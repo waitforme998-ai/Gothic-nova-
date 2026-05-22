@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Gothic Nova Master Hub</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;600;700&amp;family=Inter:wght@400;500;700&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                "secondary-container": "#131332",
+                "on-tertiary-fixed-variant": "#9f9fb5",
+                "primary": "#6366f1",
+                "primary-fixed": "#818cf8",
+                "on-secondary-fixed-variant": "#9f9fb5",
+                "tertiary": "#06b6d4",
+                "on-surface-variant": "#9f9fb5",
+                "on-surface": "#f5f5f7",
+                "on-primary": "#ffffff",
+                "error-container": "#93000a",
+                "primary-container": "#4f46e5",
+                "secondary": "#0e0e24",
+                "on-background": "#f5f5f7",
+                "surface-container-low": "#090916",
+                "on-tertiary-fixed": "#030308",
+                "outline-variant": "#2b2b3d",
+                "on-secondary-container": "#f5f5f7",
+                "tertiary-fixed": "#06b6d4",
+                "inverse-surface": "#f5f5f7",
+                "surface-container-highest": "#191942",
+                "on-primary-fixed": "#030308",
+                "on-secondary": "#f5f5f7",
+                "secondary-fixed": "#0e0e24",
+                "on-primary-fixed-variant": "#818cf8",
+                "surface-dim": "#05050f",
+                "outline": "#4e4e66",
+                "inverse-on-surface": "#030308",
+                "on-error-container": "#ffdad6",
+                "secondary-fixed-dim": "#0e0e24",
+                "surface": "#05050f",
+                "tertiary-container": "#085f73",
+                "on-primary-container": "#f5f5f7",
+                "surface-container-lowest": "#030308",
+                "primary-fixed-dim": "#818cf8",
+                "inverse-primary": "#818cf8",
+                "on-secondary-fixed": "#030308",
+                "surface-variant": "#131332",
+                "surface-container-high": "#131332",
+                "surface-bright": "#1e1e3f",
+                "tertiary-fixed-dim": "#06b6d4",
+                "error": "#ff5555",
+                "on-tertiary-container": "#f5f5f7",
+                "on-error": "#ffffff",
+                "surface-container": "#0e0e24",
+                "surface-tint": "#6366f1",
+                "background": "#030308",
+                "on-tertiary": "#f5f5f7"
+              },
+              "borderRadius": {
+                "DEFAULT": "12px",
+                "sm": "8px",
+                "md": "12px",
+                "lg": "16px",
+                "xl": "24px",
+                "2xl": "32px",
+                "full": "9999px"
+              },
+              "spacing": {
+                "stack-md": "24px",
+                "stack-lg": "48px",
+                "gutter": "16px",
+                "container-padding-desktop": "64px",
+                "unit": "8px",
+                "container-padding-mobile": "20px",
+                "stack-sm": "12px"
+              },
+              "fontFamily": {
+                "headline-xl-mobile": ["Noto Serif"],
+                "label-caps": ["Inter"],
+                "headline-xl": ["Noto Serif"],
+                "headline-lg": ["Noto Serif"],
+                "body-md": ["Inter"],
+                "data-mono": ["Inter"],
+                "headline-md": ["Noto Serif"],
+                "body-lg": ["Inter"]
+              },
+              "fontSize": {
+                "headline-xl-mobile": ["32px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                "label-caps": ["12px", {"lineHeight": "1", "letterSpacing": "0.1em", "fontWeight": "700"}],
+                "headline-xl": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                "headline-lg": ["32px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                "data-mono": ["14px", {"lineHeight": "1.4", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+                "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}]
+              }
+            }
+          }
+        }
+    </script>
+    <link rel="stylesheet" href="style.css">
+<style>
+        .glass {
+            backdrop-filter: blur(24px);
+            background: rgba(14, 14, 28, 0.45);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .glass:hover {
+            background: rgba(22, 22, 45, 0.6);
+            border-color: rgba(99, 102, 241, 0.2);
+            transform: translateY(-2px);
+        }
+        .crimson-glow {
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.35);
+        }
+        .text-glow {
+            text-shadow: 0 0 10px rgba(6, 182, 212, 0.5);
+        }
+        .crimson-gradient {
+            background: linear-gradient(90deg, #6366f1 0%, #06b6d4 100%);
+        }
+        .pulse-dot {
+            box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.7);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(6, 182, 212, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(6, 182, 212, 0); }
+        }
+        body {
+            background-color: #030308;
+            color: #f5f5f7;
+        }
+        .spotlight {
+            position: fixed;
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.06) 0%, rgba(0, 0, 0, 0) 70%);
+            z-index: -1;
+            pointer-events: none;
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #030308; }
+        ::-webkit-scrollbar-thumb { background: #131332; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6366f1; }
+    </style>
+</head>
+<body class="font-body-md text-body-md overflow-x-hidden">
+    <!-- DYNAMIC BACKGROUND GRADIENT ENGINE -->
+    <div class="apple-bg-glow-container">
+        <div class="apple-glow-blob apple-glow-blob-1"></div>
+        <div class="apple-glow-blob apple-glow-blob-2"></div>
+        <div class="apple-glow-blob apple-glow-blob-3"></div>
+    </div>
+
+    <!-- FIXED GLASSMORPHIC NAVBAR -->
+    <nav class="navbar" style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); width: calc(100% - 40px); max-width: 1200px; z-index: 50; display: flex; justify-content: space-between; align-items: center; padding: 12px 24px; border-radius: 9999px; background: rgba(14, 14, 28, 0.45); border: 1px solid rgba(255, 255, 255, 0.05); backdrop-filter: blur(24px); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);">
+        <div class="flex items-center gap-4">
+            <a href="index.html" class="flex items-center gap-3 nav-logo-brand" aria-label="Gothic Nova Home">
+                <svg class="nav-logo-svg" viewBox="0 0 100 100" width="38" height="38" xmlns="http://www.w3.org/2000/svg" style="transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);">
+                    <circle cx="50" cy="50" r="48" fill="#000000" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+                    <text x="50" y="44" font-family="'Playfair Display', 'Georgia', serif" font-size="14" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="0.8">GOTHIC</text>
+                    <text x="50" y="62" font-family="'Playfair Display', 'Georgia', serif" font-size="14" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="0.8">NOVA</text>
+                </svg>
+                <span class="font-headline-md text-[18px] text-white font-bold tracking-tight uppercase" style="letter-spacing: 0.05em;">MASTER HUB</span>
+            </a>
+        </div>
+        <div class="flex items-center gap-6">
+            <a href="index.html" class="flex items-center gap-2 px-4 py-2 border border-primary/20 hover:border-primary/60 text-on-surface/80 hover:text-primary font-mono text-[10px] uppercase rounded-full transition-all duration-300 bg-white/5 backdrop-blur-md">
+                <span class="material-symbols-outlined text-[14px]">arrow_back</span>
+                View Site
+            </a>
+            <button class="text-on-surface/60 hover:text-primary transition-colors duration-300 p-2 hover:bg-white/5 rounded-full">
+                <span class="material-symbols-outlined" data-icon="settings">settings</span>
+            </button>
+        </div>
+    </nav>
+    
+    <div style="display:none">
+<header class="fixed top-0 w-full z-50 bg-surface/10 dark:bg-surface/10 backdrop-blur-xl border-b border-white/10 shadow-none">
+<div class="flex justify-between items-center px-gutter py-4 w-full max-w-[1200px] mx-auto">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 overflow-hidden rounded-lg">
+<img alt="Gothic Nova Logo" class="w-full h-full object-cover" src="data:image/png;base64,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"/>
+</div>
+<h1 class="font-headline-md text-headline-md-mobile md:text-headline-md text-on-surface tracking-tighter uppercase">GOTHIC NOVA MASTER HUB</h1>
+</div>
+<div class="flex items-center gap-6">
+<a href="index.html" class="flex items-center gap-2 px-3 py-1.5 border border-primary/20 hover:border-primary text-on-surface/80 hover:text-primary font-mono text-[10px] uppercase rounded transition-all duration-300">
+  <span class="material-symbols-outlined text-[14px]">arrow_back</span>
+  View Site
+</a>
+<button class="text-on-surface/60 hover:text-primary transition-colors duration-300">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+</div>
+</div>
+</header>
+</div>
+<main class="pt-32 pb-stack-lg px-gutter max-w-[1200px] mx-auto min-h-screen">
+<!-- Navigation Tab Bar (Simplified Horizontal Drawer for Mobile/Web) -->
+<div class="mb-stack-lg overflow-x-auto no-scrollbar">
+<div class="flex gap-4 border-b border-white/5 pb-2 min-w-max">
+<button class="px-6 py-3 font-label-caps text-label-caps bg-primary/10 text-primary border-b-2 border-primary transition-all duration-300">ALL FORGES</button>
+<button class="px-6 py-3 font-label-caps text-label-caps text-on-surface/50 hover:text-primary transition-all">ACTIVE DROPS</button>
+<button class="px-6 py-3 font-label-caps text-label-caps text-on-surface/50 hover:text-primary transition-all">COMMISSIONS</button>
+<button class="px-6 py-3 font-label-caps text-label-caps text-on-surface/50 hover:text-primary transition-all">PENDING RUNS</button>
+</div>
+</div>
+<!-- Hero Metrics -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-stack-md mb-stack-lg">
+<!-- Forging Capacity -->
+<div class="glass p-stack-md rounded-xl relative overflow-hidden group hover:border-primary/30 transition-all duration-500">
+<div class="flex justify-between items-start mb-4">
+<p class="font-label-caps text-label-caps text-on-surface/50 uppercase">Forging Capacity</p>
+<span class="material-symbols-outlined text-primary/40" data-icon="factory">factory</span>
+</div>
+<h2 class="font-headline-lg text-headline-lg text-white mb-1">94% Forged</h2>
+<p class="font-data-mono text-data-mono text-on-surface/40">Silver/Titanium Alloy stats</p>
+<div class="mt-6 h-1 w-full bg-white/5 rounded-full overflow-hidden">
+<div class="h-full bg-primary crimson-glow transition-all duration-1000" style="width: 94%"></div>
+</div>
+</div>
+<!-- Total Drop Revenue -->
+<div class="glass p-stack-md rounded-xl group hover:border-primary/30 transition-all duration-500">
+<div class="flex justify-between items-start mb-4">
+<p class="font-label-caps text-label-caps text-on-surface/50 uppercase">Total Drop Revenue</p>
+<span class="material-symbols-outlined text-primary/40" data-icon="payments">payments</span>
+</div>
+<h2 class="font-headline-lg text-headline-lg text-white mb-1">Rs. 1,489,000</h2>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-sm" data-icon="trending_up">trending_up</span>
+<p class="font-data-mono text-data-mono text-primary">+12.4% vs last forge</p>
+</div>
+<div class="mt-4 flex items-end gap-1 h-12">
+<div class="flex-1 bg-primary/20 h-[30%] group-hover:h-[45%] transition-all duration-700"></div>
+<div class="flex-1 bg-primary/20 h-[50%] group-hover:h-[65%] transition-all duration-700"></div>
+<div class="flex-1 bg-primary/20 h-[40%] group-hover:h-[55%] transition-all duration-700"></div>
+<div class="flex-1 bg-primary/20 h-[70%] group-hover:h-[85%] transition-all duration-700"></div>
+<div class="flex-1 bg-primary/30 h-[60%] group-hover:h-[75%] transition-all duration-700"></div>
+<div class="flex-1 bg-primary h-[90%] group-hover:h-[100%] transition-all duration-700"></div>
+</div>
+</div>
+<!-- Active Drop 001 -->
+<div class="glass p-stack-md rounded-xl relative overflow-hidden group hover:border-primary/30 transition-all duration-500">
+<div class="flex justify-between items-start mb-4">
+<p class="font-label-caps text-label-caps text-on-surface/50 uppercase">Active Drop 001</p>
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-primary pulse-dot"></div>
+<span class="font-label-caps text-[10px] text-primary">LIVE</span>
+</div>
+</div>
+<h2 class="font-headline-lg text-headline-lg text-white mb-1">98.4% Sold Out</h2>
+<p class="font-data-mono text-data-mono text-on-surface/40">Exhaustion imminent</p>
+<div class="mt-6 flex gap-2">
+<div class="flex-1 h-3 bg-primary crimson-glow rounded-sm"></div>
+<div class="flex-1 h-3 bg-primary crimson-glow rounded-sm"></div>
+<div class="flex-1 h-3 bg-primary crimson-glow rounded-sm"></div>
+<div class="flex-1 h-3 bg-primary/20 rounded-sm"></div>
+</div>
+</div>
+</section>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-stack-lg items-start">
+<!-- ACTIVE FORGING QUEUE -->
+<section id="active-forging-queue" class="lg:col-span-7">
+<div class="flex items-center justify-between mb-stack-md">
+<h3 class="font-headline-md text-headline-md text-white">ACTIVE FORGING QUEUE</h3>
+<span class="font-label-caps text-label-caps text-primary/50">3 UNITS PROCESSING</span>
+</div>
+<div class="space-y-stack-md">
+<!-- Item 1 -->
+<div class="glass p-6 group">
+<div class="flex flex-wrap justify-between items-center gap-4 mb-4">
+<div class="flex items-center gap-4">
+<div class="w-16 h-16 bg-surface-container-highest rounded overflow-hidden">
+<img alt="Venom Spider Ring" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" src="assets/venom_spider_ring.png"/>
+</div>
+<div>
+<h4 class="font-headline-md text-body-lg text-white">Venom Spider Ring</h4>
+<p class="font-body-md text-sm text-on-surface/40">Artisan: K. Thorne</p>
+</div>
+</div>
+<button class="px-4 py-2 border border-primary/40 text-primary font-label-caps text-[10px] hover:bg-primary/10 transition-all uppercase">Prioritize</button>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between font-data-mono text-xs text-on-surface/60">
+<span>Forging Status</span>
+<span>85%</span>
+</div>
+<div class="h-1.5 w-full bg-white/5 overflow-hidden">
+<div class="h-full crimson-gradient w-[85%] group-hover:brightness-125 transition-all"></div>
+</div>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="glass p-6 group">
+<div class="flex flex-wrap justify-between items-center gap-4 mb-4">
+<div class="flex items-center gap-4">
+<div class="w-16 h-16 bg-surface-container-highest rounded overflow-hidden">
+<img alt="Crimson Cross Choker" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" src="assets/crimson_cross_choker.png"/>
+</div>
+<div>
+<h4 class="font-headline-md text-body-lg text-white">Crimson Cross Choker</h4>
+<p class="font-body-md text-sm text-on-surface/40">Artisan: V. Void</p>
+</div>
+</div>
+<button class="px-4 py-2 border border-primary/40 text-primary font-label-caps text-[10px] hover:bg-primary/10 transition-all uppercase">Prioritize</button>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between font-data-mono text-xs text-on-surface/60">
+<span>Forging Status</span>
+<span>40%</span>
+</div>
+<div class="h-1.5 w-full bg-white/5 overflow-hidden">
+<div class="h-full crimson-gradient w-[40%] group-hover:brightness-125 transition-all"></div>
+</div>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="glass p-6 group">
+<div class="flex flex-wrap justify-between items-center gap-4 mb-4">
+<div class="flex items-center gap-4">
+<div class="w-16 h-16 bg-surface-container-highest rounded overflow-hidden">
+<img alt="Obsidian Helix Chain" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" src="assets/obsidian_helix_chain.png"/>
+</div>
+<div>
+<h4 class="font-headline-md text-body-lg text-white">Obsidian Helix Chain</h4>
+<p class="font-body-md text-sm text-on-surface/40">Artisan: M. Malice</p>
+</div>
+</div>
+<button class="px-4 py-2 border border-primary/40 text-primary font-label-caps text-[10px] hover:bg-primary/10 transition-all uppercase">Prioritize</button>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between font-data-mono text-xs text-on-surface/60">
+<span>Forging Status</span>
+<span>12%</span>
+</div>
+<div class="h-1.5 w-full bg-white/5 overflow-hidden">
+<div class="h-full crimson-gradient w-[12%] group-hover:brightness-125 transition-all"></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- ELITE CUSTOM COMMISSION QUEUE -->
+<section id="commissions-queue" class="lg:col-span-5">
+<h3 class="font-headline-md text-headline-md text-white mb-stack-md">ELITE CUSTOM COMMISSION QUEUE</h3>
+<div class="glass p-1 overflow-hidden">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-white/10">
+<th class="p-4 font-label-caps text-[10px] text-on-surface/50">ORDER</th>
+<th class="p-4 font-label-caps text-[10px] text-on-surface/50">SPECIFICATION</th>
+<th class="p-4 font-label-caps text-[10px] text-on-surface/50">STATUS</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-white/5">
+<tr class="hover:bg-white/5 transition-colors">
+<td class="p-4 font-data-mono text-sm text-white">#882</td>
+<td class="p-4 font-body-md text-sm text-on-surface/60">Sapphire inclusion</td>
+<td class="p-4">
+<span class="inline-block px-2 py-1 bg-primary-container/20 border border-primary-container text-primary-container font-label-caps text-[9px] rounded-sm">HEATING</span>
+</td>
+</tr>
+<tr class="hover:bg-white/5 transition-colors">
+<td class="p-4 font-data-mono text-sm text-white">#885</td>
+<td class="p-4 font-body-md text-sm text-on-surface/60">Obsidian inclusion</td>
+<td class="p-4">
+<span class="inline-block px-2 py-1 bg-primary-container/20 border border-primary-container text-primary-container font-label-caps text-[9px] rounded-sm">ENGRAVING</span>
+</td>
+</tr>
+<tr class="hover:bg-white/5 transition-colors">
+<td class="p-4 font-data-mono text-sm text-white">#889</td>
+<td class="p-4 font-body-md text-sm text-on-surface/60">Platinum base</td>
+<td class="p-4">
+<span class="inline-block px-2 py-1 bg-white/5 border border-white/20 text-on-surface/80 font-label-caps text-[9px] rounded-sm">SHIPPED</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Recent Activity/Secondary Stat -->
+<div class="mt-stack-lg glass p-6 border-l-4 border-primary">
+<h4 class="font-label-caps text-label-caps text-primary mb-4">FORGE ALERTS</h4>
+<ul class="space-y-4">
+<li class="flex gap-4">
+<div class="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0"></div>
+<p class="text-sm text-on-surface/70"><span class="text-white font-bold">Argon Supply Low</span> in Forge Chamber 02. Automatic replenishment initiated.</p>
+</li>
+<li class="flex gap-4">
+<div class="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0"></div>
+<p class="text-sm text-on-surface/70"><span class="text-white font-bold">Commission #889</span> has reached the logistics layer in Neo-Tokyo.</p>
+</li>
+</ul>
+</div>
+</section>
+</div>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="fixed bottom-0 w-full z-50 md:hidden bg-surface/10 dark:bg-surface/10 backdrop-blur-lg border-t border-white/10 shadow-none">
+<div class="flex justify-around items-center h-16 w-full">
+<button class="text-primary scale-110 drop-shadow-[0_0_8px_rgba(255,180,171,0.8)] active:scale-95 transition-transform">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+</button>
+<button class="text-on-surface/40 active:scale-95 transition-transform">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+</button>
+<button class="text-on-surface/40 active:scale-95 transition-transform">
+<span class="material-symbols-outlined" data-icon="rebase_edit">rebase_edit</span>
+</button>
+<button class="text-on-surface/40 active:scale-95 transition-transform">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</button>
+</div>
+</nav>
+<!-- High-Tech Glassmorphic Details Drawer -->
+<div id="detailsDrawer" class="fixed inset-y-0 right-0 w-full sm:w-[460px] bg-[#0c0c0c]/95 backdrop-blur-2xl border-l border-white/10 z-[100] transform translate-x-full transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] shadow-2xl p-8 flex flex-col justify-between hidden">
+    <div>
+        <!-- Close & Header -->
+        <div class="flex justify-between items-center mb-6">
+            <h4 class="font-label-caps text-label-caps text-primary">FORGE TELEMETRY DIRECT</h4>
+            <button id="drawerClose" class="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center text-on-surface/50 hover:text-primary hover:border-primary transition-all duration-300">
+                <span class="material-symbols-outlined text-sm">close</span>
+            </button>
+        </div>
+        
+        <!-- Product Spotlight in Drawer -->
+        <div class="flex items-center gap-6 mb-8 p-4 bg-white/5 border border-white/10 rounded-sm">
+            <img id="drawerImage" src="assets/venom_spider_ring.png" alt="Detail Image" class="w-20 h-20 object-cover rounded border border-white/10">
+            <div>
+                <h3 id="drawerTitle" class="font-headline-md text-xl text-white">Venom Spider Ring</h3>
+                <p id="drawerArtisan" class="font-body-md text-xs text-on-surface/40">Artisan: K. Thorne</p>
+                <span class="inline-block mt-2 px-2 py-0.5 bg-green-500/10 border border-green-500/30 text-green-400 font-mono text-[9px] rounded-sm">LASER SENSORS STABLE</span>
+            </div>
+        </div>
+
+        <!-- Simulated Vector Schematic -->
+        <div class="mb-8 p-4 border border-white/5 bg-black/40 rounded-sm relative overflow-hidden h-40 flex items-center justify-center">
+            <!-- Vector Grid Background -->
+            <div class="absolute inset-0 opacity-10 bg-[linear-gradient(to_right,#808080_1px,transparent_1px),linear-gradient(to_bottom,#808080_1px,transparent_1px)] bg-[size:14px_24px]"></div>
+            
+            <!-- Dynamic Blueprint SVG -->
+            <svg class="w-full h-full opacity-60 text-primary animate-pulse" viewBox="0 0 200 100" fill="none" stroke="currentColor" stroke-width="1">
+                <circle cx="100" cy="50" r="30" stroke-dasharray="4 4" />
+                <path d="M70 50 H130 M100 20 V80 M80 30 L120 70 M80 70 L120 30" />
+                <!-- Pulsing sensor hot-spots -->
+                <circle cx="100" cy="20" r="2" fill="#06b6d4" />
+                <circle cx="70" cy="50" r="2" fill="#06b6d4" />
+                <circle cx="130" cy="50" r="2" fill="#06b6d4" />
+            </svg>
+            <div class="absolute bottom-2 left-2 font-mono text-[8px] text-on-surface/30 uppercase">Thermal Calibration: 1240°C</div>
+            <div class="absolute top-2 right-2 font-mono text-[8px] text-primary uppercase animate-pulse">L-Scan: Active</div>
+        </div>
+
+        <!-- Real-time readouts -->
+        <div class="space-y-4 font-mono text-xs">
+            <div class="flex justify-between border-b border-white/5 pb-2">
+                <span class="text-on-surface/40">COMPOSITION</span>
+                <span id="drawerComposition" class="text-white text-right">92.5% Ag, 7.5% Ti Alloy</span>
+            </div>
+            <div class="flex justify-between border-b border-white/5 pb-2">
+                <span class="text-on-surface/40">PRESSURE RATIO</span>
+                <span class="text-white text-right">1.2 GPa [Nominal]</span>
+            </div>
+            <div class="flex justify-between border-b border-white/5 pb-2">
+                <span class="text-on-surface/40">CALIBRATION RANGE</span>
+                <span id="drawerSpec" class="text-on-surface/70 leading-relaxed text-right max-w-[250px]">92.5% Silver, 7.5% Titanium Alloy base with deep obsidian filigree.</span>
+            </div>
+            <div class="flex justify-between border-b border-white/5 pb-2">
+                <span class="text-on-surface/40">FORGING PIPELINE</span>
+                <span id="drawerProgressText" class="text-primary font-bold text-right">85%</span>
+            </div>
+        </div>
+
+        <div class="mt-6 space-y-2">
+            <div class="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                <div id="drawerProgressBar" class="h-full crimson-gradient w-[85%] transition-all duration-300"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Telemetry Actions -->
+    <div class="space-y-4">
+        <button id="doubleSpeedBtn" class="w-full py-3 border border-primary/40 text-primary font-label-caps text-xs tracking-wider uppercase hover:bg-primary hover:text-white transition-all duration-300 rounded-sm">
+            DOUBLESPEED FORGE
+        </button>
+        <p class="font-mono text-[9px] text-center text-on-surface/30 uppercase">
+            WARNING: Operational override alters artisan timeline parameters.
+        </p>
+    </div>
+</div>
+
+<script src="dashboard-engine.js"></script>
+</body></html>
