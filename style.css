@@ -602,7 +602,7 @@ motion-div {
 /* Luxury Editorial Aspect Ratio */
 .card-img-wrapper {
     width: 100%;
-    aspect-ratio: 3 / 4;
+    aspect-ratio: 1 / 1;
     background: linear-gradient(135deg, #f0eff5 0%, #e8e6f0 100%); /* Elegant fallback for missing images */
     overflow: hidden;
     position: relative;

@@ -807,48 +807,56 @@
         }
 
         // --- WIRE UP BUTTONS ---
-        document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
-            if (btn.disabled) return;
+        window.wireUpAddToCartButtons = function() {
+            // Remove old listeners by cloning
+            document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+                const newBtn = btn.cloneNode(true);
+                btn.parentNode.replaceChild(newBtn, btn);
+            });
+            document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+                if (btn.disabled) return;
 
-            const card    = btn.closest('.product-card');
-            const pid     = card.dataset.productId;
-            const name    = card.querySelector('.card-title')?.textContent?.trim() || 'Item';
-            const priceEl = card.querySelector('.sale-price') || card.querySelector('.card-price');
-            const priceText = priceEl?.textContent?.trim() || 'Rs. 0';
-            const priceNum  = parseInt(priceText.replace(/[^\d]/g,''), 10) || 0;
-            const imgSrc    = card.dataset.img || '';
+                const card    = btn.closest('.product-card');
+                const pid     = card.dataset.productId;
+                const name    = card.querySelector('.card-title')?.textContent?.trim() || 'Item';
+                const priceEl = card.querySelector('.sale-price') || card.querySelector('.card-price');
+                const priceText = priceEl?.textContent?.trim() || 'Rs. 0';
+                const priceNum  = parseInt(priceText.replace(/[^\d]/g,''), 10) || 0;
+                const imgSrc    = card.dataset.img || '';
 
-            btn.addEventListener('click', function() {
-                // If already in cart — opens the drawer
-                if (btn.dataset.inCart === 'true') {
-                    openCart();
-                    return;
-                }
+                btn.addEventListener('click', function() {
+                    // If already in cart — opens the drawer
+                    if (btn.dataset.inCart === 'true') {
+                        openCart();
+                        return;
+                    }
 
-                premiumCartAnimation(this, () => {
-                    const qtyToAdd = window.preAddQty[pid] || 1;
-                    cartMap[pid] = { name, price: priceText, priceNum, qty: qtyToAdd, img: imgSrc };
-                    saveCart();
-                    
-                    window.syncStorefront();
-                    renderCart();
+                    premiumCartAnimation(this, () => {
+                        const qtyToAdd = window.preAddQty[pid] || 1;
+                        cartMap[pid] = { name, price: priceText, priceNum, qty: qtyToAdd, img: imgSrc };
+                        saveCart();
+                        
+                        window.syncStorefront();
+                        renderCart();
 
-                    // Badge spring pop
-                    cartBadge.animate([
-                        { transform:'scale(0.5)' },
-                        { transform:'scale(1.4)' },
-                        { transform:'scale(1)'   }
-                    ], { duration:400, easing:'cubic-bezier(0.34,1.56,0.64,1)' });
+                        // Badge spring pop
+                        cartBadge.animate([
+                            { transform:'scale(0.5)' },
+                            { transform:'scale(1.4)' },
+                            { transform:'scale(1)'   }
+                        ], { duration:400, easing:'cubic-bezier(0.34,1.56,0.64,1)' });
 
-                    // Cart icon bounce
-                    cartIconLink.animate([
-                        { transform:'scale(1)'   },
-                        { transform:'scale(1.35)' },
-                        { transform:'scale(1)'   }
-                    ], { duration:380, easing:'cubic-bezier(0.34,1.56,0.64,1)' });
+                        // Cart icon bounce
+                        cartIconLink.animate([
+                            { transform:'scale(1)'   },
+                            { transform:'scale(1.35)' },
+                            { transform:'scale(1)'   }
+                        ], { duration:380, easing:'cubic-bezier(0.34,1.56,0.64,1)' });
+                    });
                 });
             });
-        });
+        };
+        window.wireUpAddToCartButtons();
 
         // --- INITIAL RUN ---
         renderCart();
