@@ -1562,8 +1562,8 @@ button {
         width: 100%;
         height: 100%;
         object-fit: cover;
-        object-position: center 25%; /* Clean, spacious, uncropped framing for Rosé embroidered suit */
-        filter: brightness(0.96) contrast(1.02);
+        object-position: center 70px; /* Brought down so the face & head are completely visible below the header */
+        filter: brightness(0.97) contrast(1.02);
     }
 
     .hero-mobile-gradient {
@@ -1571,9 +1571,10 @@ button {
         inset: 0;
         background: linear-gradient(
             180deg,
-            rgba(0, 0, 0, 0.10) 0%,
-            rgba(0, 0, 0, 0.40) 50%,
-            rgba(10, 8, 6, 0.92) 100%
+            rgba(0, 0, 0, 0.20) 0%,
+            rgba(0, 0, 0, 0.04) 22%,
+            rgba(0, 0, 0, 0.38) 55%,
+            rgba(10, 8, 6, 0.94) 100%
         );
         z-index: 2;
         pointer-events: none;
