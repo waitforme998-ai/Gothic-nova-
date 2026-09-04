@@ -105,28 +105,75 @@
         initReviewsTrackPause();
     });
 
-    // Pause autoscrolling reviews when grabbed, touched, or hovered; resume smoothly on release
+    // Fully Touch-Scrollable Continuous Auto-Scroller for Reviews
     function initReviewsTrackPause() {
-        const track = document.querySelector('.reviews-track');
-        if (!track) return;
+        const slider = document.querySelector('.reviews-slider-container');
+        if (!slider) return;
 
-        const pauseTrack = () => {
-            track.classList.add('is-paused');
-            track.style.animationPlayState = 'paused';
+        let isInteracting = false;
+        let resumeTimer = null;
+        const scrollSpeed = 0.75; // Smooth luxury velocity (pixels per frame)
+
+        function tick() {
+            if (!isInteracting) {
+                slider.scrollLeft += scrollSpeed;
+                const halfWidth = slider.scrollWidth / 2;
+                if (halfWidth > 0 && slider.scrollLeft >= halfWidth) {
+                    slider.scrollLeft -= halfWidth;
+                }
+            }
+            requestAnimationFrame(tick);
+        }
+
+        const pause = () => {
+            isInteracting = true;
+            if (resumeTimer) clearTimeout(resumeTimer);
         };
 
-        const resumeTrack = () => {
-            track.classList.remove('is-paused');
-            track.style.animationPlayState = 'running';
+        const resume = () => {
+            if (resumeTimer) clearTimeout(resumeTimer);
+            resumeTimer = setTimeout(() => {
+                isInteracting = false;
+            }, 600); // 600ms after finger lift, smoothly continue auto-scroll
         };
 
-        track.addEventListener('mouseenter', pauseTrack);
-        track.addEventListener('mouseleave', resumeTrack);
-        track.addEventListener('pointerdown', pauseTrack);
-        window.addEventListener('pointerup', resumeTrack);
-        track.addEventListener('touchstart', pauseTrack, { passive: true });
-        window.addEventListener('touchend', resumeTrack, { passive: true });
-        window.addEventListener('touchcancel', resumeTrack, { passive: true });
+        // Mobile touch listeners (passive for native 60fps scrolling)
+        slider.addEventListener('touchstart', pause, { passive: true });
+        slider.addEventListener('touchmove', pause, { passive: true });
+        slider.addEventListener('touchend', resume, { passive: true });
+        slider.addEventListener('touchcancel', resume, { passive: true });
+
+        // Desktop mouse drag & hover listeners
+        let isMouseDown = false;
+        let startX = 0;
+        let startScroll = 0;
+
+        slider.addEventListener('mousedown', (e) => {
+            isMouseDown = true;
+            pause();
+            startX = e.pageX - slider.offsetLeft;
+            startScroll = slider.scrollLeft;
+        });
+
+        window.addEventListener('mouseup', () => {
+            if (isMouseDown) {
+                isMouseDown = false;
+                resume();
+            }
+        });
+
+        slider.addEventListener('mousemove', (e) => {
+            if (!isMouseDown) return;
+            e.preventDefault();
+            const x = e.pageX - slider.offsetLeft;
+            const walk = (x - startX) * 1.5;
+            slider.scrollLeft = startScroll - walk;
+        });
+
+        slider.addEventListener('mouseenter', pause);
+        slider.addEventListener('mouseleave', resume);
+
+        requestAnimationFrame(tick);
     }
 
     // Intercept all internal anchor clicks to prevent native teleportation jumps

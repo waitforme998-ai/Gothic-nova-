@@ -1015,26 +1015,32 @@ button {
     letter-spacing: 0.02em;
 }
 
-.reviews-track {
-    display: flex;
-    gap: 20px;
-    animation: reviews-scroll 45s linear infinite;
-    width: max-content;
+.reviews-slider-container {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
     cursor: grab;
     user-select: none;
     -webkit-user-select: none;
+    width: 100%;
+    padding: 6px 0;
 }
 
-.reviews-track:active {
+.reviews-slider-container::-webkit-scrollbar {
+    display: none;
+}
+
+.reviews-slider-container:active {
     cursor: grabbing;
 }
 
-.section-reviews:hover .reviews-track,
-.section-reviews:active .reviews-track,
-.reviews-track:hover,
-.reviews-track:active,
-.reviews-track.is-paused {
-    animation-play-state: paused !important;
+.reviews-track {
+    display: flex;
+    gap: 20px;
+    width: max-content;
+    padding: 0 20px;
 }
 
 .review-card {
@@ -1556,8 +1562,8 @@ button {
         width: 100%;
         height: 100%;
         object-fit: cover;
-        object-position: center 18%; /* Perfectly showcases bridal jewelry, forehead matha patti, passa, face & neckline */
-        filter: brightness(0.95) contrast(1.02);
+        object-position: center 25%; /* Clean, spacious, uncropped framing for Rosé embroidered suit */
+        filter: brightness(0.96) contrast(1.02);
     }
 
     .hero-mobile-gradient {
