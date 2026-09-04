@@ -1,139 +1,194 @@
-/* scroll-engine.js - Custom Inertia and Interactive Typography Engine */
+// scroll-engine.js — Velora Luxury Smooth Scroll & Reveal Engine
+// Elegant, non-jarring easeInOutCubic scrolling for all category clicks and navigation.
 
-// Initialize and expose observer globally at top level to prevent timing race conditions with dynamic products
-const revealObserver = new IntersectionObserver((entries, observer) => {
-    let visibleCount = 0;
-    entries.forEach((entry) => {
-        const el = entry.target;
-        if (entry.isIntersecting) {
-            el.style.transitionDelay = `${visibleCount * 50}ms`;
-            el.classList.add('is-visible');
-            visibleCount++;
+(function() {
+    'use strict';
+
+    let isAutoScrolling = false;
+    let autoScrollRaf = null;
+
+    // Elegant easeInOutCubic easing for luxury deceleration and acceleration
+    function easeInOutCubic(t) {
+        return t < 0.5 
+            ? 4 * t * t * t 
+            : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    }
+
+    /**
+     * Smoothly and elegantly scrolls to an element, selector, or Y coordinate.
+     * @param {string|HTMLElement|number} target - The target element, selector, or Y offset.
+     * @param {Object} options - Custom options { duration, offset, callback, event }
+     */
+    function elegantScrollTo(target, options = {}) {
+        // If event was passed, prevent default teleport
+        if (options.event && options.event.preventDefault) {
+            options.event.preventDefault();
+        }
+
+        let targetY = 0;
+        const nav = document.querySelector('.main-nav');
+        const navHeight = nav ? nav.offsetHeight : 76;
+        const extraOffset = options.offset !== undefined ? options.offset : -16;
+
+        if (typeof target === 'number') {
+            targetY = target;
         } else {
-            el.classList.remove('is-visible');
-            el.style.transitionDelay = '0ms';
-        }
-    });
-}, {
-    root: null,
-    threshold: 0.15,
-    rootMargin: '0px 0px -50px 0px'
-});
-window.revealObserver = revealObserver;
-
-document.addEventListener('DOMContentLoaded', () => {
-    // Navbar scroll interaction state
-    const navbar = document.querySelector('.navbar');
-    const heroSection = document.querySelector('.hero-section');
-    
-    window.addEventListener('scroll', () => {
-        // Navbar Scrolled State
-        if (window.scrollY > 50) {
-            navbar.classList.add('navbar-scrolled');
-        } else {
-            navbar.classList.remove('navbar-scrolled');
+            let el = typeof target === 'string' ? document.querySelector(target) : target;
+            if (!el) return;
+            const rect = el.getBoundingClientRect();
+            const currentY = window.pageYOffset || document.documentElement.scrollTop;
+            targetY = Math.max(0, rect.top + currentY - navHeight + extraOffset);
         }
 
-        // Parallax Fade for Hero Section Overlap Effect
-        if (heroSection) {
-            const scrollY = window.scrollY;
-            // Fade out the hero text and elements completely over 40% of viewport height
-            const fadeThreshold = window.innerHeight * 0.4;
-            const opacity = Math.max(0, 1 - (scrollY / fadeThreshold));
-            heroSection.style.opacity = opacity;
+        const startY = window.pageYOffset || document.documentElement.scrollTop;
+        const distance = targetY - startY;
+
+        // If distance is tiny, don't trigger heavy animation
+        if (Math.abs(distance) < 6) {
+            if (options.callback) options.callback();
+            return;
         }
-    });
 
-    // --- CATEGORY FILTER ENGINE ---
-    const filterTabs = document.querySelectorAll('.filter-tab');
-    
-    window.runFilterTab = function() {
-        const activeTab = document.querySelector('.filter-tab.active');
-        if (!activeTab) return;
-        const targetCategory = activeTab.getAttribute('data-filter');
-        const productWrappers = document.querySelectorAll('motion-div[data-category]');
+        // Adaptive duration based on distance (600ms to 950ms)
+        const baseDuration = options.duration || Math.min(Math.max(Math.abs(distance) * 0.45, 600), 950);
+        let startTime = null;
 
-        productWrappers.forEach(wrapper => {
-            const itemCategory = wrapper.getAttribute('data-category');
-            
-            if (targetCategory === 'all' || itemCategory === targetCategory) {
-                // Make visible and fade in
-                wrapper.style.display = 'block';
-                setTimeout(() => {
-                    wrapper.style.opacity = '1';
-                    wrapper.style.transform = 'translateY(0) scale(1)';
-                }, 50);
+        // Cancel any prior running auto-scroll
+        if (autoScrollRaf) {
+            cancelAnimationFrame(autoScrollRaf);
+            autoScrollRaf = null;
+        }
+
+        isAutoScrolling = true;
+
+        function step(timestamp) {
+            if (!startTime) startTime = timestamp;
+            const elapsed = timestamp - startTime;
+            const progress = Math.min(elapsed / baseDuration, 1);
+            const ease = easeInOutCubic(progress);
+
+            window.scrollTo(0, startY + (distance * ease));
+
+            if (progress < 1 && isAutoScrolling) {
+                autoScrollRaf = requestAnimationFrame(step);
             } else {
-                // Fade out and hide
-                wrapper.style.opacity = '0';
-                wrapper.style.transform = 'translateY(30px) scale(0.95)';
-                setTimeout(() => {
-                    wrapper.style.display = 'none';
-                }, 400); // matches transition time
+                isAutoScrolling = false;
+                autoScrollRaf = null;
+                if (options.callback) options.callback();
             }
-        });
-    };
+        }
 
-    filterTabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            // Remove active class from all tabs
-            filterTabs.forEach(t => t.classList.remove('active'));
-            // Add active class to clicked tab
-            tab.classList.add('active');
-            window.runFilterTab();
-        });
+        autoScrollRaf = requestAnimationFrame(step);
+    }
+
+    // Cancel auto-scroll if user manually wheels/touches during animation
+    function handleUserInterrupt() {
+        if (isAutoScrolling) {
+            isAutoScrolling = false;
+            if (autoScrollRaf) {
+                cancelAnimationFrame(autoScrollRaf);
+                autoScrollRaf = null;
+            }
+        }
+    }
+
+    window.addEventListener('wheel', handleUserInterrupt, { passive: true });
+    window.addEventListener('touchmove', handleUserInterrupt, { passive: true });
+
+    // Global expose
+    window.elegantScrollTo = elegantScrollTo;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initScrollReveals();
+        initStickyNav();
+        initAnchorIntercept();
+        initReviewsTrackPause();
     });
 
-    // --- PRODUCT CARD 3D TILT EFFECT & DYNAMIC MOUSE SPOTLIGHT (EVENT DELEGATION) ---
-    const isTouchDevice = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
-    const dropGrid = document.querySelector('.drop-grid');
-    
-    if (!isTouchDevice && dropGrid) {
-        dropGrid.addEventListener('mousemove', (e) => {
-            const card = e.target.closest('.product-card');
-            if (!card || card.classList.contains('card-sold-out')) return;
+    // Pause autoscrolling reviews when grabbed, touched, or hovered; resume smoothly on release
+    function initReviewsTrackPause() {
+        const track = document.querySelector('.reviews-track');
+        if (!track) return;
 
-            const rect = card.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            
-            // Mouse coordinates in percentage for dynamic radial spotlight glow
-            const mouseX = (x / rect.width) * 100;
-            const mouseY = (y / rect.height) * 100;
-            card.style.setProperty('--mouse-x', `${mouseX}%`);
-            card.style.setProperty('--mouse-y', `${mouseY}%`);
+        const pauseTrack = () => {
+            track.classList.add('is-paused');
+            track.style.animationPlayState = 'paused';
+        };
 
-            const xPct = (x / rect.width) - 0.5;
-            const yPct = (y / rect.height) - 0.5;
-            
-            const img = card.querySelector('.card-img');
-            if (img) {
-                img.style.transform = `scale(1.05) translateX(${xPct * 12}px) translateY(${yPct * 12}px)`;
-            }
-        });
+        const resumeTrack = () => {
+            track.classList.remove('is-paused');
+            track.style.animationPlayState = 'running';
+        };
 
-        dropGrid.addEventListener('mouseout', (e) => {
-            const card = e.target.closest('.product-card');
-            if (!card) return;
-            
-            // Check if we really left the card
-            const related = e.relatedTarget;
-            if (related && card.contains(related)) return;
+        track.addEventListener('mouseenter', pauseTrack);
+        track.addEventListener('mouseleave', resumeTrack);
+        track.addEventListener('pointerdown', pauseTrack);
+        window.addEventListener('pointerup', resumeTrack);
+        track.addEventListener('touchstart', pauseTrack, { passive: true });
+        window.addEventListener('touchend', resumeTrack, { passive: true });
+        window.addEventListener('touchcancel', resumeTrack, { passive: true });
+    }
 
-            card.style.setProperty('--mouse-x', '50%');
-            card.style.setProperty('--mouse-y', '50%');
-            const img = card.querySelector('.card-img');
-            if (img) {
-                img.style.transform = 'scale(1) translateX(0) translateY(0)';
+    // Intercept all internal anchor clicks to prevent native teleportation jumps
+    function initAnchorIntercept() {
+        document.addEventListener('click', (e) => {
+            const anchor = e.target.closest('a[href^="#"]');
+            if (!anchor) return;
+
+            const href = anchor.getAttribute('href');
+            if (!href || href === '#') return;
+
+            const targetEl = document.querySelector(href);
+            if (targetEl) {
+                e.preventDefault();
+                elegantScrollTo(targetEl, { event: e });
             }
         });
     }
 
-    // --- STAGGERED SCROLL-TRIGGERED REVEALS ---
-    const revealElements = document.querySelectorAll('.reveal-element');
-    
-    // Observe existing static elements in DOM
-    revealElements.forEach(el => {
-        window.revealObserver.observe(el);
-    });
-});
+    function initScrollReveals() {
+        const revealElements = document.querySelectorAll('.reveal-on-scroll');
+        if (!revealElements.length) return;
+
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px 0px -40px 0px',
+            threshold: 0.08
+        };
+
+        const revealObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const siblings = entry.target.parentElement?.querySelectorAll('.reveal-on-scroll');
+                    let index = 0;
+                    if (siblings) {
+                        index = Array.from(siblings).indexOf(entry.target);
+                    }
+                    const delay = Math.min(index * 60, 300);
+
+                    setTimeout(() => {
+                        entry.target.classList.add('is-visible');
+                    }, delay);
+
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        revealElements.forEach(el => revealObserver.observe(el));
+    }
+
+    function initStickyNav() {
+        const nav = document.querySelector('.main-nav');
+        if (!nav) return;
+
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 40) {
+                nav.classList.add('nav-scrolled');
+            } else {
+                nav.classList.remove('nav-scrolled');
+            }
+        }, { passive: true });
+    }
+})();
+
