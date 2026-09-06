@@ -3,734 +3,937 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Velora Official — Luxury Fashion & Jewelry</title>
-    <meta name="description" content="Discover curated Pakistani bridal fashion, fine jewelry, accessories, and lifestyle essentials with nationwide Cash on Delivery.">
+    <title>GOTHIC NOVA | Premium Cyber-Goth Editorial Jewelry</title>
     
-    <!-- Google Fonts: Cormorant Garamond + DM Sans -->
+    <!-- Search Engine & Live Presentation Optimization Meta Tags -->
+    <meta name="description" content="Gothic × Japanese Jewelry. Minimalist, premium, cyber-goth catalog designed with hardware-accelerated 60FPS fluid touch scrolling and luxury glassmorphism.">
+    <meta name="theme-color" content="#f5f5f7">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="assets/reaper_pendant.png">
+    
+    <!-- OpenGraph High-Fidelity Social Sharing Metadata (Vercel Link Previews) -->
+    <meta property="og:title" content="GOTHIC NOVA | Premium Cyber-Goth Editorial Storefront">
+    <meta property="og:description" content="Explore a state-of-the-art jewelry shopping catalog. Zero scroll lag, ultra-responsive touch controls, and high-fidelity interaction mockup.">
+    <meta property="og:image" content="assets/reaper_pendant.png">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Gothic Nova">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="GOTHIC NOVA Storefront">
+    <meta name="twitter:description" content="Explore the cyber-goth jewelry catalog mockup. 60FPS scrolling and persistent checkout.">
+    <meta name="twitter:image" content="assets/reaper_pendant.png">
+
+    <!-- Design System Typography Links -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700..900;1,700..900&family=Inter:wght@200;300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
     
-    <!-- Open Graph / WhatsApp / Facebook Social Preview Card -->
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://velora-official-store.vercel.app/">
-    <meta property="og:title" content="Velora Official — Luxury Fashion & Jewelry">
-    <meta property="og:description" content="Discover Pakistan's finest collection of handcrafted formal wear, fine bridal jewelry & accessories.">
-    <meta property="og:image" content="https://velora-official-store.vercel.app/assets/og-hero-preview.jpg">
-    <meta property="og:image:secure_url" content="https://velora-official-store.vercel.app/assets/og-hero-preview.jpg">
-    <meta property="og:image:type" content="image/jpeg">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
-    <meta property="og:image:alt" content="Velora Official Luxury Collection — Elegance Redefined">
-
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:url" content="https://velora-official-store.vercel.app/">
-    <meta name="twitter:title" content="Velora Official — Luxury Fashion & Jewelry">
-    <meta name="twitter:description" content="Discover Pakistan's finest collection of handcrafted formal wear, fine bridal jewelry & accessories.">
-    <meta name="twitter:image" content="https://velora-official-store.vercel.app/assets/og-hero-preview.jpg">
-
-    <!-- Stylesheet -->
+    <!-- Tailored Design System Style Sheets -->
     <link rel="stylesheet" href="style.css">
+    
+    <!-- Custom Scroll & Interaction Engine -->
+    <script src="scroll-engine.js" defer></script>
+    
+    <!-- Supabase SDK & Dual-Mode Engine -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-engine.js" defer></script>
 </head>
 <body>
+    
+    <script>
+        // Global Catalog Loader & Seeder (Async Dual-Mode)
+        window.addEventListener('DOMContentLoaded', async function() {
+            const defaultProducts = [
+                { id: "1", name: "Venom Spider Ring", category: "rings", img: "assets/venom_spider_ring.png", price: 3499, salePrice: null, stock: 15, threshold: 3, active: true },
+                { id: "2", name: "Crimson Cross", category: "chains", img: "assets/crimson_cross_choker.png", price: 5999, salePrice: 4499, stock: 8, threshold: 3, active: true },
+                { id: "3", name: "Obsidian Helix", category: "chains", img: "assets/obsidian_helix_chain.png", price: 5999, salePrice: null, stock: 12, threshold: 3, active: true },
+                { id: "4", name: "Shadow Claw", category: "rings", img: "assets/shadow_claw_ring.png", price: 3899, salePrice: null, stock: 0, threshold: 3, active: true },
+                { id: "5", name: "Spine Bracelet", category: "chains", img: "assets/spine_bracelet.png", price: 6899, salePrice: null, stock: 5, threshold: 3, active: true },
+                { id: "6", name: "Reaper Pendant", category: "pendants", img: "assets/reaper_pendant.png", price: 8999, salePrice: 7499, stock: 15, threshold: 3, active: true }
+            ];
 
-    <!-- 1. TOP ANNOUNCEMENT BAR -->
-    <div class="announcement-bar">
-        <div class="ticker-track">
-            <div class="ticker-item">✨ FREE NATIONWIDE DELIVERY ON ORDERS OVER RS. 3,000 <span class="dot">●</span></div>
-            <div class="ticker-item">💎 NEW BRIDAL & FORMAL COLLECTION LIVE <span class="dot">●</span></div>
-            <div class="ticker-item">📦 CASH ON DELIVERY (COD) ALL OVER PAKISTAN <span class="dot">●</span></div>
-            <div class="ticker-item">📱 INSTANT 1-CLICK WHATSAPP ORDERING <span class="dot">●</span></div>
-            <div class="ticker-item">✨ FREE NATIONWIDE DELIVERY ON ORDERS OVER RS. 3,000 <span class="dot">●</span></div>
-            <div class="ticker-item">💎 NEW BRIDAL & FORMAL COLLECTION LIVE <span class="dot">●</span></div>
-            <div class="ticker-item">📦 CASH ON DELIVERY (COD) ALL OVER PAKISTAN <span class="dot">●</span></div>
-            <div class="ticker-item">📱 INSTANT 1-CLICK WHATSAPP ORDERING <span class="dot">●</span></div>
+            if (window.SupabaseEngine) {
+                try {
+                    let prods = await window.SupabaseEngine.getProducts();
+                    window.gn_products = prods && prods.length ? prods : defaultProducts;
+                } catch(e) {
+                    console.error("Supabase error:", e);
+                    window.gn_products = defaultProducts;
+                }
+            } else {
+                let stored = localStorage.getItem('gn_products');
+                if (stored) {
+                    try { 
+                        let parsed = JSON.parse(stored);
+                        window.gn_products = parsed && parsed.length ? parsed : defaultProducts;
+                    } catch(e) { 
+                        window.gn_products = defaultProducts; 
+                    }
+                } else {
+                    window.gn_products = defaultProducts;
+                    localStorage.setItem('gn_products', JSON.stringify(defaultProducts));
+                }
+            }
+            
+            // Ensure no empty products state ever exists
+            if (!window.gn_products || window.gn_products.length === 0) {
+                window.gn_products = defaultProducts;
+            }
+            
+            // Dispatch event to trigger rendering
+            window.dispatchEvent(new Event('productsLoaded'));
+        });
+    </script>
+    
+    <!-- SALE TICKER BAND -->
+    <div class="sale-ticker-band">
+        <div class="sale-ticker-track">
+            <span>⚡ EARLY ACCESS: 15% OFF ALL PENDANTS WITH CODE 'NOVA15'</span>
+            <span>⚡ FREE SHIPPING ON ORDERS OVER RS. 5000</span>
+            <span>⚡ LIMITED EDITION REAPER CHAIN DROPS TONIGHT</span>
+            <span>⚡ EARLY ACCESS: 15% OFF ALL PENDANTS WITH CODE 'NOVA15'</span>
+            <span>⚡ FREE SHIPPING ON ORDERS OVER RS. 5000</span>
+            <span>⚡ LIMITED EDITION REAPER CHAIN DROPS TONIGHT</span>
         </div>
     </div>
 
-    <!-- 2. FULL-WIDTH LUXURY NAVIGATION -->
-    <header class="main-nav">
-        <div class="container">
-            <div class="nav-inner">
-                <!-- Brand / Logo -->
-                <a href="#" class="nav-brand" onclick="elegantScrollTo(0, { event })">
-                    <img src="assets/logo.jpg" alt="Velora Official Monogram" class="nav-logo-badge">
-                    <div class="brand-text">
-                        <span class="brand-title">VELORA</span>
-                        <span class="brand-tagline">OFFICIAL · PAKISTAN</span>
-                    </div>
-                </a>
+    <!-- DYNAMIC BACKGROUND GRADIENT ENGINE (GPU-ACCELERATED) -->
+    <div class="hardware-bg-wrapper">
+        <!-- Static frosted layer over the spinning orbs -->
+        <div class="hardware-bg-frost"></div>
+        <div class="hardware-bg-noise"></div>
+        
+        <!-- PURE GPU SPIN CONTAINER -->
+        <div class="framer-motion-wrapper">
+            <!-- 5 Dynamic Violet/Purple masses for chaotic motion -->
+            <div class="static-orb orb-1"></div>
+            <div class="static-orb orb-2"></div>
+            <div class="static-orb orb-3"></div>
+            <div class="static-orb orb-4"></div>
+            <div class="static-orb orb-5"></div>
+        </div>
+    </div>
 
-                <!-- Category Links -->
-                <nav class="nav-categories">
-                    <a href="#products" class="nav-link active" data-cat="all" onclick="filterCategory('all', event)">All</a>
-                    <a href="#products" class="nav-link" data-cat="jewelry" onclick="filterCategory('jewelry', event)">Jewelry</a>
-                    <a href="#products" class="nav-link" data-cat="fashion" onclick="filterCategory('fashion', event)">Fashion</a>
-                    <a href="#products" class="nav-link" data-cat="accessories" onclick="filterCategory('accessories', event)">Accessories</a>
-                    <a href="#reviews" class="nav-link" onclick="elegantScrollTo('#reviews', { event })">Reviews</a>
-                </nav>
+    <!-- FIXED GLASSMORPHIC NAVBAR -->
+    <nav class="navbar reveal-header" id="mainNav">
+        <!-- Left: Hamburger + Drops + Collections -->
+        <div class="nav-left" style="display:flex;align-items:center;flex:1;position:relative;gap:16px;">
+            <button id="navMenuBtn" aria-label="Toggle Categories" style="display:flex;flex-direction:column;justify-content:center;gap:4px;width:22px;height:18px;background:transparent;border:none;cursor:pointer;padding:0;flex-shrink:0;">
+                <span class="hb-line"></span>
+                <span class="hb-line"></span>
+                <span class="hb-line"></span>
+            </button>
+            <a href="#active-drop" class="nav-link-desktop" style="font-size:0.82rem;color:#000;text-decoration:none;font-weight:500;">Drops</a>
+            <a href="#" class="nav-link-desktop" style="font-size:0.82rem;color:#000;text-decoration:none;font-weight:500;">Collections</a>
+            
+            <div id="navMenuDropdown" style="display:none;position:absolute;top:2.8rem;left:0;background:rgba(255,255,255,0.97);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(0,0,0,0.06);border-radius:14px;padding:10px 0;min-width:200px;box-shadow:0 12px 40px rgba(0,0,0,0.12);flex-direction:column;z-index:100;">
+                <a href="#active-drop" style="display:block;padding:10px 20px;font-size:0.85rem;color:#000;text-decoration:none;font-weight:500;">Drops</a>
+                <a href="#" style="display:block;padding:10px 20px;font-size:0.85rem;color:#000;text-decoration:none;font-weight:500;">Collections</a>
+                <hr style="border:none;border-top:1px solid rgba(0,0,0,0.06);margin:6px 0;">
+                <a href="#active-drop" style="display:block;padding:10px 20px;font-size:0.85rem;color:#000;text-decoration:none;font-weight:500;">Rings</a>
+                <a href="#active-drop" style="display:block;padding:10px 20px;font-size:0.85rem;color:#000;text-decoration:none;font-weight:500;">Chains</a>
+                <a href="#active-drop" style="display:block;padding:10px 20px;font-size:0.85rem;color:#000;text-decoration:none;font-weight:500;">Bracelets</a>
+                <a href="#active-drop" style="display:block;padding:10px 20px;font-size:0.85rem;color:#000;text-decoration:none;font-weight:500;">Pendants</a>
+                <hr style="border:none;border-top:1px solid rgba(0,0,0,0.06);margin:6px 0;">
+                <span style="display:block;padding:6px 20px;font-size:0.72rem;color:#999;font-style:italic;">You can add more...</span>
+            </div>
+        </div>
+        
+        <!-- Center Logo -->
+        <div class="nav-center" style="position:absolute;left:50%;transform:translateX(-50%);">
+            <a href="#" class="nav-logo-link" style="font-family:'Playfair Display',serif;letter-spacing:0.2em;color:#000;font-size:0.875rem;font-weight:600;text-decoration:none;text-align:center;">
+                <span class="logo-word">GOTHIC</span><span class="logo-space"> </span><span class="logo-word">NOVA</span>
+            </a>
+        </div>
+        
+        <!-- Right: Search + Cart -->
+        <div class="nav-right" style="display:flex;gap:14px;flex:1;justify-content:flex-end;align-items:center;">
+            <div class="search-wrapper" style="position:relative;display:flex;align-items:center;">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14" style="position:absolute;left:10px;color:#888;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+                <input type="text" placeholder="Search..." class="search-input" style="background:rgba(255,255,255,0.4);border:1px solid rgba(0,0,0,0.06);border-radius:9999px;padding:6px 12px 6px 30px;font-size:0.8rem;outline:none;width:140px;color:#000;transition:all 0.3s ease;">
+            </div>
+            <a href="#cart" id="cart-icon-link" style="color:#000;display:flex;align-items:center;position:relative;flex-shrink:0;" aria-label="Shopping Cart">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                </svg>
+                <span class="cart-badge" id="cart-badge">0</span>
+            </a>
+        </div>
+    </nav>
+    <script>
+        document.getElementById('navMenuBtn').addEventListener('click', function(e) {
+            e.stopPropagation();
+            const dropdown = document.getElementById('navMenuDropdown');
+            if (dropdown.style.display === 'none' || dropdown.style.display === '') {
+                dropdown.style.display = 'flex';
+            } else {
+                dropdown.style.display = 'none';
+            }
+        });
+        document.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('navMenuDropdown');
+            if (dropdown && !dropdown.contains(e.target) && e.target.id !== 'navMenuBtn') {
+                dropdown.style.display = 'none';
+            }
+        });
+    </script>
 
-                <!-- Actions -->
-                <div class="nav-actions">
-                    <!-- Hamburger Menu Button (mobile only) -->
-                    <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleMobileNav(event)" aria-label="Menu" aria-expanded="false">
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                    </button>
-
-                    <!-- Rounded Floating Category Dropdown (Anchored right below 3 bars) -->
-                    <div class="mobile-nav-popup" id="mobileNavPopup">
-                        <div class="mobile-popup-header">Categories</div>
-                        <a href="#products" class="mobile-popup-link active" data-cat="all" onclick="filterCategory('all', event); closeMobileNav();">
-                            <span>All</span>
-                            <span class="popup-arrow">&rarr;</span>
-                        </a>
-                        <a href="#products" class="mobile-popup-link" data-cat="jewelry" onclick="filterCategory('jewelry', event); closeMobileNav();">
-                            <span>Jewelry</span>
-                            <span class="popup-arrow">&rarr;</span>
-                        </a>
-                        <a href="#products" class="mobile-popup-link" data-cat="fashion" onclick="filterCategory('fashion', event); closeMobileNav();">
-                            <span>Fashion</span>
-                            <span class="popup-arrow">&rarr;</span>
-                        </a>
-                        <a href="#products" class="mobile-popup-link" data-cat="accessories" onclick="filterCategory('accessories', event); closeMobileNav();">
-                            <span>Accessories</span>
-                            <span class="popup-arrow">&rarr;</span>
-                        </a>
-                        <a href="#reviews" class="mobile-popup-link" onclick="elegantScrollTo('#reviews', { event }); closeMobileNav();">
-                            <span>Reviews</span>
-                            <span class="popup-arrow">&rarr;</span>
-                        </a>
-                    </div>
-
-                    <!-- Outside Click Dismiss Backdrop -->
-                    <div class="mobile-popup-backdrop" id="mobilePopupBackdrop" onclick="closeMobileNav()"></div>
-
-                    <a href="https://wa.me/923130665364?text=Hi%20Velora%20Official!%20I%20have%20an%20inquiry." target="_blank" class="btn-nav-action whatsapp" title="Chat on WhatsApp">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.771-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.274.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.043.073.043.419-.101.824z"/>
-                        </svg>
-                    </a>
-                    <button class="btn-nav-action" onclick="toggleCart()" title="Cart">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
-                            <line x1="3" y1="6" x2="21" y2="6"></line>
-                            <path d="M16 10a4 4 0 0 1-8 0"></path>
-                        </svg>
-                        <span class="cart-badge" id="cartBadgeCount">0</span>
-                    </button>
-                </div>
+    <!-- KINETIC HERO SECTION -->
+    <header class="hero-section">
+        <div class="hero-overlay"></div>
+        
+        <div class="hero-title reveal-left-hero">
+            <h1 class="font-serif t-display">GOTHIC NOVA</h1>
+        </div>
+        
+        <p class="hero-subtitle reveal-element font-sans">
+            Gothic × Japanese Jewelry. Limited. Dark. Eternal. Wear the darkness you feel. Crafted with uncompromising precision.
+        </p>
+        
+        <div class="reveal-element">
+            <button class="explore-btn" onclick="document.getElementById('active-drop').scrollIntoView({ behavior: 'smooth' })">
+                Explore Drop
+            </button>
+        </div>
+        
+        <div class="scroll-indicator-container" style="cursor: pointer;" onclick="document.getElementById('active-drop').scrollIntoView({ behavior: 'smooth' })">
+            <span class="scroll-text">SCROLL DOWN</span>
+            <div class="scroll-indicator-arrow">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+                </svg>
             </div>
         </div>
     </header>
 
-        <!-- 3. SPLIT HERO SECTION (DESKTOP) / FULL-BLEED EDITORIAL (MOBILE) -->
-    <section class="hero-section">
-        <!-- Mobile Full-Bleed Background Media (Active ONLY on <= 768px via CSS) -->
-        <div class="hero-mobile-bg">
-            <img src="assets/product-rose-suit.jpg" alt="Velora Haute Couture Rosé Embroidered Collection" class="hero-mobile-bg-img">
-            <div class="hero-mobile-gradient"></div>
-        </div>
-
-        <div class="container hero-container">
-            <!-- Desktop Split Grid (Visible ONLY on >= 769px) -->
-            <div class="hero-grid desktop-only-hero">
-                <!-- Visual Left -->
-                <div class="hero-visual reveal-on-scroll">
-                    <img src="assets/product-rose-suit.jpg" alt="Velora Haute Couture Rosé Embroidered Suit">
-                    <div class="hero-visual-badge">
-                        <div class="tag">Haute Couture</div>
-                        <div class="title">Rosé Embroidered Suit '26</div>
-                    </div>
-                </div>
-
-                <!-- Text Right -->
-                <div class="hero-content reveal-on-scroll">
-                    <span class="hero-tag">Velora Official Curations</span>
-                    <h1 class="hero-title">Elegance<br><em>Redefined.</em></h1>
-                    <p class="hero-desc">Discover Pakistan's finest collection of handcrafted formal wear, fine bridal jewelry, and bespoke accessories designed for timeless grace.</p>
-                    <div class="hero-actions">
-                        <a href="#products" class="btn-primary" onclick="filterCategory('all', event)">Explore Collection &rarr;</a>
-                        <a href="https://wa.me/923130665364?text=Salam!%20I%20would%20like%20to%20know%20more%20about%20your%20collection." target="_blank" class="btn-secondary">
-                            Order on WhatsApp
-                        </a>
-                    </div>
-                </div>
+    <!-- THE ACTIVE DROP AREA -->
+    <main class="grid-container active-drop-section" id="active-drop">
+        
+        <!-- LATEST DROPS MARQUEE SECTION -->
+        <div class="marquee-section reveal-element" style="margin-bottom: 60px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding: 0 12px;">
+                <h3 class="t-h2 font-serif" style="font-size: 1.8rem; margin: 0;">NEW ARRIVALS</h3>
+                <a href="#active-drop" style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--color-accent); text-decoration: none; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 1px solid var(--color-accent); padding-bottom: 2px;">Shop Latest</a>
             </div>
-
-            <!-- Mobile Full-Bleed Content (Visible ONLY on <= 768px, exactly ONE instance) -->
-            <div class="hero-mobile-content mobile-only-hero">
-                <span class="hero-eyebrow-overhaul">Velora Haute Couture</span>
-                <h1 class="hero-headline-overhaul">Elegance <em>Redefined.</em></h1>
-                <p class="hero-subtext-overhaul">Handcrafted formal wear, fine bridal jewelry &amp; bespoke accessories.</p>
-                <div class="hero-actions-overhaul">
-                    <a href="#products" class="btn-hero-primary" onclick="filterCategory('all', event)">
-                        Explore Collection
-                    </a>
-                    <a href="https://wa.me/923130665364?text=Salam!%20I%20would%20like%20to%20know%20more%20about%20your%20collection." target="_blank" class="btn-hero-secondary-ghost">
-                        <svg width="14" height="14" viewBox="0 0 308 308" fill="#25D366" class="wa-ghost-icon" style="flex-shrink: 0;">
-                            <path d="M227.904 176.981c-0.6-0.288-23.054-11.345-27.044-12.781c-1.629-0.585-3.374-1.156-5.23-1.156c-3.032 0-5.579 1.511-7.563 4.479c-2.243 3.334-9.033 11.271-11.131 13.642c-0.274 0.313-0.648 0.687-0.872 0.687c-0.201 0-3.676-1.431-4.728-1.888c-24.087-10.463-42.37-35.624-44.877-39.867c-0.358-0.61-0.373-0.887-0.376-0.887c0.088-0.323 0.898-1.135 1.316-1.554c1.223-1.21 2.548-2.805 3.83-4.348c0.607-0.731 1.215-1.463 1.812-2.153c1.86-2.164 2.688-3.844 3.648-5.79l0.503-1.011c2.344-4.657 0.342-8.587-0.305-9.856c-0.531-1.062-10.012-23.944-11.02-26.348c-2.424-5.801-5.627-8.502-10.078-8.502c-0.413 0 0 0-1.732 0.073c-2.109 0.089-13.594 1.601-18.672 4.802c-5.385 3.395-14.495 14.217-14.495 33.249c0 17.129 10.87 33.302 15.537 39.453c0.116 0.155 0.329 0.47 0.638 0.922c17.873 26.102 40.154 45.446 62.741 54.469c21.745 8.686 32.042 9.69 37.896 9.69c0.001 0 0.001 0 0.001 0c2.46 0 4.429-0.193 6.166-0.364l1.102-0.105c7.512-0.666 24.02-9.22 27.775-19.655c2.958-8.219 3.738-17.199 1.77-20.458C233.168 179.508 230.845 178.393 227.904 176.981z"/>
-                            <path d="M156.734 0C73.318 0 5.454 67.354 5.454 150.143c0 26.777 7.166 52.988 20.741 75.928L0.204 302.716c-0.484 1.429-0.124 3.009 0.933 4.085C1.908 307.58 2.943 308 4 308c0.405 0 0.813-0.061 1.211-0.188l79.92-25.396c21.87 11.685 46.588 17.853 71.604 17.853C239.65 300.27 307.516 232.923 307.516 150.143C307.516 67.354 239.65 0 156.734 0zM156.734 268.994c-23.539 0-46.338-6.797-65.936-19.657c-0.659-0.433-1.424-0.655-2.194-0.655c-0.407 0-0.815 0.062-1.212 0.188l-40.035 12.726l12.924-38.129c0.418-1.234 0.209-2.595-0.561-3.647c-14.924-20.392-22.813-44.485-22.813-69.677c0-65.543 53.754-118.867 119.826-118.867c66.064 0 119.812 53.324 119.812 118.867C276.546 215.678 222.799 268.994 156.734 268.994z"/>
-                        </svg>
-                        <span>Order on WhatsApp</span>
-                    </a>
+            <div class="marquee-container">
+                <div class="marquee-track" id="new-arrivals-marquee">
+                    <script>
+                        window.addEventListener('productsLoaded', function() {
+                            const products = (window.gn_products || []).filter(p => p.active !== false);
+                            if (products.length === 0) return;
+                            const marqueeTrack = document.getElementById('new-arrivals-marquee');
+                            marqueeTrack.innerHTML = ''; // clear any static placeholders
+                            
+                            // To make sure there are at least 10 items in Set 1, we can repeat the list
+                            let set1Items = [];
+                            while (set1Items.length < 10) {
+                                set1Items = set1Items.concat(products);
+                            }
+                            
+                            // We duplicate the entire list to make Set 2 for seamless infinite scroll
+                            const allItems = [...set1Items, ...set1Items];
+                            
+                            allItems.forEach((p) => {
+                                const saleVal = p.salePrice !== undefined && p.salePrice !== null ? p.salePrice : p.saleprice;
+                                const priceVal = Number(p.price || 0);
+                                const isSale = saleVal !== null && saleVal !== undefined && saleVal !== '';
+                                let priceHtml = '';
+                                if (isSale) {
+                                    priceHtml = `
+                                        <div class="price-layout">
+                                            <span class="original-price font-mono">Rs. ${priceVal.toLocaleString('en-PK')}</span>
+                                            <span class="sale-price font-mono">Rs. ${Number(saleVal || 0).toLocaleString('en-PK')}</span>
+                                        </div>
+                                    `;
+                                } else {
+                                    priceHtml = `<div class="marquee-price font-mono">Rs. ${priceVal.toLocaleString('en-PK')}</div>`;
+                                }
+                                
+                                const itemDiv = document.createElement('div');
+                                itemDiv.className = 'marquee-item';
+                                itemDiv.onclick = () => {
+                                    document.getElementById('active-drop').scrollIntoView({ behavior: 'smooth' });
+                                };
+                                itemDiv.innerHTML = `
+                                    <img src="${p.img}" alt="${p.name}" onerror="this.style.opacity='0'">
+                                    <div class="marquee-item-overlay">
+                                        <div class="marquee-title font-sans">${p.name}</div>
+                                        ${priceHtml}
+                                    </div>
+                                `;
+                                marqueeTrack.appendChild(itemDiv);
+                            });
+                        });
+                    </script>
                 </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- RIDE-OVER SHEET (Curtain overlay that rides up over the hero upon scrolling) -->
-    <main class="ride-over-sheet">
-
-    <!-- 4. SOCIAL PROOF & REVIEWS (IMMEDIATELY BELOW HERO FOR MAXIMUM TRUST) -->
-    <section class="section-reviews" id="reviews">
-        <div class="container">
-            <div class="reviews-header-compact reveal-on-scroll">
-                <span class="reviews-eyebrow">Client Feedback</span>
-                <span class="reviews-title-compact">Loved Across Pakistan ★★★★★ (4.9/5 from 400+ orders)</span>
             </div>
         </div>
 
-        <div class="reviews-slider-container">
-            <div class="reviews-track" id="reviewsTrack">
-                <div class="review-card">
-                    <div class="review-stars">★★★★★</div>
-                    <p class="review-text">"The emerald flower bracelet looks even more breathtaking in person! Dispatched to Lahore in 2 days via COD."</p>
-                    <div class="review-author">
-                        <span class="author-name">Ayesha R.</span>
-                        <span class="author-location">Lahore</span>
-                    </div>
-                </div>
-                <div class="review-card">
-                    <div class="review-stars">★★★★★</div>
-                    <p class="review-text">"Ordered the Rosé embroidered suit for dholki. Fabric quality and tilla work exceeded my expectations."</p>
-                    <div class="review-author">
-                        <span class="author-name">Fatima Khan</span>
-                        <span class="author-location">Islamabad</span>
-                    </div>
-                </div>
-                <div class="review-card">
-                    <div class="review-stars">★★★★★</div>
-                    <p class="review-text">"Ordering on WhatsApp was super easy. Got confirmation right away and package arrived safely via TCS."</p>
-                    <div class="review-author">
-                        <span class="author-name">Hira M.</span>
-                        <span class="author-location">Karachi</span>
-                    </div>
-                </div>
-                <div class="review-card">
-                    <div class="review-stars">★★★★★</div>
-                    <p class="review-text">"The crystal bangles have an incredible diamond sparkle. Very premium weight and clasp finish!"</p>
-                    <div class="review-author">
-                        <span class="author-name">Zainab Tariq</span>
-                        <span class="author-location">Faisalabad</span>
-                    </div>
-                </div>
-                <!-- Clones for seamless infinite loop -->
-                <div class="review-card">
-                    <div class="review-stars">★★★★★</div>
-                    <p class="review-text">"The emerald flower bracelet looks even more breathtaking in person! Dispatched to Lahore in 2 days via COD."</p>
-                    <div class="review-author">
-                        <span class="author-name">Ayesha R.</span>
-                        <span class="author-location">Lahore</span>
-                    </div>
-                </div>
-                <div class="review-card">
-                    <div class="review-stars">★★★★★</div>
-                    <p class="review-text">"Ordered the Rosé embroidered suit for dholki. Fabric quality and tilla work exceeded my expectations."</p>
-                    <div class="review-author">
-                        <span class="author-name">Fatima Khan</span>
-                        <span class="author-location">Islamabad</span>
-                    </div>
-                </div>
-                <div class="review-card">
-                    <div class="review-stars">★★★★★</div>
-                    <p class="review-text">"Ordering on WhatsApp was super easy. Got confirmation right away and package arrived safely via TCS."</p>
-                    <div class="review-author">
-                        <span class="author-name">Hira M.</span>
-                        <span class="author-location">Karachi</span>
-                    </div>
-                </div>
-                <div class="review-card">
-                    <div class="review-stars">★★★★★</div>
-                    <p class="review-text">"The crystal bangles have an incredible diamond sparkle. Very premium weight and clasp finish!"</p>
-                    <div class="review-author">
-                        <span class="author-name">Zainab Tariq</span>
-                        <span class="author-location">Faisalabad</span>
-                    </div>
+        <!-- CUSTOMER REVIEWS MARQUEE (APPLE STYLE — REVERSE SCROLL) -->
+        <div class="marquee-section reveal-element" style="margin-bottom: 60px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding: 0 12px;">
+                <h3 class="t-h2 font-serif" style="font-size: 1.8rem; margin: 0;">OUR REVIEWS</h3>
+                <span style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--color-accent); text-transform: uppercase; letter-spacing: 0.1em;">&#9733; 4.9 / 5.0</span>
+            </div>
+            <div class="marquee-container">
+                <div class="marquee-track marquee-reverse">
+                    <script>
+                        (function() {
+                            var reviews = [
+                                { name: 'Sarah M.', text: 'The Venom Spider Ring exceeded all expectations. Incredibly detailed craftsmanship.', stars: 5 },
+                                { name: 'Arjun K.', text: 'Reaper Pendant is a showstopper. Everyone asks where I got it.', stars: 5 },
+                                { name: 'Emily R.', text: 'Obsidian Helix is the most beautiful chain I own. Dark and elegant.', stars: 5 },
+                                { name: 'Zain A.', text: 'Fast shipping, premium packaging. This brand is the real deal.', stars: 5 },
+                                { name: 'Priya S.', text: 'Crimson Cross choker — I get compliments every single time.', stars: 4 },
+                                { name: 'Liam T.', text: 'Spine Bracelet fits perfectly. Heavy, solid, worth every rupee.', stars: 5 },
+                                { name: 'Noor F.', text: 'Ordered two pieces. Both arrived flawless. Gothic Nova is unmatched.', stars: 5 },
+                                { name: 'James W.', text: 'The gothic aesthetic is exactly what I was looking for. Masterpiece.', stars: 5 },
+                            ];
+                            var track = document.currentScript.parentElement;
+                            var allReviews = reviews.concat(reviews);
+                            allReviews.forEach(function(r) {
+                                var starStr = '';
+                                for (var i = 0; i < r.stars; i++) starStr += '\u2605';
+                                for (var j = r.stars; j < 5; j++) starStr += '\u2606';
+                                var div = document.createElement('div');
+                                div.className = 'review-card';
+                                div.innerHTML = '<div style="color:#f5a623;font-size:0.85rem;margin-bottom:8px;letter-spacing:2px;">' + starStr + '</div>' +
+                                    '<p style="font-size:0.82rem;color:#333;line-height:1.5;margin-bottom:12px;font-style:italic;">\u201C' + r.text + '\u201D</p>' +
+                                    '<span style="font-family:var(--font-mono);font-size:0.68rem;color:#888;text-transform:uppercase;letter-spacing:0.1em;">\u2014 ' + r.name + '</span>';
+                                track.appendChild(div);
+                            });
+                        })();
+                    </script>
                 </div>
             </div>
         </div>
-    </section>
 
-    <!-- 5. TRUST & SHIPPING BAR (PREMIUM LUXURY ICONS) -->
-    <section class="trust-bar">
-        <div class="container">
-            <div class="trust-section-header reveal-on-scroll">
-                <span class="trust-eyebrow">The Velora Promise</span>
-                <h3 class="trust-main-heading">Nationwide Excellence & Uncompromising Service</h3>
-            </div>
-            <div class="trust-grid">
-                <div class="trust-item reveal-on-scroll">
-                    <div class="trust-icon">
-                        <!-- Apple-style minimal delivery box SVG -->
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-                            <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-                            <line x1="12" y1="22.08" x2="12" y2="12"></line>
-                        </svg>
-                    </div>
-                    <div>
-                        <div class="trust-title">Nationwide Delivery</div>
-                        <div class="trust-sub">Free shipping on orders above Rs. 3,000</div>
-                    </div>
-                </div>
-                <div class="trust-item reveal-on-scroll">
-                    <div class="trust-icon">
-                        <!-- Apple-style Cash on Delivery / Shield Check SVG -->
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="2" y="5" width="20" height="14" rx="2"></rect>
-                            <line x1="2" y1="10" x2="22" y2="10"></line>
-                            <circle cx="12" cy="15" r="2"></circle>
-                        </svg>
-                    </div>
-                    <div>
-                        <div class="trust-title">Cash on Delivery</div>
-                        <div class="trust-sub">Inspect & pay at your doorstep across Pakistan</div>
-                    </div>
-                </div>
-                <div class="trust-item reveal-on-scroll">
-                    <div class="trust-icon">
-                        <!-- Apple-style Diamond / Certified Quality SVG -->
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M6 3h12l4 6-10 12L2 9z"></path>
-                            <path d="M10 9l2 12 2-12"></path>
-                            <path d="M2 9h20"></path>
-                        </svg>
-                    </div>
-                    <div>
-                        <div class="trust-title">Handcrafted Quality</div>
-                        <div class="trust-sub">Hand-inspected heirloom jewelry & couture</div>
-                    </div>
-                </div>
-                <div class="trust-item reveal-on-scroll">
-                    <div class="trust-icon">
-                        <!-- Apple-style Direct Concierge Support SVG -->
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
-                        </svg>
-                    </div>
-                    <div>
-                        <div class="trust-title">Direct WhatsApp Concierge</div>
-                        <div class="trust-sub">Instant stylist support on +92 313 0665364</div>
-                    </div>
-                </div>
+        <!-- Category Filters -->
+        <div class="category-filter-container reveal-element">
+            <button class="filter-tab active" data-filter="all">All</button>
+            <button class="filter-tab" data-filter="chains">Chains</button>
+            <button class="filter-tab" data-filter="rings">Rings</button>
+            <button class="filter-tab" data-filter="pendants">Pendants</button>
+        </div>
+
+        <!-- Mathematically Balanced 3-Column Drop Grid -->
+        <div class="drop-grid" id="main-drop-grid">
+            <script>
+                window.addEventListener('productsLoaded', function() {
+                    const products = window.gn_products || [];
+                    const dropGrid = document.getElementById('main-drop-grid');
+                    
+                    // Clear old motion-divs
+                    dropGrid.querySelectorAll('motion-div').forEach(el => el.remove());
+                    
+                    products.forEach((p, idx) => {
+                        if (p.active === false) return;
+                        
+                        const isSoldOut = p.stock === 0;
+                        const isLowStock = !isSoldOut && p.stock <= p.threshold;
+                        
+                        // Stagger reveal direction based on column
+                        const revealDirs = ['reveal-left', 'reveal-center', 'reveal-right'];
+                        const revealClass = revealDirs[idx % 3];
+                        
+                        const motionDiv = document.createElement('motion-div');
+                        motionDiv.setAttribute('data-category', p.category);
+                        motionDiv.className = `reveal-element ${revealClass}`;
+                        
+                        const saleVal = p.salePrice !== undefined && p.salePrice !== null ? p.salePrice : p.saleprice;
+                        const priceVal = Number(p.price || 0);
+                        const isSale = saleVal !== null && saleVal !== undefined && saleVal !== '';
+                        let priceHtml = '';
+                        if (isSale) {
+                            priceHtml = `
+                                <div class="price-layout">
+                                    <span class="original-price font-mono">Rs. ${priceVal.toLocaleString('en-PK')}</span>
+                                    <span class="sale-price font-mono">Rs. ${Number(saleVal || 0).toLocaleString('en-PK')}</span>
+                                </div>
+                            `;
+                        } else {
+                            priceHtml = `<span class="card-price font-mono">Rs. ${priceVal.toLocaleString('en-PK')}</span>`;
+                        }
+                        
+                        let statusHtml = '';
+                        if (isSoldOut) {
+                            statusHtml = `<span class="card-status-dot" style="background:#8e8e93;"></span><span style="color:#8e8e93;">Sold Out</span>`;
+                        } else if (isLowStock) {
+                            statusHtml = `<span class="card-status-dot pulse-red"></span><span style="color:#ff3b30; font-weight:700;">LOW STOCK (${p.stock} left)</span>`;
+                        } else {
+                            statusHtml = `<span class="card-status-dot"></span>In Stock`;
+                        }
+                        
+                        const soldOutClass = isSoldOut ? ' card-sold-out' : '';
+                        const disabledAttr = isSoldOut ? ' disabled' : '';
+                        const ctaText = isSoldOut ? 'SOLD OUT' : 'ADD TO CART';
+                        
+                        motionDiv.innerHTML = `
+                            <div class="product-card${soldOutClass}" data-product-id="${p.id}" data-img="${p.img}">
+                                <div class="sold-out-overlay" ${isSoldOut ? 'style="opacity:1; transform:scale(1) rotate(-3deg);"' : ''}>
+                                    <span class="sold-out-badge">SOLD OUT</span>
+                                </div>
+                                <div class="corner-flare flare-tl"></div><div class="corner-flare flare-tr"></div>
+                                <div class="corner-flare flare-bl"></div><div class="corner-flare flare-br"></div>
+                                <div class="card-img-wrapper">
+                                    <img class="card-img" src="${p.img}" alt="${p.name}" onerror="this.style.opacity='0'">
+                                </div>
+                                <div class="card-details">
+                                    <div class="card-title-price">
+                                        <h3 class="card-title">${p.name}</h3>
+                                        ${priceHtml}
+                                    </div>
+                                    <div class="card-status font-mono">
+                                        ${statusHtml}
+                                    </div>
+                                </div>
+                                <button class="add-to-cart-btn"${disabledAttr}>
+                                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
+                                    ${ctaText}
+                                </button>
+                                ${!isSoldOut ? `
+                                <div class="card-qty-control" id="qty-ctrl-${p.id}">
+                                    <button class="card-qty-btn" onclick="adjustStepper('${p.id}',-1)">−</button>
+                                    <span class="card-qty-num" id="card-qty-num-${p.id}">1</span>
+                                    <button class="card-qty-btn" onclick="adjustStepper('${p.id}',1)">+</button>
+                                </div>
+                                ` : ''}
+                            </div>
+                        `;
+                        dropGrid.appendChild(motionDiv);
+                        
+                        // Observe the dynamic motion-div
+                        if (window.revealObserver) {
+                            window.revealObserver.observe(motionDiv);
+                        } else {
+                            setTimeout(() => {
+                                if (window.revealObserver) {
+                                    window.revealObserver.observe(motionDiv);
+                                } else {
+                                    motionDiv.classList.add('is-visible');
+                                }
+                            }, 100);
+                        }
+                    });
+                    
+                    // Sync storefront after render
+                    if (window.syncStorefront) window.syncStorefront();
+                    if (window.runFilterTab) window.runFilterTab();
+                    if (window.wireUpAddToCartButtons) window.wireUpAddToCartButtons();
+                });
+            </script>
+        </div>
+        
+
+
+    </main>
+
+    <!-- HIGH-END 4-COLUMN FOOTER -->
+    <footer class="grid-container" style="background-color: #ffffff; border-top: 1px solid rgba(0, 0, 0, 0.05); padding-top: 120px; padding-bottom: 96px; border-top-left-radius: 64px; border-top-right-radius: 64px; margin-top: 60px;">
+        <!-- Column 1: Brand Info -->
+        <div style="grid-column: span 3; display: flex; flex-direction: column; gap: 24px; text-align: left;">
+            <h4 class="font-serif" style="font-size: 1.2rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #000;">GOTHIC NOVA</h4>
+            <p class="font-sans" style="font-size: 0.85rem; color: #4a4a4a; line-height: 1.6; max-width: 260px;">
+                Premium Editorial Jewelry Engine. Crafted under absolute precision for the unapologetic and eternal.
+            </p>
+        </div>
+
+        <!-- Column 2: Navigation Links -->
+        <div style="grid-column: span 3; display: flex; flex-direction: column; gap: 24px; text-align: left;">
+            <h5 class="t-utility" style="color: #000; font-weight: 700; letter-spacing: 0.1em;">NAVIGATE</h5>
+            <ul class="font-sans" style="list-style: none; display: flex; flex-direction: column; gap: 16px; font-size: 0.85rem; padding: 0;">
+                <li><a href="#" style="color: #4a4a4a; text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='#000'" onmouseout="this.style.color='#4a4a4a'">Latest Drop</a></li>
+                <li><a href="#" style="color: #4a4a4a; text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='#000'" onmouseout="this.style.color='#4a4a4a'">Archive Collection</a></li>
+                <li><a href="#" style="color: #4a4a4a; text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='#000'" onmouseout="this.style.color='#4a4a4a'">Forge Hub Control</a></li>
+                <li><a href="#" style="color: #4a4a4a; text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='#000'" onmouseout="this.style.color='#4a4a4a'">Studio Journal</a></li>
+            </ul>
+        </div>
+
+        <!-- Column 3: Policy Specs -->
+        <div style="grid-column: span 3; display: flex; flex-direction: column; gap: 24px; text-align: left;">
+            <h5 class="t-utility" style="color: #000; font-weight: 700; letter-spacing: 0.1em;">POLICIES</h5>
+            <ul class="font-mono" style="list-style: none; display: flex; flex-direction: column; gap: 16px; font-size: 0.8rem; padding: 0;">
+                <li><a href="#" style="color: #000; text-decoration: none; font-weight: 500; transition: color 0.3s;">Advance Payment Only Basis</a></li>
+                <li><a href="#" style="color: #000; text-decoration: none; font-weight: 500; transition: color 0.3s;">Secure Tracking Provided</a></li>
+                <li><a href="#" style="color: #000; text-decoration: none; font-weight: 500; transition: color 0.3s;">14-Day Exchange Policy</a></li>
+            </ul>
+        </div>
+
+        <!-- Column 4: Secure Ledger / Newsletter -->
+        <div style="grid-column: span 3; display: flex; flex-direction: column; gap: 24px; text-align: left;">
+            <h5 class="t-utility" style="color: #000; font-weight: 700; letter-spacing: 0.1em;">SECURE LEDGER</h5>
+            <p class="font-sans" style="font-size: 0.85rem; color: #4a4a4a; line-height: 1.6;">
+                Register your public key to receive drop notifications in under 5 milliseconds.
+            </p>
+            <div style="display: flex; width: 100%;">
+                <input type="email" placeholder="Enter email address..." style="background: #f9f9f9; border: 1px solid rgba(0, 0, 0, 0.1); color: #000; font-size: 0.85rem; padding: 14px 20px; border-radius: 99px 0 0 99px; width: 100%; outline: none;" onfocus="this.style.borderColor='#000'" onblur="this.style.borderColor='rgba(0, 0, 0, 0.1)'">
+                <button style="background: #000; border: 1px solid #000; border-left: none; color: #fff; padding: 0 24px; border-radius: 0 99px 99px 0; cursor: pointer; transition: background 0.3s, opacity 0.3s;" onmouseover="this.style.opacity='0.8';" onmouseout="this.style.opacity='1';">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 16px; height: 16px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
+                </button>
             </div>
         </div>
-    </section>
 
-    <!-- 5. CATEGORY SHOWCASE -->
-    <section class="section-categories">
-        <div class="container">
-            <div class="section-header reveal-on-scroll">
-                <div class="section-eyebrow">Discover Collections</div>
-                <h2 class="section-title">Shop by Category</h2>
-            </div>
-
-            <div class="category-cards-grid">
-                <div class="cat-card reveal-on-scroll" onclick="filterCategory('jewelry', event)">
-                    <img src="assets/product-emerald-bracelet.jpg" alt="Fine Jewelry">
-                    <div class="cat-card-overlay">
-                        <div class="cat-card-name">Fine Jewelry</div>
-                        <div class="cat-card-cta">Explore Jewels &rarr;</div>
-                    </div>
-                </div>
-                <div class="cat-card reveal-on-scroll" onclick="filterCategory('fashion', event)">
-                    <img src="assets/product-rose-suit.jpg" alt="Pret & Formal">
-                    <div class="cat-card-overlay">
-                        <div class="cat-card-name">Pret & Formal</div>
-                        <div class="cat-card-cta">Explore Suits &rarr;</div>
-                    </div>
-                </div>
-                <div class="cat-card reveal-on-scroll" onclick="filterCategory('accessories', event)">
-                    <img src="assets/product-burgundy-bag.jpg" alt="Luxury Bags">
-                    <div class="cat-card-overlay">
-                        <div class="cat-card-name">Accessories</div>
-                        <div class="cat-card-cta">Explore Bags &rarr;</div>
-                    </div>
-                </div>
-                <div class="cat-card reveal-on-scroll" onclick="filterCategory('fashion', event)">
-                    <img src="assets/lifestyle-bridal.jpg" alt="Bridal Wear">
-                    <div class="cat-card-overlay">
-                        <div class="cat-card-name">Bridal Coutures</div>
-                        <div class="cat-card-cta">Explore Bridal &rarr;</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- 6. CURATED PRODUCTS GRID -->
-    <section class="section-products" id="products">
-        <div class="container">
-            <div class="section-header reveal-on-scroll">
-                <div class="section-eyebrow">Handpicked Selection</div>
-                <h2 class="section-title">Curated for You</h2>
-            </div>
-
-            <div class="category-filter-bar">
-                <button class="filter-pill active" data-cat="all" onclick="filterCategory('all', event, this)">All Items</button>
-                <button class="filter-pill" data-cat="jewelry" onclick="filterCategory('jewelry', event, this)">Jewelry</button>
-                <button class="filter-pill" data-cat="fashion" onclick="filterCategory('fashion', event, this)">Fashion</button>
-                <button class="filter-pill" data-cat="accessories" onclick="filterCategory('accessories', event, this)">Accessories</button>
-            </div>
-
-            <div class="products-grid" id="productsGridContainer">
-                <!-- Injected via JavaScript from catalog -->
-            </div>
-        </div>
-    </section>
-
-    <!-- 7. LIFESTYLE BANNER -->
-    <section class="lifestyle-banner">
-        <img src="assets/lifestyle-bridal.jpg" alt="Velora Bridal Couture" class="lifestyle-banner-bg">
-        <div class="container">
-            <div class="lifestyle-content reveal-on-scroll">
-                <div class="lifestyle-eyebrow">Royal Heritage 2026</div>
-                <h2 class="lifestyle-title">Crafted for Your Most Precious Moments</h2>
-                <p class="lifestyle-desc">Every stitch and gemstone in our bridal collection embodies Pakistani heritage infused with modern haute couture refinement.</p>
-                <a href="https://wa.me/923130665364?text=Salam!%20I%20am%20interested%20in%20custom%20bridal%20orders." target="_blank" class="btn-primary">Inquire for Bridal Customization &rarr;</a>
-            </div>
-        </div>
-    </section>
-
-    <!-- 9. FOOTER -->
-    <footer class="site-footer">
-        <div class="container">
-            <div class="footer-grid">
-                <div class="footer-about">
-                    <div class="nav-brand" style="margin-bottom: 16px; cursor: pointer;" onclick="elegantScrollTo(0, { event })">
-                        <img src="assets/logo.jpg" alt="Velora Logo" class="nav-logo-badge">
-                        <span class="brand-title" style="color: #FFF;">VELORA</span>
-                    </div>
-                    <p>Velora Official is Pakistan's premier online lifestyle boutique offering haute couture bridal wear, pret collections, fine jewelry, and everyday luxuries.</p>
-                </div>
-                <div class="footer-col">
-                    <h4>Collections</h4>
-                    <ul>
-                        <li><a href="#products" onclick="filterCategory('jewelry', event)">Bridal Jewels</a></li>
-                        <li><a href="#products" onclick="filterCategory('fashion', event)">Formal & Pret</a></li>
-                        <li><a href="#products" onclick="filterCategory('accessories', event)">Handbags & Clutches</a></li>
-                        <li><a href="#products" onclick="filterCategory('jewelry', event)">Bangles & Rings</a></li>
-                    </ul>
-                </div>
-                <div class="footer-col">
-                    <h4>Customer Care</h4>
-                    <ul>
-                        <li><a href="#">Cash on Delivery Policy</a></li>
-                        <li><a href="#">Track Your Order</a></li>
-                        <li><a href="#">Exchange & Returns</a></li>
-                        <li><a href="#">Size Consultation Guide</a></li>
-                    </ul>
-                </div>
-                <div class="footer-col">
-                    <h4>Connect</h4>
-                    <ul>
-                        <li><a href="https://wa.me/923130665364" target="_blank">WhatsApp: +92 313 0665364</a></li>
-                        <li><a href="https://instagram.com/thev.elorastore.pk" target="_blank">Instagram: @thev.elorastore.pk</a></li>
-                        <li><a href="#">Nationwide Delivery (Pakistan)</a></li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="footer-bottom">
-                <div>&copy; 2026 Velora Official. All rights reserved.</div>
-                <div>Curated for elegance · Cash on Delivery available</div>
+        <!-- Footer Bottom Sub-info -->
+        <div style="grid-column: 1 / -1; border-top: 1px solid rgba(0, 0, 0, 0.05); margin-top: 80px; padding-top: 40px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+            <span class="font-mono" style="font-size: 0.75rem; color: #8e8e93;">© 2026 GOTHIC NOVA. All Rights Reserved.</span>
+            <div class="font-mono" style="display: flex; gap: 24px; font-size: 0.75rem;">
+                <a href="#" style="color: #4a4a4a; text-decoration: none;" onmouseover="this.style.color='#000'" onmouseout="this.style.color='#4a4a4a'">SECURITY_KEY</a>
+                <a href="#" style="color: #4a4a4a; text-decoration: none;" onmouseover="this.style.color='#000'" onmouseout="this.style.color='#4a4a4a'">P2P_TERMS</a>
+                <a href="#" style="color: #4a4a4a; text-decoration: none;" onmouseover="this.style.color='#000'" onmouseout="this.style.color='#4a4a4a'">SYSTEM_STATUS</a>
             </div>
         </div>
     </footer>
 
-    </main> <!-- END RIDE-OVER SHEET -->
+    <!-- ADMIN ENTRY BUTTON (MOCKUP ONLY) -->
+    <a href="admin.html" class="floating-admin-btn">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+        </svg>
+        <span>Admin Panel</span>
+    </a>
 
-    <!-- CART SLIDE-IN DRAWER -->
-    <div class="cart-drawer-backdrop" id="cartBackdrop" onclick="toggleCart()"></div>
-    <div class="cart-drawer" id="cartDrawer">
-        <div class="cart-header">
-            <h3>Your Shopping Bag</h3>
-            <button onclick="toggleCart()" style="font-size: 1.5rem; line-height: 1;">&times;</button>
-        </div>
-        <div class="cart-items-list" id="cartItemsList">
-            <!-- Dynamic Cart Items -->
-        </div>
-        <div class="cart-footer">
-            <div class="cart-total-row">
-                <span>Subtotal (COD)</span>
-                <span id="cartTotalPrice">Rs. 0</span>
-            </div>
-            <button class="btn-cart-wa" onclick="checkoutViaWhatsApp()">
-                <svg width="18" height="18" viewBox="0 0 308 308" fill="#FFF" style="flex-shrink: 0;">
-                    <path d="M227.904 176.981c-0.6-0.288-23.054-11.345-27.044-12.781c-1.629-0.585-3.374-1.156-5.23-1.156c-3.032 0-5.579 1.511-7.563 4.479c-2.243 3.334-9.033 11.271-11.131 13.642c-0.274 0.313-0.648 0.687-0.872 0.687c-0.201 0-3.676-1.431-4.728-1.888c-24.087-10.463-42.37-35.624-44.877-39.867c-0.358-0.61-0.373-0.887-0.376-0.887c0.088-0.323 0.898-1.135 1.316-1.554c1.223-1.21 2.548-2.805 3.83-4.348c0.607-0.731 1.215-1.463 1.812-2.153c1.86-2.164 2.688-3.844 3.648-5.79l0.503-1.011c2.344-4.657 0.342-8.587-0.305-9.856c-0.531-1.062-10.012-23.944-11.02-26.348c-2.424-5.801-5.627-8.502-10.078-8.502c-0.413 0 0 0-1.732 0.073c-2.109 0.089-13.594 1.601-18.672 4.802c-5.385 3.395-14.495 14.217-14.495 33.249c0 17.129 10.87 33.302 15.537 39.453c0.116 0.155 0.329 0.47 0.638 0.922c17.873 26.102 40.154 45.446 62.741 54.469c21.745 8.686 32.042 9.69 37.896 9.69c0.001 0 0.001 0 0.001 0c2.46 0 4.429-0.193 6.166-0.364l1.102-0.105c7.512-0.666 24.02-9.22 27.775-19.655c2.958-8.219 3.738-17.199 1.77-20.458C233.168 179.508 230.845 178.393 227.904 176.981z"/>
-                    <path d="M156.734 0C73.318 0 5.454 67.354 5.454 150.143c0 26.777 7.166 52.988 20.741 75.928L0.204 302.716c-0.484 1.429-0.124 3.009 0.933 4.085C1.908 307.58 2.943 308 4 308c0.405 0 0.813-0.061 1.211-0.188l79.92-25.396c21.87 11.685 46.588 17.853 71.604 17.853C239.65 300.27 307.516 232.923 307.516 150.143C307.516 67.354 239.65 0 156.734 0zM156.734 268.994c-23.539 0-46.338-6.797-65.936-19.657c-0.659-0.433-1.424-0.655-2.194-0.655c-0.407 0-0.815 0.062-1.212 0.188l-40.035 12.726l12.924-38.129c0.418-1.234 0.209-2.595-0.561-3.647c-14.924-20.392-22.813-44.485-22.813-69.677c0-65.543 53.754-118.867 119.826-118.867c66.064 0 119.812 53.324 119.812 118.867C276.546 215.678 222.799 268.994 156.734 268.994z"/>
-                </svg>
-                <span>Order on WhatsApp (COD)</span>
+    <!-- CART DRAWER -->
+    <div id="cart-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.25);backdrop-filter:blur(4px);z-index:20000;opacity:0;pointer-events:none;transition:opacity 0.35s ease;"></div>
+    <aside id="cart-drawer" style="
+        position:fixed;top:0;right:0;height:100%;width:min(420px,100vw);
+        background:#fff;z-index:20001;
+        transform:translateX(100%);transition:transform 0.45s cubic-bezier(0.16,1,0.3,1);
+        display:flex;flex-direction:column;
+        box-shadow:-20px 0 60px rgba(0,0,0,0.08);
+    ">
+        <!-- Drawer Header -->
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:28px 28px 20px;border-bottom:1px solid rgba(0,0,0,0.06);">
+            <span style="font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;">Your Cart</span>
+            <button id="cart-close-btn" style="background:none;border:none;cursor:pointer;padding:4px;display:flex;align-items:center;opacity:0.5;transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.5'">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
-            <p style="font-size: 0.75rem; text-align: center; color: var(--color-text-muted);">
-                Free Nationwide Shipping on orders over Rs. 3,000
-            </p>
+        </div>
+
+        <!-- Cart Items List -->
+        <div id="cart-items-list" style="flex:1;overflow-y:auto;padding:20px 28px;display:flex;flex-direction:column;gap:16px;">
+            <div id="cart-empty-state" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:60px 0;color:#8e8e93;">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="40" height="40" style="opacity:0.3"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                <span style="font-family:'Fira Code',monospace;font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;">Cart is empty</span>
+            </div>
+        </div>
+
+        <!-- Cart Footer -->
+        <div id="cart-footer" style="padding:20px 28px 32px;border-top:1px solid rgba(0,0,0,0.06);display:none;flex-direction:column;gap:16px;">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;">
+                <span style="font-family:'Fira Code',monospace;font-size:0.7rem;letter-spacing:0.12em;text-transform:uppercase;color:#888;">Total</span>
+                <span id="cart-total" style="font-family:'Fira Code',monospace;font-size:1.2rem;font-weight:600;color:#000;">Rs. 0</span>
+            </div>
+            <button onclick="alert('Checkout flow coming soon — backend integration required.')" style="
+                width:100%;padding:16px;background:#000;color:#fff;
+                border:none;border-radius:99px;cursor:pointer;
+                font-family:'Fira Code',monospace;font-size:0.72rem;font-weight:600;
+                letter-spacing:0.15em;text-transform:uppercase;
+                transition:opacity 0.2s;
+            " onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                Proceed to Checkout →
+            </button>
+            <button onclick="clearCart()" style="
+                width:100%;padding:10px;background:none;color:#8e8e93;
+                border:none;cursor:pointer;font-size:0.72rem;font-family:'Fira Code',monospace;
+                letter-spacing:0.1em;text-transform:uppercase;transition:color 0.2s;
+            " onmouseover="this.style.color='#000'" onmouseout="this.style.color='#8e8e93'">
+                Clear Cart
+            </button>
+        </div>
+    </aside>
+
+    <!-- INTERACTION ENGINE -->
+    <script>
+    (function() {
+
+        // --- CART STATE (localStorage-backed, quantity-aware, keyed by product id) ---
+        let cartMap = {};
+        const storedCart = localStorage.getItem('gn_cart');
+        if (storedCart) {
+            try {
+                cartMap = JSON.parse(storedCart);
+            } catch(e) {
+                cartMap = {};
+            }
+        }
+        window.gn_cart = cartMap; // Expose globally for cross-system sync if needed
+
+        function saveCart() {
+            localStorage.setItem('gn_cart', JSON.stringify(cartMap));
+            window.gn_cart = cartMap;
+        }
+
+        const cartBadge   = document.getElementById('cart-badge');
+        const cartIconLink= document.getElementById('cart-icon-link');
+        const cartDrawer  = document.getElementById('cart-drawer');
+        const cartOverlay = document.getElementById('cart-overlay');
+        const cartItemsList  = document.getElementById('cart-items-list');
+        const cartEmptyState = document.getElementById('cart-empty-state');
+        const cartFooter  = document.getElementById('cart-footer');
+        const cartTotal   = document.getElementById('cart-total');
+
+        // Pre-add local selection quantity, defaults to 1 per product ID
+        window.preAddQty = {};
+
+        function totalItems() { return Object.values(cartMap).reduce((s,i)=>s+i.qty,0); }
+        function totalPrice() { return Object.values(cartMap).reduce((s,i)=>s+i.priceNum*i.qty,0); }
+
+        // --- OPEN / CLOSE CART ---
+        function openCart()  { cartDrawer.style.transform='translateX(0)'; cartOverlay.style.opacity='1'; cartOverlay.style.pointerEvents='auto'; }
+        function closeCart() { cartDrawer.style.transform='translateX(100%)'; cartOverlay.style.opacity='0'; cartOverlay.style.pointerEvents='none'; }
+
+        cartIconLink.addEventListener('click', e => { e.preventDefault(); openCart(); });
+        document.getElementById('cart-close-btn').addEventListener('click', closeCart);
+        cartOverlay.addEventListener('click', closeCart);
+
+        // --- STOREFRONT RENDERING SYNC ---
+        // Updates buttons, checkmarks, text, and stepper displays to align with cart states
+        window.syncStorefront = function() {
+            const products = window.gn_products || [];
+            products.forEach(p => {
+                if (p.active === false || p.stock === 0) return;
+                const pid = p.id;
+                const card = document.querySelector(`.product-card[data-product-id="${pid}"]`);
+                if (!card) return;
+                const btn = card.querySelector('.add-to-cart-btn');
+                const numEl = document.getElementById(`card-qty-num-${pid}`);
+                
+                if (cartMap[pid]) {
+                    // POST-ADD STATE: Green "VIEW CART" morph, syncing quantities
+                    if (btn) {
+                        btn.dataset.inCart = 'true';
+                        btn.classList.add('btn-success');
+                        btn.innerHTML = `
+                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:13px;height:13px;display:inline-block;stroke-width:2.5px;">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            VIEW CART
+                        `;
+                    }
+                    if (numEl) {
+                        numEl.textContent = cartMap[pid].qty;
+                    }
+                } else {
+                    // PRE-ADD STATE: Stepper controls display quantity locally
+                    if (btn) {
+                        btn.dataset.inCart = 'false';
+                        btn.classList.remove('btn-success');
+                        btn.innerHTML = `
+                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:13px;height:13px;display:inline-block;stroke-width:2px;">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                            </svg>
+                            ADD TO CART
+                        `;
+                    }
+                    const localQty = window.preAddQty[pid] || 1;
+                    if (numEl) {
+                        numEl.textContent = localQty;
+                    }
+                }
+            });
+        };
+
+        // --- RENDER CART ---
+        function renderCart() {
+            cartItemsList.querySelectorAll('.cart-item-row').forEach(el => el.remove());
+            const items = Object.entries(cartMap);
+
+            if (items.length === 0) {
+                cartEmptyState.style.display = 'flex';
+                cartFooter.style.display = 'none';
+                cartBadge.classList.remove('visible');
+                return;
+            }
+
+            cartEmptyState.style.display = 'none';
+            cartFooter.style.display = 'flex';
+
+            items.forEach(([pid, item]) => {
+                const row = document.createElement('div');
+                row.className = 'cart-item-row';
+                row.style.cssText = 'display:flex;align-items:center;padding:14px 0;border-bottom:1px solid rgba(0,0,0,0.05);gap:14px;animation:fadeIn 0.25s ease;';
+                const thumb = item.img
+                    ? `<img src="${item.img}" style="width:52px;height:52px;object-fit:cover;border-radius:10px;background:#f0f0f0;flex-shrink:0;" onerror="this.style.display='none'">`
+                    : `<div style="width:52px;height:52px;background:#f0f0f0;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:0.5rem;color:#aaa;text-align:center;letter-spacing:0.05em;">GN</div>`;
+                row.innerHTML = `
+                    ${thumb}
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-family:'Playfair Display',serif;font-size:0.88rem;font-weight:700;color:#000;text-transform:uppercase;letter-spacing:0.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.name}</div>
+                        <div style="font-family:'Fira Code',monospace;font-size:0.75rem;color:#555;margin-top:2px;">${item.price}</div>
+                        <div style="display:flex;align-items:center;gap:6px;background:#f5f5f5;border-radius:99px;padding:3px 10px;margin-top:6px;width:fit-content;">
+                            <button onclick="adjustQty('${pid}',-1)" style="background:none;border:none;cursor:pointer;font-size:1rem;line-height:1;color:#000;padding:0 2px;">−</button>
+                            <span id="cart-qty-${pid}" style="font-size:0.75rem;min-width:14px;text-align:center;">${item.qty}</span>
+                            <button onclick="adjustQty('${pid}',1)" style="background:none;border:none;cursor:pointer;font-size:1rem;line-height:1;color:#000;padding:0 2px;">+</button>
+                        </div>
+                    </div>
+                    <button onclick="removeFromCart('${pid}')" style="background:none;border:none;cursor:pointer;padding:4px;opacity:0.25;transition:opacity 0.2s;flex-shrink:0;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.25'">
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                `;
+                cartItemsList.appendChild(row);
+            });
+
+            const t = totalItems();
+            cartBadge.textContent = t;
+            cartBadge.classList.toggle('visible', t > 0);
+            cartTotal.textContent = 'Rs. ' + totalPrice().toLocaleString('en-PK');
+        }
+
+        window.adjustQty = function(pid, delta) {
+            if (!cartMap[pid]) return;
+            
+            const products = window.gn_products || [];
+            const product = products.find(p => p.id === pid);
+            const stock = product ? product.stock : 999;
+            
+            const newQty = cartMap[pid].qty + delta;
+            if (newQty < 1) {
+                window.removeFromCart(pid);
+            } else {
+                cartMap[pid].qty = Math.min(stock, newQty);
+                saveCart();
+                window.syncStorefront();
+                renderCart();
+            }
+        };
+
+        window.removeFromCart = function(pid) {
+            delete cartMap[pid];
+            window.preAddQty[pid] = 1;
+            saveCart();
+            window.syncStorefront();
+            renderCart();
+        };
+
+        window.clearCart = function() {
+            Object.keys(cartMap).forEach(k => delete cartMap[k]);
+            Object.keys(window.preAddQty).forEach(k => window.preAddQty[k] = 1);
+            saveCart();
+            window.syncStorefront();
+            renderCart();
+        };
+
+        // --- DUAL-STATE CARD QUANTITY STEPPER ---
+        window.adjustStepper = function(pid, delta) {
+            const products = window.gn_products || [];
+            const product = products.find(p => p.id === pid);
+            const stock = product ? product.stock : 999;
+
+            if (cartMap[pid]) {
+                // STATE B: Post-Add state. Directly updates real-time cart quantity
+                const newQty = cartMap[pid].qty + delta;
+                if (newQty < 1) {
+                    window.removeFromCart(pid);
+                } else {
+                    cartMap[pid].qty = Math.min(stock, newQty);
+                    saveCart();
+                    window.syncStorefront();
+                    renderCart();
+                }
+            } else {
+                // STATE A: Pre-Add state. Adjusts local selection locally only
+                if (!window.preAddQty[pid]) window.preAddQty[pid] = 1;
+                const currentQty = window.preAddQty[pid];
+                const newQty = currentQty + delta;
+                window.preAddQty[pid] = Math.max(1, Math.min(stock, newQty));
+                
+                const numEl = document.getElementById(`card-qty-num-${pid}`);
+                if (numEl) {
+                    numEl.textContent = window.preAddQty[pid];
+                }
+            }
+        };
+
+        // ─── APPLE-STYLE RIPPLE BURST ANIMATION ─────────────────────────────
+        function premiumCartAnimation(btn, onComplete) {
+            const btnRect  = btn.getBoundingClientRect();
+            const cartRect = cartIconLink.getBoundingClientRect();
+
+            const startX = btnRect.left + btnRect.width  / 2;
+            const startY = btnRect.top  + btnRect.height / 2;
+            const endX   = cartRect.left + cartRect.width  / 2;
+            const endY   = cartRect.top  + cartRect.height / 2;
+
+            // 1. Ripple burst — expands and fades from button center
+            const ripple = document.createElement('div');
+            ripple.style.cssText = `
+                position:fixed; border-radius:50%; pointer-events:none; z-index:9998;
+                width:60px; height:60px;
+                left:${startX-30}px; top:${startY-30}px;
+                background: rgba(0,0,0,0.08);
+                border: 1.5px solid rgba(0,0,0,0.15);
+            `;
+            document.body.appendChild(ripple);
+            ripple.animate([
+                { transform:'scale(0.3)', opacity:1 },
+                { transform:'scale(2.8)', opacity:0 }
+            ], { duration:550, easing:'cubic-bezier(0,0,0.2,1)', fill:'forwards' })
+            .onfinish = () => ripple.remove();
+
+            // 2. Filled arc-ball — travels to cart
+            const ball = document.createElement('div');
+            const size = 20;
+            ball.style.cssText = `
+                position:fixed; border-radius:50%; pointer-events:none; z-index:9999;
+                width:${size}px; height:${size}px;
+                left:${startX - size/2}px; top:${startY - size/2}px;
+                background:#000;
+                box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+            `;
+            document.body.appendChild(ball);
+
+            const dx = endX - startX;
+            const dy = endY - startY;
+            const midX = dx * 0.5;
+            const midY = dy * 0.5 - Math.abs(dx) * 0.35; // natural upward arc
+
+            ball.animate([
+                { transform: 'translate(0,0) scale(1)',              opacity: 1,   offset: 0    },
+                { transform: `translate(${midX}px,${midY}px) scale(1.15)`, opacity: 1, offset: 0.45 },
+                { transform: `translate(${dx}px,${dy}px) scale(0.3)`, opacity: 0,  offset: 1    }
+            ], {
+                duration: 780,
+                easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+                fill: 'forwards'
+            }).onfinish = () => {
+                ball.remove();
+                onComplete();
+            };
+        }
+
+        // --- WIRE UP BUTTONS ---
+        window.wireUpAddToCartButtons = function() {
+            // Remove old listeners by cloning
+            document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+                const newBtn = btn.cloneNode(true);
+                btn.parentNode.replaceChild(newBtn, btn);
+            });
+            document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+                if (btn.disabled) return;
+
+                const card    = btn.closest('.product-card');
+                const pid     = card.dataset.productId;
+                const name    = card.querySelector('.card-title')?.textContent?.trim() || 'Item';
+                const priceEl = card.querySelector('.sale-price') || card.querySelector('.card-price');
+                const priceText = priceEl?.textContent?.trim() || 'Rs. 0';
+                const priceNum  = parseInt(priceText.replace(/[^\d]/g,''), 10) || 0;
+                const imgSrc    = card.dataset.img || '';
+
+                btn.addEventListener('click', function() {
+                    // If already in cart — opens the drawer
+                    if (btn.dataset.inCart === 'true') {
+                        openCart();
+                        return;
+                    }
+
+                    premiumCartAnimation(this, () => {
+                        const qtyToAdd = window.preAddQty[pid] || 1;
+                        cartMap[pid] = { name, price: priceText, priceNum, qty: qtyToAdd, img: imgSrc };
+                        saveCart();
+                        
+                        window.syncStorefront();
+                        renderCart();
+
+                        // Badge spring pop
+                        cartBadge.animate([
+                            { transform:'scale(0.5)' },
+                            { transform:'scale(1.4)' },
+                            { transform:'scale(1)'   }
+                        ], { duration:400, easing:'cubic-bezier(0.34,1.56,0.64,1)' });
+
+                        // Cart icon bounce
+                        cartIconLink.animate([
+                            { transform:'scale(1)'   },
+                            { transform:'scale(1.35)' },
+                            { transform:'scale(1)'   }
+                        ], { duration:380, easing:'cubic-bezier(0.34,1.56,0.64,1)' });
+                    });
+                });
+            });
+        };
+        window.wireUpAddToCartButtons();
+
+        // --- INITIAL RUN ---
+        renderCart();
+        window.syncStorefront();
+
+    })();
+    </script>
+
+    <!-- MOBILE NAVIGATION DRAWER -->
+    <div class="mobile-nav-drawer" id="mobileNavDrawer">
+        <div class="mobile-drawer-header">
+            <span style="font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; letter-spacing: 0.2em; color: #fff;">GOTHIC NOVA</span>
+            <button id="mobileDrawerClose" style="background:none; border:none; cursor:pointer; color:#fff; opacity:0.6; padding:8px;">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="24" height="24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        <div class="mobile-drawer-links" style="display:flex; flex-direction:column; gap:24px; padding-top:20px;">
+            <a href="#active-drop" class="mobile-drawer-link" onclick="toggleMobileNav()">Drops</a>
+            <a href="#" class="mobile-drawer-link" onclick="toggleMobileNav()">Collections</a>
+            <a href="admin.html" class="mobile-drawer-link" style="color: var(--color-accent) !important; font-weight: 600;">Admin Panel</a>
         </div>
     </div>
 
-    <!-- FLOATING WHATSAPP BUTTON -->
-    <a href="https://wa.me/923130665364?text=Salam%20Velora!%20I%20have%20an%20order%20inquiry." target="_blank" class="floating-wa-btn" title="Chat on WhatsApp">
-        <!-- Official WhatsApp Standalone Logo SVG (IDENTICAL to navbar) -->
-        <svg width="38" height="38" viewBox="0 0 308 308" fill="#25D366" class="wa-svg-icon">
-            <path d="M227.904 176.981c-0.6-0.288-23.054-11.345-27.044-12.781c-1.629-0.585-3.374-1.156-5.23-1.156c-3.032 0-5.579 1.511-7.563 4.479c-2.243 3.334-9.033 11.271-11.131 13.642c-0.274 0.313-0.648 0.687-0.872 0.687c-0.201 0-3.676-1.431-4.728-1.888c-24.087-10.463-42.37-35.624-44.877-39.867c-0.358-0.61-0.373-0.887-0.376-0.887c0.088-0.323 0.898-1.135 1.316-1.554c1.223-1.21 2.548-2.805 3.83-4.348c0.607-0.731 1.215-1.463 1.812-2.153c1.86-2.164 2.688-3.844 3.648-5.79l0.503-1.011c2.344-4.657 0.342-8.587-0.305-9.856c-0.531-1.062-10.012-23.944-11.02-26.348c-2.424-5.801-5.627-8.502-10.078-8.502c-0.413 0 0 0-1.732 0.073c-2.109 0.089-13.594 1.601-18.672 4.802c-5.385 3.395-14.495 14.217-14.495 33.249c0 17.129 10.87 33.302 15.537 39.453c0.116 0.155 0.329 0.47 0.638 0.922c17.873 26.102 40.154 45.446 62.741 54.469c21.745 8.686 32.042 9.69 37.896 9.69c0.001 0 0.001 0 0.001 0c2.46 0 4.429-0.193 6.166-0.364l1.102-0.105c7.512-0.666 24.02-9.22 27.775-19.655c2.958-8.219 3.738-17.199 1.77-20.458C233.168 179.508 230.845 178.393 227.904 176.981z"/>
-            <path d="M156.734 0C73.318 0 5.454 67.354 5.454 150.143c0 26.777 7.166 52.988 20.741 75.928L0.204 302.716c-0.484 1.429-0.124 3.009 0.933 4.085C1.908 307.58 2.943 308 4 308c0.405 0 0.813-0.061 1.211-0.188l79.92-25.396c21.87 11.685 46.588 17.853 71.604 17.853C239.65 300.27 307.516 232.923 307.516 150.143C307.516 67.354 239.65 0 156.734 0zM156.734 268.994c-23.539 0-46.338-6.797-65.936-19.657c-0.659-0.433-1.424-0.655-2.194-0.655c-0.407 0-0.815 0.062-1.212 0.188l-40.035 12.726l12.924-38.129c0.418-1.234 0.209-2.595-0.561-3.647c-14.924-20.392-22.813-44.485-22.813-69.677c0-65.543 53.754-118.867 119.826-118.867c66.064 0 119.812 53.324 119.812 118.867C276.546 215.678 222.799 268.994 156.734 268.994z"/>
-        </svg>
-    </a>
+    <!-- SHOWCASE PITCH PANEL BUTTON & DRAWER REMOVED -->
 
-    <!-- Application Script -->
-    <script src="supabase-engine.js"></script>
-    <script src="scroll-engine.js"></script>
+    <!-- SHOWCASE PRESENTATION ENGINE scripts -->
     <script>
-        // === 10 CATALOG PRODUCTS ===
-        const PRODUCTS = [
-            { id: '1', name: 'Emerald Flower Bracelet', price: 3499, category: 'jewelry', img: 'assets/product-emerald-bracelet.jpg' },
-            { id: '2', name: 'Royal Bridal Jewels Set', price: 15999, category: 'jewelry', img: 'assets/hero-bridal.jpg' },
-            { id: '3', name: 'Crystal Bangle Set', price: 4999, category: 'jewelry', img: 'assets/product-crystal-bangles.jpg' },
-            { id: '4', name: 'Pearl Ivory Bridal Suit', price: 12999, category: 'fashion', img: 'assets/lifestyle-bridal.jpg' },
-            { id: '5', name: 'Rosé Embroidered Formal', price: 8999, category: 'fashion', img: 'assets/product-rose-suit.jpg' },
-            { id: '6', name: 'Amber Gold Bangles', price: 2999, category: 'jewelry', img: 'assets/product-amber-bangles.jpg' },
-            { id: '7', name: 'Cherry Print Maxi Dress', price: 3499, category: 'fashion', img: 'assets/product-cherry-dress.jpg' },
-            { id: '8', name: 'Solitaire Diamond Ring', price: 6999, category: 'jewelry', img: 'assets/product-diamond-ring.jpg' },
-            { id: '9', name: 'Burgundy Shoulder Bag', price: 4499, category: 'accessories', img: 'assets/product-burgundy-bag.jpg' },
-            { id: '10', name: 'Silver Diamond Bangles', price: 5499, category: 'jewelry', img: 'assets/product-silver-bangles.jpg' }
-        ];
+    (function() {
+        // Mobile hamburger trigger wire-up
+        const hamburgerBtn = document.getElementById('mobileHamburger');
+        const drawerCloseBtn = document.getElementById('mobileDrawerClose');
+        const navDrawer = document.getElementById('mobileNavDrawer');
 
-        let cart = JSON.parse(localStorage.getItem('vl_cart') || '[]');
-
-        function renderProducts(items) {
-            const container = document.getElementById('productsGridContainer');
-            container.innerHTML = items.map(product => `
-                <div class="product-card reveal-on-scroll">
-                    <div class="card-img-wrap">
-                        <img src="${product.img}" alt="${product.name}" loading="lazy">
-                    </div>
-                    <div class="card-body">
-                        <span class="card-category clickable-category" onclick="filterCategory('${product.category}', event)" title="View all ${product.category}">${product.category}</span>
-                        <h3 class="card-title">${product.name}</h3>
-                        <div class="card-price-row">
-                            <span class="card-price">Rs. ${product.price.toLocaleString()}</span>
-                        </div>
-                        <div class="card-actions">
-                            <button class="btn-add-cart" onclick="addToCart('${product.id}')">Add to Bag</button>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-
-            // Re-bind scroll observer to newly created items
-            document.querySelectorAll('.product-card').forEach(el => el.classList.add('is-visible'));
-        }
-
-        function filterCategory(cat, event, btn) {
-            if (event && event.preventDefault) {
-                event.preventDefault();
+        window.toggleMobileNav = function() {
+            if (navDrawer) {
+                navDrawer.classList.toggle('active');
             }
+        };
 
-            // Sync all category filter pill active states
-            const pills = document.querySelectorAll('.filter-pill');
-            pills.forEach(b => {
-                const text = b.innerText.toLowerCase();
-                const dataCat = b.getAttribute('data-cat') || '';
-                if (dataCat === cat || (cat === 'all' && text.includes('all')) || text.includes(cat)) {
-                    b.classList.add('active');
-                } else {
-                    b.classList.remove('active');
-                }
-            });
+        if (hamburgerBtn) hamburgerBtn.addEventListener('click', toggleMobileNav);
+        if (drawerCloseBtn) drawerCloseBtn.addEventListener('click', toggleMobileNav);
 
-            // Sync navbar category links (desktop + mobile popup dropdown)
-            const navLinks = document.querySelectorAll('.nav-categories .nav-link, .mobile-nav-popup .mobile-popup-link');
-            navLinks.forEach(link => {
-                const dataCat = link.getAttribute('data-cat');
-                if (dataCat === cat) {
-                    link.classList.add('active');
-                } else if (dataCat) {
-                    link.classList.remove('active');
-                }
-            });
-
-            // Filter products
-            if (cat === 'all') {
-                renderProducts(PRODUCTS);
-            } else {
-                renderProducts(PRODUCTS.filter(p => p.category === cat));
-            }
-
-            // Elegantly and smoothly glide down to products section
-            if (window.elegantScrollTo) {
-                window.elegantScrollTo('#products', { offset: -16, event });
-            } else {
-                const targetSection = document.getElementById('products');
-                if (targetSection) {
-                    const navHeight = document.querySelector('.main-nav')?.offsetHeight || 76;
-                    const targetPosition = targetSection.getBoundingClientRect().top + window.pageYOffset - navHeight - 16;
-                    window.scrollTo({
-                        top: targetPosition,
-                        behavior: 'smooth'
-                    });
-                }
-            }
-        }
-
-        function addToCart(productId) {
-            const product = PRODUCTS.find(p => p.id === productId);
-            if (!product) return;
-
-            const existing = cart.find(item => item.id === productId);
-            if (existing) {
-                existing.qty += 1;
-            } else {
-                cart.push({ ...product, qty: 1 });
-            }
-            saveCart();
-            updateCartUI();
-            toggleCart(true);
-        }
-
-        function saveCart() {
-            localStorage.setItem('vl_cart', JSON.stringify(cart));
-        }
-
-        function updateCartUI() {
-            const count = cart.reduce((sum, item) => sum + item.qty, 0);
-            const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-            
-            document.getElementById('cartBadgeCount').innerText = count;
-            document.getElementById('cartTotalPrice').innerText = `Rs. ${total.toLocaleString()}`;
-
-            const list = document.getElementById('cartItemsList');
-            if (cart.length === 0) {
-                list.innerHTML = `<div style="text-align: center; padding: 40px 0; color: var(--color-text-muted);">Your shopping bag is empty.</div>`;
-                return;
-            }
-
-            list.innerHTML = cart.map(item => `
-                <div class="cart-item-row">
-                    <img src="${item.img}" alt="${item.name}" class="cart-item-thumb">
-                    <div class="cart-item-info">
-                        <div class="cart-item-title">${item.name}</div>
-                        <div class="cart-item-price">Rs. ${item.price.toLocaleString()} × ${item.qty}</div>
-                        <div style="margin-top: 6px;">
-                            <button onclick="changeQty('${item.id}', -1)" style="font-size: 0.9rem; padding: 0 6px; border: 1px solid #ddd; border-radius: 4px;">-</button>
-                            <span style="font-size: 0.85rem; margin: 0 8px;">${item.qty}</span>
-                            <button onclick="changeQty('${item.id}', 1)" style="font-size: 0.9rem; padding: 0 6px; border: 1px solid #ddd; border-radius: 4px;">+</button>
-                        </div>
-                    </div>
-                    <button onclick="removeItem('${item.id}')" style="color: #999; font-size: 1.2rem; align-self: flex-start;">&times;</button>
-                </div>
-            `).join('');
-        }
-
-        function changeQty(id, delta) {
-            const item = cart.find(p => p.id === id);
-            if (!item) return;
-            item.qty += delta;
-            if (item.qty <= 0) {
-                cart = cart.filter(p => p.id !== id);
-            }
-            saveCart();
-            updateCartUI();
-        }
-
-        function removeItem(id) {
-            cart = cart.filter(p => p.id !== id);
-            saveCart();
-            updateCartUI();
-        }
-
-        function toggleCart(forceOpen) {
-            const drawer = document.getElementById('cartDrawer');
-            const backdrop = document.getElementById('cartBackdrop');
-            const isOpen = drawer.classList.contains('active');
-            
-            if (forceOpen === true || !isOpen) {
-                drawer.classList.add('active');
-                backdrop.classList.add('active');
-            } else {
-                drawer.classList.remove('active');
-                backdrop.classList.remove('active');
-            }
-        }
-
-        function checkoutViaWhatsApp() {
-            if (cart.length === 0) {
-                alert("Your bag is empty!");
-                return;
-            }
-            const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-            let message = `Salam Velora Official! I would like to place an order:%0A%0A`;
-            cart.forEach(item => {
-                message += `• ${item.name} (x${item.qty}) — Rs. ${(item.price * item.qty).toLocaleString()}%0A`;
-            });
-            message += `%0A*Total Amount (COD):* Rs. ${total.toLocaleString()}%0A%0APlease confirm delivery details!`;
-            
-            window.open(`https://wa.me/923130665364?text=${message}`, '_blank');
-        }
-
-        // Initialize on load
-        renderProducts(PRODUCTS);
-        updateCartUI();
-
-        // Floating Mobile Nav Popup Toggle
-        function toggleMobileNav(event) {
-            if (event && event.stopPropagation) event.stopPropagation();
-            const popup = document.getElementById('mobileNavPopup');
-            const backdrop = document.getElementById('mobilePopupBackdrop');
-            const btn = document.getElementById('hamburgerBtn');
-            const isOpen = popup.classList.contains('active');
-            
-            if (isOpen) {
-                closeMobileNav();
-            } else {
-                popup.classList.add('active');
-                backdrop.classList.add('active');
-                if (btn) btn.classList.add('active');
-            }
-        }
-
-        function closeMobileNav() {
-            const popup = document.getElementById('mobileNavPopup');
-            const backdrop = document.getElementById('mobilePopupBackdrop');
-            const btn = document.getElementById('hamburgerBtn');
-            if (popup) popup.classList.remove('active');
-            if (backdrop) backdrop.classList.remove('active');
-            if (btn) btn.classList.remove('active');
-        }
-
-        // Expose globally for onclick handlers
-        window.toggleMobileNav = toggleMobileNav;
-        window.closeMobileNav = closeMobileNav;
-
-        // Dismiss on Escape key or outside click/tap
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                closeMobileNav();
-                toggleCart(false);
-            }
-        });
-
-        document.addEventListener('pointerdown', (e) => {
-            const popup = document.getElementById('mobileNavPopup');
-            const btn = document.getElementById('hamburgerBtn');
-            if (popup && popup.classList.contains('active')) {
-                if (!popup.contains(e.target) && (!btn || !btn.contains(e.target))) {
-                    closeMobileNav();
-                }
-            }
-        });
+        // Pitch panel wire-up removed
+    })();
     </script>
+
+    <style>
+    @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+    
+    /* Low performance overrides: disables heavy backdrop filter blurs & keyframes */
+    body.low-perf .hardware-bg-frost {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        background: rgba(245, 245, 247, 0.96) !important;
+    }
+    body.low-perf .product-card,
+    body.low-perf .navbar {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        background: rgba(255, 255, 255, 0.95) !important;
+        border-color: rgba(0, 0, 0, 0.15) !important;
+    }
+    body.low-perf #cart-drawer,
+    body.low-perf #cart-overlay {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+    body.low-perf .framer-motion-wrapper {
+        animation: none !important;
+        transform: none !important;
+    }
+    body.low-perf .static-orb {
+        display: none !important;
+    }
+    </style>
+
 </body>
 </html>

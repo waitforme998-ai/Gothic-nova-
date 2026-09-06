@@ -1,9 +1,11 @@
-// supabase-engine.js — Velora Dual-Mode Data Engine
-// Handles Mockup (localStorage) vs Live (Supabase)
+// supabase-engine.js
+// Handles Dual-Mode Data fetching: Mockup (localStorage) vs Live (Supabase)
 
 (function() {
-    const SUPABASE_URL = localStorage.getItem('vl_supabase_url') || '';
-    const SUPABASE_ANON_KEY = localStorage.getItem('vl_supabase_anon_key') || '';
+    // These can be injected here for Vercel deployment,
+    // OR set via localStorage in the browser console.
+    const SUPABASE_URL = localStorage.getItem('gn_supabase_url') || 'https://ronpiwedkthgjakjnzhw.supabase.co'; 
+    const SUPABASE_ANON_KEY = localStorage.getItem('gn_supabase_anon_key') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvbnBpd2Vka3RoZ2pha2puemh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NDc3NDMsImV4cCI6MjA5NTAyMzc0M30.3Iin84RfxpF5OK4x9g-85XxNRweR9NTnS7CeBoHJfvo';  
     
     let supabase = null;
 
@@ -20,9 +22,10 @@
         async getProducts() {
             if (this.isLive) {
                 const { data, error } = await supabase
-                    .from('vl_products')
+                    .from('gn_products')
                     .select('*')
                     .order('id', { ascending: true });
+                
                 if (error) {
                     console.error("Supabase fetch error:", error);
                     return this._getMockProducts();
@@ -36,10 +39,13 @@
         async saveProduct(product) {
             if (this.isLive) {
                 const { data, error } = await supabase
-                    .from('vl_products')
+                    .from('gn_products')
                     .upsert(product)
                     .select();
-                if (error) { console.error("Supabase upsert error:", error); throw error; }
+                if (error) {
+                    console.error("Supabase upsert error:", error);
+                    throw error;
+                }
                 return data;
             } else {
                 return this._saveMockProduct(product);
@@ -49,40 +55,48 @@
         async deleteProduct(id) {
             if (this.isLive) {
                 const { error } = await supabase
-                    .from('vl_products')
+                    .from('gn_products')
                     .delete()
                     .eq('id', id);
-                if (error) { console.error("Supabase delete error:", error); throw error; }
+                if (error) {
+                    console.error("Supabase delete error:", error);
+                    throw error;
+                }
             } else {
                 this._deleteMockProduct(id);
             }
         },
 
+        // --- Mockup Fallbacks ---
         _getMockProducts() {
-            const stored = localStorage.getItem('vl_products');
+            const stored = localStorage.getItem('gn_products');
             if (stored) {
-                try { return JSON.parse(stored); } catch(e) { console.error("Parse error", e); }
+                try {
+                    return JSON.parse(stored);
+                } catch(e) {
+                    console.error("Failed to parse mock products", e);
+                }
             }
-            return [];
+            return []; // Relies on seed logic elsewhere if empty
         },
 
         _saveMockProduct(product) {
             let products = this._getMockProducts();
-            if (product.id) {
-                const idx = products.findIndex(p => p.id === product.id);
-                if (idx > -1) products[idx] = product;
-                else products.push(product);
+            const existingIndex = products.findIndex(p => p.id === product.id);
+            if (existingIndex >= 0) {
+                products[existingIndex] = product;
             } else {
-                product.id = Date.now().toString();
                 products.push(product);
             }
-            localStorage.setItem('vl_products', JSON.stringify(products));
+            localStorage.setItem('gn_products', JSON.stringify(products));
             return [product];
         },
 
         _deleteMockProduct(id) {
-            let products = this._getMockProducts().filter(p => p.id !== id);
-            localStorage.setItem('vl_products', JSON.stringify(products));
+            let products = this._getMockProducts();
+            products = products.filter(p => p.id !== id);
+            localStorage.setItem('gn_products', JSON.stringify(products));
         }
     };
+
 })();
