@@ -54,11 +54,14 @@
     <script>
         (function() {
             try {
+                if (window.location.search.includes('reset=1') || window.location.search.includes('tarot=reset') || window.location.search.includes('test=1')) {
+                    try { localStorage.removeItem('gn_tarot_ritual_v13'); localStorage.removeItem('gn_tarot_ritual_v12'); } catch(e) {}
+                }
                 // Purge all legacy storage keys
-                ['gn_daily_card_v11', 'gn_daily_card_v10', 'gn_daily_card_v9', 'gn_daily_card_v8', 'gn_daily_card_v7', 'gn_daily_card_v6', 'gn_daily_card_v5', 'gn_daily_card_v4', 'gn_daily_card_v3', 'gn_daily_card_state'].forEach(function(k) {
+                ['gn_tarot_ritual_v12', 'gn_daily_card_v11', 'gn_daily_card_v10', 'gn_daily_card_v9', 'gn_daily_card_v8', 'gn_daily_card_v7', 'gn_daily_card_v6', 'gn_daily_card_v5', 'gn_daily_card_v4', 'gn_daily_card_v3', 'gn_daily_card_state'].forEach(function(k) {
                     try { localStorage.removeItem(k); } catch(e) {}
                 });
-                var TAROT_KEY = 'gn_tarot_ritual_v12';
+                var TAROT_KEY = 'gn_tarot_ritual_v13';
                 var raw = localStorage.getItem(TAROT_KEY);
                 var hasValidReward = false;
                 if (raw) {
@@ -2719,7 +2722,7 @@
                 }
             }
             try {
-                const raw = localStorage.getItem('gn_tarot_ritual_v12');
+                const raw = localStorage.getItem('gn_tarot_ritual_v13');
                 if (!raw) return null;
                 const parsed = JSON.parse(raw);
                 if (parsed && parsed.timestamp && (Date.now() - parsed.timestamp < 48 * 60 * 60 * 1000) && parsed.reward) {
@@ -3655,11 +3658,11 @@
 
                 // Mark reward redeemed in localStorage
                 try {
-                    const rawState = localStorage.getItem('gn_tarot_ritual_v12');
+                    const rawState = localStorage.getItem('gn_tarot_ritual_v13');
                     if (rawState) {
                         const parsed = JSON.parse(rawState);
                         parsed.redeemed = true;
-                        localStorage.setItem('gn_tarot_ritual_v12', JSON.stringify(parsed));
+                        localStorage.setItem('gn_tarot_ritual_v13', JSON.stringify(parsed));
                     }
                 } catch(e) {}
 
@@ -4182,16 +4185,37 @@
         };
 
         const FORTY_EIGHT_HOURS = 48 * 60 * 60 * 1000;
-        const TAROT_STORAGE_KEY = 'gn_tarot_ritual_v12';
+        const TAROT_STORAGE_KEY = 'gn_tarot_ritual_v13';
         let countdownTimerInterval = null;
 
         // Clean up any legacy storage keys from previous builds
         (function cleanupLegacyStorage() {
-            const legacyKeys = ['gn_daily_card_v11', 'gn_daily_card_v10', 'gn_daily_card_v9', 'gn_daily_card_v8', 'gn_daily_card_v7', 'gn_daily_card_v6', 'gn_daily_card_v5', 'gn_daily_card_v4', 'gn_daily_card_state'];
+            const legacyKeys = ['gn_tarot_ritual_v12', 'gn_daily_card_v11', 'gn_daily_card_v10', 'gn_daily_card_v9', 'gn_daily_card_v8', 'gn_daily_card_v7', 'gn_daily_card_v6', 'gn_daily_card_v5', 'gn_daily_card_v4', 'gn_daily_card_state'];
             legacyKeys.forEach(k => {
                 try { localStorage.removeItem(k); } catch(e) {}
             });
         })();
+
+        // Global Testing Helper to reset Tarot Ritual on demand
+        window.resetTarotRitual = function() {
+            try {
+                localStorage.removeItem(TAROT_STORAGE_KEY);
+                ['gn_tarot_ritual_v13', 'gn_tarot_ritual_v12', 'gn_daily_card_v11', 'gn_daily_card_v10'].forEach(k => {
+                    try { localStorage.removeItem(k); } catch(e) {}
+                });
+            } catch(e) {}
+            window.activeDailyReward = null;
+            if (countdownTimerInterval) {
+                clearInterval(countdownTimerInterval);
+                countdownTimerInterval = null;
+            }
+            const pill = document.getElementById('floatingRewardPill');
+            if (pill) pill.style.display = 'none';
+            if (typeof updateInPageContextualPolicy === 'function') updateInPageContextualPolicy(null);
+            if (typeof updateCheckoutTotals === 'function') updateCheckoutTotals();
+            if (typeof initTarotRitual === 'function') initTarotRitual(false);
+            console.log('✦ Tarot Ritual state successfully reset for testing.');
+        };
 
         function getStoredDailyReward() {
             try {
