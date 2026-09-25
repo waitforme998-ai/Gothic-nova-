@@ -50,28 +50,24 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-engine.js" defer></script>
     <script src="search-engine.js" defer></script>
-        <!-- Instant 0ms Daily Fortune Gate Check (Professional & Majestic v8 with 48h Timer) -->
+        <!-- Instant 0ms Tarot Ritual Gate Check (Strict 48-Hour Restriction) -->
     <script>
         (function() {
             try {
-                if (window.location.search.indexOf('reset') !== -1) {
-                    localStorage.removeItem('gn_daily_card_v8');
-                    localStorage.removeItem('gn_daily_card_v7');
-                    localStorage.removeItem('gn_daily_card_v6');
-                    localStorage.removeItem('gn_daily_card_v4');
-                    localStorage.removeItem('gn_daily_card_v3');
-                    localStorage.removeItem('gn_daily_card_state');
-                }
-                var raw = localStorage.getItem('gn_daily_card_v8');
-                var hasValidDailyReward = false;
+                // Purge all legacy storage keys
+                ['gn_daily_card_v11', 'gn_daily_card_v10', 'gn_daily_card_v9', 'gn_daily_card_v8', 'gn_daily_card_v7', 'gn_daily_card_v6', 'gn_daily_card_v5', 'gn_daily_card_v4', 'gn_daily_card_v3', 'gn_daily_card_state'].forEach(function(k) {
+                    try { localStorage.removeItem(k); } catch(e) {}
+                });
+                var TAROT_KEY = 'gn_tarot_ritual_v12';
+                var raw = localStorage.getItem(TAROT_KEY);
+                var hasValidReward = false;
                 if (raw) {
                     var parsed = JSON.parse(raw);
                     if (parsed && parsed.timestamp && (Date.now() - parsed.timestamp < 48 * 60 * 60 * 1000) && parsed.reward) {
-                        hasValidDailyReward = true;
+                        hasValidReward = true;
                     }
                 }
-                var force = window.location.search.indexOf('tarot') !== -1 || window.location.hash === '#tarot' || window.location.search.indexOf('shuffle') !== -1;
-                if (!hasValidDailyReward || force) {
+                if (!hasValidReward) {
                     document.documentElement.classList.add('tarot-pending');
                 }
             } catch(e) {}
@@ -245,7 +241,7 @@
     <!-- SALE TICKER BAND -->
     <div class="sale-ticker-band" id="saleTickerBand">
         <div class="sale-ticker-track" id="saleTickerTrack">
-            <span><strong style="color: #ffc857;">✦ DAILY ORACLE:</strong> REWARDS REMAIN PERSISTENT FOR 48 HOURS ✦</span>
+            <span><strong style="color: #e2d7c5;">✦ TAROT RITUAL:</strong> REWARDS PERSIST FOR 48 HOURS ✦</span>
             <span>⚡ EARLY ACCESS: 15% OFF ALL PENDANTS WITH CODE 'NOVA15'</span>
             <span>⚡ FREE SHIPPING ON ORDERS OVER RS. 5000</span>
             <span>⚡ LIMITED EDITION REAPER CHAIN DROPS TONIGHT</span>
@@ -1615,35 +1611,37 @@
                         <span class="font-mono" id="checkoutDeliveryValue" style="font-size: 0.88rem; color: #ffffff; font-weight: 700;">Rs. 250</span>
                     </div>
 
-                    <!-- Tier 3: Active Daily Reward Discount / Benefit -->
-                    <div id="checkoutDiscountRow" style="display: none; align-items: center; justify-content: space-between; gap: 12px; width: 100%; padding: 6px 10px; background: rgba(255, 200, 87, 0.08); border: 1px dashed rgba(255, 200, 87, 0.35); border-radius: 4px;">
-                        <span class="font-mono" id="checkoutDiscountLabel" style="font-size: 0.68rem; color: #ffc857; font-weight: 700; letter-spacing: 0.06em;">✦ DAILY OFFER:</span>
-                        <span class="font-mono" id="checkoutDiscountValue" style="font-size: 0.92rem; color: #ffc857; font-weight: 800;">-Rs. 0</span>
+                    <!-- Tier 3: Active Tarot Reward Discount / Benefit -->
+                    <div id="checkoutDiscountRow" style="display: none; align-items: center; justify-content: space-between; gap: 12px; width: 100%; padding: 7px 10px; background: rgba(139, 0, 0, 0.12); border: 1px dashed rgba(200, 50, 50, 0.45); border-radius: 4px; box-sizing: border-box;">
+                        <span class="font-mono" id="checkoutDiscountLabel" style="font-size: 0.68rem; color: #ff9999; font-weight: 700; letter-spacing: 0.06em; white-space: nowrap;">✦ TAROT REWARD:</span>
+                        <span class="font-mono" id="checkoutDiscountValue" style="font-size: 0.88rem; color: #4ade80; font-weight: 800; text-align: right;">-Rs. 0</span>
                     </div>
 
-                    <!-- Tier 4: Dominant Final Payable Total -->
-                    <div style="display: flex; flex-direction: column; gap: 4px; border-top: 1px solid rgba(255, 232, 190, 0.18); padding-top: 10px; margin-top: 2px;">
-                        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px; width: 100%;">
-                            <div style="display: flex; flex-direction: column;">
-                                <span class="font-mono" style="font-size: 0.70rem; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 800; color: #ffe8be;">TOTAL PAYABLE AMOUNT</span>
-                                <span id="checkoutSavingsBadge" class="font-mono" style="display: none; font-size: 0.60rem; color: #25d366; font-weight: 700; margin-top: 2px;">✦ YOU SAVE Rs. 0</span>
+                    <!-- Tier 4: Dominant Final Payable Total (Locked to Single Unbreakable Line) -->
+                    <div style="display: flex; flex-direction: column; gap: 4px; border-top: 1px solid rgba(255, 232, 190, 0.18); padding-top: 10px; margin-top: 2px; width: 100%; box-sizing: border-box;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; min-width: 0;">
+                            <div style="display: flex; flex-direction: column; min-width: 0;">
+                                <span class="font-mono" style="font-size: 0.68rem; letter-spacing: 0.10em; text-transform: uppercase; font-weight: 800; color: #ffe8be; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">TOTAL PAYABLE AMOUNT</span>
+                                <span id="checkoutSavingsBadge" class="font-mono" style="display: none; font-size: 0.58rem; color: #4ade80; font-weight: 700; margin-top: 2px; white-space: nowrap;">✦ YOU SAVE Rs. 0</span>
                             </div>
-                            <span class="payable-amount font-mono" id="checkoutStep1Total" class="payable-amount font-mono" style="font-size: 1.12rem; color: #ffc857; font-weight: 800;">Rs. 0</span>
+                            <span class="payable-amount font-mono" id="checkoutStep1Total" style="font-size: 1.15rem; color: #ffe8be; font-weight: 800; white-space: nowrap !important; display: inline-flex !important; align-items: baseline !important; word-break: keep-all !important; flex-shrink: 0 !important; font-variant-numeric: tabular-nums;">Rs. 0</span>
                         </div>
                     </div>
                     
-                    <!-- Tier 5: 2 Metric Boxes (Deposit + Doorstep Balance) -->
+                    <!-- Tier 5: 2 Metric Boxes (Deposit + Doorstep Balance - Bound Within Borders) -->
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; box-sizing: border-box; margin-top: 4px;">
                         <!-- Box 1: Deposit Due Now -->
-                        <div id="checkoutDepositBox" style="display: flex; flex-direction: column; gap: 3px; background: rgba(56, 189, 248, 0.06); border: 1px solid rgba(56, 189, 248, 0.22); border-radius: 6px; padding: 8px 10px; box-sizing: border-box; min-width: 0;">
-                            <span class="font-mono" id="checkoutDepositLabel" style="font-size: 0.58rem; color: #38bdf8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; line-height: 1.25;">DUE NOW (DEPOSIT)</span>
-                            <span class="font-mono" id="checkoutStep1Deposit" style="font-size: 0.95rem; color: #38bdf8; font-weight: 800; white-space: nowrap;">Courier Delivery Fee (Rs. 250)</span>
+                        <div id="checkoutDepositBox" style="display: flex; flex-direction: column; justify-content: space-between; gap: 2px; background: rgba(139, 0, 0, 0.08); border: 1px solid rgba(139, 0, 0, 0.35); border-radius: 6px; padding: 8px 10px; box-sizing: border-box; min-width: 0; overflow: hidden;">
+                            <span class="font-mono" id="checkoutDepositLabel" style="font-size: 0.58rem; color: #ff9999; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">DUE NOW (DEPOSIT)</span>
+                            <span class="font-mono" id="checkoutStep1Deposit" style="font-size: 1.05rem; color: #ffffff; font-weight: 800; white-space: nowrap !important; display: inline-block; font-variant-numeric: tabular-nums;">Rs. 250</span>
+                            <span class="font-mono" id="checkoutDepositSub" style="font-size: 0.55rem; color: rgba(255,255,255,0.6); line-height: 1.2; word-break: break-word;">Courier Advance Deposit</span>
                         </div>
 
                         <!-- Box 2: Balance Due on Delivery -->
-                        <div id="checkoutBalanceBox" style="display: flex; flex-direction: column; gap: 3px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 232, 190, 0.14); border-radius: 6px; padding: 8px 10px; box-sizing: border-box; min-width: 0;">
-                            <span class="font-mono text-muted" id="checkoutBalanceLabel" style="font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.03em; line-height: 1.25;">DUE AT DOORSTEP</span>
-                            <span class="font-mono" id="checkoutStep1Balance" style="font-size: 0.95rem; color: #ffffff; font-weight: 700; white-space: nowrap;">Rs. 0</span>
+                        <div id="checkoutBalanceBox" style="display: flex; flex-direction: column; justify-content: space-between; gap: 2px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 232, 190, 0.14); border-radius: 6px; padding: 8px 10px; box-sizing: border-box; min-width: 0; overflow: hidden;">
+                            <span class="font-mono text-muted" id="checkoutBalanceLabel" style="font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.03em; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">DUE AT DOORSTEP</span>
+                            <span class="font-mono" id="checkoutStep1Balance" style="font-size: 1.05rem; color: #ffffff; font-weight: 700; white-space: nowrap !important; display: inline-block; font-variant-numeric: tabular-nums;">Rs. 0</span>
+                            <span class="font-mono" id="checkoutBalanceSub" style="font-size: 0.55rem; color: rgba(255,255,255,0.6); line-height: 1.2; word-break: break-word;">Pay on parcel delivery</span>
                         </div>
                     </div>
                 </div>
@@ -2721,7 +2719,7 @@
                 }
             }
             try {
-                const raw = localStorage.getItem('gn_daily_card_v8');
+                const raw = localStorage.getItem('gn_tarot_ritual_v12');
                 if (!raw) return null;
                 const parsed = JSON.parse(raw);
                 if (parsed && parsed.timestamp && (Date.now() - parsed.timestamp < 48 * 60 * 60 * 1000) && parsed.reward) {
@@ -3020,15 +3018,15 @@
                     if (discountRow) {
                         discountRow.style.display = 'flex';
                         if (discountLabel) discountLabel.textContent = `✦ FREE GOTHIC GIFT:`;
-                        if (discountVal) discountVal.textContent = `You will get a random gift with this order !`;
+                        if (discountVal) discountVal.innerHTML = `<span style="color: #4ade80; font-weight: 800;">FREE GIFT INCLUDED (Rs. 0)</span>`;
                     }
                 } else if (activeReward.type === 'order_upgrade') {
                     deliveryFee = STANDARD_DELIVERY;
                     productDiscount = 0;
                     if (discountRow) {
                         discountRow.style.display = 'flex';
-                        if (discountLabel) discountLabel.textContent = `✦ ORDER UPGRADE!:`;
-                        if (discountVal) discountVal.textContent = `Your order will be upgraded !`;
+                        if (discountLabel) discountLabel.textContent = `✦ ORDER UPGRADE:`;
+                        if (discountVal) discountVal.innerHTML = `<span style="color: #4ade80; font-weight: 800;">VIP PACKAGING (Rs. 0)</span>`;
                     }
                 }
             } else {
@@ -3036,12 +3034,12 @@
             }
 
             const finalTotal = Math.max(0, rawSubtotal - productDiscount) + deliveryFee;
-            const formattedTotal = 'Rs. ' + finalTotal.toLocaleString('en-PK');
+            const formattedTotal = 'Rs.\u00A0' + finalTotal.toLocaleString('en-PK');
 
             // Tier 1: Original Subtotal display
             if (elOriginalSubtotal) {
                 if (productDiscount > 0) {
-                    elOriginalSubtotal.innerHTML = `<span style="text-decoration: line-through; opacity: 0.65; color: #a0a0a0;">Rs. ${rawSubtotal.toLocaleString('en-PK')}</span> <span style="color: #ffc857; font-weight: 800; margin-left: 4px;">Rs. ${(rawSubtotal - productDiscount).toLocaleString('en-PK')}</span>`;
+                    elOriginalSubtotal.innerHTML = `<span style="text-decoration: line-through; opacity: 0.65; color: #a0a0a0;">Rs. ${rawSubtotal.toLocaleString('en-PK')}</span> <span style="color: #ffe8be; font-weight: 800; margin-left: 4px;">Rs. ${(rawSubtotal - productDiscount).toLocaleString('en-PK')}</span>`;
                 } else {
                     elOriginalSubtotal.textContent = `Rs. ${rawSubtotal.toLocaleString('en-PK')}`;
                 }
@@ -3050,19 +3048,19 @@
             // Tier 2: Delivery Fee display
             if (elDeliveryValue) {
                 if (deliveryFee === 0) {
-                    elDeliveryValue.innerHTML = `<span style="text-decoration: line-through; opacity: 0.65; color: #a0a0a0;">Rs. 250</span> <span style="color: #38bdf8; font-weight: 800; margin-left: 4px;">FREE (Rs. 0)</span>`;
+                    elDeliveryValue.innerHTML = `<span style="text-decoration: line-through; opacity: 0.65; color: #a0a0a0;">Rs. 250</span> <span style="color: #4ade80; font-weight: 800; margin-left: 4px;">FREE (Rs. 0)</span>`;
                 } else {
                     elDeliveryValue.textContent = `Rs. ${deliveryFee.toLocaleString('en-PK')}`;
                 }
             }
 
-            // Tier 4: Dominant Total & Savings Badge
+            // Tier 4: Dominant Total & Savings Badge (Unbreakable Single Line)
             const elStep1Total = document.getElementById('checkoutStep1Total');
             const elSummaryTotal = document.getElementById('checkoutSummaryTotal');
             const elSummaryCount = document.getElementById('checkoutSummaryCount');
 
-            if (elStep1Total) elStep1Total.textContent = formattedTotal;
-            if (elSummaryTotal) elSummaryTotal.textContent = formattedTotal;
+            if (elStep1Total) elStep1Total.innerHTML = formattedTotal;
+            if (elSummaryTotal) elSummaryTotal.innerHTML = formattedTotal;
             if (elSummaryCount) elSummaryCount.textContent = count;
 
             if (savingsBadge) {
@@ -3074,13 +3072,13 @@
                 }
             }
 
-            // 1. POPULATE STEP 1 PRODUCT PREVIEW SUMMARY
+            // 1. POPULATE STEP 1 PRODUCT PREVIEW SUMMARY WITH FREE GIFT
             const step1PreviewEl = document.getElementById('checkoutStep1ProductPreview');
             if (step1PreviewEl) {
                 const itemEntries = Object.entries(currentMap);
                 if (itemEntries.length > 0) {
                     step1PreviewEl.style.display = 'flex';
-                    step1PreviewEl.innerHTML = `
+                    let previewHtml = `
                         <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255, 232, 190, 0.12); padding-bottom: 6px;">
                             <span class="font-mono text-muted" style="font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700;">SELECTED ARTIFACTS (${count})</span>
                             <span class="font-mono" style="font-size: 0.72rem; color: #ffe8be; font-weight: 800;">${formattedTotal}</span>
@@ -3101,8 +3099,38 @@
                                     </div>
                                 `;
                             }).join('')}
-                        </div>
                     `;
+
+                    if (activeReward && activeReward.type === 'free_gift') {
+                        previewHtml += `
+                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 10px; background: rgba(139, 0, 0, 0.15); border: 1px dashed rgba(200, 50, 50, 0.5); border-radius: 4px; margin-top: 2px;">
+                                <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
+                                    <span style="font-size: 0.95rem; flex-shrink: 0;">🎁</span>
+                                    <div style="display: flex; flex-direction: column; min-width: 0;">
+                                        <span style="font-size: 0.74rem; font-weight: 700; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">✦ FREE GOTHIC ARTIFACT GIFT</span>
+                                        <span class="font-mono" style="font-size: 0.58rem; color: #ff9999;">Tarot Ritual Reward &bull; Enclosed in Parcel</span>
+                                    </div>
+                                </div>
+                                <span class="font-mono" style="font-size: 0.74rem; color: #4ade80; font-weight: 800; flex-shrink: 0; white-space: nowrap;">FREE (Rs. 0)</span>
+                            </div>
+                        `;
+                    } else if (activeReward && activeReward.type === 'order_upgrade') {
+                        previewHtml += `
+                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 10px; background: rgba(139, 0, 0, 0.15); border: 1px dashed rgba(200, 50, 50, 0.5); border-radius: 4px; margin-top: 2px;">
+                                <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
+                                    <span style="font-size: 0.95rem; flex-shrink: 0;">👑</span>
+                                    <div style="display: flex; flex-direction: column; min-width: 0;">
+                                        <span style="font-size: 0.74rem; font-weight: 700; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">✦ ORDER UPGRADE (VIP UNBOXING)</span>
+                                        <span class="font-mono" style="font-size: 0.58rem; color: #ff9999;">Tarot Ritual Reward &bull; Premium Packaging</span>
+                                    </div>
+                                </div>
+                                <span class="font-mono" style="font-size: 0.74rem; color: #4ade80; font-weight: 800; flex-shrink: 0; white-space: nowrap;">FREE (Rs. 0)</span>
+                            </div>
+                        `;
+                    }
+
+                    previewHtml += `</div>`;
+                    step1PreviewEl.innerHTML = previewHtml;
                 } else {
                     step1PreviewEl.style.display = 'none';
                 }
@@ -3129,15 +3157,27 @@
                 }).join('');
 
                 if (activeReward) {
-                    itemsHtml += `
-                        <div class="checkout-mini-item" style="border-top: 1px dashed rgba(212, 175, 55, 0.35); margin-top: 4px; padding-top: 6px; background: rgba(212, 175, 55, 0.06); border-radius: 4px; padding: 6px 8px;">
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <span style="color: ${activeReward.accent || '#d4af37'}; font-size: 0.85rem;">✦</span>
-                                <span style="font-weight: 700; color: #ffe8be; font-size: 0.74rem;">REWARD: ${activeReward.offer || activeReward.title}</span>
+                    if (activeReward.type === 'free_gift') {
+                        itemsHtml += `
+                            <div class="checkout-mini-item" style="border-top: 1px dashed rgba(200, 50, 50, 0.45); margin-top: 4px; padding-top: 6px; background: rgba(139, 0, 0, 0.12); border-radius: 4px; padding: 6px 8px;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span style="font-size: 0.9rem;">🎁</span>
+                                    <span style="font-weight: 700; color: #ffe8be; font-size: 0.74rem;">✦ FREE GOTHIC ARTIFACT GIFT (CLAIMED)</span>
+                                </div>
+                                <span class="font-mono" style="color: #4ade80; font-weight: 800; font-size: 0.70rem;">FREE (Rs. 0)</span>
                             </div>
-                            <span class="font-mono" style="color: ${activeReward.accent || '#d4af37'}; font-weight: 800; font-size: 0.70rem;">ACTIVE</span>
-                        </div>
-                    `;
+                        `;
+                    } else {
+                        itemsHtml += `
+                            <div class="checkout-mini-item" style="border-top: 1px dashed rgba(200, 50, 50, 0.45); margin-top: 4px; padding-top: 6px; background: rgba(139, 0, 0, 0.12); border-radius: 4px; padding: 6px 8px;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span style="color: #ff9999; font-size: 0.85rem;">✦</span>
+                                    <span style="font-weight: 700; color: #ffe8be; font-size: 0.74rem;">REWARD: ${activeReward.offer || activeReward.title}</span>
+                                </div>
+                                <span class="font-mono" style="color: #4ade80; font-weight: 800; font-size: 0.70rem;">ACTIVE</span>
+                            </div>
+                        `;
+                    }
                 }
 
                 listEl.innerHTML = itemsHtml;
@@ -3150,7 +3190,7 @@
             if (stepNum > 1 && !paymentScreenshotDataUrl && !isFreeShippingCod) {
                 const isCod = (selectedPaymentMethod === 'cod');
                 const msg = isCod
-                    ? 'Payment proof screenshot is mandatory for Courier Delivery Fee (Rs. 250) deposit before advancing.'
+                    ? 'Payment proof screenshot is mandatory for Courier Deposit (Rs. 250) before advancing.'
                     : 'Payment proof screenshot is mandatory for full payment before advancing.';
                 if (typeof showLuxuryAlert === 'function') {
                     showLuxuryAlert(msg, 'PAYMENT PROOF REQUIRED', 'error');
@@ -3218,7 +3258,9 @@
             const depLabel = document.getElementById('checkoutDepositLabel');
             const balLabel = document.getElementById('checkoutBalanceLabel');
             const depEl = document.getElementById('checkoutStep1Deposit');
+            const depSub = document.getElementById('checkoutDepositSub');
             const balEl = document.getElementById('checkoutStep1Balance');
+            const balSub = document.getElementById('checkoutBalanceSub');
             const advPaymentBox = document.getElementById('advancePaymentBox');
             const freeDeliveryCodBanner = document.getElementById('freeDeliveryCodBanner');
             const codSubtextDeposit = document.getElementById('codSubtextDeposit');
@@ -3251,30 +3293,34 @@
                     // Free Delivery on COD: Advance deposit is Rs. 0; HIDE proof upload and bank transfer box completely
                     if (advPaymentBox) advPaymentBox.style.display = 'none';
                     if (freeDeliveryCodBanner) freeDeliveryCodBanner.style.display = 'flex';
-                    if (codSubtextDeposit) codSubtextDeposit.innerHTML = '<strong style="color: #38bdf8;">Rs. 0 deposit (Waived)</strong>';
+                    if (codSubtextDeposit) codSubtextDeposit.innerHTML = '<strong style="color: #4ade80;">Rs. 0 deposit (Waived)</strong>';
                     if (depLabel) depLabel.textContent = 'DUE NOW (WAIVED)';
                     if (balLabel) balLabel.textContent = 'DUE AT DOORSTEP';
-                    if (depEl) depEl.textContent = 'Rs. 0 (Free Delivery)';
+                    if (depEl) depEl.innerHTML = '<span class="deposit-waived-strike" style="text-decoration: line-through; opacity: 0.5; font-size: 0.85rem; margin-right: 4px;">Rs. 250</span><span style="color: #4ade80; font-weight: 800;">Rs. 0</span>';
+                    if (depSub) depSub.textContent = 'Deposit waived (Free Delivery)';
                     if (balEl) balEl.textContent = `Rs. ${finalTotal.toLocaleString('en-PK')}`;
+                    if (balSub) balSub.textContent = 'Full balance at doorstep';
                 } else {
-                    // Standard COD: Rs. 600-700 deposit applies, bank transfer box and proof upload must be shown
-                    const depositAmount = Math.min(finalTotal, 600);
+                    // Standard COD: Rs. 250 courier deposit applies, bank transfer box and proof upload must be shown
+                    const depositAmount = 250;
                     const balanceAmount = Math.max(0, finalTotal - depositAmount);
                     if (advPaymentBox) advPaymentBox.style.display = 'flex';
                     if (freeDeliveryCodBanner) freeDeliveryCodBanner.style.display = 'none';
-                    if (codSubtextDeposit) codSubtextDeposit.innerHTML = '<strong style="color: #38bdf8;">Courier Advance Deposit</strong>';
+                    if (codSubtextDeposit) codSubtextDeposit.innerHTML = '<strong style="color: #ffe8be;">Courier Advance Deposit (Rs. 250)</strong>';
                     if (subtag) {
-                        subtag.textContent = 'Advance Deposit';
-                        subtag.style.color = '#38bdf8';
-                        subtag.style.background = 'rgba(56, 189, 248, 0.12)';
-                        subtag.style.borderColor = 'rgba(56, 189, 248, 0.25)';
+                        subtag.textContent = 'Courier Deposit (Rs. 250)';
+                        subtag.style.color = '#ffe8be';
+                        subtag.style.background = 'rgba(255, 232, 190, 0.12)';
+                        subtag.style.borderColor = 'rgba(255, 232, 190, 0.25)';
                     }
                     if (depLabel) depLabel.textContent = 'DUE NOW (DEPOSIT)';
                     if (balLabel) balLabel.textContent = 'DUE AT DOORSTEP';
-                    if (depEl) depEl.textContent = 'Courier Delivery Fee (Rs. 250)';
+                    if (depEl) depEl.textContent = 'Rs. 250';
+                    if (depSub) depSub.textContent = 'Courier Advance Deposit';
                     if (balEl) balEl.textContent = `Rs. ${balanceAmount.toLocaleString('en-PK')}`;
-                    if (ssTitle) ssTitle.textContent = 'UPLOAD Courier Delivery Fee (Rs. 250) DEPOSIT SCREENSHOT *';
-                    if (dropText) dropText.textContent = 'Tap to attach deposit proof receipt';
+                    if (balSub) balSub.textContent = 'Cash on parcel delivery';
+                    if (ssTitle) ssTitle.textContent = 'UPLOAD RS. 250 COURIER DEPOSIT SCREENSHOT *';
+                    if (dropText) dropText.textContent = 'Tap to attach Rs. 250 deposit screenshot receipt';
                 }
             } else {
                 // Advance Full Payment: Always show bank transfer box and require mandatory proof screenshot
@@ -3289,7 +3335,9 @@
                 if (depLabel) depLabel.textContent = 'DUE NOW (FULL ORDER)';
                 if (balLabel) balLabel.textContent = 'DUE AT DOORSTEP';
                 if (depEl) depEl.textContent = `Rs. ${finalTotal.toLocaleString('en-PK')}`;
-                if (balEl) balEl.textContent = 'Rs. 0 (FULLY PAID)';
+                if (depSub) depSub.textContent = '100% full order payment';
+                if (balEl) balEl.textContent = 'Rs. 0 (PAID)';
+                if (balSub) balSub.textContent = 'Zero payment on delivery';
                 if (ssTitle) ssTitle.textContent = `UPLOAD FULL PAYMENT SCREENSHOT (RS. ${finalTotal.toLocaleString('en-PK')}) *`;
                 if (dropText) dropText.textContent = 'Tap to attach full order payment receipt';
             }
@@ -3565,10 +3613,25 @@
                     deposit_paid: depositAmt,
                     delivery_fee: deliveryFee,
                     payment_screenshot_url: uploadedScreenshotUrl,
-                    items: itemsArray,
+                    items: (function() {
+                        const finalItems = [...itemsArray];
+                        if (activeReward && activeReward.type === 'free_gift') {
+                            finalItems.push({
+                                id: 'gift_artifact',
+                                name: '✦ FREE GOTHIC ARTIFACT (CLAIMED REWARD)',
+                                price: 0,
+                                priceNum: 0,
+                                quantity: 1,
+                                qty: 1,
+                                img: 'assets/venom_spider_ring.png'
+                            });
+                        }
+                        return finalItems;
+                    })(),
                     total_amount: calculatedTotal,
+                    reward_applied: activeReward ? (activeReward.offer || activeReward.title) : null,
                     card_reward_applied: activeReward ? {
-                        code: activeReward.code,
+                        code: activeReward.code || 'TAROT',
                         title: activeReward.title,
                         type: activeReward.type,
                         value: activeReward.value,
@@ -3580,11 +3643,11 @@
 
                 // Mark reward redeemed in localStorage
                 try {
-                    const rawState = localStorage.getItem('gn_daily_card_v8');
+                    const rawState = localStorage.getItem('gn_tarot_ritual_v12');
                     if (rawState) {
                         const parsed = JSON.parse(rawState);
                         parsed.redeemed = true;
-                        localStorage.setItem('gn_daily_card_v8', JSON.stringify(parsed));
+                        localStorage.setItem('gn_tarot_ritual_v12', JSON.stringify(parsed));
                     }
                 } catch(e) {}
 
@@ -3848,23 +3911,19 @@
     <!-- ==========================================================================
          GOTHIC NOVA: OCCULT DAILY TAROT OVERLAY & GAMIFICATION ENGINE
          ========================================================================== -->
+    <!-- ==========================================================================
+         GOTHIC NOVA: OCCULT TAROT RITUAL & DESTINY ENGINE (48-HOUR RESTRICTION)
+         ========================================================================== -->
     <div class="daily-tarot-overlay" id="dailyFortuneOverlay">
         <!-- Ambient Mystical Particle Canvas -->
         <canvas class="daily-tarot-canvas" id="dailyTarotCanvas"></canvas>
 
         <div class="tarot-stage-container">
-            <!-- Header -->
-            <!-- Header (Elevated Visual Hierarchy with Oracle Eyebrow & High-Contrast Typography) -->
+            <!-- Header (Occult Eyebrow, Large Authority Title, No Reset Button) -->
             <div class="tarot-header" style="margin-bottom: 16px; text-align: center;">
-                <div class="tarot-eyebrow font-mono" style="font-size: 0.72rem; color: #ffc857; letter-spacing: 0.24em; text-transform: uppercase; margin-bottom: 4px; text-shadow: 0 0 10px rgba(255,200,87,0.5);">✦ GOTHIC NOVA DAILY ORACLE ✦</div>
-                <h2 class="tarot-title" style="font-family: var(--font-serif); font-size: clamp(1.45rem, 4.5vw, 2.25rem); font-weight: 800; color: #ffffff; letter-spacing: 0.1em; text-transform: uppercase; margin: 0 0 6px 0; text-shadow: 0 0 25px rgba(212, 175, 55, 0.45);">DRAW YOUR DAILY CARD</h2>
-                <div class="tarot-subtext font-mono" style="font-size: clamp(0.72rem, 2.5vw, 0.86rem); color: rgba(255, 232, 190, 0.88); letter-spacing: 0.06em;">— ✦ What you choose will remain for 48 hours. ✦ —</div>
-                <div style="display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 6px;">
-                    <button type="button" id="tarotResetDeckBtn" class="tarot-sound-toggle-btn font-mono" onclick="window.resetTarotRitual()" title="Reset Tarot Deck for testing">
-                        <span>↺</span>
-                        <span>RESET DECK</span>
-                    </button>
-                </div>
+                <div class="tarot-eyebrow font-mono" style="font-size: 0.72rem; color: #dcd3c5; letter-spacing: 0.26em; text-transform: uppercase; margin-bottom: 6px; font-weight: 700;">✦ GOTHIC OCCULT ORACLE ✦</div>
+                <h2 class="tarot-title" style="font-family: var(--font-serif); font-size: clamp(1.85rem, 5.5vw, 2.75rem); font-weight: 900; color: #ffffff; letter-spacing: 0.12em; text-transform: uppercase; margin: 0 0 8px 0; text-shadow: 0 2px 10px rgba(0,0,0,0.95);">DRAW YOUR CARD</h2>
+                <div class="tarot-subtext font-mono" style="font-size: clamp(0.72rem, 2.5vw, 0.86rem); color: #dcd3c5; letter-spacing: 0.08em;">— ✦ What you choose will remain bound for 48 hours. ✦ —</div>
             </div>
 
             <!-- Dramatic CHOOSE ! Impact Banner -->
@@ -3875,24 +3934,24 @@
             <!-- 4-Card Shuffling Stage (Initial Rewards Face-Up Preview) -->
             <div class="tarot-cards-stage" id="tarotCardsStage">
                 
-                <!-- CARD 1: ORDER UPGRADE! (I • PRIMUS) -->
+                <!-- CARD 1: ORDER UPGRADE (I • PRIMUS) -->
                 <div class="tarot-card-wrapper flipped" data-card-index="0" onclick="handleTarotCardSelect(0)">
                     <div class="tarot-flash"></div>
                     <div class="tarot-card-inner">
                         <!-- Front -->
-                        <div class="tarot-face tarot-front" style="border-color: rgba(255, 200, 87, 0.85); box-shadow: inset 0 0 25px rgba(255, 200, 87, 0.15);">
+                        <div class="tarot-face tarot-front" style="border-color: rgba(139, 26, 39, 0.85); box-shadow: 0 12px 30px rgba(0, 0, 0, 0.95), inset 0 0 0 1px rgba(255, 232, 190, 0.1);">
                             <div style="display: flex; align-items: center; justify-content: center; width: 100%;">
-                                <span class="font-mono tarot-roman-title" style="color: #ffc857;">I &bull; PRIMUS</span>
+                                <span class="font-mono tarot-roman-title" style="color: #e2d7c5; font-weight: 800;">I &bull; PRIMUS</span>
                             </div>
-                            <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; margin: auto 0;">
-                                <div class="tarot-roman-numeral-front" style="color: #ffc857;">I</div>
-                                <span class="font-serif" style="font-size: 1.35rem; font-weight: 800; color: #ffffff; letter-spacing: 0.04em;">ORDER UPGRADE!</span>
-                                <span class="font-mono" style="font-size: 0.66rem; color: #fff0d0; opacity: 0.95;">Your order will be upgraded !</span>
+                            <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; margin: auto 0; text-align: center;">
+                                <div class="tarot-roman-numeral-front" style="color: #8b1a27;">I</div>
+                                <span class="font-serif" style="font-size: 1.35rem; font-weight: 900; color: #ffffff; letter-spacing: 0.04em;">ORDER UPGRADE</span>
+                                <span class="font-mono" style="font-size: 0.66rem; color: #dcd3c5; opacity: 0.95;">VIP Unboxing &amp; Packaging</span>
                             </div>
-                            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 80%; margin-top: auto; opacity: 0.65;">
-                                <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #ffc857, transparent);"></span>
-                                <span style="color: #ffc857; font-size: 0.6rem;">✦</span>
-                                <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #ffc857, transparent);"></span>
+                            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 80%; margin-top: auto; opacity: 0.5;">
+                                <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #8b1a27, transparent);"></span>
+                                <span style="color: #8b1a27; font-size: 0.6rem;">✦</span>
+                                <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #8b1a27, transparent);"></span>
                             </div>
                         </div>
                         <!-- Back -->
@@ -3907,19 +3966,19 @@
                     <div class="tarot-flash"></div>
                     <div class="tarot-card-inner">
                         <!-- Front -->
-                        <div class="tarot-face tarot-front" style="border-color: rgba(56, 189, 248, 0.85); box-shadow: inset 0 0 25px rgba(56, 189, 248, 0.15);">
+                        <div class="tarot-face tarot-front" style="border-color: rgba(138, 112, 66, 0.85); box-shadow: 0 12px 30px rgba(0, 0, 0, 0.95), inset 0 0 0 1px rgba(255, 232, 190, 0.1);">
                             <div style="display: flex; align-items: center; justify-content: center; width: 100%;">
-                                <span class="font-mono tarot-roman-title" style="color: #38bdf8;">II &bull; SECUNDUS</span>
+                                <span class="font-mono tarot-roman-title" style="color: #e2d7c5; font-weight: 800;">II &bull; SECUNDUS</span>
                             </div>
-                            <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; margin: auto 0;">
-                                <div class="tarot-roman-numeral-front" style="color: #38bdf8;">II</div>
-                                <span class="font-serif" style="font-size: 1.40rem; font-weight: 800; color: #ffffff; letter-spacing: 0.04em;">FREE DELIVERY</span>
-                                <span class="font-mono" style="font-size: 0.66rem; color: #fff0d0; opacity: 0.95;">COD Deposit Waived (Rs. 0)</span>
+                            <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; margin: auto 0; text-align: center;">
+                                <div class="tarot-roman-numeral-front" style="color: #8a7042;">II</div>
+                                <span class="font-serif" style="font-size: 1.35rem; font-weight: 900; color: #ffffff; letter-spacing: 0.04em;">FREE DELIVERY</span>
+                                <span class="font-mono" style="font-size: 0.66rem; color: #dcd3c5; opacity: 0.95;">Courier Deposit Waived (Rs. 0)</span>
                             </div>
-                            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 80%; margin-top: auto; opacity: 0.65;">
-                                <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #38bdf8, transparent);"></span>
-                                <span style="color: #38bdf8; font-size: 0.6rem;">✦</span>
-                                <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #38bdf8, transparent);"></span>
+                            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 80%; margin-top: auto; opacity: 0.5;">
+                                <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #8a7042, transparent);"></span>
+                                <span style="color: #8a7042; font-size: 0.6rem;">✦</span>
+                                <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #8a7042, transparent);"></span>
                             </div>
                         </div>
                         <!-- Back -->
@@ -3934,19 +3993,19 @@
                     <div class="tarot-flash"></div>
                     <div class="tarot-card-inner">
                         <!-- Front -->
-                        <div class="tarot-face tarot-front" style="border-color: rgba(255, 59, 92, 0.85); box-shadow: inset 0 0 25px rgba(255, 59, 92, 0.15);">
+                        <div class="tarot-face tarot-front" style="border-color: rgba(158, 27, 43, 0.85); box-shadow: 0 12px 30px rgba(0, 0, 0, 0.95), inset 0 0 0 1px rgba(255, 232, 190, 0.1);">
                             <div style="display: flex; align-items: center; justify-content: center; width: 100%;">
-                                <span class="font-mono tarot-roman-title" style="color: #ff3b5c;">III &bull; TERTIUS</span>
+                                <span class="font-mono tarot-roman-title" style="color: #e2d7c5; font-weight: 800;">III &bull; TERTIUS</span>
                             </div>
-                            <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; margin: auto 0;">
-                                <div class="tarot-roman-numeral-front" style="color: #ff3b5c;">III</div>
-                                <span class="font-serif" style="font-size: 1.35rem; font-weight: 800; color: #ffffff; letter-spacing: 0.04em;">FREE GOTHIC GIFT</span>
-                                <span class="font-mono" style="font-size: 0.66rem; color: #fff0d0; opacity: 0.95;">Handcrafted Relic Included</span>
+                            <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; margin: auto 0; text-align: center;">
+                                <div class="tarot-roman-numeral-front" style="color: #9e1b2b;">III</div>
+                                <span class="font-serif" style="font-size: 1.30rem; font-weight: 900; color: #ffffff; letter-spacing: 0.04em;">FREE GOTHIC GIFT</span>
+                                <span class="font-mono" style="font-size: 0.66rem; color: #dcd3c5; opacity: 0.95;">Artifact Enclosed in Parcel</span>
                             </div>
-                            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 80%; margin-top: auto; opacity: 0.65;">
-                                <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #ff3b5c, transparent);"></span>
-                                <span style="color: #ff3b5c; font-size: 0.6rem;">✦</span>
-                                <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #ff3b5c, transparent);"></span>
+                            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 80%; margin-top: auto; opacity: 0.5;">
+                                <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #9e1b2b, transparent);"></span>
+                                <span style="color: #9e1b2b; font-size: 0.6rem;">✦</span>
+                                <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #9e1b2b, transparent);"></span>
                             </div>
                         </div>
                         <!-- Back -->
@@ -3961,19 +4020,19 @@
                     <div class="tarot-flash"></div>
                     <div class="tarot-card-inner">
                         <!-- Front -->
-                        <div class="tarot-face tarot-front" style="border-color: rgba(224, 169, 109, 0.85); box-shadow: inset 0 0 25px rgba(224, 169, 109, 0.15);">
+                        <div class="tarot-face tarot-front" style="border-color: rgba(125, 99, 55, 0.85); box-shadow: 0 12px 30px rgba(0, 0, 0, 0.95), inset 0 0 0 1px rgba(255, 232, 190, 0.1);">
                             <div style="display: flex; align-items: center; justify-content: center; width: 100%;">
-                                <span class="font-mono tarot-roman-title" style="color: #e0a96d;">IV &bull; QUARTUS</span>
+                                <span class="font-mono tarot-roman-title" style="color: #e2d7c5; font-weight: 800;">IV &bull; QUARTUS</span>
                             </div>
-                            <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; margin: auto 0;">
-                                <div class="tarot-roman-numeral-front" style="color: #e0a96d;">IV</div>
-                                <span class="font-serif" style="font-size: 1.45rem; font-weight: 800; color: #ffffff; letter-spacing: 0.04em;">10% OFF</span>
-                                <span class="font-mono" style="font-size: 0.66rem; color: #fff0d0; opacity: 0.95;">Instant Cart Discount</span>
+                            <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; margin: auto 0; text-align: center;">
+                                <div class="tarot-roman-numeral-front" style="color: #7d6337;">IV</div>
+                                <span class="font-serif" style="font-size: 1.45rem; font-weight: 900; color: #ffffff; letter-spacing: 0.04em;">10% OFF</span>
+                                <span class="font-mono" style="font-size: 0.66rem; color: #dcd3c5; opacity: 0.95;">Instant Cart Deduction</span>
                             </div>
-                            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 80%; margin-top: auto; opacity: 0.65;">
-                                <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #e0a96d, transparent);"></span>
-                                <span style="color: #e0a96d; font-size: 0.6rem;">✦</span>
-                                <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #e0a96d, transparent);"></span>
+                            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 80%; margin-top: auto; opacity: 0.5;">
+                                <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #7d6337, transparent);"></span>
+                                <span style="color: #7d6337; font-size: 0.6rem;">✦</span>
+                                <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #7d6337, transparent);"></span>
                             </div>
                         </div>
                         <!-- Back -->
@@ -4001,13 +4060,13 @@
 
             <!-- Fortune Claim Container (Revealed after pick) -->
             <div id="tarotClaimBox" class="tarot-claim-box" style="display: none;">
-                <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
-                    <span class="font-mono" style="font-size: 0.68rem; color: #d4af37; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;">✦ DESTINY GRANTED FOR 48 HOURS ✦</span>
-                    <span id="tarotClaimTitle" class="font-serif" style="font-size: 1.45rem; font-weight: 800; color: #ffffff; text-align: center;">FREE DELIVERY</span>
-                    <span id="tarotClaimDesc" class="font-mono" style="font-size: 0.76rem; color: #fff0d0; opacity: 0.95; text-align: center;">COD Delivery Deposit is Waived (Rs. 0 Due Now).</span>
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 6px;">
+                    <span class="font-mono" style="font-size: 0.68rem; color: #dcd3c5; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;">✦ DESTINY BOUND FOR 48 HOURS ✦</span>
+                    <span id="tarotClaimTitle" class="font-serif" style="font-size: 1.55rem; font-weight: 900; color: #ffffff; text-align: center; letter-spacing: 0.04em;">FREE GOTHIC GIFT</span>
+                    <span id="tarotClaimDesc" class="font-mono" style="font-size: 0.76rem; color: #e2d7c5; opacity: 0.95; text-align: center; line-height: 1.4;">Complimentary handcrafted gothic jewelry artifact enclosed in parcel.</span>
                 </div>
                 <button type="button" class="tarot-claim-btn" onclick="closeTarotOverlay(false)">
-                    <span>CLAIM &amp; ENTER THE REALM</span>
+                    <span>CLAIM &amp; ENTER STORE</span>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
                 </button>
             </div>
@@ -4021,25 +4080,25 @@
         </div>
         <div style="display: flex; flex-direction: column; gap: 1px; min-width: 0;">
             <div style="display: flex; align-items: center; gap: 6px;">
-                <span class="font-mono" style="font-size: 0.55rem; color: #d4af37; font-weight: 700; letter-spacing: 0.10em; text-transform: uppercase;">✦ REWARD</span>
+                <span class="font-mono" style="font-size: 0.55rem; color: #ff9999; font-weight: 700; letter-spacing: 0.10em; text-transform: uppercase;">✦ REWARD</span>
                 <span id="floatingPillTimer" class="font-mono" style="font-size: 0.60rem; color: #ffe8be; font-weight: 700; opacity: 0.95; font-variant-numeric: tabular-nums; letter-spacing: 0.04em;">48h 00m</span>
             </div>
-            <span id="floatingPillText" class="font-mono" style="font-size: 0.86rem; font-weight: 800; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">FREE DELIVERY</span>
+            <span id="floatingPillText" class="font-mono" style="font-size: 0.86rem; font-weight: 800; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">FREE GOTHIC GIFT</span>
         </div>
-        <span class="font-mono" style="font-size: 0.62rem; color: #ffe8be; background: rgba(255,232,190,0.12); padding: 2px 7px; border-radius: 4px; border: 1px solid rgba(255,232,190,0.22); flex-shrink: 0;">ACTIVE</span>
+        <span class="font-mono" style="font-size: 0.62rem; color: #ffe8be; background: rgba(139, 0, 0, 0.25); padding: 2px 7px; border-radius: 4px; border: 1px solid rgba(139, 20, 30, 0.6); flex-shrink: 0;">ACTIVE</span>
     </div>
 
     <!-- Dedicated Cyber-Occult Destiny Details Modal (Triggered via Floating Pill) -->
-    <div id="tarotDestinyModal" class="tarot-destiny-modal-overlay" onclick="closeTarotDetailsModal(event)" role="dialog" aria-modal="true" aria-label="Active Daily Fortune Details">
+    <div id="tarotDestinyModal" class="tarot-destiny-modal-overlay" onclick="closeTarotDetailsModal(event)" role="dialog" aria-modal="true" aria-label="Active Occult Fortune Details">
         <div class="tarot-destiny-modal-content" onclick="event.stopPropagation()">
             <button type="button" class="tarot-destiny-modal-close" onclick="closeTarotDetailsModal()" aria-label="Close">✕</button>
             <div style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px;">
                 <div class="tarot-destiny-countdown-badge font-mono">
-                    <span style="color: #ffc857;">✦ LIVE DESTINY:</span>
+                    <span style="color: #ff9999;">✦ ACTIVE DESTINY:</span>
                     <span id="destinyModalTimer">47h 59m 30s</span>
                 </div>
-                <h3 id="destinyModalTitle" class="font-serif" style="font-size: 1.6rem; font-weight: 800; color: #ffffff; margin: 0; text-shadow: 0 0 20px rgba(255,200,87,0.35);">FREE DELIVERY</h3>
-                <p id="destinyModalDesc" class="font-mono" style="font-size: 0.80rem; color: #ffe8be; opacity: 0.90; line-height: 1.5; margin: 6px 0 16px 0;">Advance COD delivery deposit is waived to Rs. 0. Pay full balance at doorstep.</p>
+                <h3 id="destinyModalTitle" class="font-serif" style="font-size: 1.6rem; font-weight: 800; color: #ffffff; margin: 0; text-shadow: 0 2px 10px rgba(0,0,0,0.9);">FREE GOTHIC GIFT</h3>
+                <p id="destinyModalDesc" class="font-mono" style="font-size: 0.80rem; color: #ffe8be; opacity: 0.90; line-height: 1.5; margin: 6px 0 16px 0;">Complimentary handcrafted gothic jewelry artifact enclosed in parcel.</p>
                 <div style="display: flex; gap: 10px; width: 100%;">
                     <button type="button" class="pdp-btn-secondary font-mono" style="flex: 1; padding: 10px; font-size: 0.74rem;" onclick="closeTarotDetailsModal()">CONTINUE SHOPPING</button>
                     <button type="button" class="pdp-btn-primary font-mono" style="flex: 1; padding: 10px; font-size: 0.74rem;" onclick="closeTarotDetailsModal(); openCheckout();">VIEW CART &amp; CHECKOUT</button>
@@ -4055,49 +4114,49 @@
                 id: "reward_upgrade",
                 roman: "I",
                 name: "PRIMUS",
-                title: "ORDER UPGRADE!",
-                desc: "Your order will be upgraded !",
-                offer: "ORDER UPGRADE!",
-                subtext: "Your order will be upgraded !",
+                title: "ORDER UPGRADE",
+                desc: "VIP packaging & complimentary artifact upgrade included.",
+                offer: "ORDER UPGRADE",
+                subtext: "VIP Unboxing & Packaging",
                 type: "order_upgrade",
                 value: 0,
-                accent: "#ffc857"
+                accent: "#8b1a27"
             },
             {
                 id: "reward_freeship",
                 roman: "II",
                 name: "SECUNDUS",
                 title: "FREE DELIVERY",
-                desc: "Advance COD deposit waived to Rs. 0. Full payment on doorstep.",
+                desc: "Advance courier deposit waived (Rs. 0 Due Now). Pay balance on delivery.",
                 offer: "FREE DELIVERY",
-                subtext: "COD Deposit Waived (Rs. 0)",
+                subtext: "Courier Deposit Waived (Rs. 0)",
                 type: "free_shipping",
                 value: 0,
-                accent: "#38bdf8"
+                accent: "#8a7042"
             },
             {
                 id: "reward_gift",
                 roman: "III",
                 name: "TERTIUS",
                 title: "FREE GOTHIC GIFT",
-                desc: "You will get a random gift with this order !",
+                desc: "Complimentary handcrafted gothic jewelry artifact enclosed in parcel.",
                 offer: "FREE GOTHIC GIFT",
-                subtext: "You will get a random gift with this order !",
+                subtext: "Artifact Enclosed in Parcel",
                 type: "free_gift",
                 value: 0,
-                accent: "#c084fc"
+                accent: "#9e1b2b"
             },
             {
                 id: "reward_discount",
                 roman: "IV",
                 name: "QUARTUS",
                 title: "10% OFF CART",
-                desc: "10% Instant discount on product subtotal.",
+                desc: "10% Instant deduction applied directly to your artifact subtotal.",
                 offer: "10% OFF",
-                subtext: "Instant Cart Discount",
+                subtext: "Instant Cart Deduction",
                 type: "percentage_discount",
                 value: 10,
-                accent: "#e0a96d"
+                accent: "#7d6337"
             }
         ];
 
@@ -4111,12 +4170,12 @@
         };
 
         const FORTY_EIGHT_HOURS = 48 * 60 * 60 * 1000;
-        const TAROT_STORAGE_KEY = 'gn_daily_card_v11';
+        const TAROT_STORAGE_KEY = 'gn_tarot_ritual_v12';
         let countdownTimerInterval = null;
 
         // Clean up any legacy storage keys from previous builds
         (function cleanupLegacyStorage() {
-            const legacyKeys = ['gn_daily_card_v10', 'gn_daily_card_v9', 'gn_daily_card_v8', 'gn_daily_card_v7', 'gn_daily_card_v6', 'gn_daily_card_v5', 'gn_daily_card_v4', 'gn_daily_card_state'];
+            const legacyKeys = ['gn_daily_card_v11', 'gn_daily_card_v10', 'gn_daily_card_v9', 'gn_daily_card_v8', 'gn_daily_card_v7', 'gn_daily_card_v6', 'gn_daily_card_v5', 'gn_daily_card_v4', 'gn_daily_card_state'];
             legacyKeys.forEach(k => {
                 try { localStorage.removeItem(k); } catch(e) {}
             });
@@ -4182,21 +4241,21 @@
         function renderCardFront(cardWrapper, reward, index) {
             const front = cardWrapper.querySelector('.tarot-front');
             if (!front) return;
-            front.style.borderColor = `${reward.accent}d9`;
-            front.style.boxShadow = `0 12px 30px rgba(0, 0, 0, 0.9), inset 0 0 0 1px rgba(255, 232, 190, 0.15), inset 0 0 20px ${reward.accent}22`;
+            front.style.borderColor = `${reward.accent || '#8b1a27'}d9`;
+            front.style.boxShadow = `0 12px 30px rgba(0, 0, 0, 0.95), inset 0 0 0 1px rgba(255, 232, 190, 0.1)`;
             front.innerHTML = `
                 <div style="display: flex; align-items: center; justify-content: center; width: 100%;">
-                    <span class="font-mono tarot-roman-title" style="color: ${reward.accent}; font-weight: 700;">${reward.roman} &bull; ${reward.name}</span>
+                    <span class="font-mono tarot-roman-title" style="color: #e2d7c5; font-weight: 800; font-size: 0.70rem; letter-spacing: 0.16em;">${reward.roman} &bull; ${reward.name}</span>
                 </div>
-                <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; margin: auto 0;">
-                    <div class="tarot-roman-numeral-front" style="color: ${reward.accent};">${reward.roman}</div>
-                    <span class="font-serif" style="font-size: 1.35rem; font-weight: 800; color: #ffffff; letter-spacing: 0.04em;">${reward.offer}</span>
-                    <span class="font-mono" style="font-size: 0.66rem; color: #fff0d0; opacity: 0.95;">${reward.subtext}</span>
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; margin: auto 0; text-align: center;">
+                    <div class="tarot-roman-numeral-front" style="color: ${reward.accent || '#8b1a27'}; font-family: 'Playfair Display', Georgia, serif; font-size: 3.2rem; font-weight: 900; line-height: 1; text-shadow: 0 2px 8px rgba(0,0,0,0.9);">${reward.roman}</div>
+                    <span class="font-serif" style="font-size: 1.35rem; font-weight: 900; color: #ffffff; letter-spacing: 0.04em;">${reward.offer}</span>
+                    <span class="font-mono" style="font-size: 0.66rem; color: #dcd3c5; opacity: 0.95; line-height: 1.3;">${reward.subtext}</span>
                 </div>
-                <div style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 80%; margin-top: auto; opacity: 0.65;">
-                    <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, ${reward.accent}, transparent);"></span>
-                    <span style="color: ${reward.accent}; font-size: 0.6rem;">✦</span>
-                    <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, ${reward.accent}, transparent);"></span>
+                <div style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 80%; margin-top: auto; opacity: 0.5;">
+                    <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, ${reward.accent || '#8b1a27'}, transparent);"></span>
+                    <span style="color: ${reward.accent || '#8b1a27'}; font-size: 0.6rem;">✦</span>
+                    <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, ${reward.accent || '#8b1a27'}, transparent);"></span>
                 </div>
             `;
         }
@@ -4214,7 +4273,7 @@
             }
             const toast = document.createElement('div');
             toast.className = 'luxury-toast-item';
-            toast.innerHTML = `<span style="color: #ffc857; font-size: 0.9rem;">${icon}</span> <span>${message}</span>`;
+            toast.innerHTML = `<span style="color: #ff9999; font-size: 0.9rem;">${icon}</span> <span>${message}</span>`;
             container.appendChild(toast);
             setTimeout(() => {
                 if (toast && toast.parentNode) {
@@ -4251,7 +4310,7 @@
         });
 
         // =========================================================================
-        // MYSTICAL CANVAS PARTICLE & RUNIC VFX ENGINE
+        // MYSTICAL CANVAS PARTICLE & RUNIC VFX ENGINE (OCCULT BLOOD & ASH THEME)
         // =========================================================================
         let tarotCanvasAnimId = null;
         let tarotParticles = [];
@@ -4271,16 +4330,16 @@
             window.addEventListener('resize', resize);
 
             tarotParticles = [];
-            const particleCount = window.innerWidth < 600 ? 30 : 60;
+            const particleCount = window.innerWidth < 600 ? 25 : 50;
             for (let i = 0; i < particleCount; i++) {
                 tarotParticles.push({
                     x: Math.random() * canvas.width,
                     y: Math.random() * canvas.height,
-                    size: Math.random() * 2.2 + 0.6,
-                    speedY: -(Math.random() * 0.6 + 0.2),
-                    speedX: (Math.random() - 0.5) * 0.4,
-                    alpha: Math.random() * 0.6 + 0.2,
-                    gold: Math.random() > 0.4,
+                    size: Math.random() * 2.0 + 0.5,
+                    speedY: -(Math.random() * 0.5 + 0.15),
+                    speedX: (Math.random() - 0.5) * 0.3,
+                    alpha: Math.random() * 0.5 + 0.15,
+                    blood: Math.random() > 0.45,
                     phase: Math.random() * Math.PI * 2
                 });
             }
@@ -4292,8 +4351,8 @@
 
                 tarotParticles.forEach(p => {
                     p.y += p.speedY;
-                    p.x += Math.sin(p.phase) * 0.3 + p.speedX;
-                    p.phase += 0.02;
+                    p.x += Math.sin(p.phase) * 0.25 + p.speedX;
+                    p.phase += 0.015;
 
                     if (p.y < -10) {
                         p.y = canvas.height + 10;
@@ -4302,11 +4361,11 @@
 
                     ctx.beginPath();
                     ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                    ctx.fillStyle = p.gold 
-                        ? `rgba(255, 200, 87, ${p.alpha * 0.75})` 
-                        : `rgba(255, 232, 190, ${p.alpha * 0.45})`;
-                    ctx.shadowColor = p.gold ? 'rgba(255, 200, 87, 0.8)' : 'rgba(255, 255, 255, 0.5)';
-                    ctx.shadowBlur = p.gold ? 8 : 4;
+                    ctx.fillStyle = p.blood 
+                        ? `rgba(139, 0, 0, ${p.alpha * 0.7})` 
+                        : `rgba(224, 214, 200, ${p.alpha * 0.35})`;
+                    ctx.shadowColor = p.blood ? 'rgba(139, 0, 0, 0.7)' : 'rgba(0, 0, 0, 0.5)';
+                    ctx.shadowBlur = p.blood ? 6 : 2;
                     ctx.fill();
                     ctx.shadowBlur = 0;
                 });
@@ -4314,8 +4373,8 @@
                 for (let i = tarotShockwaves.length - 1; i >= 0; i--) {
                     const sw = tarotShockwaves[i];
                     sw.radius += sw.speed;
-                    sw.alpha -= 0.025;
-                    sw.speed *= 0.96;
+                    sw.alpha -= 0.03;
+                    sw.speed *= 0.95;
 
                     if (sw.alpha <= 0) {
                         tarotShockwaves.splice(i, 1);
@@ -4324,10 +4383,10 @@
 
                     ctx.beginPath();
                     ctx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2);
-                    ctx.strokeStyle = `rgba(255, 200, 87, ${sw.alpha * 0.85})`;
-                    ctx.lineWidth = 2.5;
-                    ctx.shadowColor = 'rgba(255, 200, 87, 0.9)';
-                    ctx.shadowBlur = 15;
+                    ctx.strokeStyle = `rgba(139, 20, 30, ${sw.alpha * 0.8})`;
+                    ctx.lineWidth = 2;
+                    ctx.shadowColor = 'rgba(139, 0, 0, 0.8)';
+                    ctx.shadowBlur = 10;
                     ctx.stroke();
                     ctx.shadowBlur = 0;
                 }
@@ -4344,8 +4403,8 @@
                 x: canvas.width / 2,
                 y: canvas.height / 2,
                 radius: 10,
-                speed: 16,
-                alpha: 1.0
+                speed: 14,
+                alpha: 0.9
             });
         }
 
@@ -4360,21 +4419,21 @@
                 x: cx,
                 y: cy,
                 radius: 5,
-                speed: 12,
-                alpha: 0.95
+                speed: 10,
+                alpha: 0.85
             });
 
-            for (let i = 0; i < 35; i++) {
+            for (let i = 0; i < 30; i++) {
                 const angle = Math.random() * Math.PI * 2;
-                const spd = Math.random() * 5 + 2;
+                const spd = Math.random() * 4 + 1.5;
                 tarotParticles.push({
                     x: cx,
                     y: cy,
-                    size: Math.random() * 3 + 1.5,
+                    size: Math.random() * 2.5 + 1.0,
                     speedX: Math.cos(angle) * spd,
                     speedY: Math.sin(angle) * spd,
-                    alpha: 1.0,
-                    gold: true,
+                    alpha: 0.9,
+                    blood: true,
                     phase: 0
                 });
             }
@@ -4431,7 +4490,7 @@
 
                     if (typeof updateInPageContextualPolicy === 'function') updateInPageContextualPolicy(null);
                     if (typeof updateCheckoutTotals === 'function') updateCheckoutTotals();
-                    initTarotRitual(true);
+                    initTarotRitual(false);
                     return;
                 }
 
@@ -4451,33 +4510,7 @@
             countdownTimerInterval = setInterval(updateTimer, 1000);
         }
 
-        // Initialize Tarot Stage on page load
-                // Global Reset Helper for easy testing
-        window.resetTarotRitual = function() {
-            try {
-                localStorage.removeItem(TAROT_STORAGE_KEY);
-                ['gn_daily_card_v10', 'gn_daily_card_v9', 'gn_daily_card_v8', 'gn_daily_card_v7', 'gn_daily_card_v6', 'gn_daily_card_v5', 'gn_daily_card_v4'].forEach(k => {
-                    localStorage.removeItem(k);
-                });
-            } catch(e) {}
-            window.activeDailyReward = null;
-            if (countdownTimerInterval) {
-                clearInterval(countdownTimerInterval);
-                countdownTimerInterval = null;
-            }
-            const pill = document.getElementById('floatingRewardPill');
-            if (pill) pill.style.display = 'none';
-            if (typeof updateInPageContextualPolicy === 'function') updateInPageContextualPolicy(null);
-            if (typeof updateCheckoutTotals === 'function') updateCheckoutTotals();
-            initTarotRitual(true);
-            if (typeof showLuxuryToast === 'function') {
-                showLuxuryToast('✦ TAROT DECK RESET FOR TODAY', '🎴');
-            }
-        };
-
         function initTarotRitual(force = false) {
-            const urlParams = new URLSearchParams(window.location.search);
-            const isForced = force || urlParams.has('tarot') || urlParams.has('shuffle') || urlParams.has('reset') || window.location.hash === '#tarot';
             const stored = getStoredDailyReward();
             const overlay = document.getElementById('dailyFortuneOverlay');
             const stage = document.getElementById('tarotCardsStage');
@@ -4486,7 +4519,8 @@
             const claimBox = document.getElementById('tarotClaimBox');
             const impactWrap = document.getElementById('tarotChooseImpactWrap');
 
-            if (stored && !isForced) {
+            // Ironclad Rule: If user has a valid active reward in the last 48 hours, NEVER allow reshuffle!
+            if (stored) {
                 document.documentElement.classList.remove('tarot-pending');
                 if (overlay) {
                     overlay.style.display = 'none';
@@ -4540,16 +4574,16 @@
 
         window.openTarotRitual = function(force = false) {
             const stored = getStoredDailyReward();
-            if (stored && !force) {
+            if (stored) {
                 if (typeof showLuxuryToast === 'function') {
-                    showLuxuryToast(`✦ ACTIVE REWARD: ${stored.reward.title} (Valid for 48 Hours)`, '🎴');
+                    showLuxuryToast(`✦ ACTIVE DESTINY: ${stored.reward.title} (48h Bound)`, '🎴');
                 }
                 if (typeof openTarotDetailsModal === 'function') {
                     openTarotDetailsModal();
                 }
                 return;
             }
-            initTarotRitual(force);
+            initTarotRitual(false);
         };
 
         // USER CLICKS THE "SHUFFLE CARDS" BUTTON
@@ -4695,7 +4729,7 @@
         function closeTarotOverlay(isDirectSkip = false) {
             if (!tarotState.selectedReward && !isDirectSkip) {
                 if (typeof showLuxuryAlert === 'function') {
-                    showLuxuryAlert("Thou must choose thy card of destiny to enter the realm.", "DAILY ALLOCATION REQUIRED", "warning");
+                    showLuxuryAlert("Thou must choose thy card of destiny to enter the realm.", "RITUAL REQUIRED", "warning");
                 }
                 return;
             }
@@ -4739,7 +4773,7 @@
             const stored = getStoredDailyReward();
             const reward = stored?.reward || window.activeDailyReward;
             if (!reward) {
-                initTarotRitual(true);
+                initTarotRitual(false);
                 return;
             }
 
@@ -4778,20 +4812,20 @@
         }
         window.closeTarotDetailsModal = closeTarotDetailsModal;
 
-        // In-page Contextual Strike-through: Cut the 600-700 advance deposit number when Free Delivery is active
+        // In-page Contextual Strike-through: Cut the advance deposit number when Free Delivery is active
         function updateInPageContextualPolicy(reward) {
             const depositDoms = document.querySelectorAll('.checkout-advance-badge, .deposit-policy-badge, #checkoutStep1Deposit, [data-deposit-notice]');
             if (!reward || reward.type !== 'free_shipping') {
                 depositDoms.forEach(el => {
                     if (el.id === 'checkoutStep1Deposit' && selectedPaymentMethod === 'cod') {
-                        el.innerHTML = `Courier Delivery Fee (Rs. 250)`;
+                        el.innerHTML = `Rs. 250`;
                     }
                 });
                 return;
             }
             depositDoms.forEach(el => {
                 if (el.id === 'checkoutStep1Deposit') {
-                    el.innerHTML = `<span class="deposit-waived-strike">Courier Delivery Fee (Rs. 250)</span> <span class="deposit-waived-active">Rs. 0 (WAIVED)</span>`;
+                    el.innerHTML = `<span class="deposit-waived-strike" style="text-decoration: line-through; opacity: 0.5; font-size: 0.85rem; margin-right: 4px;">Rs. 250</span><span style="color: #4ade80; font-weight: 800;">Rs. 0</span>`;
                 }
             });
         }
