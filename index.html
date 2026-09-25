@@ -3610,7 +3610,7 @@
                 }
 
                 const calculatedTotal = Math.max(0, calculatedSubtotal - discountAmt) + deliveryFee;
-                const depositAmt = (isFreeShippingCod) ? 0 : (isCod ? Math.min(calculatedTotal, 600) : calculatedTotal);
+                const depositAmt = (isFreeShippingCod) ? 0 : (isCod ? Math.min(calculatedTotal, 250) : calculatedTotal);
 
                 const orderPayload = {
                     customer_name: name,
@@ -3775,7 +3775,7 @@
                     `;
                 }
 
-                const depositPaid = isAdvance ? total : (order.advance_amount !== undefined ? order.advance_amount : (order.deposit_paid !== undefined ? order.deposit_paid : 600));
+                const depositPaid = isAdvance ? total : (order.advance_amount !== undefined ? order.advance_amount : (order.deposit_paid !== undefined ? order.deposit_paid : 250));
                 const isZeroDeposit = !isAdvance && Number(depositPaid) === 0;
                 const totalNum = Number(String(total).replace(/,/g, '')) || 0;
                 const balanceOnDelivery = isAdvance ? 0 : Math.max(0, totalNum - Number(depositPaid));

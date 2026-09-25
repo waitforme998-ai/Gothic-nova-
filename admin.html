@@ -4467,8 +4467,8 @@
             } else if (isFullAdvance) {
                 advancePaid = total;
             } else {
-                // For COD orders, standard policy deposit is PKR 600
-                advancePaid = Math.min(total, 600);
+                // For COD orders, standard policy deposit is PKR 250
+                advancePaid = Math.min(total, 250);
             }
 
             const codBalance = Math.max(0, total - advancePaid);
