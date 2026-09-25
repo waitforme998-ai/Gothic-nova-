@@ -6097,9 +6097,9 @@ select option {
 
 .tarot-title {
     font-family: var(--font-serif);
-    font-size: clamp(1.85rem, 5.5vw, 2.75rem);
+    font-size: clamp(2.45rem, 7.2vw, 3.6rem);
     font-weight: 900;
-    letter-spacing: 0.16em;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
     margin: 0;
     color: #fdfbf7;
@@ -6107,6 +6107,7 @@ select option {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     filter: drop-shadow(0 2px 14px rgba(139, 0, 0, 0.6));
+    transition: all 0.3s ease;
 }
 
 .tarot-subtext {
@@ -6182,21 +6183,8 @@ select option {
 }
 
 /* --------------------------------------------------------------------------
-   4-CARD STAGE (3D Cards)
+   4-CARD STAGE (3D Cards) - Clean, Solid, No Gradient Circles Behind
    -------------------------------------------------------------------------- */
-.tarot-cards-stage::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 90%;
-    height: 80%;
-    background: radial-gradient(ellipse at center, rgba(139, 0, 0, 0.12) 0%, rgba(60, 7, 18, 0.05) 50%, transparent 75%);
-    pointer-events: none;
-    z-index: 0;
-    filter: blur(24px);
-}
 .tarot-cards-stage {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -6284,12 +6272,12 @@ select option {
     padding: 16px;
 }
 
-/* Card Front: Revealed Gothic Reward (Refined, Serious & Scary Gothic) */
+/* Card Front: Revealed Gothic Reward (Solid Obsidian Background, Ultra-Crisp Typography) */
 .tarot-front {
     transform: rotateY(0deg);
-    background: radial-gradient(circle at 50% 20%, #1a060d 0%, #080205 100%);
+    background: #080306;
     border: 1.5px solid rgba(139, 0, 0, 0.65);
-    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.98), inset 0 0 0 1px rgba(255, 255, 255, 0.08), inset 0 0 22px rgba(0, 0, 0, 0.9);
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.98), inset 0 0 0 1px rgba(255, 255, 255, 0.06), inset 0 0 18px rgba(0, 0, 0, 0.9);
     padding: 18px 14px;
     display: flex;
     flex-direction: column;
@@ -6331,7 +6319,7 @@ select option {
     left: 0;
     width: 100%;
     height: 100%;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.7) 0%, rgba(139, 0, 0, 0.5) 45%, transparent 80%);
+    background: rgba(255, 255, 255, 0.35);
     opacity: 0;
     pointer-events: none;
     z-index: 10;
@@ -6851,7 +6839,7 @@ html.tarot-pending body {
         gap: 4px !important;
     }
     .tarot-title {
-        font-size: 1.25rem !important;
+        font-size: 1.75rem !important;
     }
     .tarot-subtext {
         font-size: 0.68rem !important;
