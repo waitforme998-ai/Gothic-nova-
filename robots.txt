@@ -1,0 +1,17 @@
+# ==============================================================================
+# Gothic Nova — Search Engine Robots Configuration
+# ==============================================================================
+
+User-agent: *
+Allow: /
+Allow: /assets/
+Allow: /category.html
+
+# Disallow internal operational pages from search results
+Disallow: /admin.html
+Disallow: /admin
+Disallow: /dashboard.html
+Disallow: /dashboard
+
+# UPDATE: Replace with custom domain if attached to Vercel
+Sitemap: https://gothic-nova.vercel.app/sitemap.xml

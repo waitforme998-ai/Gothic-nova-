@@ -1,0 +1,35 @@
+# ==============================================================================
+# Gothic Nova — Vercel Deployment Ignore Rules
+# Excludes development scripts, test artifacts, and dev server from live build.
+# ==============================================================================
+
+# Python development and audit scripts
+*.py
+*.pyc
+__pycache__/
+
+# Root-level development screenshots and debug dumps (Keeps /assets/ intact)
+/*.png
+/*.jpg
+/*.jpeg
+/*.webp
+
+# Dev documentation, notes, and transcripts
+*.md
+*.txt
+!robots.txt
+*.log
+*.tmp
+*.bak
+
+# Root JSON dumps (except vercel.json)
+detailed_analysis.json
+
+# Local dev server (run locally with node server.js; not used on Vercel static)
+server.js
+
+# Git metadata
+.git
+.gitignore
+.env
+.env.local

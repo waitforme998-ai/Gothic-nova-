@@ -1,0 +1,16 @@
+# Operating system files
+Thumbs.db
+.DS_Store
+
+# Logs and environment
+*.log
+.env
+.env.local
+
+# Python artifacts
+*.pyc
+__pycache__/
+
+# Scratch and temp dumps
+*.tmp
+*.bak

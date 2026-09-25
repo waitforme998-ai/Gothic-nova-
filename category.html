@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GOTHIC NOVA</title>
+    <script>
+        // Redirect immediately to single-page storefront on index.html
+        (function() {
+            var search = window.location.search || '';
+            var hash = window.location.hash || '#active-drop';
+            window.location.replace('index.html' + search + (search.includes('#') ? '' : hash));
+        })();
+    </script>
+</head>
+<body style="background:#0a0508;color:#ffffff;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;font-family:sans-serif;">
+    <p style="letter-spacing:0.1em;opacity:0.7;">Opening Gothic Nova Store...</p>
+</body>
+</html>
