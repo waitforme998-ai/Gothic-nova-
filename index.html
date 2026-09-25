@@ -29,6 +29,12 @@
     <meta name="twitter:description" content="Explore gothic rings, chains, chokers &amp; pendants in Pakistan. Cash on Delivery available nationwide.">
     <meta name="twitter:image" content="https://gothic-nova.vercel.app/assets/hero_gothic_bg.png">
 
+    <!-- High-Performance Critical Image Preloads -->
+    <link rel="preload" as="image" href="assets/gothic_card_back.jpg" fetchpriority="high">
+    <link rel="preload" as="image" href="assets/hero_gothic_bg.png" fetchpriority="high">
+    <link rel="preload" as="image" href="assets/website_bg.png">
+    <link rel="preload" as="image" href="assets/subject_silhouette.png">
+
     <!-- Design System Typography Links -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -239,7 +245,7 @@
     <!-- SALE TICKER BAND -->
     <div class="sale-ticker-band" id="saleTickerBand">
         <div class="sale-ticker-track" id="saleTickerTrack">
-            <span onclick="openTarotRitual(true)" style="cursor: pointer; color: #ffe8be;"><strong style="color: #ffc857;">✦ DAILY FORTUNE:</strong> DRAW THY TAROT CARD (FREE REWARDS) ✦</span>
+            <span><strong style="color: #ffc857;">✦ DAILY ORACLE:</strong> REWARDS REMAIN PERSISTENT FOR 48 HOURS ✦</span>
             <span>⚡ EARLY ACCESS: 15% OFF ALL PENDANTS WITH CODE 'NOVA15'</span>
             <span>⚡ FREE SHIPPING ON ORDERS OVER RS. 5000</span>
             <span>⚡ LIMITED EDITION REAPER CHAIN DROPS TONIGHT</span>
@@ -248,7 +254,7 @@
 
     <!-- FIXED GLASSMORPHIC NAVBAR -->
     <nav class="navbar reveal-header" id="mainNav">
-        <!-- Left: Hamburger + Drops + Collections + Tarot -->
+        <!-- Left: Hamburger + Drops + Collections -->
         <div class="nav-left" style="display:flex;align-items:center;flex:1;position:relative;gap:16px;">
             <button id="navMenuBtn" aria-label="Toggle Categories" style="display:flex;flex-direction:column;justify-content:center;gap:4px;width:22px;height:18px;background:transparent;border:none;cursor:pointer;padding:0;flex-shrink:0;">
                 <span class="hb-line"></span>
@@ -257,13 +263,8 @@
             </button>
             <a href="#active-drop" class="nav-link-desktop" style="font-size:0.82rem;color:var(--color-text-primary);text-decoration:none;font-weight:500;">Drops</a>
             <a href="#" class="nav-link-desktop" style="font-size:0.82rem;color:var(--color-text-primary);text-decoration:none;font-weight:500;">Collections</a>
-            <a href="javascript:void(0)" onclick="openTarotRitual(true)" class="nav-link-desktop" style="font-size:0.82rem;color:#ffc857;text-decoration:none;font-weight:600;display:inline-flex;align-items:center;gap:5px;">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                Daily Tarot
-            </a>
             
             <div id="navMenuDropdown" style="display:none;position:absolute;top:2.8rem;left:0;background:rgba(20,9,15,0.96);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--color-border);border-radius:6px;padding:10px 0;min-width:200px;box-shadow:0 12px 40px rgba(0,0,0,0.6);flex-direction:column;z-index:100;">
-                <a href="javascript:void(0)" onclick="openTarotRitual(true)" style="display:block;padding:10px 20px;font-size:0.85rem;color:#ffc857;text-decoration:none;font-weight:700;border-bottom:1px solid rgba(255,200,87,0.2);">✦ Draw Daily Tarot</a>
                 <a href="javascript:void(0)" onclick="selectCategoryAndScroll('all')" style="display:block;padding:10px 20px;font-size:0.85rem;color:var(--color-text-primary);text-decoration:none;font-weight:500;">All Collections</a>
                 <hr style="border:none;border-top:1px solid var(--color-border);margin:6px 0;">
                 <a href="javascript:void(0)" onclick="selectCategoryAndScroll('rings')" style="display:block;padding:10px 20px;font-size:0.85rem;color:var(--color-text-primary);text-decoration:none;font-weight:500;">Rings</a>
@@ -1654,14 +1655,9 @@
                     <div class="payment-options-grid" style="display: grid; grid-template-columns: 1fr; gap: 10px; width: 100%; box-sizing: border-box;">
                         <!-- Option 1: Cash on Delivery -->
                         <div class="payment-card selected" id="payCardCod" onclick="selectPaymentMethod('cod')" style="padding: 12px 14px; cursor: pointer; border-radius: 6px; box-sizing: border-box;">
-                            <div class="payment-card-header" style="display: flex; flex-direction: column; align-items: flex-start; gap: 4px;">
-                                <div style="display: flex; align-items: center; gap: 8px; width: 100%;">
-                                    <div class="payment-radio-circle"><div class="payment-radio-dot"></div></div>
-                                    <span class="payment-card-title" style="font-size: 0.88rem; font-weight: 700; color: #ffffff; white-space: nowrap;">Cash on Delivery</span>
-                                </div>
-                                <div style="padding-left: 24px; margin-top: 1px;">
-                                    <span class="payment-card-badge cod font-mono" style="font-size: 0.58rem; background: rgba(255,232,190,0.12); color: #ffe8be; border: 1px solid rgba(255,232,190,0.28); border-radius: 3px; padding: 2px 7px; display: inline-block;">POPULAR</span>
-                                </div>
+                            <div class="payment-card-header" style="display: flex; align-items: center; gap: 8px;">
+                                <div class="payment-radio-circle"><div class="payment-radio-dot"></div></div>
+                                <span class="payment-card-title" style="font-size: 0.88rem; font-weight: 700; color: #ffffff; white-space: nowrap;">Cash on Delivery</span>
                             </div>
                             <div style="font-size: 0.73rem; color: rgba(255,255,255,0.75); line-height: 1.4; padding-left: 24px; margin-top: 6px;">
                                 <strong id="codSubtextDeposit" style="color: #38bdf8;">Courier Advance Deposit</strong> &bull; Balance on delivery
@@ -1671,9 +1667,12 @@
 
                         <!-- Option 2: Full Advance Payment -->
                         <div class="payment-card" id="payCardAdvance" onclick="selectPaymentMethod('advance')" style="padding: 12px 14px; cursor: pointer; border-radius: 6px; box-sizing: border-box;">
-                            <div class="payment-card-header" style="display: flex; align-items: center; gap: 8px;">
-                                <div class="payment-radio-circle"><div class="payment-radio-dot"></div></div>
-                                <span class="payment-card-title" style="font-size: 0.88rem; font-weight: 700; color: #ffffff; white-space: nowrap;">Full Advance</span>
+                            <div class="payment-card-header" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <div class="payment-radio-circle"><div class="payment-radio-dot"></div></div>
+                                    <span class="payment-card-title" style="font-size: 0.88rem; font-weight: 700; color: #ffffff; white-space: nowrap;">Full Advance</span>
+                                </div>
+                                <span class="payment-card-badge font-mono" style="font-size: 0.58rem; background: rgba(255,200,87,0.15); color: #ffc857; border: 1px solid rgba(255,200,87,0.35); border-radius: 3px; padding: 2px 7px; display: inline-block; font-weight: 700; letter-spacing: 0.08em;">POPULAR</span>
                             </div>
                             <div style="font-size: 0.73rem; color: rgba(255,255,255,0.75); line-height: 1.4; padding-left: 24px; margin-top: 6px;">
                                 <strong style="color: #ffe8be;">100% full payment</strong> &bull; Zero COD surcharge
@@ -3861,10 +3860,6 @@
                 <h2 class="tarot-title" style="font-family: var(--font-serif); font-size: clamp(1.45rem, 4.5vw, 2.25rem); font-weight: 800; color: #ffffff; letter-spacing: 0.1em; text-transform: uppercase; margin: 0 0 6px 0; text-shadow: 0 0 25px rgba(212, 175, 55, 0.45);">DRAW YOUR DAILY CARD</h2>
                 <div class="tarot-subtext font-mono" style="font-size: clamp(0.72rem, 2.5vw, 0.86rem); color: rgba(255, 232, 190, 0.88); letter-spacing: 0.06em;">— ✦ What you choose will remain for 48 hours. ✦ —</div>
                 <div style="display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 6px;">
-                    <button type="button" id="tarotSoundToggleBtn" class="tarot-sound-toggle-btn font-mono" onclick="toggleGothicAudio()">
-                        <span id="tarotSoundIcon">🔊</span>
-                        <span id="tarotSoundLabel">AUDIO: ON</span>
-                    </button>
                     <button type="button" id="tarotResetDeckBtn" class="tarot-sound-toggle-btn font-mono" onclick="window.resetTarotRitual()" title="Reset Tarot Deck for testing">
                         <span>↺</span>
                         <span>RESET DECK</span>
@@ -4207,29 +4202,8 @@
         }
 
         // =========================================================================
-        // GOTHIC OCCULT LUXURY UTILITIES & AUDIO CONTROLLER
+        // GOTHIC OCCULT LUXURY UTILITIES
         // =========================================================================
-        window.isGothicAudioMuted = (localStorage.getItem('gn_audio_muted') === '1');
-
-        function toggleGothicAudio() {
-            window.isGothicAudioMuted = !window.isGothicAudioMuted;
-            try {
-                localStorage.setItem('gn_audio_muted', window.isGothicAudioMuted ? '1' : '0');
-            } catch(e) {}
-            
-            const btn = document.getElementById('tarotSoundToggleBtn');
-            const icon = document.getElementById('tarotSoundIcon');
-            const label = document.getElementById('tarotSoundLabel');
-
-            if (btn) btn.classList.toggle('muted', window.isGothicAudioMuted);
-            if (icon) icon.textContent = window.isGothicAudioMuted ? '🔇' : '🔊';
-            if (label) label.textContent = window.isGothicAudioMuted ? 'AUDIO: MUTED' : 'AUDIO: ON';
-
-            if (typeof showLuxuryToast === 'function') {
-                showLuxuryToast(window.isGothicAudioMuted ? '✦ AUDIO MUTED' : '✦ OCCULT AUDIO ACTIVE', window.isGothicAudioMuted ? '🔇' : '🔊');
-            }
-        }
-
         function showLuxuryToast(message, icon = '✦') {
             let container = document.getElementById('luxuryToastContainer');
             if (!container) {
@@ -4267,8 +4241,6 @@
             window.print();
         }
 
-
-
         // Global Keyboard Handler for Modals & Accessibility
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
@@ -4277,135 +4249,6 @@
                 if (typeof closePdpModal === 'function') closePdpModal();
             }
         });
-
-
-        // =========================================================================
-        // GOTHIC OCCULT WEB AUDIO SOUNDSCAPE (Zero Assets, Synthetic Harmonics)
-        // =========================================================================
-        const GothicAudio = (function() {
-            let ctx = null;
-            function getCtx() {
-                if (window.isGothicAudioMuted) return null;
-                if (!ctx && (window.AudioContext || window.webkitAudioContext)) {
-                    try {
-                        ctx = new (window.AudioContext || window.webkitAudioContext)();
-                    } catch(e) {}
-                }
-                if (ctx && ctx.state === 'suspended') {
-                    ctx.resume().catch(() => {});
-                }
-                return ctx;
-            }
-
-            return {
-                playShuffleWhoosh: function() {
-                    const c = getCtx();
-                    if (!c) return;
-                    try {
-                        const now = c.currentTime;
-                        const osc = c.createOscillator();
-                        const gain = c.createGain();
-                        const filter = c.createBiquadFilter();
-
-                        osc.type = 'sawtooth';
-                        osc.frequency.setValueAtTime(160 + Math.random() * 80, now);
-                        osc.frequency.exponentialRampToValueAtTime(45 + Math.random() * 20, now + 0.18);
-
-                        filter.type = 'bandpass';
-                        filter.frequency.setValueAtTime(600, now);
-                        filter.Q.setValueAtTime(2.5, now);
-
-                        gain.gain.setValueAtTime(0.01, now);
-                        gain.gain.linearRampToValueAtTime(0.09, now + 0.04);
-                        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
-
-                        osc.connect(filter);
-                        filter.connect(gain);
-                        gain.connect(c.destination);
-
-                        osc.start(now);
-                        osc.stop(now + 0.2);
-                    } catch(e) {}
-                },
-                playImpactThud: function() {
-                    const c = getCtx();
-                    if (!c) return;
-                    try {
-                        const now = c.currentTime;
-                        const osc = c.createOscillator();
-                        const gain = c.createGain();
-                        osc.type = 'sine';
-                        osc.frequency.setValueAtTime(120, now);
-                        osc.frequency.exponentialRampToValueAtTime(32, now + 0.35);
-
-                        gain.gain.setValueAtTime(0.25, now);
-                        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-
-                        osc.connect(gain);
-                        gain.connect(c.destination);
-                        osc.start(now);
-                        osc.stop(now + 0.36);
-
-                        const ping = c.createOscillator();
-                        const pingGain = c.createGain();
-                        ping.type = 'triangle';
-                        ping.frequency.setValueAtTime(880, now);
-                        pingGain.gain.setValueAtTime(0.06, now);
-                        pingGain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
-                        ping.connect(pingGain);
-                        pingGain.connect(c.destination);
-                        ping.start(now);
-                        ping.stop(now + 0.46);
-                    } catch(e) {}
-                },
-                playHoverTone: function(cardIdx) {
-                    const c = getCtx();
-                    if (!c) return;
-                    try {
-                        const now = c.currentTime;
-                        const notes = [440, 523.25, 659.25, 783.99];
-                        const freq = notes[cardIdx % notes.length];
-                        const osc = c.createOscillator();
-                        const gain = c.createGain();
-
-                        osc.type = 'sine';
-                        osc.frequency.setValueAtTime(freq, now);
-
-                        gain.gain.setValueAtTime(0.001, now);
-                        gain.gain.linearRampToValueAtTime(0.04, now + 0.03);
-                        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
-
-                        osc.connect(gain);
-                        gain.connect(c.destination);
-                        osc.start(now);
-                        osc.stop(now + 0.23);
-                    } catch(e) {}
-                },
-                playVictoryReveal: function() {
-                    const c = getCtx();
-                    if (!c) return;
-                    try {
-                        const now = c.currentTime;
-                        const chord = [293.66, 369.99, 440, 587.33, 880];
-                        chord.forEach((freq, i) => {
-                            const osc = c.createOscillator();
-                            const gain = c.createGain();
-                            osc.type = i % 2 === 0 ? 'sine' : 'triangle';
-                            osc.frequency.setValueAtTime(freq, now + i * 0.05);
-
-                            gain.gain.setValueAtTime(0.001, now + i * 0.05);
-                            gain.gain.linearRampToValueAtTime(0.08, now + i * 0.05 + 0.06);
-                            gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.05 + 0.85);
-
-                            osc.connect(gain);
-                            gain.connect(c.destination);
-                            osc.start(now + i * 0.05);
-                            osc.stop(now + i * 0.05 + 0.9);
-                        });
-                    } catch(e) {}
-                }
-            };
-        })();
 
         // =========================================================================
         // MYSTICAL CANVAS PARTICLE & RUNIC VFX ENGINE
@@ -4539,10 +4382,8 @@
 
         function attachCardTiltListeners() {
             const wrappers = document.querySelectorAll('.tarot-card-wrapper');
-            wrappers.forEach((w, idx) => {
-                w.onmouseenter = () => {
-                    if (tarotState.isReadyToPick) GothicAudio.playHoverTone(idx);
-                };
+            wrappers.forEach((w) => {
+                w.onmouseenter = null;
                 w.onmousemove = (e) => {
                     if (!tarotState.isReadyToPick) return;
                     const rect = w.getBoundingClientRect();
@@ -4697,11 +4538,21 @@
             attachCardTiltListeners();
         }
 
-        window.openTarotRitual = function(force = true) {
+        window.openTarotRitual = function(force = false) {
+            const stored = getStoredDailyReward();
+            if (stored && !force) {
+                if (typeof showLuxuryToast === 'function') {
+                    showLuxuryToast(`✦ ACTIVE REWARD: ${stored.reward.title} (Valid for 48 Hours)`, '🎴');
+                }
+                if (typeof openTarotDetailsModal === 'function') {
+                    openTarotDetailsModal();
+                }
+                return;
+            }
             initTarotRitual(force);
         };
 
-        // USER CLICKS THE ENTERPRISE "SHUFFLE CARDS" BUTTON
+        // USER CLICKS THE "SHUFFLE CARDS" BUTTON
         function triggerMajesticShuffle() {
             if (tarotState.isShuffling) return;
             tarotState.isShuffling = true;
@@ -4717,8 +4568,9 @@
                 setTimeout(() => { shuffleBox.style.display = 'none'; }, 260);
             }
 
+            // Step 1: Immediately flip all cards to face-down (turn their side, hiding offers beneath them)
             wrappers.forEach(w => {
-                w.classList.remove('flipped', 'ready-to-pick');
+                w.classList.remove('flipped', 'ready-to-pick', 'chosen-one', 'flash-active', 'dimmed');
                 w.classList.add('face-down');
                 w.style.transform = '';
             });
@@ -4727,8 +4579,7 @@
             const durationSec = (1.30 + Math.random() * 0.35).toFixed(2);
             const durationMs = Math.round(Number(durationSec) * 1000);
 
-            let whooshInterval = null;
-
+            // Step 2: Wait 550ms for the 3D flip animation to finish completely before shuffle movement starts
             setTimeout(() => {
                 if (stage) {
                     stage.style.setProperty('--shuffle-dur', `${durationSec}s`);
@@ -4737,13 +4588,7 @@
 
                 activeCardRewards = cryptoShuffleArray(INITIAL_REWARDS_CONFIG);
 
-                whooshInterval = setInterval(() => {
-                    GothicAudio.playShuffleWhoosh();
-                }, 140);
-
                 setTimeout(() => {
-                    if (whooshInterval) clearInterval(whooshInterval);
-                    GothicAudio.playImpactThud();
                     triggerTarotShockwave();
 
                     const PERMUTATIONS = {
@@ -4791,10 +4636,10 @@
 
                 }, durationMs);
 
-            }, 350);
+            }, 550); // 550ms dedicated flip completion delay
         }
 
-        // When user selects a card
+        // When user selects a card: Reveal only the selected card by flipping it face-up
         function handleTarotCardSelect(cardIndex) {
             if (!tarotState.isReadyToPick || tarotState.isShuffling) return;
             tarotState.isReadyToPick = false;
@@ -4817,7 +4662,6 @@
                 chosenWrapper.classList.add('flash-active', 'chosen-one', 'flipped');
                 chosenWrapper.classList.remove('face-down', 'ready-to-pick');
                 chosenWrapper.style.transform = '';
-                GothicAudio.playVictoryReveal();
                 triggerTarotCardBurst(chosenWrapper);
             }
 

@@ -6217,8 +6217,28 @@ select option {
     max-width: 205px;
     height: 300px;
     cursor: default;
+    perspective: 1200px;
     transform-style: preserve-3d;
     transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.4s ease, filter 0.4s ease;
+}
+
+/* 3D Flip Container */
+.tarot-card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transition: transform 0.55s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+/* State: Face-Up (Reward Revealed) */
+.tarot-card-wrapper.flipped .tarot-card-inner {
+    transform: rotateY(0deg);
+}
+
+/* State: Face-Down (Crowned Skull Backing / Offers Hidden) */
+.tarot-card-wrapper.face-down .tarot-card-inner {
+    transform: rotateY(180deg);
 }
 
 /* Natural slight organic rotation */
@@ -6231,6 +6251,20 @@ select option {
 .tarot-card-wrapper.ready-to-pick {
     cursor: pointer !important;
     pointer-events: auto !important;
+}
+
+/* Common Face Styling */
+.tarot-face {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    border-radius: 12px;
+    overflow: hidden;
+    box-sizing: border-box;
 }
 
 /* Card Back: Identical Occult Gothic Crowned Skull Art */
@@ -7236,10 +7270,6 @@ html.tarot-pending body {
 .tarot-card-wrapper.ready-to-pick {
     cursor: pointer !important;
     pointer-events: auto !important;
-}
-.tarot-sound-toggle-btn.muted {
-    border-color: rgba(255, 255, 255, 0.20);
-    color: rgba(255, 255, 255, 0.50);
 }
 
 
