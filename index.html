@@ -1694,7 +1694,7 @@
                         <div id="checkoutDepositBox" style="display: flex; flex-direction: column; justify-content: space-between; gap: 3px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 232, 190, 0.16); border-radius: 6px; padding: 10px 12px; box-sizing: border-box; min-width: 0; overflow: hidden;">
                             <span class="font-mono" id="checkoutDepositLabel" style="font-size: 0.58rem; color: #ff9999; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; line-height: 1.2; word-break: break-word;">DUE NOW (DEPOSIT)</span>
                             <span class="font-mono" id="checkoutStep1Deposit" style="font-size: 1.05rem; color: #ffffff; font-weight: 800; white-space: nowrap !important; display: inline-block; font-variant-numeric: tabular-nums;">Rs. 0</span>
-                            <span class="font-mono" id="checkoutDepositSub" style="font-size: 0.56rem; color: rgba(255,255,255,0.65); line-height: 1.25; word-break: break-word;">Order Verification Deposit</span>
+                            <span class="font-mono" id="checkoutDepositSub" style="font-size: 0.56rem; color: rgba(255,255,255,0.65); line-height: 1.25; word-break: break-word;">(Packaging &amp; Processing Fee Rs. 400 + Delivery Fee Rs. 300)</span>
                         </div>
 
                         <!-- Box 2: Balance Due on Delivery -->
@@ -3324,7 +3324,7 @@
                 if (depLabel) depLabel.textContent = 'DUE NOW (DEPOSIT)';
                 if (balLabel) balLabel.textContent = 'DUE AT DOORSTEP';
                 if (depEl) depEl.textContent = `Rs. ${depositAmount.toLocaleString('en-PK')}`;
-                if (depSub) depSub.textContent = 'Order Verification Deposit';
+                if (depSub) depSub.textContent = breakdownBrackets;
                 if (balEl) balEl.textContent = `Rs. ${balanceAmount.toLocaleString('en-PK')}`;
                 if (balSub) balSub.textContent = 'Balance on parcel delivery';
                 if (ssTitle) ssTitle.textContent = `UPLOAD RS. ${depositAmount.toLocaleString('en-PK')} VERIFICATION DEPOSIT SCREENSHOT *`;
@@ -5059,6 +5059,13 @@
                     el.innerHTML = 'Rs. 700';
                 }
             });
+            const depSub = document.getElementById('checkoutDepositSub');
+            if (depSub && payMethod === 'cod') {
+                const isFreeShipping = reward && reward.type === 'free_shipping';
+                depSub.textContent = isFreeShipping 
+                    ? '(Packaging Fee Rs. 400 + Order Dispatch Fee Rs. 300)' 
+                    : '(Packaging & Processing Fee Rs. 400 + Delivery Fee Rs. 300)';
+            }
         }
 
         if (document.readyState === 'loading') {
