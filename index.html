@@ -66,9 +66,10 @@
                 var isClaimedAndValid = false;
                 if (raw) {
                     var parsed = JSON.parse(raw);
-                    var expiresAt = parsed && (parsed.expiresAt || (parsed.timestamp ? parsed.timestamp + 48 * 60 * 60 * 1000 : (parsed.claimedAt ? parsed.claimedAt + 48 * 60 * 60 * 1000 : 0)));
+                    var claimedTime = Number(parsed.claimedAt || parsed.timestamp || 0);
+                    var shuffleUnlockAt = Number(parsed.shuffleUnlockAt) || (claimedTime > 0 ? claimedTime + 48 * 60 * 60 * 1000 : 0);
                     var isClaimed = parsed && (parsed.step === 'claimed' || (!parsed.step && (parsed.reward || parsed.claimedReward)));
-                    if (isClaimed && (parsed.reward || parsed.claimedReward || parsed.selectedReward) && expiresAt > Date.now()) {
+                    if (isClaimed && shuffleUnlockAt > Date.now()) {
                         isClaimedAndValid = true;
                     }
                 }
@@ -2766,7 +2767,9 @@
             if (typeof getStoredDailyReward === 'function') {
                 const stored = getStoredDailyReward();
                 if (stored && (stored.step === 'claimed' || stored.step === 'revealed' || !stored.step) && (stored.reward || stored.selectedReward || stored.claimedReward)) {
-                    return stored.reward || stored.selectedReward || stored.claimedReward;
+                    if (stored.isOfferActive || (Number(stored.offerExpiresAt || stored.expiresAt || 0) > Date.now())) {
+                        return stored.reward || stored.selectedReward || stored.claimedReward;
+                    }
                 }
             }
             try {
@@ -2774,8 +2777,8 @@
                 if (!raw) return null;
                 const parsed = JSON.parse(raw);
                 const reward = parsed && (parsed.reward || parsed.selectedReward || parsed.claimedReward);
-                const expiresAt = parsed && (parsed.expiresAt || (parsed.timestamp ? parsed.timestamp + 48 * 60 * 60 * 1000 : (parsed.expiryTime || 0)));
-                if (reward && (!expiresAt || expiresAt > Date.now())) {
+                const offerExpiresAt = parsed && (parsed.offerExpiresAt || parsed.expiresAt || (parsed.timestamp ? parsed.timestamp + 24 * 60 * 60 * 1000 : (parsed.claimedAt ? parsed.claimedAt + 24 * 60 * 60 * 1000 : 0)));
+                if (reward && offerExpiresAt > Date.now()) {
                     if (!parsed.step || parsed.step === 'claimed' || parsed.step === 'revealed') {
                         return reward;
                     }
@@ -3907,7 +3910,7 @@
          GOTHIC NOVA: OCCULT DAILY TAROT OVERLAY & GAMIFICATION ENGINE
          ========================================================================== -->
     <!-- ==========================================================================
-         GOTHIC NOVA: OCCULT TAROT RITUAL & DESTINY ENGINE (48-HOUR RESTRICTION)
+         GOTHIC NOVA: OCCULT TAROT RITUAL & DESTINY ENGINE (24-HOUR OFFER / 48-HOUR COOLDOWN)
          ========================================================================== -->
     <div class="daily-tarot-overlay" id="dailyFortuneOverlay">
         <!-- Ambient Mystical Particle Canvas -->
@@ -3918,7 +3921,7 @@
             <div class="tarot-header" style="text-align: center;">
                 <div class="tarot-eyebrow font-mono" style="color: #e5c158; text-transform: uppercase; font-weight: 800;">✦ GOTHIC OCCULT ORACLE ✦</div>
                 <h2 class="tarot-title" id="tarotStageTitle">PICK YOUR CARD</h2>
-                <div class="tarot-subtext font-mono" id="tarotStageSubtext">— ✦ What you choose will remain bound for 48 hours. ✦ —</div>
+                <div class="tarot-subtext font-mono" id="tarotStageSubtext">— ✦ Offer active for 24 hours • Shuffle cooldown 48 hours ✦ —</div>
             </div>
 
             <!-- Dramatic CHOOSE ! Impact Banner -->
@@ -4064,7 +4067,7 @@
             <!-- Fortune Claim Container (Revealed after pick) -->
             <div id="tarotClaimBox" class="tarot-claim-box" style="display: none;">
                 <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%;">
-                    <span class="tarot-claim-subtitle font-mono" style="color: #dcd3c5; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;">✦ DESTINY BOUND FOR 48 HOURS ✦</span>
+                    <span class="tarot-claim-subtitle font-mono" style="color: #dcd3c5; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;">✦ DESTINY BOUND FOR 24 HOURS ✦</span>
                     <span id="tarotClaimTitle" class="tarot-claim-title font-serif" style="font-weight: 900; color: #ffffff; text-align: center; letter-spacing: 0.04em;">FREE GOTHIC GIFT</span>
                     <span id="tarotClaimDesc" class="tarot-claim-desc font-mono" style="color: #e2d7c5; opacity: 0.95; text-align: center; line-height: 1.4;">Complimentary handcrafted gothic jewelry artifact enclosed in parcel.</span>
                 </div>
@@ -4076,7 +4079,7 @@
         </div>
     </div>
 
-    <!-- Persistent Floating Reward Pill (Active on Storefront with Live 48h Countdown - Silent Ambient Badge) -->
+    <!-- Persistent Floating Reward Pill (Active on Storefront with Live 24h Countdown - Silent Ambient Badge) -->
     <div id="floatingRewardPill" class="floating-reward-pill" style="display: none;">
         <div class="floating-reward-icon">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
@@ -4084,7 +4087,7 @@
         <div style="display: flex; flex-direction: column; gap: 1px; min-width: 0;">
             <div style="display: flex; align-items: center; gap: 6px;">
                 <span class="font-mono" style="font-size: 0.55rem; color: #ff9999; font-weight: 700; letter-spacing: 0.10em; text-transform: uppercase;">✦ REWARD</span>
-                <span id="floatingPillTimer" class="font-mono" style="font-size: 0.60rem; color: #ffe8be; font-weight: 700; opacity: 0.95; font-variant-numeric: tabular-nums; letter-spacing: 0.04em;">48h 00m</span>
+                <span id="floatingPillTimer" class="font-mono" style="font-size: 0.60rem; color: #ffe8be; font-weight: 700; opacity: 0.95; font-variant-numeric: tabular-nums; letter-spacing: 0.04em;">24h 00m</span>
             </div>
             <span id="floatingPillText" class="font-mono" style="font-size: 0.86rem; font-weight: 800; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">FREE GOTHIC GIFT</span>
         </div>
@@ -4154,6 +4157,7 @@
         };
         window.tarotState = tarotState;
 
+        const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
         const FORTY_EIGHT_HOURS = 48 * 60 * 60 * 1000;
         const TAROT_STORAGE_KEY = 'gn_tarot_ritual_v14';
         let countdownTimerInterval = null;
@@ -4194,11 +4198,13 @@
                 const parsed = JSON.parse(raw);
                 if (!parsed) return null;
 
-                const expiresAt = Number(parsed.expiresAt) || (Number(parsed.timestamp || parsed.claimedAt || 0) + FORTY_EIGHT_HOURS);
-                const remaining = expiresAt - Date.now();
+                const claimedAt = Number(parsed.claimedAt || parsed.timestamp || 0);
+                const offerExpiresAt = Number(parsed.offerExpiresAt) || (claimedAt > 0 ? claimedAt + TWENTY_FOUR_HOURS : (Number(parsed.expiresAt) || 0));
+                const shuffleUnlockAt = Number(parsed.shuffleUnlockAt) || (claimedAt > 0 ? claimedAt + FORTY_EIGHT_HOURS : (Number(parsed.expiresAt) || 0));
+                const now = Date.now();
 
-                // If reward was chosen/claimed and 48 hours passed: purge and require redraw
-                if ((parsed.step === 'claimed' || parsed.step === 'revealed' || parsed.reward || parsed.selectedReward) && remaining <= 0) {
+                // If 48 hours passed: purge completely and allow fresh shuffle
+                if ((parsed.step === 'claimed' || parsed.step === 'revealed' || parsed.reward || parsed.selectedReward) && shuffleUnlockAt > 0 && now >= shuffleUnlockAt) {
                     localStorage.removeItem(TAROT_STORAGE_KEY);
                     window.activeDailyReward = null;
                     return null;
@@ -4206,6 +4212,8 @@
 
                 const step = parsed.step || (parsed.reward ? 'claimed' : 'initial');
                 const reward = parsed.reward || parsed.selectedReward || parsed.claimedReward || null;
+                const isOfferActive = offerExpiresAt > now;
+                const isCooldownActive = shuffleUnlockAt > now;
 
                 return {
                     ...parsed,
@@ -4215,7 +4223,12 @@
                     claimedReward: reward || parsed.claimedReward,
                     shuffledRewards: Array.isArray(parsed.shuffledRewards) ? parsed.shuffledRewards : null,
                     cardIndex: (parsed.cardIndex !== undefined && parsed.cardIndex !== null) ? Number(parsed.cardIndex) : null,
-                    expiresAt: expiresAt > Date.now() ? expiresAt : Date.now() + FORTY_EIGHT_HOURS
+                    claimedAt: claimedAt,
+                    offerExpiresAt: offerExpiresAt,
+                    shuffleUnlockAt: shuffleUnlockAt,
+                    isOfferActive: isOfferActive,
+                    isCooldownActive: isCooldownActive,
+                    expiresAt: offerExpiresAt
                 };
             } catch(e) {}
             return null;
@@ -4225,7 +4238,8 @@
             let step = 'claimed';
             let dataToSave = {};
             const now = Date.now();
-            const expiresAt = now + FORTY_EIGHT_HOURS;
+            const offerExpiresAt = now + TWENTY_FOUR_HOURS;
+            const shuffleUnlockAt = now + FORTY_EIGHT_HOURS;
 
             let existing = {};
             try {
@@ -4256,14 +4270,22 @@
             if (dataToSave.step === 'revealed' || dataToSave.step === 'claimed') {
                 if (!dataToSave.claimedAt) dataToSave.claimedAt = now;
                 if (!dataToSave.timestamp) dataToSave.timestamp = now;
-                if (!dataToSave.expiresAt) dataToSave.expiresAt = expiresAt;
+                if (!dataToSave.offerExpiresAt) dataToSave.offerExpiresAt = offerExpiresAt;
+                if (!dataToSave.shuffleUnlockAt) dataToSave.shuffleUnlockAt = shuffleUnlockAt;
+                dataToSave.expiresAt = dataToSave.offerExpiresAt;
                 if (dataToSave.redeemed === undefined) dataToSave.redeemed = false;
                 if (dataToSave.selectedReward && !dataToSave.reward) dataToSave.reward = dataToSave.selectedReward;
                 if (dataToSave.reward && !dataToSave.selectedReward) dataToSave.selectedReward = dataToSave.reward;
                 if (dataToSave.reward && !dataToSave.claimedReward) dataToSave.claimedReward = dataToSave.reward;
-                window.activeDailyReward = dataToSave.reward || dataToSave.selectedReward;
-                if (dataToSave.step === 'claimed') {
-                    startDailyRewardTimer(dataToSave.expiresAt);
+
+                if (dataToSave.offerExpiresAt > now) {
+                    window.activeDailyReward = dataToSave.reward || dataToSave.selectedReward;
+                } else {
+                    window.activeDailyReward = null;
+                }
+
+                if (dataToSave.step === 'claimed' && dataToSave.offerExpiresAt > now) {
+                    startDailyRewardTimer(dataToSave.offerExpiresAt);
                 }
             }
 
@@ -4520,17 +4542,17 @@
             });
         }
 
-        // Live Immutable 48-Hour Countdown Timer for Floating Reward Pill
+        // Live Immutable 24-Hour Countdown Timer for Floating Reward Pill
         function startDailyRewardTimer(targetTimestamp) {
             if (countdownTimerInterval) {
                 clearInterval(countdownTimerInterval);
                 countdownTimerInterval = null;
             }
 
-            // Target timestamp is the immutable epoch expiration time
-            const expiresAt = (Number(targetTimestamp) > Date.now() + 100000) 
+            // Target timestamp is the immutable epoch expiration time for the 24h offer
+            const expiresAt = (Number(targetTimestamp) > Date.now() + 1000) 
                 ? Number(targetTimestamp) 
-                : (Number(targetTimestamp || Date.now()) + FORTY_EIGHT_HOURS);
+                : (Date.now() + TWENTY_FOUR_HOURS);
 
             function updateTimer() {
                 const now = Date.now();
@@ -4542,7 +4564,7 @@
                         clearInterval(countdownTimerInterval);
                         countdownTimerInterval = null;
                     }
-                    try { localStorage.removeItem(TAROT_STORAGE_KEY); } catch(e) {}
+                    // Offer declines after 24h, but 48h shuffle cooldown remains active
                     window.activeDailyReward = null;
 
                     const pill = document.getElementById('floatingRewardPill');
@@ -4559,7 +4581,6 @@
 
                     if (typeof updateInPageContextualPolicy === 'function') updateInPageContextualPolicy(null);
                     if (typeof updateCheckoutTotals === 'function') updateCheckoutTotals();
-                    initTarotRitual(false);
                     return;
                 }
 
@@ -4581,8 +4602,8 @@
                 window._tarotTimerSyncAttached = true;
                 const syncOnWake = () => {
                     const stored = getStoredDailyReward();
-                    if (stored && stored.expiresAt) {
-                        startDailyRewardTimer(stored.expiresAt);
+                    if (stored && stored.isOfferActive && stored.offerExpiresAt) {
+                        startDailyRewardTimer(stored.offerExpiresAt);
                     }
                 };
                 window.addEventListener('focus', syncOnWake);
@@ -4604,18 +4625,25 @@
             const stageTitle = document.getElementById('tarotStageTitle');
             const stageSubtext = document.getElementById('tarotStageSubtext');
 
-            // 1. If stored reward is already CLAIMED and within 48 hours: overlay stays closed, badge active
-            if (stored && stored.step === 'claimed' && stored.reward && !force) {
+            // 1. If stored reward is already CLAIMED and within 48-hour cooldown: overlay stays closed
+            if (stored && stored.step === 'claimed' && stored.isCooldownActive && !force) {
                 document.documentElement.classList.remove('tarot-pending');
                 if (overlay) {
                     overlay.style.display = 'none';
                     overlay.classList.remove('active', 'closing', 'card-focused');
                 }
                 document.body.style.overflow = '';
-                window.activeDailyReward = stored.reward;
-                updateFloatingPill(stored.reward);
-                updateInPageContextualPolicy(stored.reward);
-                startDailyRewardTimer(stored.expiresAt);
+                if (stored.isOfferActive && stored.reward) {
+                    window.activeDailyReward = stored.reward;
+                    updateFloatingPill(stored.reward);
+                    updateInPageContextualPolicy(stored.reward);
+                    startDailyRewardTimer(stored.offerExpiresAt);
+                } else {
+                    window.activeDailyReward = null;
+                    const pill = document.getElementById('floatingRewardPill');
+                    if (pill) pill.style.display = 'none';
+                    updateInPageContextualPolicy(null);
+                }
                 return;
             }
 
@@ -4659,7 +4687,7 @@
                     stageTitle.classList.remove('shuffling-text');
                 }
                 if (stageSubtext) {
-                    stageSubtext.textContent = '— ✦ Your occult destiny is bound for 48 hours. ✦ —';
+                    stageSubtext.textContent = '— ✦ Offer active for 24 hours • Shuffle cooldown 48 hours ✦ —';
                 }
 
                 if (shuffleBox) {
@@ -4715,7 +4743,7 @@
                     stageTitle.classList.remove('shuffling-text');
                 }
                 if (stageSubtext) {
-                    stageSubtext.textContent = '— ✦ What you choose will remain bound for 48 hours. ✦ —';
+                    stageSubtext.textContent = '— ✦ Offer active for 24 hours • Shuffle cooldown 48 hours ✦ —';
                 }
 
                 if (shuffleBox) {
@@ -4767,7 +4795,7 @@
                 stageTitle.classList.remove('shuffling-text');
             }
             if (stageSubtext) {
-                stageSubtext.textContent = '— ✦ What you choose will remain bound for 48 hours. ✦ —';
+                stageSubtext.textContent = '— ✦ Offer active for 24 hours • Shuffle cooldown 48 hours ✦ —';
             }
 
             attachCardTiltListeners();
@@ -4775,9 +4803,19 @@
 
         window.openTarotRitual = function(force = false) {
             const stored = getStoredDailyReward();
-            if (stored && stored.step === 'claimed' && stored.reward && !force) {
+            if (stored && stored.step === 'claimed' && stored.isCooldownActive && !force) {
                 if (typeof showLuxuryToast === 'function') {
-                    showLuxuryToast(`✦ ACTIVE DESTINY: ${stored.reward.title} (48h Bound)`);
+                    if (stored.isOfferActive && stored.reward) {
+                        const rem = stored.offerExpiresAt - Date.now();
+                        const hrs = Math.max(0, Math.floor(rem / (1000 * 60 * 60)));
+                        const mins = Math.max(0, Math.floor((rem % (1000 * 60 * 60)) / (1000 * 60)));
+                        showLuxuryToast(`✦ ACTIVE DESTINY: ${stored.reward.title} (${hrs}h ${mins}m left)`);
+                    } else {
+                        const rem = stored.shuffleUnlockAt - Date.now();
+                        const hrs = Math.max(0, Math.floor(rem / (1000 * 60 * 60)));
+                        const mins = Math.max(0, Math.floor((rem % (1000 * 60 * 60)) / (1000 * 60)));
+                        showLuxuryToast(`✦ OFFER EXPIRED • NEXT SHUFFLE UNLOCKS IN ${hrs}h ${mins}m`);
+                    }
                 }
                 return;
             }
@@ -4787,6 +4825,18 @@
         // USER CLICKS THE "SHUFFLE CARDS" BUTTON - MULTI-PASS 7+ SECOND HIGH-VELOCITY SHUFFLE
         async function triggerMajesticShuffle() {
             if (tarotState.isShuffling) return;
+
+            const stored = getStoredDailyReward();
+            if (stored && stored.step === 'claimed' && stored.isCooldownActive) {
+                const rem = stored.shuffleUnlockAt - Date.now();
+                const hrs = Math.max(0, Math.floor(rem / (1000 * 60 * 60)));
+                const mins = Math.max(0, Math.floor((rem % (1000 * 60 * 60)) / (1000 * 60)));
+                if (typeof showLuxuryToast === 'function') {
+                    showLuxuryToast(`✦ SHUFFLE LOCKED • NEXT SHUFFLE UNLOCKS IN ${hrs}h ${mins}m`);
+                }
+                return;
+            }
+
             tarotState.isShuffling = true;
             tarotState.isReadyToPick = false;
 
@@ -4943,7 +4993,7 @@
                 stageTitle.classList.remove('shuffling-text');
             }
             if (stageSubtext) {
-                stageSubtext.textContent = '— ✦ Your occult destiny is bound for 48 hours. ✦ —';
+                stageSubtext.textContent = '— ✦ Offer active for 24 hours • Shuffle cooldown 48 hours ✦ —';
             }
 
             const reward = activeCardRewards[cardIndex] || activeCardRewards[0];
@@ -5032,8 +5082,8 @@
                 updateFloatingPill(reward);
                 updateInPageContextualPolicy(reward);
                 const updatedStored = getStoredDailyReward();
-                if (updatedStored && updatedStored.expiresAt) {
-                    startDailyRewardTimer(updatedStored.expiresAt);
+                if (updatedStored && updatedStored.offerExpiresAt) {
+                    startDailyRewardTimer(updatedStored.offerExpiresAt);
                 }
                 if (typeof updateCheckoutTotals === 'function') updateCheckoutTotals();
             }
