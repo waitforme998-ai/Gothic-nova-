@@ -3791,7 +3791,37 @@
         }
 
         // --- PRODUCT DATA HELPERS ---
+        let gnAdminBroadcastChannel = null;
+        function getGnAdminBroadcastChannel() {
+            if (!gnAdminBroadcastChannel && typeof BroadcastChannel !== 'undefined') {
+                try {
+                    gnAdminBroadcastChannel = new BroadcastChannel('gn_store_sync');
+                } catch(e) {}
+            }
+            return gnAdminBroadcastChannel;
+        }
+
+        function broadcastProductsUpdate(prods) {
+            try {
+                const bc = getGnAdminBroadcastChannel();
+                if (bc) {
+                    bc.postMessage({ type: 'PRODUCTS_UPDATED', products: prods });
+                }
+            } catch(e) {}
+        }
+
         async function loadProducts() {
+            try {
+                const stored = localStorage.getItem('gn_products');
+                if (stored) {
+                    const parsed = JSON.parse(stored);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        products = parsed;
+                        window.gn_products = products;
+                    }
+                }
+            } catch(e) {}
+
             if (window.SupabaseEngine) {
                 try {
                     const prods = await window.SupabaseEngine.getProducts();
@@ -3812,11 +3842,7 @@
             try { 
                 localStorage.setItem('gn_products', JSON.stringify(products)); 
                 window.gn_products = products; 
-                if (window.BroadcastChannel) {
-                    const bc = new BroadcastChannel('gn_store_sync');
-                    bc.postMessage({ type: 'PRODUCTS_UPDATED', products });
-                    bc.close();
-                }
+                broadcastProductsUpdate(products);
             } catch(e) {}
         }
         window.saveProducts = saveProducts;
@@ -4146,11 +4172,7 @@
                 window.dispatchEvent(new Event('storage'));
                 window.dispatchEvent(new Event('productsLoaded'));
                 window.dispatchEvent(new CustomEvent('gn:productsUpdated', { detail: { products } }));
-                if (window.BroadcastChannel) {
-                    const bc = new BroadcastChannel('gn_store_sync');
-                    bc.postMessage({ type: 'PRODUCTS_UPDATED', products });
-                    bc.close();
-                }
+                broadcastProductsUpdate(products);
             } catch(e) {}
 
             // 5. Background save to Supabase
@@ -4194,11 +4216,7 @@
                 if (window.SupabaseEngine) await window.SupabaseEngine.deleteProduct(pid);
                 window.dispatchEvent(new Event('productsLoaded'));
                 window.dispatchEvent(new Event('storage'));
-                if (window.BroadcastChannel) {
-                    const bc = new BroadcastChannel('gn_store_sync');
-                    bc.postMessage({ type: 'PRODUCTS_UPDATED', products });
-                    bc.close();
-                }
+                broadcastProductsUpdate(products);
             } catch(e) {}
         };
 

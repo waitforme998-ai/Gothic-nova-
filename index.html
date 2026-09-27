@@ -1219,55 +1219,89 @@
                     window.renderMainCatalog();
                     window.renderCustomerReviews();
                 });
-                window.addEventListener('productsLoaded', () => {
-                    renderCategoryTabs();
-                    window.renderSaleTicker();
-                    window.renderFooterCollections();
-                    window.renderMainCatalog();
-                    if (typeof window.renderNewArrivals === 'function') window.renderNewArrivals();
-                    window.renderCustomerReviews();
-                });
-                window.addEventListener('storage', () => {
+                function refreshStorefrontCatalog() {
                     try {
                         const raw = localStorage.getItem('gn_products');
                         if (raw) {
                             const parsed = JSON.parse(raw);
-                            if (Array.isArray(parsed) && parsed.length > 0) window.gn_products = parsed;
+                            if (Array.isArray(parsed) && parsed.length > 0) {
+                                window.gn_products = parsed;
+                            }
                         }
                     } catch(e) {}
-                    renderCategoryTabs();
-                    window.renderSaleTicker();
-                    window.renderFooterCollections();
-                    window.renderMainCatalog();
+                    if (typeof renderCategoryTabs === 'function') renderCategoryTabs();
+                    if (typeof window.renderSaleTicker === 'function') window.renderSaleTicker();
+                    if (typeof window.renderFooterCollections === 'function') window.renderFooterCollections();
+                    if (typeof window.renderMainCatalog === 'function') window.renderMainCatalog();
                     if (typeof window.renderNewArrivals === 'function') window.renderNewArrivals();
-                    window.renderCustomerReviews();
-                });
+                    if (typeof window.renderCustomerReviews === 'function') window.renderCustomerReviews();
+                    
+                    // Live update active centered PDP modal if open
+                    const pdpOverlay = document.getElementById('pdpModalOverlay');
+                    if (pdpOverlay && pdpOverlay.classList.contains('active')) {
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const pid = urlParams.get('product');
+                        if (pid && typeof window.openPdpModal === 'function') {
+                            const prods = (typeof getAllProducts === 'function') ? getAllProducts() : (window.gn_products || []);
+                            const p = prods.find(item => String(item.id) === String(pid));
+                            if (p) {
+                                const isSoldOut = Number(p.stock || 0) <= 0;
+                                const buyNowBtn = document.getElementById('pdpModalBuyNowBtn');
+                                const addToCartBtn = document.getElementById('pdpModalAddToCartBtn');
+                                const qtyMinus = document.getElementById('pdpModalQtyMinus');
+                                const qtyPlus = document.getElementById('pdpModalQtyPlus');
+                                if (buyNowBtn && addToCartBtn) {
+                                    if (isSoldOut) {
+                                        buyNowBtn.disabled = true;
+                                        addToCartBtn.disabled = true;
+                                        addToCartBtn.classList.remove('view-cart-mode');
+                                        addToCartBtn.textContent = 'SOLD OUT';
+                                        if (qtyMinus) qtyMinus.disabled = true;
+                                        if (qtyPlus) qtyPlus.disabled = true;
+                                    } else {
+                                        buyNowBtn.disabled = false;
+                                        addToCartBtn.disabled = false;
+                                        if (qtyMinus) qtyMinus.disabled = false;
+                                        if (qtyPlus) qtyPlus.disabled = false;
+                                        const existingInCart = (window.gn_cart && window.gn_cart[p.id]) ? window.gn_cart[p.id].qty : 0;
+                                        if (existingInCart > 0) {
+                                            addToCartBtn.classList.add('view-cart-mode');
+                                            addToCartBtn.innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="stroke-width:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg> VIEW CART`;
+                                        } else {
+                                            addToCartBtn.classList.remove('view-cart-mode');
+                                            addToCartBtn.innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="stroke-width:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg> ADD TO CART`;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                window.refreshStorefrontCatalog = refreshStorefrontCatalog;
+
+                window.addEventListener('productsLoaded', refreshStorefrontCatalog);
+                window.addEventListener('productsUpdated', refreshStorefrontCatalog);
+                window.addEventListener('storage', refreshStorefrontCatalog);
                 window.addEventListener('gn:productsUpdated', (e) => {
                     if (e && e.detail && e.detail.products) {
                         window.gn_products = e.detail.products;
+                        try { localStorage.setItem('gn_products', JSON.stringify(e.detail.products)); } catch(err) {}
                     }
-                    renderCategoryTabs();
-                    window.renderSaleTicker();
-                    window.renderFooterCollections();
-                    window.renderMainCatalog();
-                    if (typeof window.renderNewArrivals === 'function') window.renderNewArrivals();
-                    window.renderCustomerReviews();
+                    refreshStorefrontCatalog();
                 });
                 window.addEventListener('reviewsUpdated', () => {
-                    window.renderCustomerReviews();
+                    if (typeof window.renderCustomerReviews === 'function') window.renderCustomerReviews();
                 });
+
                 try {
-                    if (window.BroadcastChannel) {
+                    if (typeof BroadcastChannel !== 'undefined') {
                         const syncChannel = new BroadcastChannel('gn_store_sync');
                         syncChannel.onmessage = function(ev) {
                             if (ev && ev.data) {
                                 if (ev.data.type === 'PRODUCTS_UPDATED' && Array.isArray(ev.data.products) && ev.data.products.length > 0) {
                                     window.gn_products = ev.data.products;
-                                    renderCategoryTabs();
-                                    window.renderSaleTicker();
-                                    window.renderFooterCollections();
-                                    window.renderMainCatalog();
-                                    if (typeof window.renderNewArrivals === 'function') window.renderNewArrivals();
+                                    try { localStorage.setItem('gn_products', JSON.stringify(ev.data.products)); } catch(e) {}
+                                    refreshStorefrontCatalog();
                                 }
                             }
                         };
@@ -1275,10 +1309,7 @@
                 } catch(e) {}
 
                 initCatalogControls();
-                window.renderSaleTicker();
-                window.renderFooterCollections();
-                window.renderMainCatalog();
-                window.renderCustomerReviews();
+                refreshStorefrontCatalog();
             })();
         </script>
         <!-- ENTERPRISE DARK LUXURY GOTHIC FOOTER -->
@@ -1366,7 +1397,7 @@
                     Cash On Delivery (COD) Parcel Policy
                 </div>
                 <p style="margin-bottom: 8px;">• <strong>Delivery Timeline:</strong> 5–7 business days nationwide across Pakistan.</p>
-                <p style="margin-bottom: 8px;">• <strong>Advance Verification Deposit:</strong> A deposit of <strong>Courier Delivery Fee</strong> is required prior to dispatch to secure packing materials & courier logistics. The remaining order balance is paid upon doorstep delivery.</p>
+                <p style="margin-bottom: 8px;">• <strong>Advance Verification Deposit:</strong> A deposit of <strong>Rs. 250</strong> is required prior to dispatch to secure packing materials & courier logistics. The remaining order balance is paid upon doorstep delivery.</p>
                 <p style="margin-bottom: 8px;">• <strong>Courier Partner:</strong> Dispatched securely via <strong>PostEx</strong> logistics.</p>
                 <p style="margin: 0;">• <strong>Tracking:</strong> A real-time tracking code is sent via SMS & WhatsApp immediately upon courier booking.</p>
             </div>
@@ -1631,52 +1662,46 @@
                     <!-- Dynamically populated via updateCheckoutTotals() -->
                 </div>
 
-                <!-- 2. FINANCIAL BREAKDOWN BANNER (HIGH VISUAL HIERARCHY & BALANCED MINIMALISM) -->
+                <!-- 2. FINANCIAL BREAKDOWN BANNER (CLEAN & AUTHORITATIVE TOTAL PRICE) -->
                 <div class="checkout-payable-banner" id="checkoutPayableBanner" style="display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; background: linear-gradient(180deg, rgba(255, 232, 190, 0.05) 0%, rgba(18, 9, 14, 0.9) 100%); border: 1px solid rgba(255, 232, 190, 0.25); border-radius: 8px; box-sizing: border-box; width: 100%;">
                     
-                    <!-- Tier 1: Original Product Subtotal -->
-                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; flex-wrap: wrap;">
-                        <span class="font-mono" style="font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.7); font-weight: 600;">ORIGINAL CART TOTAL</span>
+                    <!-- Original Subtotal (Shown only when discount active) -->
+                    <div id="checkoutOriginalSubtotalRow" style="display: none; align-items: center; justify-content: space-between; gap: 8px; width: 100%; flex-wrap: wrap;">
+                        <span class="font-mono" style="font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.7); font-weight: 600;">ORIGINAL TOTAL</span>
                         <span class="font-mono" id="checkoutOriginalSubtotal" style="font-size: 0.88rem; color: #d0d0d0; font-weight: 700;">Rs. 0</span>
                     </div>
 
-                    <!-- Tier 2: Delivery Charges Line Item -->
-                    <div id="checkoutDeliveryRow" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; flex-wrap: wrap;">
-                        <span class="font-mono" id="checkoutDeliveryLabel" style="font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.7); font-weight: 600;">COURIER DELIVERY FEE</span>
-                        <span class="font-mono" id="checkoutDeliveryValue" style="font-size: 0.88rem; color: #ffffff; font-weight: 700;">Rs. 0</span>
-                    </div>
-
-                    <!-- Tier 3: Active Tarot Reward Discount / Benefit (Symmetrical Minimal Row) -->
+                    <!-- Active Tarot Reward Discount Benefit -->
                     <div id="checkoutDiscountRow" style="display: none; align-items: center; justify-content: space-between; gap: 8px; width: 100%; padding: 6px 10px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 232, 190, 0.16); border-radius: 6px; box-sizing: border-box; flex-wrap: wrap;">
-                        <span class="font-mono" id="checkoutDiscountLabel" style="font-size: 0.68rem; color: #ff9999; font-weight: 700; letter-spacing: 0.06em; white-space: normal; word-break: break-word;">✦ TAROT REWARD:</span>
+                        <span class="font-mono" id="checkoutDiscountLabel" style="font-size: 0.68rem; color: #ff9999; font-weight: 700; letter-spacing: 0.06em; white-space: normal; word-break: break-word;">✦ REWARD:</span>
                         <span class="font-mono" id="checkoutDiscountValue" style="font-size: 0.88rem; color: #4ade80; font-weight: 800; text-align: right;">-Rs. 0</span>
                     </div>
 
-                    <!-- Tier 4: Dominant Final Payable Total (Responsive Row) -->
-                    <div style="display: flex; flex-direction: column; gap: 4px; border-top: 1px solid rgba(255, 232, 190, 0.18); padding-top: 10px; margin-top: 2px; width: 100%; box-sizing: border-box;">
+                    <!-- Dominant Final Payable Total -->
+                    <div style="display: flex; flex-direction: column; gap: 4px; border-top: 1px solid rgba(255, 232, 190, 0.18); padding-top: 8px; margin-top: 2px; width: 100%; box-sizing: border-box;">
                         <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; min-width: 0; flex-wrap: wrap;">
                             <div style="display: flex; flex-direction: column; min-width: 0;">
-                                <span class="font-mono" style="font-size: 0.68rem; letter-spacing: 0.10em; text-transform: uppercase; font-weight: 800; color: #ffe8be; word-break: break-word;">TOTAL PAYABLE AMOUNT</span>
-                                <span id="checkoutSavingsBadge" class="font-mono" style="display: none; font-size: 0.58rem; color: #4ade80; font-weight: 700; margin-top: 2px; word-break: break-word;">✦ YOU SAVED Rs. 0</span>
+                                <span class="font-mono" style="font-size: 0.72rem; letter-spacing: 0.10em; text-transform: uppercase; font-weight: 800; color: #ffe8be; word-break: break-word;">TOTAL PAYABLE AMOUNT</span>
+                                <span id="checkoutSavingsBadge" class="font-mono" style="display: none; font-size: 0.62rem; color: #4ade80; font-weight: 700; margin-top: 2px; word-break: break-word;">✦ YOU SAVED Rs. 0</span>
                             </div>
-                            <span class="payable-amount font-mono" id="checkoutStep1Total" style="font-size: 1.15rem; color: #ffe8be; font-weight: 800; white-space: nowrap !important; display: inline-flex !important; align-items: baseline !important; word-break: keep-all !important; flex-shrink: 0 !important; font-variant-numeric: tabular-nums;">Rs. 0</span>
+                            <span class="payable-amount font-mono" id="checkoutStep1Total" style="font-size: 1.25rem; color: #ffe8be; font-weight: 900; white-space: nowrap !important; display: inline-flex !important; align-items: baseline !important; word-break: keep-all !important; flex-shrink: 0 !important; font-variant-numeric: tabular-nums;">Rs. 0</span>
                         </div>
                     </div>
                     
-                    <!-- Tier 5: 2 Metric Boxes (Deposit + Doorstep Balance - Symmetrical Equal Boxes) -->
+                    <!-- 2 Symmetrical Metric Boxes (Deposit + Doorstep Balance) -->
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; box-sizing: border-box; margin-top: 4px;">
                         <!-- Box 1: Deposit Due Now -->
                         <div id="checkoutDepositBox" style="display: flex; flex-direction: column; justify-content: space-between; gap: 3px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 232, 190, 0.16); border-radius: 6px; padding: 10px 12px; box-sizing: border-box; min-width: 0; overflow: hidden;">
                             <span class="font-mono" id="checkoutDepositLabel" style="font-size: 0.58rem; color: #ff9999; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; line-height: 1.2; word-break: break-word;">DUE NOW (DEPOSIT)</span>
                             <span class="font-mono" id="checkoutStep1Deposit" style="font-size: 1.05rem; color: #ffffff; font-weight: 800; white-space: nowrap !important; display: inline-block; font-variant-numeric: tabular-nums;">Rs. 0</span>
-                            <span class="font-mono" id="checkoutDepositSub" style="font-size: 0.56rem; color: rgba(255,255,255,0.65); line-height: 1.25; word-break: break-word;">Courier Advance Deposit</span>
+                            <span class="font-mono" id="checkoutDepositSub" style="font-size: 0.56rem; color: rgba(255,255,255,0.65); line-height: 1.25; word-break: break-word;">Order Verification Deposit</span>
                         </div>
 
                         <!-- Box 2: Balance Due on Delivery -->
                         <div id="checkoutBalanceBox" style="display: flex; flex-direction: column; justify-content: space-between; gap: 3px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 232, 190, 0.16); border-radius: 6px; padding: 10px 12px; box-sizing: border-box; min-width: 0; overflow: hidden;">
                             <span class="font-mono text-muted" id="checkoutBalanceLabel" style="font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.05em; line-height: 1.2; word-break: break-word;">DUE AT DOORSTEP</span>
                             <span class="font-mono" id="checkoutStep1Balance" style="font-size: 1.05rem; color: #ffffff; font-weight: 700; white-space: nowrap !important; display: inline-block; font-variant-numeric: tabular-nums;">Rs. 0</span>
-                            <span class="font-mono" id="checkoutBalanceSub" style="font-size: 0.56rem; color: rgba(255,255,255,0.65); line-height: 1.25; word-break: break-word;">Pay on parcel delivery</span>
+                            <span class="font-mono" id="checkoutBalanceSub" style="font-size: 0.56rem; color: rgba(255,255,255,0.65); line-height: 1.25; word-break: break-word;">Balance on parcel delivery</span>
                         </div>
                     </div>
                 </div>
@@ -1696,8 +1721,8 @@
                                 <span class="payment-card-badge font-mono" style="font-size: 0.58rem; background: rgba(255,200,87,0.15); color: #ffc857; border: 1px solid rgba(255,200,87,0.35); border-radius: 3px; padding: 2px 7px; display: inline-block; font-weight: 700; letter-spacing: 0.08em;">RECOMMENDED VIP</span>
                             </div>
                             <div style="font-size: 0.73rem; color: rgba(255,255,255,0.75); line-height: 1.4; padding-left: 24px; margin-top: 6px;">
-                                <strong style="color: #ffe8be;">100% full payment</strong> &bull; Zero COD surcharge
-                                <div style="font-size: 0.66rem; color: var(--color-text-muted); margin-top: 2px;">Direct courier priority dispatch (2–3 business days)</div>
+                                <strong style="color: #ffe8be;">100% full payment</strong> &bull; Zero doorstep hassle
+                                <div style="font-size: 0.66rem; color: var(--color-text-muted); margin-top: 2px;">Priority Express Dispatch (2–3 business days)</div>
                             </div>
                         </div>
 
@@ -1708,8 +1733,8 @@
                                 <span class="payment-card-title" style="font-size: 0.88rem; font-weight: 700; color: #ffffff; white-space: nowrap;">Cash on Delivery</span>
                             </div>
                             <div style="font-size: 0.73rem; color: rgba(255,255,255,0.75); line-height: 1.4; padding-left: 24px; margin-top: 6px;">
-                                <strong id="codSubtextDeposit" style="color: #38bdf8;">Courier Advance Deposit</strong> &bull; Balance on delivery
-                                <div style="font-size: 0.66rem; color: var(--color-text-muted); margin-top: 2px;">Standard courier dispatch (5–7 business days)</div>
+                                <strong id="codSubtextDeposit" style="color: #38bdf8;">Rs. 250 Verification Deposit</strong> &bull; Balance on delivery
+                                <div style="font-size: 0.66rem; color: var(--color-text-muted); margin-top: 2px;">Standard dispatch (5–7 business days)</div>
                             </div>
                         </div>
                     </div>
@@ -1720,7 +1745,7 @@
                     <span style="font-size: 1.3rem; color: #38bdf8; flex-shrink: 0;">✓</span>
                     <div style="display: flex; flex-direction: column; gap: 2px;">
                         <span style="font-size: 0.80rem; font-weight: 800; color: #ffffff; letter-spacing: 0.02em;">FREE DELIVERY REWARD ACTIVE &bull; ZERO ADVANCE DEPOSIT</span>
-                        <span class="font-mono" style="font-size: 0.66rem; color: #38bdf8; line-height: 1.35;">Courier advance deposit is fully waived (Rs. 0 Due Now). Pay full balance upon parcel delivery. No payment proof screenshot required.</span>
+                        <span class="font-mono" style="font-size: 0.66rem; color: #38bdf8; line-height: 1.35;">Advance verification deposit is fully waived (Rs. 0 Due Now). Pay full balance upon parcel delivery. No payment proof screenshot required.</span>
                     </div>
                 </div>
 
@@ -3043,15 +3068,12 @@
             const rawSubtotal = checkoutTotalPrice();
             const count = checkoutTotalItems();
             const activeReward = getActiveDailyReward();
-            const deliveryFee = getCheckoutDeliveryFee(currentMap);
 
-            let productDiscount = 0;
-            let deliveryFeeWaived = 0;
+            let discountAmount = 0;
             let savingsAmount = 0;
-            let savingsType = '';
 
+            const elOriginalRow = document.getElementById('checkoutOriginalSubtotalRow');
             const elOriginalSubtotal = document.getElementById('checkoutOriginalSubtotal');
-            const elDeliveryValue = document.getElementById('checkoutDeliveryValue');
             const discountRow = document.getElementById('checkoutDiscountRow');
             const discountLabel = document.getElementById('checkoutDiscountLabel');
             const discountVal = document.getElementById('checkoutDiscountValue');
@@ -3060,24 +3082,22 @@
             if (activeReward) {
                 if (activeReward.type === 'percentage_discount') {
                     const pct = Number(activeReward.value || 10);
-                    productDiscount = Math.round(rawSubtotal * (pct / 100));
-                    savingsAmount = productDiscount;
-                    savingsType = `${pct}% OFF CART`;
+                    discountAmount = Math.round(rawSubtotal * (pct / 100));
+                    savingsAmount = discountAmount;
 
                     if (discountRow) {
                         discountRow.style.display = 'flex';
                         if (discountLabel) discountLabel.textContent = `✦ REWARD (${activeReward.offer || `${pct}% OFF`}):`;
-                        if (discountVal) discountVal.innerHTML = `<span style="color: #4ade80; font-weight: 800;">-Rs. ${productDiscount.toLocaleString('en-PK')}</span>`;
+                        if (discountVal) discountVal.innerHTML = `<span style="color: #4ade80; font-weight: 800;">-Rs. ${discountAmount.toLocaleString('en-PK')}</span>`;
                     }
                 } else if (activeReward.type === 'free_shipping') {
-                    deliveryFeeWaived = deliveryFee;
-                    savingsAmount = deliveryFee;
-                    savingsType = 'FREE DELIVERY';
+                    discountAmount = 250;
+                    savingsAmount = 250;
 
                     if (discountRow) {
                         discountRow.style.display = 'flex';
                         if (discountLabel) discountLabel.textContent = `✦ REWARD (FREE DELIVERY):`;
-                        if (discountVal) discountVal.innerHTML = `<span style="color: #4ade80; font-weight: 800;">-Rs. ${deliveryFee.toLocaleString('en-PK')} (WAIVED)</span>`;
+                        if (discountVal) discountVal.innerHTML = `<span style="color: #4ade80; font-weight: 800;">-Rs. 250</span>`;
                     }
                 } else {
                     // For free_gift and order_upgrade: NO discount row, NO savings badge!
@@ -3087,32 +3107,21 @@
                 if (discountRow) discountRow.style.display = 'none';
             }
 
-            // Final total payable:
-            const effectiveProductsSubtotal = Math.max(0, rawSubtotal - productDiscount);
-            const isFreeShipping = activeReward && activeReward.type === 'free_shipping';
-            const effectiveDeliveryFee = isFreeShipping ? 0 : deliveryFee;
-            const finalTotal = effectiveProductsSubtotal + effectiveDeliveryFee;
+            // Final total payable is simply the product subtotal minus any valid reward discount
+            const finalTotal = Math.max(0, rawSubtotal - discountAmount);
             const formattedTotal = 'Rs.\u00A0' + finalTotal.toLocaleString('en-PK');
 
-            // Tier 1: Original Subtotal display
-            if (elOriginalSubtotal) {
-                if (productDiscount > 0) {
-                    elOriginalSubtotal.innerHTML = `<span style="text-decoration: line-through; opacity: 0.65; color: #a0a0a0;">Rs. ${rawSubtotal.toLocaleString('en-PK')}</span> <span style="color: #ffe8be; font-weight: 800; margin-left: 4px;">Rs. ${effectiveProductsSubtotal.toLocaleString('en-PK')}</span>`;
+            // Original Subtotal display (only if discount is active)
+            if (elOriginalRow && elOriginalSubtotal) {
+                if (discountAmount > 0) {
+                    elOriginalRow.style.display = 'flex';
+                    elOriginalSubtotal.innerHTML = `<span style="text-decoration: line-through; opacity: 0.65; color: #a0a0a0;">Rs. ${rawSubtotal.toLocaleString('en-PK')}</span>`;
                 } else {
-                    elOriginalSubtotal.textContent = `Rs. ${rawSubtotal.toLocaleString('en-PK')}`;
+                    elOriginalRow.style.display = 'none';
                 }
             }
 
-            // Tier 2: Delivery Fee display
-            if (elDeliveryValue) {
-                if (isFreeShipping) {
-                    elDeliveryValue.innerHTML = `<span style="text-decoration: line-through; opacity: 0.65; color: #a0a0a0;">Rs. ${deliveryFee.toLocaleString('en-PK')}</span> <span style="color: #4ade80; font-weight: 800; margin-left: 4px;">FREE (Rs. 0)</span>`;
-                } else {
-                    elDeliveryValue.textContent = `Rs. ${deliveryFee.toLocaleString('en-PK')}`;
-                }
-            }
-
-            // Tier 4: Dominant Total & Savings Badge
+            // Dominant Total & Savings Badge
             const elStep1Total = document.getElementById('checkoutStep1Total');
             const elSummaryTotal = document.getElementById('checkoutSummaryTotal');
             const elSummaryCount = document.getElementById('checkoutSummaryCount');
@@ -3124,7 +3133,7 @@
             if (savingsBadge) {
                 if (savingsAmount > 0 && activeReward && (activeReward.type === 'percentage_discount' || activeReward.type === 'free_shipping')) {
                     savingsBadge.style.display = 'inline-block';
-                    savingsBadge.textContent = `✦ YOU SAVED Rs. ${savingsAmount.toLocaleString('en-PK')} (${savingsType})`;
+                    savingsBadge.textContent = `✦ YOU SAVED Rs. ${savingsAmount.toLocaleString('en-PK')}`;
                 } else {
                     savingsBadge.style.display = 'none';
                 }
@@ -3254,12 +3263,11 @@
 
         function goToStep(stepNum) {
             const activeReward = getActiveDailyReward();
-            const deliveryFee = getCheckoutDeliveryFee();
             const isFreeShippingCod = (selectedPaymentMethod === 'cod' && activeReward && activeReward.type === 'free_shipping');
             if (stepNum > 1 && !paymentScreenshotDataUrl && !isFreeShippingCod) {
                 const isCod = (selectedPaymentMethod === 'cod');
                 const msg = isCod
-                    ? `Payment proof screenshot is mandatory for Courier Deposit (Rs. ${deliveryFee.toLocaleString('en-PK')}) before advancing.`
+                    ? 'Payment proof screenshot is mandatory for verification deposit (Rs. 250) before advancing.'
                     : 'Payment proof screenshot is mandatory for full payment before advancing.';
                 if (typeof showLuxuryAlert === 'function') {
                     showLuxuryAlert(msg, 'PAYMENT PROOF REQUIRED', 'error');
@@ -3341,18 +3349,20 @@
             const currentMap = getActiveCheckoutItems();
             const rawSubtotal = checkoutTotalPrice();
             const activeReward = getActiveDailyReward();
-            const deliveryFee = getCheckoutDeliveryFee(currentMap);
             const isFreeShipping = activeReward && activeReward.type === 'free_shipping';
 
-            let productDiscount = 0;
-            if (activeReward && activeReward.type === 'percentage_discount') {
-                const pct = Number(activeReward.value || 10);
-                productDiscount = Math.round(rawSubtotal * (pct / 100));
+            let discountAmount = 0;
+            if (activeReward) {
+                if (activeReward.type === 'percentage_discount') {
+                    const pct = Number(activeReward.value || 10);
+                    discountAmount = Math.round(rawSubtotal * (pct / 100));
+                } else if (activeReward.type === 'free_shipping') {
+                    discountAmount = 250;
+                }
             }
 
-            const effectiveProductsSubtotal = Math.max(0, rawSubtotal - productDiscount);
-            const effectiveDeliveryFee = isFreeShipping ? 0 : deliveryFee;
-            const finalTotal = effectiveProductsSubtotal + effectiveDeliveryFee;
+            const finalTotal = Math.max(0, rawSubtotal - discountAmount);
+            const standardDeposit = 250;
 
             if (method === 'cod') {
                 if (isFreeShipping) {
@@ -3362,19 +3372,19 @@
                     if (codSubtextDeposit) codSubtextDeposit.innerHTML = '<strong style="color: #4ade80;">Rs. 0 deposit (Waived)</strong>';
                     if (depLabel) depLabel.textContent = 'DUE NOW (WAIVED)';
                     if (balLabel) balLabel.textContent = 'DUE AT DOORSTEP';
-                    if (depEl) depEl.innerHTML = `<span class="deposit-waived-strike" style="text-decoration: line-through; opacity: 0.5; font-size: 0.85rem; margin-right: 4px;">Rs. ${deliveryFee.toLocaleString('en-PK')}</span><span style="color: #4ade80; font-weight: 800;">Rs. 0</span>`;
+                    if (depEl) depEl.innerHTML = `<span class="deposit-waived-strike" style="text-decoration: line-through; opacity: 0.5; font-size: 0.85rem; margin-right: 4px;">Rs. 250</span><span style="color: #4ade80; font-weight: 800;">Rs. 0</span>`;
                     if (depSub) depSub.textContent = 'Deposit waived (Free Delivery)';
-                    if (balEl) balEl.textContent = `Rs. ${effectiveProductsSubtotal.toLocaleString('en-PK')}`;
+                    if (balEl) balEl.textContent = `Rs. ${finalTotal.toLocaleString('en-PK')}`;
                     if (balSub) balSub.textContent = 'Full balance at doorstep';
                 } else {
-                    // Standard COD: Advance deposit is the cumulative courier delivery fee
-                    const depositAmount = deliveryFee;
-                    const balanceAmount = effectiveProductsSubtotal;
+                    // Standard COD: Advance deposit is flat order verification deposit (Rs. 250)
+                    const depositAmount = Math.min(finalTotal, standardDeposit);
+                    const balanceAmount = Math.max(0, finalTotal - depositAmount);
                     if (advPaymentBox) advPaymentBox.style.display = 'flex';
                     if (freeDeliveryCodBanner) freeDeliveryCodBanner.style.display = 'none';
-                    if (codSubtextDeposit) codSubtextDeposit.innerHTML = `<strong style="color: #ffe8be;">Courier Advance Deposit (Rs. ${deliveryFee.toLocaleString('en-PK')})</strong>`;
+                    if (codSubtextDeposit) codSubtextDeposit.innerHTML = `<strong style="color: #ffe8be;">Verification Deposit (Rs. ${depositAmount.toLocaleString('en-PK')})</strong>`;
                     if (subtag) {
-                        subtag.textContent = `Courier Deposit (Rs. ${deliveryFee.toLocaleString('en-PK')})`;
+                        subtag.textContent = `Verification Deposit (Rs. ${depositAmount.toLocaleString('en-PK')})`;
                         subtag.style.color = '#ffe8be';
                         subtag.style.background = 'rgba(255, 232, 190, 0.12)';
                         subtag.style.borderColor = 'rgba(255, 232, 190, 0.25)';
@@ -3382,11 +3392,11 @@
                     if (depLabel) depLabel.textContent = 'DUE NOW (DEPOSIT)';
                     if (balLabel) balLabel.textContent = 'DUE AT DOORSTEP';
                     if (depEl) depEl.textContent = `Rs. ${depositAmount.toLocaleString('en-PK')}`;
-                    if (depSub) depSub.textContent = 'Courier Advance Deposit';
+                    if (depSub) depSub.textContent = 'Order Verification Deposit';
                     if (balEl) balEl.textContent = `Rs. ${balanceAmount.toLocaleString('en-PK')}`;
-                    if (balSub) balSub.textContent = 'Cash on parcel delivery';
-                    if (ssTitle) ssTitle.textContent = `UPLOAD RS. ${deliveryFee.toLocaleString('en-PK')} COURIER DEPOSIT SCREENSHOT *`;
-                    if (dropText) dropText.textContent = `Tap to attach Rs. ${deliveryFee.toLocaleString('en-PK')} deposit screenshot receipt`;
+                    if (balSub) balSub.textContent = 'Balance on parcel delivery';
+                    if (ssTitle) ssTitle.textContent = `UPLOAD RS. ${depositAmount.toLocaleString('en-PK')} VERIFICATION DEPOSIT SCREENSHOT *`;
+                    if (dropText) dropText.textContent = `Tap to attach Rs. ${depositAmount.toLocaleString('en-PK')} deposit screenshot receipt`;
                 }
             } else {
                 // Advance Full Payment: 100% of finalTotal
@@ -3525,12 +3535,11 @@
 
         function proceedToStep2() {
             const activeReward = getActiveDailyReward();
-            const deliveryFee = getCheckoutDeliveryFee();
             const isFreeShippingCod = (selectedPaymentMethod === 'cod' && activeReward && activeReward.type === 'free_shipping');
             if (!paymentScreenshotDataUrl && !isFreeShippingCod) {
                 const isCod = (selectedPaymentMethod === 'cod');
                 const msg = isCod
-                    ? `Payment proof is strictly required! Please upload a screenshot of your Courier Delivery Fee (Rs. ${deliveryFee.toLocaleString('en-PK')}) advance deposit transfer before proceeding.`
+                    ? 'Payment proof is strictly required! Please upload a screenshot of your Rs. 250 advance verification deposit transfer before proceeding.'
                     : 'Payment proof is strictly required! Please upload a screenshot of your full payment transfer before proceeding.';
                 const title = isCod ? 'DEPOSIT PROOF REQUIRED' : 'PAYMENT PROOF REQUIRED';
                 if (typeof showLuxuryAlert === 'function') {
@@ -3592,21 +3601,18 @@
             const activeMap = getActiveCheckoutItems();
             const activeReward = getActiveDailyReward();
             const isFreeShippingCod = (selectedPaymentMethod === 'cod' && activeReward && activeReward.type === 'free_shipping');
-            const deliveryFee = getCheckoutDeliveryFee(activeMap);
             const rawSubtotal = checkoutTotalPrice();
 
             let discountAmt = 0;
-            let deliveryFeeWaived = 0;
             if (activeReward) {
                 if (activeReward.type === 'percentage_discount') {
                     discountAmt = Math.round(rawSubtotal * (Number(activeReward.value || 10) / 100));
                 } else if (activeReward.type === 'free_shipping') {
-                    deliveryFeeWaived = deliveryFee;
+                    discountAmt = 250;
                 }
             }
 
-            const effectiveProductsSubtotal = Math.max(0, rawSubtotal - discountAmt);
-            const calculatedTotal = effectiveProductsSubtotal + (activeReward && activeReward.type === 'free_shipping' ? 0 : deliveryFee);
+            const calculatedTotal = Math.max(0, rawSubtotal - discountAmt);
 
             const rewardMeta = activeReward ? {
                 code: activeReward.code,
@@ -3614,7 +3620,6 @@
                 type: activeReward.type,
                 value: activeReward.value,
                 discount_amount: discountAmt,
-                delivery_fee_waived: deliveryFeeWaived,
                 deposit_waived: isFreeShippingCod
             } : null;
 
@@ -3637,7 +3642,7 @@
             if (!paymentScreenshotDataUrl && !isFreeShippingCod) {
                 const isCod = (selectedPaymentMethod === 'cod');
                 const msg = isCod
-                    ? `Payment proof screenshot is mandatory for deposit verification (Rs. ${deliveryFee.toLocaleString('en-PK')}) before placing your order.`
+                    ? 'Payment proof screenshot is mandatory for deposit verification (Rs. 250) before placing your order.'
                     : 'Payment proof screenshot is mandatory for full payment verification before placing your order.';
                 if (typeof showLuxuryAlert === 'function') {
                     showLuxuryAlert(msg, 'PAYMENT PROOF REQUIRED', 'error');
@@ -3664,7 +3669,7 @@
                 }
 
                 const isCod = selectedPaymentMethod === 'cod';
-                const depositAmt = (isFreeShippingCod) ? 0 : (isCod ? deliveryFee : calculatedTotal);
+                const depositAmt = (isFreeShippingCod) ? 0 : (isCod ? Math.min(calculatedTotal, 250) : calculatedTotal);
 
                 const orderPayload = {
                     customer_name: name,
@@ -3677,7 +3682,7 @@
                     payment_method: selectedPaymentMethod,
                     advance_amount: depositAmt,
                     deposit_paid: depositAmt,
-                    delivery_fee: (activeReward && activeReward.type === 'free_shipping') ? 0 : deliveryFee,
+                    delivery_fee: 0,
                     payment_screenshot_url: uploadedScreenshotUrl,
                     items: (function() {
                         const finalItems = [...itemsArray];
@@ -3702,7 +3707,7 @@
                         type: activeReward.type,
                         value: activeReward.value,
                         discount_amount: discountAmt,
-                        delivery_waived: deliveryFeeWaived > 0,
+                        delivery_waived: activeReward.type === 'free_shipping',
                         deposit_waived: isFreeShippingCod
                     } : null
                 };
@@ -4046,7 +4051,7 @@
                             <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; margin: auto 0; text-align: center; width: 100%;">
                                 <div class="tarot-roman-numeral-front" style="color: #d4af37; font-family: 'Playfair Display', Georgia, serif; line-height: 1; text-shadow: 0 3px 12px rgba(0,0,0,0.98);">II</div>
                                 <span class="tarot-card-offer-title font-serif" style="font-weight: 900; color: #ffffff; letter-spacing: 0.04em; text-shadow: 0 2px 8px rgba(0,0,0,0.95);">FREE DELIVERY</span>
-                                <span class="tarot-card-subtext font-mono" style="color: #ded6c9; opacity: 0.95; line-height: 1.35; max-width: 92%;">Courier Deposit Waived (Rs. 0)</span>
+                                <span class="tarot-card-subtext font-mono" style="color: #ded6c9; opacity: 0.95; line-height: 1.35; max-width: 92%;">Instant Rs. 250 Savings</span>
                             </div>
                             <div style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 75%; margin-top: auto; opacity: 0.6;">
                                 <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #d4af37, transparent);"></span>
@@ -4185,11 +4190,11 @@
                 roman: "II",
                 name: "SECUNDUS",
                 title: "FREE DELIVERY",
-                desc: "Advance courier deposit waived (Rs. 0 Due Now). Pay balance on delivery.",
+                desc: "Instant Rs. 250 savings applied directly to your order total.",
                 offer: "FREE DELIVERY",
-                subtext: "Courier Deposit Waived (Rs. 0)",
+                subtext: "Instant Rs. 250 Savings",
                 type: "free_shipping",
-                value: 0,
+                value: 250,
                 accent: "#d4af37"
             },
             {

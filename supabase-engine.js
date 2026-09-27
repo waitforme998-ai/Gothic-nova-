@@ -124,6 +124,15 @@
                 if (rawDel) JSON.parse(rawDel).forEach(id => deletedProds.add(String(id)));
             } catch(e) {}
 
+            let localProds = [];
+            try {
+                const rawLocal = localStorage.getItem('gn_products');
+                if (rawLocal) {
+                    const parsed = JSON.parse(rawLocal);
+                    if (Array.isArray(parsed) && parsed.length > 0) localProds = parsed;
+                }
+            } catch(e) {}
+
             if (this.isLive && supabase) {
                 try {
                     const { data, error } = await supabase
@@ -132,9 +141,7 @@
                         .order('display_order', { ascending: true })
                         .order('created_at', { ascending: true });
                     
-                    if (error) throw error;
-                    
-                    if (data && Array.isArray(data) && data.length > 0) {
+                    if (!error && data && Array.isArray(data) && data.length > 0) {
                         const normalized = data.filter(p => p && !deletedProds.has(String(p.id))).map(p => ({
                             ...p,
                             salePrice: p.sale_price !== undefined ? p.sale_price : p.salePrice,
@@ -149,6 +156,9 @@
                     console.warn("Supabase fetch products notice:", err);
                 }
             }
+            if (localProds.length > 0) {
+                return localProds.filter(p => p && !deletedProds.has(String(p.id)));
+            }
             return this._getMockProducts().filter(p => p && !deletedProds.has(String(p.id)));
         },
 
@@ -162,14 +172,17 @@
                 sale_price: (product.salePrice !== undefined && product.salePrice !== null && product.salePrice !== '') ? Number(product.salePrice) : ((product.sale_price !== undefined && product.sale_price !== null && product.sale_price !== '') ? Number(product.sale_price) : null),
                 stock: Number(product.stock !== undefined ? product.stock : 10),
                 threshold: Number(product.threshold !== undefined ? product.threshold : 3),
-                description: product.description || '',
+                description: product.description || product.desc || '',
+                desc: product.description || product.desc || '',
                 img: product.img || 'assets/reaper_pendant.png',
+                delivery_charges: product.delivery_charges !== undefined ? Number(product.delivery_charges) : 250,
                 stock_images: stock_images,
+                stockImages: stock_images,
                 active: product.active !== false,
                 display_order: Number(product.display_order || product.displayOrder || 1)
             };
 
-            this._saveMockProduct({ ...dbPayload, salePrice: dbPayload.sale_price, stock_images: stock_images, stockImages: stock_images });
+            this._saveMockProduct({ ...dbPayload, salePrice: dbPayload.sale_price });
 
             if (this.isLive && supabase) {
                 try {
@@ -1114,7 +1127,7 @@
         _saveMockProduct(p) {
             let list = this._getMockProducts();
             const idx = list.findIndex(item => String(item.id) === String(p.id));
-            if (idx >= 0) list[idx] = p;
+            if (idx >= 0) list[idx] = { ...list[idx], ...p };
             else list.push(p);
             localStorage.setItem('gn_products', JSON.stringify(list));
         },
