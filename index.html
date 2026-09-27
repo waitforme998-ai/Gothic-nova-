@@ -84,12 +84,12 @@
     <script>
         // Synchronous Instant Initialization for 0ms Load
         const defaultProducts = [
-            { id: "1", name: "Venom Spider Ring", category: "rings", img: "assets/venom_spider_ring.png", price: 3499, salePrice: null, stock: 15, threshold: 3, active: true, delivery_charges: 250, description: "Handcrafted cyber-gothic spider ring featuring sculpted arachnid anatomy and antiqued dark alloy finish. Engineered for bold statement wear with Cash on Delivery across Pakistan.", desc: "Handcrafted cyber-gothic spider ring featuring sculpted arachnid anatomy and antiqued dark alloy finish. Engineered for bold statement wear with Cash on Delivery across Pakistan." },
-            { id: "2", name: "Crimson Cross", category: "chains", img: "assets/crimson_cross_choker.png", price: 5999, salePrice: 4499, stock: 8, threshold: 3, active: true, delivery_charges: 250, description: "Intricate gothic crucifix choker with blood-red crimson stone centerpiece, obsidian detailing, and reinforced link chain. Fast shipping across Karachi, Lahore, Islamabad, and nationwide.", desc: "Intricate gothic crucifix choker with blood-red crimson stone centerpiece, obsidian detailing, and reinforced link chain. Fast shipping across Karachi, Lahore, Islamabad, and nationwide." },
-            { id: "3", name: "Obsidian Helix", category: "chains", img: "assets/obsidian_helix_chain.png", price: 5999, salePrice: null, stock: 12, threshold: 3, active: true, delivery_charges: 250, description: "Minimalist helical link statement chain finished in dark obsidian electroplate with high-durability locking clasp. Premium unisex dark aesthetic jewelry.", desc: "Minimalist helical link statement chain finished in dark obsidian electroplate with high-durability locking clasp. Premium unisex dark aesthetic jewelry." },
-            { id: "4", name: "Shadow Claw", category: "rings", img: "assets/shadow_claw_ring.png", price: 3899, salePrice: null, stock: 10, threshold: 3, active: true, delivery_charges: 250, description: "Sculpted talon silhouette claw ring forged in heavyweight matte black steel alloy. Ergonomic comfort fit with aggressive gothic Japanese styling.", desc: "Sculpted talon silhouette claw ring forged in heavyweight matte black steel alloy. Ergonomic comfort fit with aggressive gothic Japanese styling." },
-            { id: "5", name: "Spine Bracelet", category: "chains", img: "assets/spine_bracelet.png", price: 6899, salePrice: null, stock: 5, threshold: 3, active: true, delivery_charges: 250, description: "Articulated skeletal vertebrae link bracelet designed with fluid anatomical movement and high-grade stainless clasp. Limited edition cyber-goth luxury.", desc: "Articulated skeletal vertebrae link bracelet designed with fluid anatomical movement and high-grade stainless clasp. Limited edition cyber-goth luxury." },
-            { id: "6", name: "Reaper Pendant", category: "pendants", img: "assets/reaper_pendant.png", price: 8999, salePrice: 7499, stock: 15, threshold: 3, active: true, delivery_charges: 250, description: "Iconic grim reaper silhouette pendant carved with precision relief, hooded shroud drape, and dark gunmetal chain. Signature Gothic Nova centerpiece.", desc: "Iconic grim reaper silhouette pendant carved with precision relief, hooded shroud drape, and dark gunmetal chain. Signature Gothic Nova centerpiece." }
+            { id: "1", name: "Venom Spider Ring", category: "rings", img: "assets/venom_spider_ring.png", price: 3499, salePrice: null, stock: 15, threshold: 3, active: true, delivery_charges: 0, description: "Handcrafted cyber-gothic spider ring featuring sculpted arachnid anatomy and antiqued dark alloy finish. Engineered for bold statement wear with Cash on Delivery across Pakistan.", desc: "Handcrafted cyber-gothic spider ring featuring sculpted arachnid anatomy and antiqued dark alloy finish. Engineered for bold statement wear with Cash on Delivery across Pakistan." },
+            { id: "2", name: "Crimson Cross", category: "chains", img: "assets/crimson_cross_choker.png", price: 5999, salePrice: 4499, stock: 8, threshold: 3, active: true, delivery_charges: 0, description: "Intricate gothic crucifix choker with blood-red crimson stone centerpiece, obsidian detailing, and reinforced link chain. Fast shipping across Karachi, Lahore, Islamabad, and nationwide.", desc: "Intricate gothic crucifix choker with blood-red crimson stone centerpiece, obsidian detailing, and reinforced link chain. Fast shipping across Karachi, Lahore, Islamabad, and nationwide." },
+            { id: "3", name: "Obsidian Helix", category: "chains", img: "assets/obsidian_helix_chain.png", price: 5999, salePrice: null, stock: 12, threshold: 3, active: true, delivery_charges: 0, description: "Minimalist helical link statement chain finished in dark obsidian electroplate with high-durability locking clasp. Premium unisex dark aesthetic jewelry.", desc: "Minimalist helical link statement chain finished in dark obsidian electroplate with high-durability locking clasp. Premium unisex dark aesthetic jewelry." },
+            { id: "4", name: "Shadow Claw", category: "rings", img: "assets/shadow_claw_ring.png", price: 3899, salePrice: null, stock: 10, threshold: 3, active: true, delivery_charges: 0, description: "Sculpted talon silhouette claw ring forged in heavyweight matte black steel alloy. Ergonomic comfort fit with aggressive gothic Japanese styling.", desc: "Sculpted talon silhouette claw ring forged in heavyweight matte black steel alloy. Ergonomic comfort fit with aggressive gothic Japanese styling." },
+            { id: "5", name: "Spine Bracelet", category: "chains", img: "assets/spine_bracelet.png", price: 6899, salePrice: null, stock: 5, threshold: 3, active: true, delivery_charges: 0, description: "Articulated skeletal vertebrae link bracelet designed with fluid anatomical movement and high-grade stainless clasp. Limited edition cyber-goth luxury.", desc: "Articulated skeletal vertebrae link bracelet designed with fluid anatomical movement and high-grade stainless clasp. Limited edition cyber-goth luxury." },
+            { id: "6", name: "Reaper Pendant", category: "pendants", img: "assets/reaper_pendant.png", price: 8999, salePrice: 7499, stock: 15, threshold: 3, active: true, delivery_charges: 0, description: "Iconic grim reaper silhouette pendant carved with precision relief, hooded shroud drape, and dark gunmetal chain. Signature Gothic Nova centerpiece.", desc: "Iconic grim reaper silhouette pendant carved with precision relief, hooded shroud drape, and dark gunmetal chain. Signature Gothic Nova centerpiece." }
         ];
         
         let storedProducts = null;
@@ -1397,7 +1397,7 @@
                     Cash On Delivery (COD) Parcel Policy
                 </div>
                 <p style="margin-bottom: 8px;">• <strong>Delivery Timeline:</strong> 5–7 business days nationwide across Pakistan.</p>
-                <p style="margin-bottom: 8px;">• <strong>Advance Verification Deposit:</strong> A deposit of <strong>Rs. 250</strong> is required prior to dispatch to secure packing materials & courier logistics. The remaining order balance is paid upon doorstep delivery.</p>
+                <p style="margin-bottom: 8px;">• <strong>Advance Verification Deposit:</strong> A deposit of <strong>Rs. 700</strong> is required prior to dispatch to secure packing materials & courier logistics. The remaining order balance is paid upon doorstep delivery.</p>
                 <p style="margin-bottom: 8px;">• <strong>Courier Partner:</strong> Dispatched securely via <strong>PostEx</strong> logistics.</p>
                 <p style="margin: 0;">• <strong>Tracking:</strong> A real-time tracking code is sent via SMS & WhatsApp immediately upon courier booking.</p>
             </div>
@@ -1718,10 +1718,10 @@
                                     <div class="payment-radio-circle"><div class="payment-radio-dot"></div></div>
                                     <span class="payment-card-title" style="font-size: 0.88rem; font-weight: 700; color: #ffffff; white-space: nowrap;">Full Advance</span>
                                 </div>
-                                <span class="payment-card-badge font-mono" style="font-size: 0.58rem; background: rgba(255,200,87,0.15); color: #ffc857; border: 1px solid rgba(255,200,87,0.35); border-radius: 3px; padding: 2px 7px; display: inline-block; font-weight: 700; letter-spacing: 0.08em;">RECOMMENDED VIP</span>
+                                <span class="payment-card-badge font-mono" style="font-size: 0.58rem; background: rgba(255,200,87,0.12); color: #ffc857; border: 1px solid rgba(255,200,87,0.30); border-radius: 3px; padding: 2px 7px; display: inline-block; font-weight: 700; letter-spacing: 0.08em;">RECOMMENDED VIP</span>
                             </div>
                             <div style="font-size: 0.73rem; color: rgba(255,255,255,0.75); line-height: 1.4; padding-left: 24px; margin-top: 6px;">
-                                <strong style="color: #ffe8be;">100% full payment</strong> &bull; Zero doorstep hassle
+                                <strong style="color: #ffe8be;">100% full payment</strong> &bull; Zero doorstep balance
                                 <div style="font-size: 0.66rem; color: var(--color-text-muted); margin-top: 2px;">Priority Express Dispatch (2–3 business days)</div>
                             </div>
                         </div>
@@ -1733,19 +1733,10 @@
                                 <span class="payment-card-title" style="font-size: 0.88rem; font-weight: 700; color: #ffffff; white-space: nowrap;">Cash on Delivery</span>
                             </div>
                             <div style="font-size: 0.73rem; color: rgba(255,255,255,0.75); line-height: 1.4; padding-left: 24px; margin-top: 6px;">
-                                <strong id="codSubtextDeposit" style="color: #38bdf8;">Rs. 250 Verification Deposit</strong> &bull; Balance on delivery
-                                <div style="font-size: 0.66rem; color: var(--color-text-muted); margin-top: 2px;">Standard dispatch (5–7 business days)</div>
+                                <div id="codSubtextDeposit" style="color: #ffe8be; font-weight: 600;">Rs. 700 Advance Deposit <span style="font-size: 0.66rem; color: var(--color-text-muted); font-weight: 400;">(Packaging & Processing Fee Rs. 400 + Delivery Fee Rs. 300)</span></div>
+                                <div style="font-size: 0.66rem; color: var(--color-text-muted); margin-top: 2px;">Remaining balance payable at doorstep upon delivery</div>
                             </div>
                         </div>
-                    </div>
-                </div>
-
-                <!-- 3B. FREE DELIVERY COD ZERO-DEPOSIT CONFIRMATION NOTICE (Shown exclusively for COD when Free Delivery active) -->
-                <div id="freeDeliveryCodBanner" style="display: none; align-items: center; gap: 12px; background: rgba(56, 189, 248, 0.08); border: 1.5px solid rgba(56, 189, 248, 0.4); border-radius: 8px; padding: 12px 14px; margin-top: 14px; box-sizing: border-box; width: 100%;">
-                    <span style="font-size: 1.3rem; color: #38bdf8; flex-shrink: 0;">✓</span>
-                    <div style="display: flex; flex-direction: column; gap: 2px;">
-                        <span style="font-size: 0.80rem; font-weight: 800; color: #ffffff; letter-spacing: 0.02em;">FREE DELIVERY REWARD ACTIVE &bull; ZERO ADVANCE DEPOSIT</span>
-                        <span class="font-mono" style="font-size: 0.66rem; color: #38bdf8; line-height: 1.35;">Advance verification deposit is fully waived (Rs. 0 Due Now). Pay full balance upon parcel delivery. No payment proof screenshot required.</span>
                     </div>
                 </div>
 
@@ -3014,38 +3005,8 @@
             initCheckoutCities();
         });
 
-        function getCheckoutDeliveryFee(itemsMap) {
-            try {
-                const items = itemsMap || getActiveCheckoutItems();
-                const prods = (typeof getFreshProducts === 'function') ? getFreshProducts() : (window.gn_products || []);
-                const pids = Object.keys(items);
-                if (pids.length === 0) return 250;
-
-                let totalFee = 0;
-                let foundAny = false;
-                for (const pid of pids) {
-                    const itemObj = items[pid];
-                    const qty = Number(itemObj.qty || itemObj.quantity || 1);
-                    let fee = null;
-                    if (itemObj && itemObj.delivery_charges !== undefined && itemObj.delivery_charges !== null && !isNaN(itemObj.delivery_charges)) {
-                        fee = Number(itemObj.delivery_charges);
-                    } else {
-                        const prod = prods.find(p => String(p.id) === String(pid));
-                        if (prod && prod.delivery_charges !== undefined && prod.delivery_charges !== null && !isNaN(prod.delivery_charges)) {
-                            fee = Number(prod.delivery_charges);
-                        }
-                    }
-                    if (fee === null || isNaN(fee)) {
-                        fee = 250;
-                    }
-                    foundAny = true;
-                    totalFee += (fee * qty);
-                }
-                if (foundAny && totalFee > 0) return totalFee;
-            } catch(e) {
-                console.warn("Error resolving checkout delivery fee:", e);
-            }
-            return 250;
+        function getCheckoutDeliveryFee() {
+            return 0;
         }
         window.getCheckoutDeliveryFee = getCheckoutDeliveryFee;
 
@@ -3060,7 +3021,7 @@
                     if (found) return found;
                 }
             } catch(e) {}
-            return { delivery_charges: getCheckoutDeliveryFee() };
+            return { delivery_charges: 0 };
         }
 
         function updateCheckoutTotals() {
@@ -3079,29 +3040,15 @@
             const discountVal = document.getElementById('checkoutDiscountValue');
             const savingsBadge = document.getElementById('checkoutSavingsBadge');
 
-            if (activeReward) {
-                if (activeReward.type === 'percentage_discount') {
-                    const pct = Number(activeReward.value || 10);
-                    discountAmount = Math.round(rawSubtotal * (pct / 100));
-                    savingsAmount = discountAmount;
+            if (activeReward && activeReward.type === 'percentage_discount') {
+                const pct = Number(activeReward.value || 10);
+                discountAmount = Math.round(rawSubtotal * (pct / 100));
+                savingsAmount = discountAmount;
 
-                    if (discountRow) {
-                        discountRow.style.display = 'flex';
-                        if (discountLabel) discountLabel.textContent = `✦ REWARD (${activeReward.offer || `${pct}% OFF`}):`;
-                        if (discountVal) discountVal.innerHTML = `<span style="color: #4ade80; font-weight: 800;">-Rs. ${discountAmount.toLocaleString('en-PK')}</span>`;
-                    }
-                } else if (activeReward.type === 'free_shipping') {
-                    discountAmount = 250;
-                    savingsAmount = 250;
-
-                    if (discountRow) {
-                        discountRow.style.display = 'flex';
-                        if (discountLabel) discountLabel.textContent = `✦ REWARD (FREE DELIVERY):`;
-                        if (discountVal) discountVal.innerHTML = `<span style="color: #4ade80; font-weight: 800;">-Rs. 250</span>`;
-                    }
-                } else {
-                    // For free_gift and order_upgrade: NO discount row, NO savings badge!
-                    if (discountRow) discountRow.style.display = 'none';
+                if (discountRow) {
+                    discountRow.style.display = 'flex';
+                    if (discountLabel) discountLabel.textContent = `✦ REWARD (${activeReward.offer || `${pct}% OFF`}):`;
+                    if (discountVal) discountVal.innerHTML = `<span style="color: #4ade80; font-weight: 800;">-Rs. ${discountAmount.toLocaleString('en-PK')}</span>`;
                 }
             } else {
                 if (discountRow) discountRow.style.display = 'none';
@@ -3172,26 +3119,26 @@
                         previewHtml += `
                             <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 6px; border-top: 1px solid rgba(255, 232, 190, 0.08); flex-wrap: wrap;">
                                 <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
-                                    <div style="width: 30px; height: 30px; border-radius: 4px; background: rgba(139, 0, 0, 0.2); border: 1px solid rgba(255, 232, 190, 0.25); display: flex; align-items: center; justify-content: center; font-size: 0.95rem; flex-shrink: 0;">🎁</div>
+                                    <div style="width: 30px; height: 30px; border-radius: 4px; background: rgba(255, 117, 143, 0.08); border: 1px solid rgba(255, 117, 143, 0.3); display: flex; align-items: center; justify-content: center; font-size: 0.62rem; color: #ff758f; font-family: var(--font-mono); font-weight: 700; flex-shrink: 0;">GIFT</div>
                                     <div style="display: flex; flex-direction: column; min-width: 0;">
                                         <span style="font-size: 0.76rem; font-weight: 700; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">✦ Free Gothic Artifact Gift</span>
                                         <span class="font-mono" style="font-size: 0.60rem; color: #ff9999;">Tarot Reward &bull; Artifact Enclosed in Parcel</span>
                                     </div>
                                 </div>
-                                <span class="font-mono" style="font-size: 0.68rem; color: #4ade80; font-weight: 800; flex-shrink: 0; background: rgba(74, 222, 128, 0.1); border: 1px solid rgba(74, 222, 128, 0.25); padding: 2px 6px; border-radius: 3px;">GIFT ENCLOSED</span>
+                                <span class="font-mono" style="font-size: 0.64rem; color: #4ade80; font-weight: 800; flex-shrink: 0; background: rgba(74, 222, 128, 0.08); border: 1px solid rgba(74, 222, 128, 0.25); padding: 2px 6px; border-radius: 3px;">GIFT ENCLOSED</span>
                             </div>
                         `;
                     } else if (activeReward && activeReward.type === 'order_upgrade') {
                         previewHtml += `
                             <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 6px; border-top: 1px solid rgba(255, 232, 190, 0.08); flex-wrap: wrap;">
                                 <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
-                                    <div style="width: 30px; height: 30px; border-radius: 4px; background: rgba(139, 0, 0, 0.2); border: 1px solid rgba(255, 232, 190, 0.25); display: flex; align-items: center; justify-content: center; font-size: 0.95rem; flex-shrink: 0;">👑</div>
+                                    <div style="width: 30px; height: 30px; border-radius: 4px; background: rgba(192, 132, 252, 0.08); border: 1px solid rgba(192, 132, 252, 0.3); display: flex; align-items: center; justify-content: center; font-size: 0.62rem; color: #c084fc; font-family: var(--font-mono); font-weight: 700; flex-shrink: 0;">VIP</div>
                                     <div style="display: flex; flex-direction: column; min-width: 0;">
                                         <span style="font-size: 0.76rem; font-weight: 700; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">✦ VIP Order Packaging Upgrade</span>
-                                        <span class="font-mono" style="font-size: 0.60rem; color: #ff9999;">Tarot Reward &bull; your order upgraded</span>
+                                        <span class="font-mono" style="font-size: 0.60rem; color: #ff9999;">Tarot Reward &bull; VIP Box Packaging</span>
                                     </div>
                                 </div>
-                                <span class="font-mono" style="font-size: 0.68rem; color: #4ade80; font-weight: 800; flex-shrink: 0; background: rgba(74, 222, 128, 0.1); border: 1px solid rgba(74, 222, 128, 0.25); padding: 2px 6px; border-radius: 3px;">UPGRADED</span>
+                                <span class="font-mono" style="font-size: 0.64rem; color: #4ade80; font-weight: 800; flex-shrink: 0; background: rgba(74, 222, 128, 0.08); border: 1px solid rgba(74, 222, 128, 0.25); padding: 2px 6px; border-radius: 3px;">UPGRADED</span>
                             </div>
                         `;
                     }
@@ -3228,7 +3175,7 @@
                         itemsHtml += `
                             <div class="checkout-mini-item" style="border-top: 1px solid rgba(255, 232, 190, 0.1); margin-top: 4px; padding-top: 6px;">
                                 <div style="display: flex; align-items: center; gap: 8px;">
-                                    <span style="font-size: 0.9rem;">🎁</span>
+                                    <span class="font-mono" style="font-size: 0.60rem; color: #ff758f; background: rgba(255, 117, 143, 0.08); border: 1px solid rgba(255, 117, 143, 0.3); padding: 1px 4px; border-radius: 3px;">GIFT</span>
                                     <span style="font-weight: 700; color: #ffe8be; font-size: 0.74rem;">✦ Free Gothic Artifact Gift (Claimed)</span>
                                 </div>
                                 <span class="font-mono" style="color: #4ade80; font-weight: 800; font-size: 0.70rem;">GIFT ENCLOSED</span>
@@ -3238,7 +3185,7 @@
                         itemsHtml += `
                             <div class="checkout-mini-item" style="border-top: 1px solid rgba(255, 232, 190, 0.1); margin-top: 4px; padding-top: 6px;">
                                 <div style="display: flex; align-items: center; gap: 8px;">
-                                    <span style="font-size: 0.9rem;">👑</span>
+                                    <span class="font-mono" style="font-size: 0.60rem; color: #c084fc; background: rgba(192, 132, 252, 0.08); border: 1px solid rgba(192, 132, 252, 0.3); padding: 1px 4px; border-radius: 3px;">VIP</span>
                                     <span style="font-weight: 700; color: #ffe8be; font-size: 0.74rem;">✦ VIP Packaging Upgrade (Claimed)</span>
                                 </div>
                                 <span class="font-mono" style="color: #4ade80; font-weight: 800; font-size: 0.70rem;">UPGRADED</span>
@@ -3262,12 +3209,10 @@
         }
 
         function goToStep(stepNum) {
-            const activeReward = getActiveDailyReward();
-            const isFreeShippingCod = (selectedPaymentMethod === 'cod' && activeReward && activeReward.type === 'free_shipping');
-            if (stepNum > 1 && !paymentScreenshotDataUrl && !isFreeShippingCod) {
+            if (stepNum > 1 && !paymentScreenshotDataUrl) {
                 const isCod = (selectedPaymentMethod === 'cod');
                 const msg = isCod
-                    ? 'Payment proof screenshot is mandatory for verification deposit (Rs. 250) before advancing.'
+                    ? 'Payment proof screenshot is mandatory for advance verification deposit (Rs. 700) before advancing.'
                     : 'Payment proof screenshot is mandatory for full payment before advancing.';
                 if (typeof showLuxuryAlert === 'function') {
                     showLuxuryAlert(msg, 'PAYMENT PROOF REQUIRED', 'error');
@@ -3340,7 +3285,6 @@
             const balEl = document.getElementById('checkoutStep1Balance');
             const balSub = document.getElementById('checkoutBalanceSub');
             const advPaymentBox = document.getElementById('advancePaymentBox');
-            const freeDeliveryCodBanner = document.getElementById('freeDeliveryCodBanner');
             const codSubtextDeposit = document.getElementById('codSubtextDeposit');
 
             if (cardCod) cardCod.classList.toggle('selected', method === 'cod');
@@ -3352,56 +3296,41 @@
             const isFreeShipping = activeReward && activeReward.type === 'free_shipping';
 
             let discountAmount = 0;
-            if (activeReward) {
-                if (activeReward.type === 'percentage_discount') {
-                    const pct = Number(activeReward.value || 10);
-                    discountAmount = Math.round(rawSubtotal * (pct / 100));
-                } else if (activeReward.type === 'free_shipping') {
-                    discountAmount = 250;
-                }
+            if (activeReward && activeReward.type === 'percentage_discount') {
+                const pct = Number(activeReward.value || 10);
+                discountAmount = Math.round(rawSubtotal * (pct / 100));
             }
 
             const finalTotal = Math.max(0, rawSubtotal - discountAmount);
-            const standardDeposit = 250;
+            const standardDeposit = 700;
+            const breakdownBrackets = isFreeShipping 
+                ? '(Packaging Fee Rs. 400 + Order Dispatch Fee Rs. 300)' 
+                : '(Packaging & Processing Fee Rs. 400 + Delivery Fee Rs. 300)';
+
+            if (advPaymentBox) advPaymentBox.style.display = 'flex';
 
             if (method === 'cod') {
-                if (isFreeShipping) {
-                    // Free Delivery on COD: Advance deposit is Rs. 0; HIDE proof upload and bank transfer box completely
-                    if (advPaymentBox) advPaymentBox.style.display = 'none';
-                    if (freeDeliveryCodBanner) freeDeliveryCodBanner.style.display = 'flex';
-                    if (codSubtextDeposit) codSubtextDeposit.innerHTML = '<strong style="color: #4ade80;">Rs. 0 deposit (Waived)</strong>';
-                    if (depLabel) depLabel.textContent = 'DUE NOW (WAIVED)';
-                    if (balLabel) balLabel.textContent = 'DUE AT DOORSTEP';
-                    if (depEl) depEl.innerHTML = `<span class="deposit-waived-strike" style="text-decoration: line-through; opacity: 0.5; font-size: 0.85rem; margin-right: 4px;">Rs. 250</span><span style="color: #4ade80; font-weight: 800;">Rs. 0</span>`;
-                    if (depSub) depSub.textContent = 'Deposit waived (Free Delivery)';
-                    if (balEl) balEl.textContent = `Rs. ${finalTotal.toLocaleString('en-PK')}`;
-                    if (balSub) balSub.textContent = 'Full balance at doorstep';
-                } else {
-                    // Standard COD: Advance deposit is flat order verification deposit (Rs. 250)
-                    const depositAmount = Math.min(finalTotal, standardDeposit);
-                    const balanceAmount = Math.max(0, finalTotal - depositAmount);
-                    if (advPaymentBox) advPaymentBox.style.display = 'flex';
-                    if (freeDeliveryCodBanner) freeDeliveryCodBanner.style.display = 'none';
-                    if (codSubtextDeposit) codSubtextDeposit.innerHTML = `<strong style="color: #ffe8be;">Verification Deposit (Rs. ${depositAmount.toLocaleString('en-PK')})</strong>`;
-                    if (subtag) {
-                        subtag.textContent = `Verification Deposit (Rs. ${depositAmount.toLocaleString('en-PK')})`;
-                        subtag.style.color = '#ffe8be';
-                        subtag.style.background = 'rgba(255, 232, 190, 0.12)';
-                        subtag.style.borderColor = 'rgba(255, 232, 190, 0.25)';
-                    }
-                    if (depLabel) depLabel.textContent = 'DUE NOW (DEPOSIT)';
-                    if (balLabel) balLabel.textContent = 'DUE AT DOORSTEP';
-                    if (depEl) depEl.textContent = `Rs. ${depositAmount.toLocaleString('en-PK')}`;
-                    if (depSub) depSub.textContent = 'Order Verification Deposit';
-                    if (balEl) balEl.textContent = `Rs. ${balanceAmount.toLocaleString('en-PK')}`;
-                    if (balSub) balSub.textContent = 'Balance on parcel delivery';
-                    if (ssTitle) ssTitle.textContent = `UPLOAD RS. ${depositAmount.toLocaleString('en-PK')} VERIFICATION DEPOSIT SCREENSHOT *`;
-                    if (dropText) dropText.textContent = `Tap to attach Rs. ${depositAmount.toLocaleString('en-PK')} deposit screenshot receipt`;
+                const depositAmount = Math.min(finalTotal, standardDeposit);
+                const balanceAmount = Math.max(0, finalTotal - depositAmount);
+                if (codSubtextDeposit) {
+                    codSubtextDeposit.innerHTML = `Rs. 700 Advance Deposit <span style="font-size: 0.66rem; color: var(--color-text-muted); font-weight: 400;">${breakdownBrackets}</span>`;
                 }
+                if (subtag) {
+                    subtag.textContent = `Verification Deposit (Rs. ${depositAmount.toLocaleString('en-PK')})`;
+                    subtag.style.color = '#ffe8be';
+                    subtag.style.background = 'rgba(255, 232, 190, 0.12)';
+                    subtag.style.borderColor = 'rgba(255, 232, 190, 0.25)';
+                }
+                if (depLabel) depLabel.textContent = 'DUE NOW (DEPOSIT)';
+                if (balLabel) balLabel.textContent = 'DUE AT DOORSTEP';
+                if (depEl) depEl.textContent = `Rs. ${depositAmount.toLocaleString('en-PK')}`;
+                if (depSub) depSub.textContent = 'Order Verification Deposit';
+                if (balEl) balEl.textContent = `Rs. ${balanceAmount.toLocaleString('en-PK')}`;
+                if (balSub) balSub.textContent = 'Balance on parcel delivery';
+                if (ssTitle) ssTitle.textContent = `UPLOAD RS. ${depositAmount.toLocaleString('en-PK')} VERIFICATION DEPOSIT SCREENSHOT *`;
+                if (dropText) dropText.textContent = `Tap to attach Rs. ${depositAmount.toLocaleString('en-PK')} deposit screenshot receipt`;
             } else {
                 // Advance Full Payment: 100% of finalTotal
-                if (advPaymentBox) advPaymentBox.style.display = 'flex';
-                if (freeDeliveryCodBanner) freeDeliveryCodBanner.style.display = 'none';
                 if (subtag) {
                     subtag.textContent = '100% Full Payment (Priority Express)';
                     subtag.style.color = '#ffe8be';
@@ -3476,7 +3405,7 @@
             }
 
             if (typeof showLuxuryToast === 'function') {
-                showLuxuryToast(`${label || 'Account details'} copied to clipboard`, '📋');
+                showLuxuryToast(`${label || 'Account details'} copied to clipboard`);
             }
         }
         window.copyAccountDetail = copyAccountDetail;
@@ -3539,7 +3468,7 @@
             if (!paymentScreenshotDataUrl && !isFreeShippingCod) {
                 const isCod = (selectedPaymentMethod === 'cod');
                 const msg = isCod
-                    ? 'Payment proof is strictly required! Please upload a screenshot of your Rs. 250 advance verification deposit transfer before proceeding.'
+                    ? 'Payment proof is strictly required! Please upload a screenshot of your Rs. 700 advance verification deposit transfer before proceeding.'
                     : 'Payment proof is strictly required! Please upload a screenshot of your full payment transfer before proceeding.';
                 const title = isCod ? 'DEPOSIT PROOF REQUIRED' : 'PAYMENT PROOF REQUIRED';
                 if (typeof showLuxuryAlert === 'function') {
@@ -3600,16 +3529,11 @@
 
             const activeMap = getActiveCheckoutItems();
             const activeReward = getActiveDailyReward();
-            const isFreeShippingCod = (selectedPaymentMethod === 'cod' && activeReward && activeReward.type === 'free_shipping');
             const rawSubtotal = checkoutTotalPrice();
 
             let discountAmt = 0;
-            if (activeReward) {
-                if (activeReward.type === 'percentage_discount') {
-                    discountAmt = Math.round(rawSubtotal * (Number(activeReward.value || 10) / 100));
-                } else if (activeReward.type === 'free_shipping') {
-                    discountAmt = 250;
-                }
+            if (activeReward && activeReward.type === 'percentage_discount') {
+                discountAmt = Math.round(rawSubtotal * (Number(activeReward.value || 10) / 100));
             }
 
             const calculatedTotal = Math.max(0, rawSubtotal - discountAmt);
@@ -3619,8 +3543,7 @@
                 title: activeReward.title,
                 type: activeReward.type,
                 value: activeReward.value,
-                discount_amount: discountAmt,
-                deposit_waived: isFreeShippingCod
+                discount_amount: discountAmt
             } : null;
 
             const itemsArray = Object.entries(activeMap).map(([pid, it]) => ({
@@ -3639,10 +3562,10 @@
                 return;
             }
 
-            if (!paymentScreenshotDataUrl && !isFreeShippingCod) {
+            if (!paymentScreenshotDataUrl) {
                 const isCod = (selectedPaymentMethod === 'cod');
                 const msg = isCod
-                    ? 'Payment proof screenshot is mandatory for deposit verification (Rs. 250) before placing your order.'
+                    ? 'Payment proof screenshot is mandatory for deposit verification (Rs. 700) before placing your order.'
                     : 'Payment proof screenshot is mandatory for full payment verification before placing your order.';
                 if (typeof showLuxuryAlert === 'function') {
                     showLuxuryAlert(msg, 'PAYMENT PROOF REQUIRED', 'error');
@@ -3669,7 +3592,7 @@
                 }
 
                 const isCod = selectedPaymentMethod === 'cod';
-                const depositAmt = (isFreeShippingCod) ? 0 : (isCod ? Math.min(calculatedTotal, 250) : calculatedTotal);
+                const depositAmt = isCod ? Math.min(calculatedTotal, 700) : calculatedTotal;
 
                 const orderPayload = {
                     customer_name: name,
@@ -3706,9 +3629,7 @@
                         title: activeReward.title,
                         type: activeReward.type,
                         value: activeReward.value,
-                        discount_amount: discountAmt,
-                        delivery_waived: activeReward.type === 'free_shipping',
-                        deposit_waived: isFreeShippingCod
+                        discount_amount: discountAmt
                     } : null
                 };
 
@@ -4051,7 +3972,7 @@
                             <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; margin: auto 0; text-align: center; width: 100%;">
                                 <div class="tarot-roman-numeral-front" style="color: #d4af37; font-family: 'Playfair Display', Georgia, serif; line-height: 1; text-shadow: 0 3px 12px rgba(0,0,0,0.98);">II</div>
                                 <span class="tarot-card-offer-title font-serif" style="font-weight: 900; color: #ffffff; letter-spacing: 0.04em; text-shadow: 0 2px 8px rgba(0,0,0,0.95);">FREE DELIVERY</span>
-                                <span class="tarot-card-subtext font-mono" style="color: #ded6c9; opacity: 0.95; line-height: 1.35; max-width: 92%;">Instant Rs. 250 Savings</span>
+                                <span class="tarot-card-subtext font-mono" style="color: #ded6c9; opacity: 0.95; line-height: 1.35; max-width: 92%;">Free Shipping Nationwide</span>
                             </div>
                             <div style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 75%; margin-top: auto; opacity: 0.6;">
                                 <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #d4af37, transparent);"></span>
@@ -4190,11 +4111,11 @@
                 roman: "II",
                 name: "SECUNDUS",
                 title: "FREE DELIVERY",
-                desc: "Instant Rs. 250 savings applied directly to your order total.",
+                desc: "Free standard delivery included with your order.",
                 offer: "FREE DELIVERY",
-                subtext: "Instant Rs. 250 Savings",
+                subtext: "Free Shipping Nationwide",
                 type: "free_shipping",
-                value: 250,
+                value: 0,
                 accent: "#d4af37"
             },
             {
@@ -4427,12 +4348,12 @@
             const text = badge ? badge.textContent.trim() : 'GOTHIC-ORDER-101';
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(text).then(() => {
-                    showLuxuryToast(`${text} COPIED TO CLIPBOARD`, '📋');
+                    showLuxuryToast(`${text} COPIED TO CLIPBOARD`);
                 }).catch(() => {
-                    showLuxuryToast(`ORDER REFERENCE: ${text}`, '📋');
+                    showLuxuryToast(`ORDER REFERENCE: ${text}`);
                 });
             } else {
-                showLuxuryToast(`ORDER REFERENCE: ${text}`, '📋');
+                showLuxuryToast(`ORDER REFERENCE: ${text}`);
             }
         }
 
@@ -4856,7 +4777,7 @@
             const stored = getStoredDailyReward();
             if (stored && stored.step === 'claimed' && stored.reward && !force) {
                 if (typeof showLuxuryToast === 'function') {
-                    showLuxuryToast(`✦ ACTIVE DESTINY: ${stored.reward.title} (48h Bound)`, '🎴');
+                    showLuxuryToast(`✦ ACTIVE DESTINY: ${stored.reward.title} (48h Bound)`);
                 }
                 return;
             }
@@ -5130,22 +5051,12 @@
             pill.style.display = 'flex';
         }
 
-        // In-page Contextual Strike-through: Cut the advance deposit number when Free Delivery is active
         function updateInPageContextualPolicy(reward) {
             const depositDoms = document.querySelectorAll('.checkout-advance-badge, .deposit-policy-badge, #checkoutStep1Deposit, [data-deposit-notice]');
-            const deliveryFee = (typeof getCheckoutDeliveryFee === 'function') ? getCheckoutDeliveryFee() : 250;
             const payMethod = (typeof selectedPaymentMethod !== 'undefined') ? selectedPaymentMethod : (window.selectedPaymentMethod || 'cod');
-            if (!reward || reward.type !== 'free_shipping') {
-                depositDoms.forEach(el => {
-                    if (el.id === 'checkoutStep1Deposit' && payMethod === 'cod') {
-                        el.innerHTML = `Rs. ${deliveryFee.toLocaleString('en-PK')}`;
-                    }
-                });
-                return;
-            }
             depositDoms.forEach(el => {
-                if (el.id === 'checkoutStep1Deposit') {
-                    el.innerHTML = `<span class="deposit-waived-strike" style="text-decoration: line-through; opacity: 0.5; font-size: 0.85rem; margin-right: 4px;">Rs. ${deliveryFee.toLocaleString('en-PK')}</span><span style="color: #4ade80; font-weight: 800;">Rs. 0</span>`;
+                if (el.id === 'checkoutStep1Deposit' && payMethod === 'cod') {
+                    el.innerHTML = 'Rs. 700';
                 }
             });
         }

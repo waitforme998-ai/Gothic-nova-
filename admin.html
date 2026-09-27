@@ -3194,16 +3194,16 @@
                             </ul>
                         </div>
 
-                        <!-- 12. Cumulative Delivery Fee Mechanics -->
+                        <!-- 12. Bundled Delivery Architecture -->
                         <div class="guide-topic-card" style="background: rgba(14, 7, 11, 0.7); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: var(--radius-sm); padding: 14px 16px;">
                             <h4 style="color: #ffffff; font-size: 0.88rem; font-weight: 700; margin-bottom: 6px; line-height: 1.4;">
-                                <span style="color: #ff3b5c; margin-right: 6px;">✦</span>Cumulative Delivery Fee Mechanics
+                                <span style="color: #ff3b5c; margin-right: 6px;">✦</span>Order Fulfillment &amp; Pricing Structure
                             </h4>
-                            <p style="margin-bottom: 6px;">Learn how delivery charges and shipping calculations are handled nationwide:</p>
+                            <p style="margin-bottom: 6px;">Nationwide dispatch and checkout pricing protocol:</p>
                             <ul style="margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px;">
-                                <li><strong>Per-Unit Cumulative Formula:</strong> Delivery fees calculate dynamically per artifact piece and quantity (<code>Total Fee = ∑ (Unit Delivery Fee × Quantity)</code>), with Rs. 250 per piece standard.</li>
-                                <li><strong>Individual Product Configuration:</strong> When adding or editing any artifact, you can specify its individual unit delivery charge (defaults to Rs. 250).</li>
-                                <li><strong>Free Delivery Reward Waiver:</strong> If the customer draws the <em>Free Delivery</em> Tarot card, all courier delivery charges and COD advance deposits are instantly reduced to <strong>Rs. 0</strong> across the entire cart.</li>
+                                <li><strong>Bundled Pricing Architecture:</strong> Delivery and fulfillment are incorporated directly into the product catalog pricing with zero extra delivery fee add-ons.</li>
+                                <li><strong>Direct Product Management:</strong> Products only require Price and optional Sale Price without manual delivery fee configuration.</li>
+                                <li><strong>Tarot Rewards Integration:</strong> Free delivery, discounts, mystery gifts, and VIP upgrades won by customers are automatically documented inside each order.</li>
                             </ul>
                         </div>
 
@@ -3212,11 +3212,11 @@
                             <h4 style="color: #ffffff; font-size: 0.88rem; font-weight: 700; margin-bottom: 6px; line-height: 1.4;">
                                 <span style="color: #ff3b5c; margin-right: 6px;">✦</span>Payment Methods Architecture &amp; Deposit Proofs
                             </h4>
-                            <p style="margin-bottom: 6px;">Dual-tier checkout payment system designed for maximum conversion and security:</p>
+                            <p style="margin-bottom: 6px;">Dual-tier checkout payment system designed for maximum conversion and fraud prevention:</p>
                             <ul style="margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px;">
-                                <li><strong>Full Advance (Pre-selected Priority):</strong> Positioned at the top of checkout as the recommended VIP option. 100% full transfer via Bank Makramah (BML) or JazzCash with 2–3 business day express dispatch.</li>
-                                <li><strong>Cash on Delivery (Courier Deposit):</strong> Positioned at the bottom. Requires customer to pay an advance courier delivery deposit (Rs. 250 × Qty) to eliminate fake/unclaimed orders, with the remaining jewelry balance paid at doorstep upon delivery.</li>
-                                <li><strong>Payment Proof Screenshot Verification:</strong> Customers attach payment receipt screenshots during checkout, which you can review and expand directly inside the Admin Orders accordion.</li>
+                                <li><strong>Full Advance (Pre-selected Priority):</strong> 100% full transfer via Bank Makramah (BML) or JazzCash with priority express dispatch.</li>
+                                <li><strong>Cash on Delivery (Advance Deposit):</strong> Requires a mandatory advance verification deposit of Rs. 700 to eliminate fake/unclaimed orders, with the remaining order balance paid at doorstep upon delivery.</li>
+                                <li><strong>Payment Proof Verification:</strong> Customers attach transfer receipt screenshots during checkout, reviewed and verified directly in the Admin Orders list.</li>
                             </ul>
                         </div>
 
@@ -3398,11 +3398,7 @@
                     <input type="number" class="input-field" placeholder="Enter price" id="single-product-price">
                 </div>
                 <div class="input-group">
-                    <label>Delivery Charges (Rs.)</label>
-                    <input type="number" class="input-field" placeholder="250" value="250" id="single-product-delivery-charges" min="0">
-                </div>
-                <div class="input-group">
-                    <label>Sale Price</label>
+                    <label>Sale Price (Rs.)</label>
                     <input type="number" class="input-field" placeholder="Optional" id="single-product-sale-price">
                 </div>
             </div>
@@ -4488,37 +4484,19 @@
 
             const payMethod = (order.payment_method || 'cod').toLowerCase();
             const isFullAdvance = payMethod === 'full_advance' || (payMethod === 'advance' && (order.advance_amount >= total || (!order.advance_amount && !order.deposit_paid)));
-            const isAdvance = isFullAdvance || payMethod === 'advance' || payMethod === 'online' || !!order.payment_screenshot_url;
+            const isAdvance = isFullAdvance || payMethod === 'advance' || payMethod === 'online' || !!order.payment_screenshot_url || (order.advance_amount !== undefined && Number(order.advance_amount) > 0);
 
             let advancePaid = 0;
-            let cardReward = order.card_reward_applied;
-            if (typeof cardReward === 'string') {
-                try { cardReward = JSON.parse(cardReward); } catch(e) { cardReward = null; }
-            }
-            if (!cardReward && Array.isArray(items)) {
-                for (const it of items) {
-                    if (it && (it._card_reward || it.card_reward_applied)) {
-                        cardReward = it._card_reward || it.card_reward_applied;
-                        if (typeof cardReward === 'string') { try { cardReward = JSON.parse(cardReward); } catch(e){} }
-                        break;
-                    }
-                }
-            }
-            const isFreeShippingCod = (payMethod === 'cod' && cardReward && cardReward.type === 'free_shipping');
-
-            if (isFreeShippingCod) {
-                advancePaid = 0;
+            if (isFullAdvance) {
+                advancePaid = total;
             } else if (order.advance_amount !== undefined && order.advance_amount !== null && Number(order.advance_amount) >= 0) {
                 advancePaid = Number(order.advance_amount);
             } else if (order.deposit_paid !== undefined && order.deposit_paid !== null && Number(order.deposit_paid) >= 0) {
                 advancePaid = Number(order.deposit_paid);
             } else if (order.advance_deposit !== undefined && order.advance_deposit !== null && Number(order.advance_deposit) >= 0) {
                 advancePaid = Number(order.advance_deposit);
-            } else if (isFullAdvance) {
-                advancePaid = total;
             } else {
-                const dynamicFee = (order.delivery_fee !== undefined && order.delivery_fee !== null) ? Number(order.delivery_fee) : 250;
-                advancePaid = Math.min(total, dynamicFee);
+                advancePaid = Math.min(total, 700);
             }
 
             const codBalance = Math.max(0, total - advancePaid);
@@ -4831,6 +4809,57 @@
                 const waUrl = (waDigits && waDigits.length >= 10) ? `https://wa.me/${waDigits}?text=${waGreeting}` : '#';
                 const waProofUrl = (waDigits && waDigits.length >= 10) ? `https://wa.me/${waDigits}?text=${waProofRequest}` : '#';
 
+                let cardReward = order.card_reward_applied;
+                if (typeof cardReward === 'string') {
+                    try { cardReward = JSON.parse(cardReward); } catch(e) { cardReward = null; }
+                }
+                if (!cardReward && order.reward_applied) {
+                    cardReward = { title: order.reward_applied, offer: order.reward_applied, type: 'reward' };
+                }
+                if (!cardReward && Array.isArray(fin.items)) {
+                    for (const it of fin.items) {
+                        if (it && (it._card_reward || it.card_reward_applied)) {
+                            cardReward = it._card_reward || it.card_reward_applied;
+                            if (typeof cardReward === 'string') { try { cardReward = JSON.parse(cardReward); } catch(e){} }
+                            break;
+                        }
+                    }
+                }
+
+                let tarotMetaBadge = '';
+                if (cardReward) {
+                    let pillText = 'TAROT REWARD';
+                    let pillColor = '#ffe8be';
+                    let pillBg = 'rgba(255, 232, 190, 0.08)';
+                    let pillBorder = 'rgba(255, 232, 190, 0.28)';
+
+                    if (cardReward.type === 'percentage_discount') {
+                        pillText = `TAROT: ${cardReward.offer || (cardReward.value ? cardReward.value + '% OFF' : '10% OFF')}`;
+                        pillColor = '#ffc857';
+                        pillBg = 'rgba(255, 200, 87, 0.08)';
+                        pillBorder = 'rgba(255, 200, 87, 0.32)';
+                    } else if (cardReward.type === 'free_shipping') {
+                        pillText = 'TAROT: FREE DELIVERY';
+                        pillColor = '#38bdf8';
+                        pillBg = 'rgba(56, 189, 248, 0.08)';
+                        pillBorder = 'rgba(56, 189, 248, 0.32)';
+                    } else if (cardReward.type === 'free_gift') {
+                        pillText = 'TAROT: FREE GIFT';
+                        pillColor = '#ff758f';
+                        pillBg = 'rgba(255, 117, 143, 0.08)';
+                        pillBorder = 'rgba(255, 117, 143, 0.32)';
+                    } else if (cardReward.type === 'order_upgrade') {
+                        pillText = 'TAROT: VIP UPGRADE';
+                        pillColor = '#c084fc';
+                        pillBg = 'rgba(192, 132, 252, 0.08)';
+                        pillBorder = 'rgba(192, 132, 252, 0.32)';
+                    } else if (cardReward.title) {
+                        pillText = `TAROT: ${cardReward.title.toUpperCase()}`;
+                    }
+
+                    tarotMetaBadge = `<span class="order-meta-pill" style="color: ${pillColor}; background: ${pillBg}; border-color: ${pillBorder}; font-weight: 700; font-family: var(--font-mono); letter-spacing: 0.03em;">${escapeHtml(pillText)}</span>`;
+                }
+
                 return `
                     <div class="order-accordion-card ${isOpen ? 'open' : ''}" id="order-card-${orderId}" data-order-id="${orderId}">
                         
@@ -4855,8 +4884,9 @@
                                     ${status}
                                 </span>
                                 <span class="order-meta-pill ${fin.isAdvance ? 'pay-advance' : ''}">
-                                    ${fin.isFullAdvance ? 'FULL ADVANCE' : (fin.isAdvance ? 'ADVANCE' : 'COD')}
+                                    ${fin.isFullAdvance ? 'FULL ADVANCE' : (fin.isAdvance ? `ADVANCE (RS. ${fin.advancePaidFormatted})` : 'COD')}
                                 </span>
+                                ${tarotMetaBadge}
                                 
                                 <span class="order-meta-pill">
                                     ${ORDER_SVGS.location} ${escapeHtml(city)}
@@ -4997,6 +5027,9 @@
                                 ${(()=>{
                                     let rw = order.card_reward_applied;
                                     if (typeof rw === 'string') { try { rw = JSON.parse(rw); } catch(e){ rw = null; } }
+                                    if (!rw && order.reward_applied) {
+                                        rw = { title: order.reward_applied, offer: order.reward_applied, type: 'reward' };
+                                    }
                                     if (!rw && Array.isArray(fin.items)) {
                                         for (const it of fin.items) {
                                             if (it && (it._card_reward || it.card_reward_applied)) {
@@ -5009,27 +5042,39 @@
                                     if (!rw) return '';
                                     if (rw.type === 'percentage_discount') {
                                         return `
-                                            <div style="display: flex; align-items: center; gap: 8px; background: rgba(255, 200, 87, 0.08); border: 1px solid rgba(255, 200, 87, 0.35); border-radius: var(--radius-sm); padding: 6px 12px; margin-bottom: 2px;">
+                                            <div style="display: flex; align-items: center; gap: 8px; background: rgba(255, 200, 87, 0.06); border: 1px solid rgba(255, 200, 87, 0.28); border-radius: var(--radius-sm); padding: 7px 12px; margin-bottom: 2px;">
                                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ffc857" stroke-width="2.2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
-                                                <span class="font-mono" style="font-size: 0.72rem; color: #ffc857; font-weight: 700; letter-spacing: 0.04em;">Reward Applied: ${escapeHtml(rw.title)} (${escapeHtml(rw.code)}) &bull; Saved Rs. ${Number(rw.discount_amount || 0).toLocaleString('en-PK')}</span>
+                                                <span class="font-mono" style="font-size: 0.72rem; color: #ffc857; font-weight: 700; letter-spacing: 0.03em;">TAROT REWARD: ${escapeHtml(rw.title || '10% Discount')} (${escapeHtml(rw.code || 'TAROT')}) &bull; Discount Deducted: Rs. ${Number(rw.discount_amount || 0).toLocaleString('en-PK')}</span>
                                             </div>
                                         `;
                                     } else if (rw.type === 'free_shipping') {
                                         return `
-                                            <div style="display: flex; align-items: center; gap: 8px; background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: var(--radius-sm); padding: 6px 12px; margin-bottom: 2px;">
+                                            <div style="display: flex; align-items: center; gap: 8px; background: rgba(56, 189, 248, 0.06); border: 1px solid rgba(56, 189, 248, 0.28); border-radius: var(--radius-sm); padding: 7px 12px; margin-bottom: 2px;">
                                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.2"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
-                                                <span class="font-mono" style="font-size: 0.72rem; color: #38bdf8; font-weight: 700; letter-spacing: 0.04em;">Reward Applied: FREE SHIPPING (${escapeHtml(rw.code)}) &bull; COD Courier Deposit Waived</span>
+                                                <span class="font-mono" style="font-size: 0.72rem; color: #38bdf8; font-weight: 700; letter-spacing: 0.03em;">TAROT REWARD: Free Delivery (${escapeHtml(rw.code || 'TAROT')}) &bull; Standard Rs. 700 Advance Verified &bull; Free Courier Shipping</span>
                                             </div>
                                         `;
                                     } else if (rw.type === 'free_gift') {
                                         return `
-                                            <div style="display: flex; align-items: center; gap: 8px; background: rgba(255, 59, 92, 0.08); border: 1px solid rgba(255, 59, 92, 0.35); border-radius: var(--radius-sm); padding: 6px 12px; margin-bottom: 2px;">
-                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ff3b5c" stroke-width="2.2"><polyline points="20 12 20 22 4 22 4 12"></polyline><rect x="2" y="7" width="20" height="5"></rect><line x1="12" y1="22" x2="12" y2="7"></line><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path></svg>
-                                                <span class="font-mono" style="font-size: 0.72rem; color: #ff3b5c; font-weight: 700; letter-spacing: 0.04em;">Special Perk: Mystery Gift Reward (${escapeHtml(rw.code)}) &bull; Include with Shipment</span>
+                                            <div style="display: flex; align-items: center; gap: 8px; background: rgba(255, 117, 143, 0.06); border: 1px solid rgba(255, 117, 143, 0.28); border-radius: var(--radius-sm); padding: 7px 12px; margin-bottom: 2px;">
+                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ff758f" stroke-width="2.2"><polyline points="20 12 20 22 4 22 4 12"></polyline><rect x="2" y="7" width="20" height="5"></rect><line x1="12" y1="22" x2="12" y2="7"></line><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path></svg>
+                                                <span class="font-mono" style="font-size: 0.72rem; color: #ff758f; font-weight: 700; letter-spacing: 0.03em;">TAROT PERK: Complimentary Gothic Gift Artifact (${escapeHtml(rw.code || 'TAROT')}) &bull; Enclose in Shipment</span>
+                                            </div>
+                                        `;
+                                    } else if (rw.type === 'order_upgrade') {
+                                        return `
+                                            <div style="display: flex; align-items: center; gap: 8px; background: rgba(192, 132, 252, 0.06); border: 1px solid rgba(192, 132, 252, 0.28); border-radius: var(--radius-sm); padding: 7px 12px; margin-bottom: 2px;">
+                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#c084fc" stroke-width="2.2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                                                <span class="font-mono" style="font-size: 0.72rem; color: #c084fc; font-weight: 700; letter-spacing: 0.03em;">TAROT PERK: VIP Luxury Packaging Upgrade (${escapeHtml(rw.code || 'TAROT')}) &bull; Pack in Deluxe Box</span>
+                                            </div>
+                                        `;
+                                    } else {
+                                        return `
+                                            <div style="display: flex; align-items: center; gap: 8px; background: rgba(255, 232, 190, 0.06); border: 1px solid rgba(255, 232, 190, 0.28); border-radius: var(--radius-sm); padding: 7px 12px; margin-bottom: 2px;">
+                                                <span class="font-mono" style="font-size: 0.72rem; color: #ffe8be; font-weight: 700; letter-spacing: 0.03em;">TAROT REWARD: ${escapeHtml(rw.title || 'Claimed Perk')}</span>
                                             </div>
                                         `;
                                     }
-                                    return '';
                                 })()}
                                 <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; background: rgba(255, 232, 190, 0.03); border: 1px solid rgba(255, 232, 190, 0.18); border-radius: var(--radius-sm); padding: 10px 14px;">
                                     <div style="display: flex; flex-direction: column; gap: 2px;">
@@ -5737,7 +5782,6 @@
             }
 
             document.getElementById('single-product-price').value = product.price || '';
-            const delInput = document.getElementById('single-product-delivery-charges'); if (delInput) delInput.value = (product.delivery_charges !== undefined) ? product.delivery_charges : 250;
             document.getElementById('single-product-sale-price').value = (product.salePrice !== null && product.salePrice !== undefined) ? product.salePrice : '';
             document.getElementById('single-product-stock').value = product.stock !== undefined ? product.stock : 10;
             document.getElementById('single-product-threshold').value = product.threshold !== undefined ? product.threshold : 3;
@@ -5750,8 +5794,6 @@
         async function saveSingleProduct(btn) {
             const name = document.getElementById('single-product-name').value.trim();
             const price = parseFloat(document.getElementById('single-product-price').value);
-            const delVal = parseFloat(document.getElementById('single-product-delivery-charges')?.value);
-            const deliveryCharges = isNaN(delVal) ? 250 : delVal;
             const salePriceVal = document.getElementById('single-product-sale-price').value.trim();
             const stock = parseInt(document.getElementById('single-product-stock').value, 10);
             const threshold = parseInt(document.getElementById('single-product-threshold').value, 10);
@@ -5771,7 +5813,6 @@
                     existing.stock = isNaN(stock) ? 10 : stock; existing.threshold = isNaN(threshold) ? 3 : threshold;
                     existing.desc = desc;
                     existing.description = desc;
-                    existing.delivery_charges = deliveryCharges;
                     existing.stock_images = [...singleProductStockImages];
                     existing.stockImages = [...singleProductStockImages];
                     saveProducts();
@@ -5789,7 +5830,6 @@
                 category, 
                 img: singleSelectedImg, 
                 price,
-                delivery_charges: deliveryCharges, 
                 salePrice: salePriceVal ? parseFloat(salePriceVal) : null, 
                 stock: isNaN(stock) ? 10 : stock, 
                 threshold: isNaN(threshold) ? 3 : threshold, 
@@ -5875,7 +5915,6 @@
             if (uploadPlaceholder) uploadPlaceholder.style.display = 'none';
             document.getElementById('single-product-name').value = '';
             document.getElementById('single-product-price').value = '';
-            const delInputNew = document.getElementById('single-product-delivery-charges'); if (delInputNew) delInputNew.value = 250;
             document.getElementById('single-product-sale-price').value = '';
             document.getElementById('single-product-category').value = '';
             document.getElementById('singleCatTrigger').textContent = 'Select category...';
