@@ -3595,7 +3595,7 @@
             { id: "1", name: "Venom Spider Ring", category: "rings", img: "assets/venom_spider_ring.png", price: 3499, salePrice: null, stock: 15, threshold: 3, active: true },
             { id: "2", name: "Crimson Cross", category: "chains", img: "assets/crimson_cross_choker.png", price: 5999, salePrice: 4499, stock: 8, threshold: 3, active: true },
             { id: "3", name: "Obsidian Helix", category: "chains", img: "assets/obsidian_helix_chain.png", price: 5999, salePrice: null, stock: 12, threshold: 3, active: true },
-            { id: "4", name: "Shadow Claw", category: "rings", img: "assets/shadow_claw_ring.png", price: 3899, salePrice: null, stock: 0, threshold: 3, active: true },
+            { id: "4", name: "Shadow Claw", category: "rings", img: "assets/shadow_claw_ring.png", price: 3899, salePrice: null, stock: 10, threshold: 3, active: true },
             { id: "5", name: "Spine Bracelet", category: "chains", img: "assets/spine_bracelet.png", price: 6899, salePrice: null, stock: 5, threshold: 3, active: true },
             { id: "6", name: "Reaper Pendant", category: "pendants", img: "assets/reaper_pendant.png", price: 8999, salePrice: 7499, stock: 15, threshold: 3, active: true }
         ];
@@ -3809,7 +3809,15 @@
         }
 
         function saveProducts() {
-            try { localStorage.setItem('gn_products', JSON.stringify(products)); window.gn_products = products; } catch(e) {}
+            try { 
+                localStorage.setItem('gn_products', JSON.stringify(products)); 
+                window.gn_products = products; 
+                if (window.BroadcastChannel) {
+                    const bc = new BroadcastChannel('gn_store_sync');
+                    bc.postMessage({ type: 'PRODUCTS_UPDATED', products });
+                    bc.close();
+                }
+            } catch(e) {}
         }
         window.saveProducts = saveProducts;
 
@@ -4138,6 +4146,11 @@
                 window.dispatchEvent(new Event('storage'));
                 window.dispatchEvent(new Event('productsLoaded'));
                 window.dispatchEvent(new CustomEvent('gn:productsUpdated', { detail: { products } }));
+                if (window.BroadcastChannel) {
+                    const bc = new BroadcastChannel('gn_store_sync');
+                    bc.postMessage({ type: 'PRODUCTS_UPDATED', products });
+                    bc.close();
+                }
             } catch(e) {}
 
             // 5. Background save to Supabase
@@ -4181,6 +4194,11 @@
                 if (window.SupabaseEngine) await window.SupabaseEngine.deleteProduct(pid);
                 window.dispatchEvent(new Event('productsLoaded'));
                 window.dispatchEvent(new Event('storage'));
+                if (window.BroadcastChannel) {
+                    const bc = new BroadcastChannel('gn_store_sync');
+                    bc.postMessage({ type: 'PRODUCTS_UPDATED', products });
+                    bc.close();
+                }
             } catch(e) {}
         };
 

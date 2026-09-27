@@ -33,7 +33,7 @@
         { id: "1", name: "Venom Spider Ring", category: "rings", img: "assets/venom_spider_ring.png", price: 3499, sale_price: null, stock: 15, threshold: 3, description: "Intricate spider silhouette ring cast in 316L solid surgical steel.", active: true, display_order: 1 },
         { id: "2", name: "Crimson Cross", category: "chains", img: "assets/crimson_cross_choker.png", price: 5999, sale_price: 4499, stock: 8, threshold: 3, description: "Heavyweight gothic cross choker with crimson blood-drop stone inlay.", active: true, display_order: 2 },
         { id: "3", name: "Obsidian Helix", category: "chains", img: "assets/obsidian_helix_chain.png", price: 5999, sale_price: null, stock: 12, threshold: 3, description: "Interlocking matte obsidian link chain with industrial quick-release clasp.", active: true, display_order: 3 },
-        { id: "4", name: "Shadow Claw", category: "rings", img: "assets/shadow_claw_ring.png", price: 3899, sale_price: null, stock: 0, threshold: 3, description: "Full-finger articulated talon ring engineered for effortless movement.", active: true, display_order: 4 },
+        { id: "4", name: "Shadow Claw", category: "rings", img: "assets/shadow_claw_ring.png", price: 3899, sale_price: null, stock: 10, threshold: 3, description: "Full-finger articulated talon ring engineered for effortless movement.", active: true, display_order: 4 },
         { id: "5", name: "Spine Bracelet", category: "bracelets", img: "assets/spine_bracelet.png", price: 6899, sale_price: null, stock: 5, threshold: 3, description: "Vertebrae link bracelet with gothic cyber-matte finish.", active: true, display_order: 5 },
         { id: "6", name: "Reaper Pendant", category: "pendants", img: "assets/reaper_pendant.png", price: 8999, sale_price: 7499, stock: 15, threshold: 3, description: "Solid onyx and stainless steel reaper emblem with 60cm rope chain.", active: true, display_order: 6 }
     ];
@@ -134,14 +134,16 @@
                     
                     if (error) throw error;
                     
-                    if (data && Array.isArray(data)) {
+                    if (data && Array.isArray(data) && data.length > 0) {
                         const normalized = data.filter(p => p && !deletedProds.has(String(p.id))).map(p => ({
                             ...p,
                             salePrice: p.sale_price !== undefined ? p.sale_price : p.salePrice,
                             sale_price: p.sale_price !== undefined ? p.sale_price : p.salePrice
                         }));
-                        localStorage.setItem('gn_products', JSON.stringify(normalized));
-                        return normalized;
+                        if (normalized.length > 0) {
+                            localStorage.setItem('gn_products', JSON.stringify(normalized));
+                            return normalized;
+                        }
                     }
                 } catch (err) {
                     console.warn("Supabase fetch products notice:", err);

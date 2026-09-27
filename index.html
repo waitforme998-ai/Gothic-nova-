@@ -87,7 +87,7 @@
             { id: "1", name: "Venom Spider Ring", category: "rings", img: "assets/venom_spider_ring.png", price: 3499, salePrice: null, stock: 15, threshold: 3, active: true, delivery_charges: 250, description: "Handcrafted cyber-gothic spider ring featuring sculpted arachnid anatomy and antiqued dark alloy finish. Engineered for bold statement wear with Cash on Delivery across Pakistan.", desc: "Handcrafted cyber-gothic spider ring featuring sculpted arachnid anatomy and antiqued dark alloy finish. Engineered for bold statement wear with Cash on Delivery across Pakistan." },
             { id: "2", name: "Crimson Cross", category: "chains", img: "assets/crimson_cross_choker.png", price: 5999, salePrice: 4499, stock: 8, threshold: 3, active: true, delivery_charges: 250, description: "Intricate gothic crucifix choker with blood-red crimson stone centerpiece, obsidian detailing, and reinforced link chain. Fast shipping across Karachi, Lahore, Islamabad, and nationwide.", desc: "Intricate gothic crucifix choker with blood-red crimson stone centerpiece, obsidian detailing, and reinforced link chain. Fast shipping across Karachi, Lahore, Islamabad, and nationwide." },
             { id: "3", name: "Obsidian Helix", category: "chains", img: "assets/obsidian_helix_chain.png", price: 5999, salePrice: null, stock: 12, threshold: 3, active: true, delivery_charges: 250, description: "Minimalist helical link statement chain finished in dark obsidian electroplate with high-durability locking clasp. Premium unisex dark aesthetic jewelry.", desc: "Minimalist helical link statement chain finished in dark obsidian electroplate with high-durability locking clasp. Premium unisex dark aesthetic jewelry." },
-            { id: "4", name: "Shadow Claw", category: "rings", img: "assets/shadow_claw_ring.png", price: 3899, salePrice: null, stock: 0, threshold: 3, active: true, delivery_charges: 250, description: "Sculpted talon silhouette claw ring forged in heavyweight matte black steel alloy. Ergonomic comfort fit with aggressive gothic Japanese styling.", desc: "Sculpted talon silhouette claw ring forged in heavyweight matte black steel alloy. Ergonomic comfort fit with aggressive gothic Japanese styling." },
+            { id: "4", name: "Shadow Claw", category: "rings", img: "assets/shadow_claw_ring.png", price: 3899, salePrice: null, stock: 10, threshold: 3, active: true, delivery_charges: 250, description: "Sculpted talon silhouette claw ring forged in heavyweight matte black steel alloy. Ergonomic comfort fit with aggressive gothic Japanese styling.", desc: "Sculpted talon silhouette claw ring forged in heavyweight matte black steel alloy. Ergonomic comfort fit with aggressive gothic Japanese styling." },
             { id: "5", name: "Spine Bracelet", category: "chains", img: "assets/spine_bracelet.png", price: 6899, salePrice: null, stock: 5, threshold: 3, active: true, delivery_charges: 250, description: "Articulated skeletal vertebrae link bracelet designed with fluid anatomical movement and high-grade stainless clasp. Limited edition cyber-goth luxury.", desc: "Articulated skeletal vertebrae link bracelet designed with fluid anatomical movement and high-grade stainless clasp. Limited edition cyber-goth luxury." },
             { id: "6", name: "Reaper Pendant", category: "pendants", img: "assets/reaper_pendant.png", price: 8999, salePrice: 7499, stock: 15, threshold: 3, active: true, delivery_charges: 250, description: "Iconic grim reaper silhouette pendant carved with precision relief, hooded shroud drape, and dark gunmetal chain. Signature Gothic Nova centerpiece.", desc: "Iconic grim reaper silhouette pendant carved with precision relief, hooded shroud drape, and dark gunmetal chain. Signature Gothic Nova centerpiece." }
         ];
@@ -372,16 +372,7 @@
             </div>
             <script>
                 window.renderNewArrivals = function() {
-                    let allProds = window.gn_products;
-                    if (!allProds) {
-                        try {
-                            const raw = localStorage.getItem('gn_products');
-                            if (raw) allProds = JSON.parse(raw);
-                        } catch(e) {}
-                    }
-                    if (!allProds || !allProds.length) {
-                        allProds = defaultProducts;
-                    }
+                    const allProds = (typeof getAllProducts === 'function') ? getAllProducts() : (window.gn_products || defaultProducts);
 
                     // Automatic recency-based sorting (created_at descending, fallback to product id/index)
                     const activeProds = allProds.filter(p => p.active !== false);
@@ -638,20 +629,23 @@
                     { id: "1", name: "Venom Spider Ring", category: "rings", img: "assets/venom_spider_ring.png", price: 3499, salePrice: null, stock: 15, threshold: 3, active: true },
                     { id: "2", name: "Crimson Cross", category: "chains", img: "assets/crimson_cross_choker.png", price: 5999, salePrice: 4499, stock: 8, threshold: 3, active: true },
                     { id: "3", name: "Obsidian Helix", category: "chains", img: "assets/obsidian_helix_chain.png", price: 5999, salePrice: null, stock: 12, threshold: 3, active: true },
-                    { id: "4", name: "Shadow Claw", category: "rings", img: "assets/shadow_claw_ring.png", price: 3899, salePrice: null, stock: 0, threshold: 3, active: true },
+                    { id: "4", name: "Shadow Claw", category: "rings", img: "assets/shadow_claw_ring.png", price: 3899, salePrice: null, stock: 10, threshold: 3, active: true },
                     { id: "5", name: "Spine Bracelet", category: "bracelets", img: "assets/spine_bracelet.png", price: 6899, salePrice: null, stock: 5, threshold: 3, active: true },
                     { id: "6", name: "Reaper Pendant", category: "pendants", img: "assets/reaper_pendant.png", price: 8999, salePrice: 7499, stock: 15, threshold: 3, active: true }
                 ];
 
                 function getAllProducts() {
-                    let prods = window.gn_products;
-                    if (!prods) {
-                        try {
-                            const raw = localStorage.getItem('gn_products');
-                            if (raw) prods = JSON.parse(raw);
-                        } catch(e) {}
-                    }
+                    let prods = null;
+                    try {
+                        const raw = localStorage.getItem('gn_products');
+                        if (raw) {
+                            const parsed = JSON.parse(raw);
+                            if (Array.isArray(parsed) && parsed.length > 0) prods = parsed;
+                        }
+                    } catch(e) {}
+                    if (!prods || !prods.length) prods = window.gn_products;
                     if (!prods || !prods.length) prods = defaultSeedProducts;
+                    window.gn_products = prods;
                     return prods.filter(p => p.active !== false);
                 }
                 window.getAllProducts = getAllProducts;
@@ -1227,20 +1221,58 @@
                 });
                 window.addEventListener('productsLoaded', () => {
                     renderCategoryTabs();
+                    window.renderSaleTicker();
                     window.renderFooterCollections();
                     window.renderMainCatalog();
+                    if (typeof window.renderNewArrivals === 'function') window.renderNewArrivals();
                     window.renderCustomerReviews();
                 });
                 window.addEventListener('storage', () => {
+                    try {
+                        const raw = localStorage.getItem('gn_products');
+                        if (raw) {
+                            const parsed = JSON.parse(raw);
+                            if (Array.isArray(parsed) && parsed.length > 0) window.gn_products = parsed;
+                        }
+                    } catch(e) {}
                     renderCategoryTabs();
                     window.renderSaleTicker();
                     window.renderFooterCollections();
                     window.renderMainCatalog();
+                    if (typeof window.renderNewArrivals === 'function') window.renderNewArrivals();
+                    window.renderCustomerReviews();
+                });
+                window.addEventListener('gn:productsUpdated', (e) => {
+                    if (e && e.detail && e.detail.products) {
+                        window.gn_products = e.detail.products;
+                    }
+                    renderCategoryTabs();
+                    window.renderSaleTicker();
+                    window.renderFooterCollections();
+                    window.renderMainCatalog();
+                    if (typeof window.renderNewArrivals === 'function') window.renderNewArrivals();
                     window.renderCustomerReviews();
                 });
                 window.addEventListener('reviewsUpdated', () => {
                     window.renderCustomerReviews();
                 });
+                try {
+                    if (window.BroadcastChannel) {
+                        const syncChannel = new BroadcastChannel('gn_store_sync');
+                        syncChannel.onmessage = function(ev) {
+                            if (ev && ev.data) {
+                                if (ev.data.type === 'PRODUCTS_UPDATED' && Array.isArray(ev.data.products) && ev.data.products.length > 0) {
+                                    window.gn_products = ev.data.products;
+                                    renderCategoryTabs();
+                                    window.renderSaleTicker();
+                                    window.renderFooterCollections();
+                                    window.renderMainCatalog();
+                                    if (typeof window.renderNewArrivals === 'function') window.renderNewArrivals();
+                                }
+                            }
+                        };
+                    }
+                } catch(e) {}
 
                 initCatalogControls();
                 window.renderSaleTicker();
@@ -2037,7 +2069,7 @@
                 { id: "1", name: "Venom Spider Ring", category: "rings", img: "assets/venom_spider_ring.png", price: 3499, salePrice: null, stock: 15, threshold: 3, active: true },
                 { id: "2", name: "Crimson Cross", category: "chains", img: "assets/crimson_cross_choker.png", price: 5999, salePrice: 4499, stock: 8, threshold: 3, active: true },
                 { id: "3", name: "Obsidian Helix", category: "chains", img: "assets/obsidian_helix_chain.png", price: 5999, salePrice: null, stock: 12, threshold: 3, active: true },
-                { id: "4", name: "Shadow Claw", category: "rings", img: "assets/shadow_claw_ring.png", price: 3899, salePrice: null, stock: 0, threshold: 3, active: true },
+                { id: "4", name: "Shadow Claw", category: "rings", img: "assets/shadow_claw_ring.png", price: 3899, salePrice: null, stock: 10, threshold: 3, active: true },
                 { id: "5", name: "Spine Bracelet", category: "bracelets", img: "assets/spine_bracelet.png", price: 6899, salePrice: null, stock: 5, threshold: 3, active: true },
                 { id: "6", name: "Reaper Pendant", category: "pendants", img: "assets/reaper_pendant.png", price: 8999, salePrice: 7499, stock: 15, threshold: 3, active: true }
             ];
@@ -2365,7 +2397,7 @@
             if (!overlay || !modalBox) return;
 
             function getProduct(id) {
-                const prods = window.gn_products || [];
+                const prods = (typeof getAllProducts === 'function') ? getAllProducts() : (window.gn_products || []);
                 return prods.find(p => String(p.id) === String(id));
             }
 
@@ -3713,15 +3745,18 @@
                             if (prod) {
                                 const orderedQty = Number(orderedItem.quantity || orderedItem.qty || 1);
                                 prod.stock = Math.max(0, (Number(prod.stock) || 0) - orderedQty);
-                                if (prod.stock === 0) {
-                                    prod.active = false;
-                                }
                             }
                         });
                         localStorage.setItem('gn_products', JSON.stringify(currentProducts));
                         window.gn_products = currentProducts;
-                        if (typeof renderProducts === 'function') {
-                            renderProducts();
+                        if (typeof window.renderMainCatalog === 'function') {
+                            window.renderMainCatalog();
+                        }
+                        if (typeof window.renderCategoryTabs === 'function') {
+                            window.renderCategoryTabs();
+                        }
+                        if (typeof window.renderNewArrivals === 'function') {
+                            window.renderNewArrivals();
                         }
                     }
                 } catch(stockErr) {
