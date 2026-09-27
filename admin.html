@@ -3194,6 +3194,56 @@
                             </ul>
                         </div>
 
+                        <!-- 12. Cumulative Delivery Fee Mechanics -->
+                        <div class="guide-topic-card" style="background: rgba(14, 7, 11, 0.7); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: var(--radius-sm); padding: 14px 16px;">
+                            <h4 style="color: #ffffff; font-size: 0.88rem; font-weight: 700; margin-bottom: 6px; line-height: 1.4;">
+                                <span style="color: #ff3b5c; margin-right: 6px;">✦</span>Cumulative Delivery Fee Mechanics
+                            </h4>
+                            <p style="margin-bottom: 6px;">Learn how delivery charges and shipping calculations are handled nationwide:</p>
+                            <ul style="margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px;">
+                                <li><strong>Per-Unit Cumulative Formula:</strong> Delivery fees calculate dynamically per artifact piece and quantity (<code>Total Fee = ∑ (Unit Delivery Fee × Quantity)</code>), with Rs. 250 per piece standard.</li>
+                                <li><strong>Individual Product Configuration:</strong> When adding or editing any artifact, you can specify its individual unit delivery charge (defaults to Rs. 250).</li>
+                                <li><strong>Free Delivery Reward Waiver:</strong> If the customer draws the <em>Free Delivery</em> Tarot card, all courier delivery charges and COD advance deposits are instantly reduced to <strong>Rs. 0</strong> across the entire cart.</li>
+                            </ul>
+                        </div>
+
+                        <!-- 13. Payment Priority & Deposit Verification -->
+                        <div class="guide-topic-card" style="background: rgba(14, 7, 11, 0.7); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: var(--radius-sm); padding: 14px 16px;">
+                            <h4 style="color: #ffffff; font-size: 0.88rem; font-weight: 700; margin-bottom: 6px; line-height: 1.4;">
+                                <span style="color: #ff3b5c; margin-right: 6px;">✦</span>Payment Methods Architecture &amp; Deposit Proofs
+                            </h4>
+                            <p style="margin-bottom: 6px;">Dual-tier checkout payment system designed for maximum conversion and security:</p>
+                            <ul style="margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px;">
+                                <li><strong>Full Advance (Pre-selected Priority):</strong> Positioned at the top of checkout as the recommended VIP option. 100% full transfer via Bank Makramah (BML) or JazzCash with 2–3 business day express dispatch.</li>
+                                <li><strong>Cash on Delivery (Courier Deposit):</strong> Positioned at the bottom. Requires customer to pay an advance courier delivery deposit (Rs. 250 × Qty) to eliminate fake/unclaimed orders, with the remaining jewelry balance paid at doorstep upon delivery.</li>
+                                <li><strong>Payment Proof Screenshot Verification:</strong> Customers attach payment receipt screenshots during checkout, which you can review and expand directly inside the Admin Orders accordion.</li>
+                            </ul>
+                        </div>
+
+                        <!-- 14. 48-Hour Tarot Ritual & Rewards Engine -->
+                        <div class="guide-topic-card" style="background: rgba(14, 7, 11, 0.7); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: var(--radius-sm); padding: 14px 16px;">
+                            <h4 style="color: #ffffff; font-size: 0.88rem; font-weight: 700; margin-bottom: 6px; line-height: 1.4;">
+                                <span style="color: #ff3b5c; margin-right: 6px;">✦</span>Sacred 48-Hour Tarot Ritual &amp; Reward Redemptions
+                            </h4>
+                            <p style="margin-bottom: 6px;">Automated customer engagement and conversion catalyst:</p>
+                            <ul style="margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px;">
+                                <li><strong>48-Hour Strict Lock:</strong> First-time visitors draw 1 sacred card from the Gothic Tarot deck with a strict 48-hour countdown timer stored in localStorage.</li>
+                                <li><strong>Reward Types:</strong> Includes <em>Free Delivery</em> (waives shipping and COD deposit), <em>10% Instant Discount</em> (deducts from cart subtotal), <em>Free Gothic Artifact Gift</em> (enclosed in packaging), and <em>VIP Order Upgrade</em>.</li>
+                                <li><strong>Order Sync:</strong> Applied discounts and claimed reward gifts automatically flow into customer orders and display with colored badges in the Admin Orders panel.</li>
+                            </ul>
+                        </div>
+
+                        <!-- 15. Zero-Refresh Admin State & Tombstones -->
+                        <div class="guide-topic-card" style="background: rgba(14, 7, 11, 0.7); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: var(--radius-sm); padding: 14px 16px;">
+                            <h4 style="color: #ffffff; font-size: 0.88rem; font-weight: 700; margin-bottom: 6px; line-height: 1.4;">
+                                <span style="color: #ff3b5c; margin-right: 6px;">✦</span>Zero-Refresh Live Admin Engine &amp; Tombstones
+                            </h4>
+                            <ul style="margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px;">
+                                <li><strong>Live In-Place State:</strong> All admin operations (updating order status, adjusting stock steppers, editing products, and adding reviews) update DOM state instantly without full-page reloads.</li>
+                                <li><strong>Tombstone Protection:</strong> Soft-deletion tombstones (<code>gn_deleted_orders</code>, <code>gn_deleted_products</code>, <code>gn_deleted_reviews</code>) guarantee deleted items never reappear when switching devices or refreshing.</li>
+                            </ul>
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -4159,6 +4209,13 @@
         window.deleteProduct = async function(pid) {
             const product = products.find(p => String(p.id) === String(pid));
             if (!product) return;
+            try {
+                let deletedList = JSON.parse(localStorage.getItem('gn_deleted_products') || '[]');
+                if (!Array.isArray(deletedList)) deletedList = [];
+                deletedList.push(String(pid));
+                localStorage.setItem('gn_deleted_products', JSON.stringify([...new Set(deletedList)]));
+            } catch(e) {}
+
             products = products.filter(p => String(p.id) !== String(pid));
             localStorage.setItem('gn_products', JSON.stringify(products));
             renderDashboard();
@@ -4467,8 +4524,8 @@
             } else if (isFullAdvance) {
                 advancePaid = total;
             } else {
-                // For COD orders, standard policy deposit is PKR 250
-                advancePaid = Math.min(total, 250);
+                const dynamicFee = (order.delivery_fee !== undefined && order.delivery_fee !== null) ? Number(order.delivery_fee) : 250;
+                advancePaid = Math.min(total, dynamicFee);
             }
 
             const codBalance = Math.max(0, total - advancePaid);
@@ -4538,7 +4595,7 @@
 
         async function loadOrdersAdmin(showFeedback = false) {
             let loaded = [];
-            if (window.SupabaseEngine) {
+            if (window.SupabaseEngine && window.SupabaseEngine.isLive) {
                 try {
                     const raw = await window.SupabaseEngine.getOrders();
                     if (raw && Array.isArray(raw)) loaded = raw;
@@ -4552,9 +4609,16 @@
                     if (rawLocal) loaded = JSON.parse(rawLocal);
                 } catch(e) {}
             }
+            let deletedSet = new Set();
+            try {
+                const rawDel = localStorage.getItem('gn_deleted_orders');
+                if (rawDel) JSON.parse(rawDel).forEach(id => deletedSet.add(String(id)));
+            } catch(e) {}
+
             const isMockOrder = (o) => {
                 if (!o) return true;
                 if (o.is_deleted || o.deleted_at || o.customer_name === '__TEST_DELETED__') return true;
+                if (deletedSet.has(String(o.id)) || deletedSet.has(String(o.order_number))) return true;
                 if (o.is_sample || o.is_dummy || o.is_mock) return true;
                 const name = String(o.customer_name || '').toLowerCase().trim();
                 if (name === 'taha siddiqui' || name === 'danyal zafar' || name === 'sara bilal' || name === 'ali raza' || name === 'test customer' || name === 'asad ali (test)') return true;
@@ -4673,7 +4737,11 @@
             const container = document.getElementById('ordersAccordionList');
             if (!container) return;
 
-            const listOrders = (window.adminOrders && window.adminOrders.length) ? window.adminOrders : adminOrders;
+            if (!Array.isArray(adminOrders)) {
+                adminOrders = [];
+            }
+            window.adminOrders = adminOrders;
+            const listOrders = adminOrders;
 
             // Strict reverse chronological order
             listOrders.sort((a, b) => {
@@ -5004,10 +5072,17 @@
         }
 
         window.deleteOrderAdmin = function(orderId) {
-            const listOrders = (window.adminOrders && window.adminOrders.length) ? window.adminOrders : adminOrders;
-            const idx = listOrders.findIndex(o => String(o.id) === String(orderId) || String(o.order_number) === String(orderId));
+            if (!Array.isArray(adminOrders)) adminOrders = [];
+            let idx = adminOrders.findIndex(o => String(o.id) === String(orderId) || String(o.order_number) === String(orderId));
+            if (idx === -1) {
+                try {
+                    const raw = localStorage.getItem('gn_orders');
+                    if (raw) adminOrders = JSON.parse(raw);
+                    idx = adminOrders.findIndex(o => String(o.id) === String(orderId) || String(o.order_number) === String(orderId));
+                } catch(e) {}
+            }
             if (idx === -1) return;
-            const targetOrder = listOrders[idx];
+            const targetOrder = adminOrders[idx];
             const orderNum = targetOrder.order_number || targetOrder.id || '1';
 
             showCustomConfirm({
@@ -5023,10 +5098,20 @@
                     targetOrder.is_deleted = true;
                     targetOrder.deleted_at = new Date().toISOString();
                     targetOrder.status = 'Cancelled';
-                    listOrders.splice(idx, 1);
-                    adminOrders = listOrders;
+                    
+                    try {
+                        let deletedList = JSON.parse(localStorage.getItem('gn_deleted_orders') || '[]');
+                        if (!Array.isArray(deletedList)) deletedList = [];
+                        if (targetOrder.id) deletedList.push(String(targetOrder.id));
+                        if (targetOrder.order_number) deletedList.push(String(targetOrder.order_number));
+                        deletedList.push(String(orderId));
+                        localStorage.setItem('gn_deleted_orders', JSON.stringify([...new Set(deletedList)]));
+                    } catch(e) {}
+
+                    adminOrders = adminOrders.filter(o => String(o.id) !== String(orderId) && String(o.order_number) !== String(orderId));
                     window.adminOrders = adminOrders;
                     localStorage.setItem('gn_orders', JSON.stringify(adminOrders));
+                    
                     updateOrdersHeaderMetrics();
                     renderOrdersAdmin();
                     showToast(`Order #${orderNum} deleted & stock replenished`);
@@ -5067,16 +5152,23 @@
         window.selectOrderStatusAdmin = selectOrderStatusAdmin;
 
         async function changeOrderStatusAdmin(orderId, newStatus) {
-            const listOrders = (window.adminOrders && window.adminOrders.length) ? window.adminOrders : adminOrders;
-            const idx = listOrders.findIndex(o => String(o.id) === String(orderId) || String(o.order_number) === String(orderId));
+            if (!Array.isArray(adminOrders)) adminOrders = [];
+            let idx = adminOrders.findIndex(o => String(o.id) === String(orderId) || String(o.order_number) === String(orderId));
+            if (idx === -1) {
+                try {
+                    const raw = localStorage.getItem('gn_orders');
+                    if (raw) adminOrders = JSON.parse(raw);
+                    idx = adminOrders.findIndex(o => String(o.id) === String(orderId) || String(o.order_number) === String(orderId));
+                } catch(e) {}
+            }
             if (idx === -1) return;
 
-            const oldStatus = listOrders[idx].status || 'Pending';
+            const oldStatus = adminOrders[idx].status || 'Pending';
             if (oldStatus === newStatus) return;
 
-            const targetOrder = listOrders[idx];
-            listOrders[idx].status = newStatus;
-            listOrders[idx].updated_at = new Date().toISOString();
+            const targetOrder = adminOrders[idx];
+            adminOrders[idx].status = newStatus;
+            adminOrders[idx].updated_at = new Date().toISOString();
 
             if (oldStatus !== 'Cancelled' && newStatus === 'Cancelled') {
                 replenishOrderStock(targetOrder);
@@ -5088,11 +5180,15 @@
                 showToast(`Order status updated to: ${newStatus}`);
             }
 
-            adminOrders = listOrders;
             window.adminOrders = adminOrders;
             localStorage.setItem('gn_orders', JSON.stringify(adminOrders));
             updateOrdersHeaderMetrics();
             renderOrdersAdmin();
+
+            try {
+                window.dispatchEvent(new Event('ordersUpdated'));
+                window.dispatchEvent(new Event('storage'));
+            } catch(e) {}
 
             if (window.SupabaseEngine) {
                 try {
@@ -5132,20 +5228,20 @@
         window.toggleReviewAccordion = toggleReviewAccordion;
 
         async function loadReviewsAdmin() {
-            let loaded = [];
+            let loaded = null;
             if (window.SupabaseEngine) {
                 try {
                     const raw = await window.SupabaseEngine.getReviews();
-                    if (raw && raw.length > 0) loaded = raw;
+                    if (raw && Array.isArray(raw)) loaded = raw;
                 } catch(e) {}
             }
-            if (!loaded || loaded.length === 0) {
+            if (loaded === null) {
                 try {
                     const raw = localStorage.getItem('gn_reviews');
-                    if (raw) loaded = JSON.parse(raw);
+                    if (raw !== null) loaded = JSON.parse(raw);
                 } catch(e) {}
             }
-            if (!loaded || loaded.length === 0) {
+            if (loaded === null) {
                 loaded = [
                     { id: "r1", author: "Sarah M.", customer_name: "Sarah M.", location: "Pakistan", rating: 5, comment: "The Venom Spider Ring exceeded all expectations. Incredibly detailed craftsmanship.", review_text: "The Venom Spider Ring exceeded all expectations. Incredibly detailed craftsmanship.", product_name: "Venom Spider Ring", is_verified: true },
                     { id: "r2", author: "Arjun K.", customer_name: "Arjun K.", location: "Pakistan", rating: 5, comment: "Reaper Pendant is a showstopper. Everyone asks where I got it.", review_text: "Reaper Pendant is a showstopper. Everyone asks where I got it.", product_name: "Reaper Pendant", is_verified: true },
@@ -5155,7 +5251,13 @@
                     { id: "r6", author: "Liam T.", customer_name: "Liam T.", location: "Pakistan", rating: 5, comment: "Spine Bracelet fits perfectly. Heavy, solid, worth every rupee.", review_text: "Spine Bracelet fits perfectly. Heavy, solid, worth every rupee.", product_name: "Spine Bracelet", is_verified: true }
                 ];
             }
-            adminReviews = loaded.map(r => ({
+            let deletedRevs = new Set();
+            try {
+                const rawDel = localStorage.getItem('gn_deleted_reviews');
+                if (rawDel) JSON.parse(rawDel).forEach(id => deletedRevs.add(String(id)));
+            } catch(e) {}
+
+            adminReviews = (Array.isArray(loaded) ? loaded : []).filter(r => r && !deletedRevs.has(String(r.id))).map(r => ({
                 id: r.id,
                 author: r.author || r.customer_name || 'Verified Customer',
                 customer_name: r.author || r.customer_name || 'Verified Customer',
@@ -5274,7 +5376,14 @@
             if (!container) return;
 
             if (adminReviews.length === 0) {
-                container.innerHTML = `<div class="catalog-empty-state">No reviews found. Click "+ Add Review" above.</div>`;
+                container.innerHTML = `
+                    <div class="catalog-empty-state" style="padding: 32px 16px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ffe8be" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        <div class="empty-state-title" style="color: #ffffff; font-size: 0.90rem; font-weight: 700;">No Customer Reviews Yet</div>
+                        <div class="empty-state-sub" style="max-width: 340px; font-size: 0.76rem; color: var(--text-secondary);">Testimonials and ratings added here appear on the live storefront.</div>
+                        <button type="button" onclick="openAddReviewInlineForm()" class="btn-clean" style="margin-top: 6px; background: rgba(255,232,190,0.12); color: #ffe8be; border: 1px solid rgba(255,232,190,0.3); border-radius: 20px; padding: 6px 18px; font-size: 0.74rem; font-weight: 600; cursor: pointer;">+ Add Customer Review</button>
+                    </div>
+                `;
                 return;
             }
 
@@ -5491,17 +5600,23 @@
                 confirmText: 'Delete',
                 isDanger: true,
                 onConfirm: async () => {
+                    try {
+                        let deletedList = JSON.parse(localStorage.getItem('gn_deleted_reviews') || '[]');
+                        if (!Array.isArray(deletedList)) deletedList = [];
+                        deletedList.push(String(id));
+                        localStorage.setItem('gn_deleted_reviews', JSON.stringify([...new Set(deletedList)]));
+                    } catch(e) {}
+
                     adminReviews = adminReviews.filter(r => String(r.id) !== String(id));
                     try {
                         localStorage.setItem('gn_reviews', JSON.stringify(adminReviews));
-                        window.dispatchEvent(new Event('reviewsUpdated'));
-                        window.dispatchEvent(new Event('storage'));
                     } catch(e) {}
+                    renderReviewsAdmin();
+                    showToast('Review removed.');
+
                     if (window.SupabaseEngine) {
                         try { await window.SupabaseEngine.deleteReview(id); } catch(e) {}
                     }
-                    renderReviewsAdmin();
-                    showToast('Review removed.');
                 }
             });
         }
@@ -6461,8 +6576,8 @@
             });
 
             // Filter Orders
-            const listOrders = (window.adminOrders && window.adminOrders.length > 0) ? window.adminOrders : adminOrders;
-            const matchedOrders = (listOrders || []).filter(o => {
+            const listOrders = Array.isArray(adminOrders) ? adminOrders : [];
+            const matchedOrders = listOrders.filter(o => {
                 const orderNum = String(o.order_number || o.id || '');
                 const orderId = String(o.id || '').toLowerCase();
                 const name = (o.customer_name || '').toLowerCase();
@@ -6758,7 +6873,7 @@
 
         function jumpToAdminOrder(orderId) {
             closeAdminExpandingSearch();
-            const listOrders = (window.adminOrders && window.adminOrders.length > 0) ? window.adminOrders : adminOrders;
+            const listOrders = Array.isArray(adminOrders) ? adminOrders : [];
             const order = listOrders.find(o => String(o.id) === String(orderId) || String(o.order_number) === String(orderId));
             
             // 1. Ensure Orders Section is opened
@@ -6905,7 +7020,19 @@
 
         // Listen for Realtime Order Updates
         window.addEventListener('ordersUpdated', () => {
-            loadOrdersAdmin();
+            if (window.SupabaseEngine && window.SupabaseEngine.isLive) {
+                loadOrdersAdmin();
+            } else {
+                try {
+                    const rawLocal = localStorage.getItem('gn_orders');
+                    if (rawLocal) {
+                        adminOrders = JSON.parse(rawLocal);
+                        window.adminOrders = adminOrders;
+                        updateOrdersHeaderMetrics();
+                        renderOrdersAdmin();
+                    }
+                } catch(e) {}
+            }
         });
 
         // Init

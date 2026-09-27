@@ -118,7 +118,13 @@
         // 1. PRODUCTS API
         // =========================================================================
         async getProducts() {
-            if (this.isLive) {
+            let deletedProds = new Set();
+            try {
+                const rawDel = localStorage.getItem('gn_deleted_products');
+                if (rawDel) JSON.parse(rawDel).forEach(id => deletedProds.add(String(id)));
+            } catch(e) {}
+
+            if (this.isLive && supabase) {
                 try {
                     const { data, error } = await supabase
                         .from('gn_products')
@@ -128,8 +134,8 @@
                     
                     if (error) throw error;
                     
-                    if (data && data.length > 0) {
-                        const normalized = data.map(p => ({
+                    if (data && Array.isArray(data)) {
+                        const normalized = data.filter(p => p && !deletedProds.has(String(p.id))).map(p => ({
                             ...p,
                             salePrice: p.sale_price !== undefined ? p.sale_price : p.salePrice,
                             sale_price: p.sale_price !== undefined ? p.sale_price : p.salePrice
@@ -141,7 +147,7 @@
                     console.warn("Supabase fetch products notice:", err);
                 }
             }
-            return this._getMockProducts();
+            return this._getMockProducts().filter(p => p && !deletedProds.has(String(p.id)));
         },
 
         async saveProduct(product) {
@@ -163,7 +169,7 @@
 
             this._saveMockProduct({ ...dbPayload, salePrice: dbPayload.sale_price, stock_images: stock_images, stockImages: stock_images });
 
-            if (this.isLive) {
+            if (this.isLive && supabase) {
                 try {
                     const { data, error } = await supabase
                         .from('gn_products')
@@ -180,8 +186,15 @@
         },
 
         async deleteProduct(id) {
+            try {
+                let deletedList = JSON.parse(localStorage.getItem('gn_deleted_products') || '[]');
+                if (!Array.isArray(deletedList)) deletedList = [];
+                deletedList.push(String(id));
+                localStorage.setItem('gn_deleted_products', JSON.stringify([...new Set(deletedList)]));
+            } catch(e) {}
+
             this._deleteMockProduct(String(id));
-            if (this.isLive) {
+            if (this.isLive && supabase) {
                 try {
                     const { error } = await supabase
                         .from('gn_products')
@@ -192,6 +205,7 @@
                     console.warn("Supabase deleteProduct error:", err);
                 }
             }
+            return true;
         },
 
         async saveProductsBulk(productsArray) {
@@ -315,7 +329,13 @@
         // 3. CUSTOMER REVIEWS API
         // =========================================================================
         async getReviews() {
-            if (this.isLive) {
+            let deletedRevs = new Set();
+            try {
+                const rawDel = localStorage.getItem('gn_deleted_reviews');
+                if (rawDel) JSON.parse(rawDel).forEach(id => deletedRevs.add(String(id)));
+            } catch(e) {}
+
+            if (this.isLive && supabase) {
                 try {
                     const { data, error } = await supabase
                         .from('gn_reviews')
@@ -323,15 +343,16 @@
                         .order('created_at', { ascending: false });
                     
                     if (error) throw error;
-                    if (data && data.length > 0) {
-                        localStorage.setItem('gn_reviews', JSON.stringify(data));
-                        return data;
+                    if (data && Array.isArray(data)) {
+                        const cleaned = data.filter(r => r && !deletedRevs.has(String(r.id)));
+                        localStorage.setItem('gn_reviews', JSON.stringify(cleaned));
+                        return cleaned;
                     }
                 } catch (err) {
-                    return this._getMockReviews();
+                    return this._getMockReviews().filter(r => r && !deletedRevs.has(String(r.id)));
                 }
             }
-            return this._getMockReviews();
+            return this._getMockReviews().filter(r => r && !deletedRevs.has(String(r.id)));
         },
 
         async saveReview(review) {
@@ -357,7 +378,7 @@
             localStorage.setItem('gn_reviews', JSON.stringify(local));
             window.dispatchEvent(new Event('reviewsUpdated'));
 
-            if (this.isLive) {
+            if (this.isLive && supabase) {
                 try {
                     const { data, error } = await supabase.from('gn_reviews').upsert(payload).select();
                     if (error) console.warn("Save review error:", error);
@@ -367,6 +388,29 @@
                 }
             }
             return payload;
+        },
+
+        async deleteReview(id) {
+            try {
+                let deletedList = JSON.parse(localStorage.getItem('gn_deleted_reviews') || '[]');
+                if (!Array.isArray(deletedList)) deletedList = [];
+                deletedList.push(String(id));
+                localStorage.setItem('gn_deleted_reviews', JSON.stringify([...new Set(deletedList)]));
+            } catch(e) {}
+
+            let local = this._getMockReviews().filter(r => String(r.id) !== String(id));
+            localStorage.setItem('gn_reviews', JSON.stringify(local));
+            window.dispatchEvent(new Event('reviewsUpdated'));
+            window.dispatchEvent(new Event('storage'));
+
+            if (this.isLive && supabase) {
+                try {
+                    await supabase.from('gn_reviews').delete().eq('id', id);
+                } catch (e) {
+                    console.warn("Supabase deleteReview error:", e);
+                }
+            }
+            return true;
         },
 
         async deleteReview(id) {
@@ -655,18 +699,26 @@
         },
 
         async deleteReview(id) {
+            try {
+                let deletedList = JSON.parse(localStorage.getItem('gn_deleted_reviews') || '[]');
+                if (!Array.isArray(deletedList)) deletedList = [];
+                deletedList.push(String(id));
+                localStorage.setItem('gn_deleted_reviews', JSON.stringify([...new Set(deletedList)]));
+            } catch(e) {}
+
             let local = this._getMockReviews().filter(r => String(r.id) !== String(id));
             localStorage.setItem('gn_reviews', JSON.stringify(local));
             window.dispatchEvent(new Event('reviewsUpdated'));
             window.dispatchEvent(new Event('storage'));
 
-            if (this.isLive) {
+            if (this.isLive && supabase) {
                 try {
                     await supabase.from('gn_reviews').delete().eq('id', id);
                 } catch (e) {
                     console.warn("Supabase deleteReview error:", e);
                 }
             }
+            return true;
         },
 
         async uploadProductImage(file, path) {
@@ -849,6 +901,12 @@
         },
 
         async getOrders() {
+            let deletedSet = new Set();
+            try {
+                const rawDel = localStorage.getItem('gn_deleted_orders');
+                if (rawDel) JSON.parse(rawDel).forEach(id => deletedSet.add(String(id)));
+            } catch(e) {}
+
             if (this.isLive && supabase) {
                 try {
                     const { data, error } = await supabase
@@ -858,33 +916,76 @@
 
                     if (!error && Array.isArray(data)) {
                         const localMap = {};
+                        const localOrdersList = [];
                         try {
                             const rawLocal = localStorage.getItem('gn_orders');
                             if (rawLocal) {
                                 JSON.parse(rawLocal).forEach(o => {
-                                    if (o && (o.id || o.order_number)) localMap[String(o.id || o.order_number)] = o;
+                                    if (o && (o.id || o.order_number)) {
+                                        localMap[String(o.id || o.order_number)] = o;
+                                        localOrdersList.push(o);
+                                    }
                                 });
                             }
                         } catch(e) {}
 
-                        const valid = data.filter(o => o && !o.is_deleted && !o.deleted_at && o.customer_name !== '__TEST_DELETED__').map(o => {
+                        const remoteIds = new Set(data.map(o => String(o.id)));
+                        const remoteOrderNums = new Set(data.map(o => String(o.order_number)));
+
+                        const validRemote = data.filter(o => {
+                            if (!o) return false;
+                            if (o.is_deleted || o.deleted_at || o.customer_name === '__TEST_DELETED__') return false;
+                            if (deletedSet.has(String(o.id)) || deletedSet.has(String(o.order_number))) return false;
+                            return true;
+                        }).map(o => {
                             const cached = localMap[String(o.id || o.order_number)];
-                            return (cached && cached.card_reward_applied && !o.card_reward_applied) ? { ...o, card_reward_applied: cached.card_reward_applied } : o;
+                            let merged = { ...o };
+                            if (cached) {
+                                if (cached.card_reward_applied && !o.card_reward_applied) merged.card_reward_applied = cached.card_reward_applied;
+                                if (cached.status && cached.status !== o.status) {
+                                    // Preserve local optimistic status change
+                                    merged.status = cached.status;
+                                }
+                            }
+                            return merged;
                         });
-                        localStorage.setItem('gn_orders', JSON.stringify(valid));
-                        return valid;
+
+                        const localOnly = localOrdersList.filter(lo => 
+                            lo && !deletedSet.has(String(lo.id)) && !deletedSet.has(String(lo.order_number)) &&
+                            !remoteIds.has(String(lo.id)) && !remoteOrderNums.has(String(lo.order_number)) &&
+                            !lo.is_deleted && !lo.deleted_at && lo.customer_name !== '__TEST_DELETED__'
+                        );
+
+                        const combined = [...validRemote, ...localOnly];
+                        localStorage.setItem('gn_orders', JSON.stringify(combined));
+                        return combined;
                     }
                 } catch (e) {
                     console.warn("Supabase getOrders error, using local fallback:", e);
                 }
             }
-            return this._getMockOrders();
+            return this._getMockOrders().filter(o => !deletedSet.has(String(o.id)) && !deletedSet.has(String(o.order_number)));
         },
 
         async deleteOrder(orderId) {
             const now = new Date().toISOString();
+            try {
+                let deletedList = JSON.parse(localStorage.getItem('gn_deleted_orders') || '[]');
+                if (!Array.isArray(deletedList)) deletedList = [];
+                deletedList.push(String(orderId));
+                localStorage.setItem('gn_deleted_orders', JSON.stringify([...new Set(deletedList)]));
+            } catch(e) {}
+
             let localOrders = this._getMockOrders();
             const targetOrder = localOrders.find(o => String(o.id) === String(orderId) || String(o.order_number) === String(orderId));
+            if (targetOrder) {
+                try {
+                    let deletedList = JSON.parse(localStorage.getItem('gn_deleted_orders') || '[]');
+                    if (targetOrder.id) deletedList.push(String(targetOrder.id));
+                    if (targetOrder.order_number) deletedList.push(String(targetOrder.order_number));
+                    localStorage.setItem('gn_deleted_orders', JSON.stringify([...new Set(deletedList)]));
+                } catch(e) {}
+            }
             
             // Clean up Supabase Storage file if screenshot was attached
             if (this.isLive && supabase && targetOrder && targetOrder.payment_screenshot_url) {
@@ -905,21 +1006,25 @@
             localOrders = localOrders.filter(o => String(o.id) !== String(orderId) && String(o.order_number) !== String(orderId));
             localStorage.setItem('gn_orders', JSON.stringify(localOrders));
 
-            window.dispatchEvent(new Event('ordersUpdated'));
-            window.dispatchEvent(new Event('storage'));
-
             if (this.isLive && supabase) {
                 try {
-                    const { error } = await supabase
-                        .from('gn_orders')
-                        .update({ is_deleted: true, deleted_at: now, status: 'Cancelled', updated_at: now })
-                        .eq('id', orderId);
-                    if (error) {
-                        // Fallback in case table doesn't have is_deleted column yet
-                        await supabase
-                            .from('gn_orders')
-                            .update({ customer_name: '__TEST_DELETED__', status: 'Cancelled', updated_at: now })
-                            .eq('id', orderId);
+                    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(orderId));
+                    let delRes = null;
+                    if (isUuid) {
+                        delRes = await supabase.from('gn_orders').delete().eq('id', orderId);
+                    } else if (!isNaN(Number(orderId))) {
+                        delRes = await supabase.from('gn_orders').delete().eq('order_number', Number(orderId));
+                    } else {
+                        delRes = await supabase.from('gn_orders').delete().eq('id', orderId);
+                    }
+
+                    if (delRes && delRes.error) {
+                        // Fallback soft delete
+                        if (isUuid) {
+                            await supabase.from('gn_orders').update({ is_deleted: true, deleted_at: now, customer_name: '__TEST_DELETED__', status: 'Cancelled' }).eq('id', orderId);
+                        } else if (!isNaN(Number(orderId))) {
+                            await supabase.from('gn_orders').update({ is_deleted: true, deleted_at: now, customer_name: '__TEST_DELETED__', status: 'Cancelled' }).eq('order_number', Number(orderId));
+                        }
                     }
                 } catch (e) {
                     console.warn("Supabase deleteOrder exception:", e);
@@ -943,19 +1048,16 @@
                 localStorage.setItem('gn_orders', JSON.stringify(localOrders));
             }
 
-            window.dispatchEvent(new Event('ordersUpdated'));
-            window.dispatchEvent(new Event('storage'));
-
             if (this.isLive && supabase) {
                 try {
-                    const { data, error } = await supabase
-                        .from('gn_orders')
-                        .update({ status: newStatus, updated_at: now })
-                        .eq('id', orderId)
-                        .select();
-
-                    if (error) console.warn("Supabase updateOrderStatus error:", error);
-                    return data ? data[0] : (idx >= 0 ? localOrders[idx] : null);
+                    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(orderId));
+                    if (isUuid) {
+                        await supabase.from('gn_orders').update({ status: newStatus, updated_at: now }).eq('id', orderId);
+                    } else if (!isNaN(Number(orderId))) {
+                        await supabase.from('gn_orders').update({ status: newStatus, updated_at: now }).eq('order_number', Number(orderId));
+                    } else {
+                        await supabase.from('gn_orders').update({ status: newStatus, updated_at: now }).eq('id', orderId);
+                    }
                 } catch (e) {
                     console.warn("Supabase updateOrderStatus exception:", e);
                 }
@@ -1035,7 +1137,7 @@
                 const raw = localStorage.getItem('gn_categories_meta');
                 if (raw) {
                     const parsed = JSON.parse(raw);
-                    if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+                    if (Array.isArray(parsed)) return parsed;
                 }
             } catch(e) {}
             localStorage.setItem('gn_categories_meta', JSON.stringify(defaultCategories));
@@ -1047,7 +1149,7 @@
                 const raw = localStorage.getItem('gn_reviews');
                 if (raw) {
                     const parsed = JSON.parse(raw);
-                    if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+                    if (Array.isArray(parsed)) return parsed;
                 }
             } catch(e) {}
             localStorage.setItem('gn_reviews', JSON.stringify(defaultReviews));
@@ -1059,7 +1161,7 @@
                 const raw = localStorage.getItem('gn_hero_slides');
                 if (raw) {
                     const parsed = JSON.parse(raw);
-                    if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+                    if (Array.isArray(parsed)) return parsed;
                 }
             } catch(e) {}
             localStorage.setItem('gn_hero_slides', JSON.stringify(defaultHeroSlides));
@@ -1068,6 +1170,12 @@
 
         _getMockOrders() {
             try {
+                let deletedSet = new Set();
+                try {
+                    const rawDel = localStorage.getItem('gn_deleted_orders');
+                    if (rawDel) JSON.parse(rawDel).forEach(id => deletedSet.add(String(id)));
+                } catch(e) {}
+
                 const raw = localStorage.getItem('gn_orders');
                 if (raw) {
                     const parsed = JSON.parse(raw);
@@ -1075,6 +1183,7 @@
                         const isMock = (o) => {
                             if (!o) return true;
                             if (o.is_deleted || o.deleted_at || o.customer_name === '__TEST_DELETED__') return true;
+                            if (deletedSet.has(String(o.id)) || deletedSet.has(String(o.order_number))) return true;
                             if (o.is_sample || o.is_dummy || o.is_mock) return true;
                             const name = String(o.customer_name || '').toLowerCase().trim();
                             if (name === 'taha siddiqui' || name === 'danyal zafar' || name === 'sara bilal' || name === 'ali raza' || name === 'test customer' || name === 'asad ali (test)') return true;

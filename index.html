@@ -50,27 +50,29 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-engine.js" defer></script>
     <script src="search-engine.js" defer></script>
-        <!-- Instant 0ms Tarot Ritual Gate Check (Strict 48-Hour Restriction) -->
+    <!-- Instant 0ms Tarot Ritual Gate Check (Strict 48-Hour Restriction) -->
     <script>
         (function() {
             try {
                 if (window.location.search.includes('reset=1') || window.location.search.includes('tarot=reset') || window.location.search.includes('test=1')) {
-                    try { localStorage.removeItem('gn_tarot_ritual_v13'); localStorage.removeItem('gn_tarot_ritual_v12'); } catch(e) {}
+                    try { localStorage.removeItem('gn_tarot_ritual_v14'); localStorage.removeItem('gn_tarot_ritual_v13'); localStorage.removeItem('gn_tarot_ritual_v12'); } catch(e) {}
                 }
                 // Purge all legacy storage keys
-                ['gn_tarot_ritual_v12', 'gn_daily_card_v11', 'gn_daily_card_v10', 'gn_daily_card_v9', 'gn_daily_card_v8', 'gn_daily_card_v7', 'gn_daily_card_v6', 'gn_daily_card_v5', 'gn_daily_card_v4', 'gn_daily_card_v3', 'gn_daily_card_state'].forEach(function(k) {
+                ['gn_tarot_ritual_v13', 'gn_tarot_ritual_v12', 'gn_daily_card_v11', 'gn_daily_card_v10', 'gn_daily_card_v9', 'gn_daily_card_v8', 'gn_daily_card_v7', 'gn_daily_card_v6', 'gn_daily_card_v5', 'gn_daily_card_v4', 'gn_daily_card_v3', 'gn_daily_card_state'].forEach(function(k) {
                     try { localStorage.removeItem(k); } catch(e) {}
                 });
-                var TAROT_KEY = 'gn_tarot_ritual_v13';
+                var TAROT_KEY = 'gn_tarot_ritual_v14';
                 var raw = localStorage.getItem(TAROT_KEY);
-                var hasValidReward = false;
+                var isClaimedAndValid = false;
                 if (raw) {
                     var parsed = JSON.parse(raw);
-                    if (parsed && parsed.timestamp && (Date.now() - parsed.timestamp < 48 * 60 * 60 * 1000) && parsed.reward) {
-                        hasValidReward = true;
+                    var expiresAt = parsed && (parsed.expiresAt || (parsed.timestamp ? parsed.timestamp + 48 * 60 * 60 * 1000 : (parsed.claimedAt ? parsed.claimedAt + 48 * 60 * 60 * 1000 : 0)));
+                    var isClaimed = parsed && (parsed.step === 'claimed' || (!parsed.step && (parsed.reward || parsed.claimedReward)));
+                    if (isClaimed && (parsed.reward || parsed.claimedReward || parsed.selectedReward) && expiresAt > Date.now()) {
+                        isClaimedAndValid = true;
                     }
                 }
-                if (!hasValidReward) {
+                if (!isClaimedAndValid) {
                     document.documentElement.classList.add('tarot-pending');
                 }
             } catch(e) {}
@@ -261,7 +263,7 @@
                 <span class="hb-line"></span>
             </button>
             <a href="#active-drop" class="nav-link-desktop" style="font-size:0.82rem;color:var(--color-text-primary);text-decoration:none;font-weight:500;">Drops</a>
-            <a href="#" class="nav-link-desktop" style="font-size:0.82rem;color:var(--color-text-primary);text-decoration:none;font-weight:500;">Collections</a>
+            <a href="#catalogSection" class="nav-link-desktop" style="font-size:0.82rem;color:var(--color-text-primary);text-decoration:none;font-weight:500;">Collections</a>
             
             <div id="navMenuDropdown" style="display:none;position:absolute;top:2.8rem;left:0;background:rgba(20,9,15,0.96);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--color-border);border-radius:6px;padding:10px 0;min-width:200px;box-shadow:0 12px 40px rgba(0,0,0,0.6);flex-direction:column;z-index:100;">
                 <a href="javascript:void(0)" onclick="selectCategoryAndScroll('all')" style="display:block;padding:10px 20px;font-size:0.85rem;color:var(--color-text-primary);text-decoration:none;font-weight:500;">All Collections</a>
@@ -441,28 +443,9 @@
                                     return;
                                 }
                                 e.stopPropagation();
-                                const catTabs = document.querySelectorAll('.category-filter-container .filter-tab');
-                                if (catTabs && catTabs.length) {
-                                    catTabs.forEach(t => t.classList.remove('active'));
-                                    const allTab = document.querySelector('.category-filter-container .filter-tab[data-filter="all"]');
-                                    if (allTab) allTab.classList.add('active');
+                                if (typeof window.openPdpModal === 'function') {
+                                    window.openPdpModal(p.id);
                                 }
-                                window.currentCategory = 'all';
-                                if (window.renderMainCatalog) window.renderMainCatalog();
-
-                                setTimeout(() => {
-                                    const targetCard = document.querySelector(`.product-card[data-product-id="${p.id}"]`);
-                                    if (targetCard) {
-                                        targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                        targetCard.classList.remove('card-highlight-pulse');
-                                        void targetCard.offsetWidth;
-                                        targetCard.classList.add('card-highlight-pulse');
-                                        setTimeout(() => targetCard.classList.remove('card-highlight-pulse'), 3000);
-                                    } else {
-                                        const activeDrop = document.getElementById('active-drop');
-                                        if (activeDrop) activeDrop.scrollIntoView({ behavior: 'smooth' });
-                                    }
-                                }, 80);
                             };
                             itemDiv.innerHTML = `
                                 <img src="${p.img}" alt="${p.name} - Gothic Nova New Arrival" loading="lazy" decoding="async" fetchpriority="low" width="260" height="340" onerror="this.style.opacity='0'">
@@ -611,7 +594,7 @@
             </div>
         </section>
 
-          <!-- CATEGORY FILTERS (DYNAMIC GOTHIC BACKDROP BANNER WITH INLINE PUSH-DOWN DRAWER) -->
+        <!-- CATEGORY FILTERS (DYNAMIC GOTHIC BACKDROP BANNER WITH INLINE PUSH-DOWN DRAWER) -->
         <div class="category-filter-wrapper reveal-element" id="catalogSection" style="margin-top: 10px; margin-bottom: 16px;">
             <div class="cat-fade-left" id="catFadeLeft"></div>
             <div class="category-filter-container" id="categoryFilterContainer">
@@ -1037,9 +1020,19 @@
 
                     if (list.length === 0) {
                         grid.innerHTML = `
-                            <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; background: rgba(22, 10, 18, 0.6); border-radius: 6px; border: 1px dashed rgba(255,255,255,0.1);">
-                                <h4 class="font-serif" style="font-size: 1.4rem; color: #ffffff; margin-bottom: 8px;">NO ITEMS FOUND</h4>
-                                <p class="font-sans" style="font-size: 0.85rem; color: var(--color-text-muted);">Try adjusting your category or search filter.</p>
+                            <div class="gothic-empty-state-box">
+                                <div class="gothic-empty-icon-wrap">
+                                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+                                    </svg>
+                                </div>
+                                <h3 class="gothic-empty-title">NO ARTIFACTS FOUND</h3>
+                                <p class="gothic-empty-desc font-sans">No gothic pieces match your active category or search criteria.</p>
+                                <button type="button" class="gothic-empty-action-btn" onclick="selectCategoryAndScroll('all')">
+                                    <span>VIEW ALL ARTIFACTS</span>
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                                </button>
                             </div>
                         `;
                         return;
@@ -1341,7 +1334,7 @@
                     Cash On Delivery (COD) Parcel Policy
                 </div>
                 <p style="margin-bottom: 8px;">• <strong>Delivery Timeline:</strong> 5–7 business days nationwide across Pakistan.</p>
-                <p style="margin-bottom: 8px;">• <strong>Advance Verification Deposit:</strong> A deposit of <strong>Courier Delivery Fee (Rs. 250)</strong> is required prior to dispatch to secure packing materials & courier logistics. The remaining order balance is paid upon doorstep delivery.</p>
+                <p style="margin-bottom: 8px;">• <strong>Advance Verification Deposit:</strong> A deposit of <strong>Courier Delivery Fee</strong> is required prior to dispatch to secure packing materials & courier logistics. The remaining order balance is paid upon doorstep delivery.</p>
                 <p style="margin-bottom: 8px;">• <strong>Courier Partner:</strong> Dispatched securely via <strong>PostEx</strong> logistics.</p>
                 <p style="margin: 0;">• <strong>Tracking:</strong> A real-time tracking code is sent via SMS & WhatsApp immediately upon courier booking.</p>
             </div>
@@ -1520,9 +1513,16 @@
 
         <!-- Cart Items List -->
         <div id="cart-items-list" style="flex:1;overflow-y:auto;padding:20px 28px;display:flex;flex-direction:column;gap:16px;">
-            <div id="cart-empty-state" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:60px 0;color:var(--color-text-muted);">
-                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="44" height="44" style="opacity:0.4;color:var(--color-text-muted);"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-                <span class="font-mono" style="font-size:0.78rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--color-text-muted);">Your cart is empty</span>
+            <div id="cart-empty-state" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:48px 12px;color:var(--color-text-muted);text-align:center;">
+                <div style="width: 52px; height: 52px; border-radius: 50%; background: rgba(138, 26, 46, 0.2); border: 1px solid rgba(255, 59, 92, 0.35); display: flex; align-items: center; justify-content: center; color: #ffe8be; margin-bottom: 4px; box-shadow: 0 0 20px rgba(138, 26, 46, 0.3);">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="24" height="24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                </div>
+                <span class="font-heading" style="font-size:1.05rem;letter-spacing:0.06em;text-transform:uppercase;color:#ffffff;font-weight:700;">Your Cart Is Empty</span>
+                <span class="font-sans" style="font-size:0.75rem;color:var(--color-text-muted);max-width:220px;line-height:1.4;">No dark artifacts selected yet.</span>
+                <button type="button" onclick="closeCart(); document.getElementById('active-drop').scrollIntoView({behavior:'smooth'});" style="margin-top:8px;padding:9px 18px;background:linear-gradient(135deg, var(--color-red-deep) 0%, #3b0813 100%);border:1px solid var(--color-red-glow);border-radius:4px;color:#ffffff;font-family:var(--font-mono);font-size:0.70rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">
+                    <span>EXPLORE ARTIFACTS</span>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </button>
             </div>
         </div>
 
@@ -1603,29 +1603,29 @@
                 <div class="checkout-payable-banner" id="checkoutPayableBanner" style="display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; background: linear-gradient(180deg, rgba(255, 232, 190, 0.05) 0%, rgba(18, 9, 14, 0.9) 100%); border: 1px solid rgba(255, 232, 190, 0.25); border-radius: 8px; box-sizing: border-box; width: 100%;">
                     
                     <!-- Tier 1: Original Product Subtotal -->
-                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; flex-wrap: wrap;">
                         <span class="font-mono" style="font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.7); font-weight: 600;">ORIGINAL CART TOTAL</span>
                         <span class="font-mono" id="checkoutOriginalSubtotal" style="font-size: 0.88rem; color: #d0d0d0; font-weight: 700;">Rs. 0</span>
                     </div>
 
                     <!-- Tier 2: Delivery Charges Line Item -->
-                    <div id="checkoutDeliveryRow" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%;">
+                    <div id="checkoutDeliveryRow" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; flex-wrap: wrap;">
                         <span class="font-mono" id="checkoutDeliveryLabel" style="font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.7); font-weight: 600;">COURIER DELIVERY FEE</span>
-                        <span class="font-mono" id="checkoutDeliveryValue" style="font-size: 0.88rem; color: #ffffff; font-weight: 700;">Rs. 250</span>
+                        <span class="font-mono" id="checkoutDeliveryValue" style="font-size: 0.88rem; color: #ffffff; font-weight: 700;">Rs. 0</span>
                     </div>
 
                     <!-- Tier 3: Active Tarot Reward Discount / Benefit (Symmetrical Minimal Row) -->
-                    <div id="checkoutDiscountRow" style="display: none; align-items: center; justify-content: space-between; gap: 12px; width: 100%; padding: 6px 10px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 232, 190, 0.16); border-radius: 6px; box-sizing: border-box;">
-                        <span class="font-mono" id="checkoutDiscountLabel" style="font-size: 0.68rem; color: #ff9999; font-weight: 700; letter-spacing: 0.06em; white-space: nowrap;">✦ TAROT REWARD:</span>
+                    <div id="checkoutDiscountRow" style="display: none; align-items: center; justify-content: space-between; gap: 8px; width: 100%; padding: 6px 10px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 232, 190, 0.16); border-radius: 6px; box-sizing: border-box; flex-wrap: wrap;">
+                        <span class="font-mono" id="checkoutDiscountLabel" style="font-size: 0.68rem; color: #ff9999; font-weight: 700; letter-spacing: 0.06em; white-space: normal; word-break: break-word;">✦ TAROT REWARD:</span>
                         <span class="font-mono" id="checkoutDiscountValue" style="font-size: 0.88rem; color: #4ade80; font-weight: 800; text-align: right;">-Rs. 0</span>
                     </div>
 
-                    <!-- Tier 4: Dominant Final Payable Total (Locked to Single Unbreakable Line) -->
+                    <!-- Tier 4: Dominant Final Payable Total (Responsive Row) -->
                     <div style="display: flex; flex-direction: column; gap: 4px; border-top: 1px solid rgba(255, 232, 190, 0.18); padding-top: 10px; margin-top: 2px; width: 100%; box-sizing: border-box;">
-                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; min-width: 0;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; min-width: 0; flex-wrap: wrap;">
                             <div style="display: flex; flex-direction: column; min-width: 0;">
-                                <span class="font-mono" style="font-size: 0.68rem; letter-spacing: 0.10em; text-transform: uppercase; font-weight: 800; color: #ffe8be; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">TOTAL PAYABLE AMOUNT</span>
-                                <span id="checkoutSavingsBadge" class="font-mono" style="display: none; font-size: 0.58rem; color: #4ade80; font-weight: 700; margin-top: 2px; white-space: nowrap;">✦ YOU SAVED Rs. 0</span>
+                                <span class="font-mono" style="font-size: 0.68rem; letter-spacing: 0.10em; text-transform: uppercase; font-weight: 800; color: #ffe8be; word-break: break-word;">TOTAL PAYABLE AMOUNT</span>
+                                <span id="checkoutSavingsBadge" class="font-mono" style="display: none; font-size: 0.58rem; color: #4ade80; font-weight: 700; margin-top: 2px; word-break: break-word;">✦ YOU SAVED Rs. 0</span>
                             </div>
                             <span class="payable-amount font-mono" id="checkoutStep1Total" style="font-size: 1.15rem; color: #ffe8be; font-weight: 800; white-space: nowrap !important; display: inline-flex !important; align-items: baseline !important; word-break: keep-all !important; flex-shrink: 0 !important; font-variant-numeric: tabular-nums;">Rs. 0</span>
                         </div>
@@ -1635,14 +1635,14 @@
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; box-sizing: border-box; margin-top: 4px;">
                         <!-- Box 1: Deposit Due Now -->
                         <div id="checkoutDepositBox" style="display: flex; flex-direction: column; justify-content: space-between; gap: 3px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 232, 190, 0.16); border-radius: 6px; padding: 10px 12px; box-sizing: border-box; min-width: 0; overflow: hidden;">
-                            <span class="font-mono" id="checkoutDepositLabel" style="font-size: 0.58rem; color: #ff9999; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">DUE NOW (DEPOSIT)</span>
-                            <span class="font-mono" id="checkoutStep1Deposit" style="font-size: 1.05rem; color: #ffffff; font-weight: 800; white-space: nowrap !important; display: inline-block; font-variant-numeric: tabular-nums;">Rs. 250</span>
+                            <span class="font-mono" id="checkoutDepositLabel" style="font-size: 0.58rem; color: #ff9999; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; line-height: 1.2; word-break: break-word;">DUE NOW (DEPOSIT)</span>
+                            <span class="font-mono" id="checkoutStep1Deposit" style="font-size: 1.05rem; color: #ffffff; font-weight: 800; white-space: nowrap !important; display: inline-block; font-variant-numeric: tabular-nums;">Rs. 0</span>
                             <span class="font-mono" id="checkoutDepositSub" style="font-size: 0.56rem; color: rgba(255,255,255,0.65); line-height: 1.25; word-break: break-word;">Courier Advance Deposit</span>
                         </div>
 
                         <!-- Box 2: Balance Due on Delivery -->
                         <div id="checkoutBalanceBox" style="display: flex; flex-direction: column; justify-content: space-between; gap: 3px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 232, 190, 0.16); border-radius: 6px; padding: 10px 12px; box-sizing: border-box; min-width: 0; overflow: hidden;">
-                            <span class="font-mono text-muted" id="checkoutBalanceLabel" style="font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.05em; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">DUE AT DOORSTEP</span>
+                            <span class="font-mono text-muted" id="checkoutBalanceLabel" style="font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.05em; line-height: 1.2; word-break: break-word;">DUE AT DOORSTEP</span>
                             <span class="font-mono" id="checkoutStep1Balance" style="font-size: 1.05rem; color: #ffffff; font-weight: 700; white-space: nowrap !important; display: inline-block; font-variant-numeric: tabular-nums;">Rs. 0</span>
                             <span class="font-mono" id="checkoutBalanceSub" style="font-size: 0.56rem; color: rgba(255,255,255,0.65); line-height: 1.25; word-break: break-word;">Pay on parcel delivery</span>
                         </div>
@@ -1654,8 +1654,23 @@
                     <div style="font-size: 0.68rem; font-family: var(--font-mono); color: var(--color-text-muted); letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600;">SELECT PAYMENT METHOD</div>
                     
                     <div class="payment-options-grid" style="display: grid; grid-template-columns: 1fr; gap: 10px; width: 100%; box-sizing: border-box;">
-                        <!-- Option 1: Cash on Delivery -->
-                        <div class="payment-card selected" id="payCardCod" onclick="selectPaymentMethod('cod')" style="padding: 12px 14px; cursor: pointer; border-radius: 6px; box-sizing: border-box;">
+                        <!-- Option 1: Full Advance Payment (Pre-selected Priority) -->
+                        <div class="payment-card selected" id="payCardAdvance" onclick="selectPaymentMethod('advance')" style="padding: 12px 14px; cursor: pointer; border-radius: 6px; box-sizing: border-box;">
+                            <div class="payment-card-header" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <div class="payment-radio-circle"><div class="payment-radio-dot"></div></div>
+                                    <span class="payment-card-title" style="font-size: 0.88rem; font-weight: 700; color: #ffffff; white-space: nowrap;">Full Advance</span>
+                                </div>
+                                <span class="payment-card-badge font-mono" style="font-size: 0.58rem; background: rgba(255,200,87,0.15); color: #ffc857; border: 1px solid rgba(255,200,87,0.35); border-radius: 3px; padding: 2px 7px; display: inline-block; font-weight: 700; letter-spacing: 0.08em;">RECOMMENDED VIP</span>
+                            </div>
+                            <div style="font-size: 0.73rem; color: rgba(255,255,255,0.75); line-height: 1.4; padding-left: 24px; margin-top: 6px;">
+                                <strong style="color: #ffe8be;">100% full payment</strong> &bull; Zero COD surcharge
+                                <div style="font-size: 0.66rem; color: var(--color-text-muted); margin-top: 2px;">Direct courier priority dispatch (2–3 business days)</div>
+                            </div>
+                        </div>
+
+                        <!-- Option 2: Cash on Delivery -->
+                        <div class="payment-card" id="payCardCod" onclick="selectPaymentMethod('cod')" style="padding: 12px 14px; cursor: pointer; border-radius: 6px; box-sizing: border-box;">
                             <div class="payment-card-header" style="display: flex; align-items: center; gap: 8px;">
                                 <div class="payment-radio-circle"><div class="payment-radio-dot"></div></div>
                                 <span class="payment-card-title" style="font-size: 0.88rem; font-weight: 700; color: #ffffff; white-space: nowrap;">Cash on Delivery</span>
@@ -1663,21 +1678,6 @@
                             <div style="font-size: 0.73rem; color: rgba(255,255,255,0.75); line-height: 1.4; padding-left: 24px; margin-top: 6px;">
                                 <strong id="codSubtextDeposit" style="color: #38bdf8;">Courier Advance Deposit</strong> &bull; Balance on delivery
                                 <div style="font-size: 0.66rem; color: var(--color-text-muted); margin-top: 2px;">Standard courier dispatch (5–7 business days)</div>
-                            </div>
-                        </div>
-
-                        <!-- Option 2: Full Advance Payment -->
-                        <div class="payment-card" id="payCardAdvance" onclick="selectPaymentMethod('advance')" style="padding: 12px 14px; cursor: pointer; border-radius: 6px; box-sizing: border-box;">
-                            <div class="payment-card-header" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%;">
-                                <div style="display: flex; align-items: center; gap: 8px;">
-                                    <div class="payment-radio-circle"><div class="payment-radio-dot"></div></div>
-                                    <span class="payment-card-title" style="font-size: 0.88rem; font-weight: 700; color: #ffffff; white-space: nowrap;">Full Advance</span>
-                                </div>
-                                <span class="payment-card-badge font-mono" style="font-size: 0.58rem; background: rgba(255,200,87,0.15); color: #ffc857; border: 1px solid rgba(255,200,87,0.35); border-radius: 3px; padding: 2px 7px; display: inline-block; font-weight: 700; letter-spacing: 0.08em;">POPULAR</span>
-                            </div>
-                            <div style="font-size: 0.73rem; color: rgba(255,255,255,0.75); line-height: 1.4; padding-left: 24px; margin-top: 6px;">
-                                <strong style="color: #ffe8be;">100% full payment</strong> &bull; Zero COD surcharge
-                                <div style="font-size: 0.66rem; color: var(--color-text-muted); margin-top: 2px;">Direct courier dispatch (2–3 business days)</div>
                             </div>
                         </div>
                     </div>
@@ -1731,8 +1731,8 @@
 
                     <!-- Streamlined Proof Upload Section -->
                     <div class="ss-upload-section" style="margin-top: 4px; width: 100%; box-sizing: border-box;">
-                        <label class="ss-upload-label font-mono" id="ssUploadLabel" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; width: 100%;">
-                            <span id="ssUploadLabelTitle" style="font-size: 0.70rem; color: #ffe8be; font-weight: 700;">UPLOAD Courier Delivery Fee (Rs. 250) DEPOSIT SCREENSHOT *</span>
+                        <label class="ss-upload-label font-mono" id="ssUploadLabel" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; width: 100%; flex-wrap: wrap; gap: 4px;">
+                            <span id="ssUploadLabelTitle" style="font-size: 0.70rem; color: #ffe8be; font-weight: 700; word-break: break-word;">UPLOAD COURIER ADVANCE DEPOSIT SCREENSHOT *</span>
                             <span style="color: #ff3b5c; font-size: 0.64rem;">(Required)</span>
                         </label>
                         <input type="file" id="paymentProofFileInput" accept="image/*" style="display: none;" onchange="handlePaymentScreenshotUpload(event)">
@@ -2700,7 +2700,8 @@
         // ON-SITE CHECKOUT ENGINE (SUPABASE REALTIME & ADVANCE SCREENSHOT UPLOADER)
         // =========================================================================
         let currentCheckoutStep = 1;
-        let selectedPaymentMethod = 'cod';
+        let selectedPaymentMethod = 'advance';
+        window.selectedPaymentMethod = selectedPaymentMethod;
         let paymentScreenshotFile = null;
         let paymentScreenshotDataUrl = null;
         window._setPaymentScreenshot = (data) => { paymentScreenshotDataUrl = data; };
@@ -2716,18 +2717,20 @@
             if (window.activeDailyReward) return window.activeDailyReward;
             if (typeof getStoredDailyReward === 'function') {
                 const stored = getStoredDailyReward();
-                if (stored && stored.reward) {
-                    window.activeDailyReward = stored.reward;
-                    return stored.reward;
+                if (stored && (stored.step === 'claimed' || stored.step === 'revealed' || !stored.step) && (stored.reward || stored.selectedReward || stored.claimedReward)) {
+                    return stored.reward || stored.selectedReward || stored.claimedReward;
                 }
             }
             try {
-                const raw = localStorage.getItem('gn_tarot_ritual_v13');
+                const raw = localStorage.getItem('gn_tarot_ritual_v14');
                 if (!raw) return null;
                 const parsed = JSON.parse(raw);
-                if (parsed && parsed.timestamp && (Date.now() - parsed.timestamp < 48 * 60 * 60 * 1000) && parsed.reward) {
-                    window.activeDailyReward = parsed.reward;
-                    return parsed.reward;
+                const reward = parsed && (parsed.reward || parsed.selectedReward || parsed.claimedReward);
+                const expiresAt = parsed && (parsed.expiresAt || (parsed.timestamp ? parsed.timestamp + 48 * 60 * 60 * 1000 : (parsed.expiryTime || 0)));
+                if (reward && (!expiresAt || expiresAt > Date.now())) {
+                    if (!parsed.step || parsed.step === 'claimed' || parsed.step === 'revealed') {
+                        return reward;
+                    }
                 }
             } catch(e) {}
             return null;
@@ -2738,11 +2741,13 @@
             const items = getActiveCheckoutItems();
             return Object.values(items).reduce((sum, it) => sum + (Number(it.priceNum || it.price || 0) * Number(it.qty || it.quantity || 1)), 0);
         }
+        window.checkoutTotalPrice = checkoutTotalPrice;
 
         function checkoutTotalItems() {
             const items = getActiveCheckoutItems();
             return Object.values(items).reduce((sum, it) => sum + Number(it.qty || 1), 0);
         }
+        window.checkoutTotalItems = checkoutTotalItems;
 
         function openCheckout(customItems = null) {
             activeCheckoutItemsMap = customItems || null;
@@ -2797,7 +2802,7 @@
         window.closeCheckoutAndReset = closeCheckoutAndReset;
 
         function resetCheckoutForm() {
-            selectedPaymentMethod = 'cod';
+            selectedPaymentMethod = 'advance';
             paymentScreenshotFile = null;
             paymentScreenshotDataUrl = null;
             const form = document.getElementById('checkoutAddressForm');
@@ -2808,7 +2813,7 @@
             if (ssPrompt) ssPrompt.style.display = 'flex';
             if (ssWrap) ssWrap.style.display = 'none';
             if (ssImg) ssImg.src = '';
-            selectPaymentMethod('cod');
+            selectPaymentMethod('advance');
         }
 
         // --- CUSTOM CITY DROPDOWN CONTROLLERS ---
@@ -2952,7 +2957,40 @@
             initCheckoutCities();
         });
 
-        // (getActiveDailyReward is defined above and on window)
+        function getCheckoutDeliveryFee(itemsMap) {
+            try {
+                const items = itemsMap || getActiveCheckoutItems();
+                const prods = (typeof getFreshProducts === 'function') ? getFreshProducts() : (window.gn_products || []);
+                const pids = Object.keys(items);
+                if (pids.length === 0) return 250;
+
+                let totalFee = 0;
+                let foundAny = false;
+                for (const pid of pids) {
+                    const itemObj = items[pid];
+                    const qty = Number(itemObj.qty || itemObj.quantity || 1);
+                    let fee = null;
+                    if (itemObj && itemObj.delivery_charges !== undefined && itemObj.delivery_charges !== null && !isNaN(itemObj.delivery_charges)) {
+                        fee = Number(itemObj.delivery_charges);
+                    } else {
+                        const prod = prods.find(p => String(p.id) === String(pid));
+                        if (prod && prod.delivery_charges !== undefined && prod.delivery_charges !== null && !isNaN(prod.delivery_charges)) {
+                            fee = Number(prod.delivery_charges);
+                        }
+                    }
+                    if (fee === null || isNaN(fee)) {
+                        fee = 250;
+                    }
+                    foundAny = true;
+                    totalFee += (fee * qty);
+                }
+                if (foundAny && totalFee > 0) return totalFee;
+            } catch(e) {
+                console.warn("Error resolving checkout delivery fee:", e);
+            }
+            return 250;
+        }
+        window.getCheckoutDeliveryFee = getCheckoutDeliveryFee;
 
         function getPrimaryCheckoutProduct() {
             try {
@@ -2960,17 +2998,12 @@
                 const ids = Object.keys(currentMap);
                 if (ids.length > 0) {
                     const pid = ids[0];
-                    if (window.allProducts) {
-                        const found = window.allProducts.find(p => String(p.id) === String(pid));
-                        if (found) return found;
-                    }
-                    if (typeof defaultProducts !== 'undefined') {
-                        const found = defaultProducts.find(p => String(p.id) === String(pid));
-                        if (found) return found;
-                    }
+                    const prods = (typeof getFreshProducts === 'function') ? getFreshProducts() : (window.gn_products || []);
+                    const found = prods.find(p => String(p.id) === String(pid));
+                    if (found) return found;
                 }
             } catch(e) {}
-            return { delivery_charges: 250 };
+            return { delivery_charges: getCheckoutDeliveryFee() };
         }
 
         function updateCheckoutTotals() {
@@ -2978,11 +3011,12 @@
             const rawSubtotal = checkoutTotalPrice();
             const count = checkoutTotalItems();
             const activeReward = getActiveDailyReward();
-            const STANDARD_DELIVERY = 250;
+            const deliveryFee = getCheckoutDeliveryFee(currentMap);
 
-            let deliveryFee = STANDARD_DELIVERY;
             let productDiscount = 0;
+            let deliveryFeeWaived = 0;
             let savingsAmount = 0;
+            let savingsType = '';
 
             const elOriginalSubtotal = document.getElementById('checkoutOriginalSubtotal');
             const elDeliveryValue = document.getElementById('checkoutDeliveryValue');
@@ -2993,58 +3027,45 @@
 
             if (activeReward) {
                 if (activeReward.type === 'percentage_discount') {
-                    // 10% off applies to product subtotal; delivery charges remain Rs. 250
-                    deliveryFee = STANDARD_DELIVERY;
                     const pct = Number(activeReward.value || 10);
                     productDiscount = Math.round(rawSubtotal * (pct / 100));
                     savingsAmount = productDiscount;
+                    savingsType = `${pct}% OFF CART`;
 
                     if (discountRow) {
                         discountRow.style.display = 'flex';
-                        if (discountLabel) discountLabel.textContent = `✦ REWARD (${activeReward.offer || '10% OFF'}):`;
+                        if (discountLabel) discountLabel.textContent = `✦ REWARD (${activeReward.offer || `${pct}% OFF`}):`;
                         if (discountVal) discountVal.innerHTML = `<span style="color: #4ade80; font-weight: 800;">-Rs. ${productDiscount.toLocaleString('en-PK')}</span>`;
                     }
                 } else if (activeReward.type === 'free_shipping') {
-                    // Free delivery reduces delivery charges to Rs. 0
-                    deliveryFee = 0;
-                    productDiscount = 0;
-                    savingsAmount = STANDARD_DELIVERY;
+                    deliveryFeeWaived = deliveryFee;
+                    savingsAmount = deliveryFee;
+                    savingsType = 'FREE DELIVERY';
 
                     if (discountRow) {
                         discountRow.style.display = 'flex';
                         if (discountLabel) discountLabel.textContent = `✦ REWARD (FREE DELIVERY):`;
-                        if (discountVal) discountVal.innerHTML = `<span style="color: #4ade80; font-weight: 800;">-Rs. 250 (WAIVED)</span>`;
+                        if (discountVal) discountVal.innerHTML = `<span style="color: #4ade80; font-weight: 800;">-Rs. ${deliveryFee.toLocaleString('en-PK')} (WAIVED)</span>`;
                     }
-                } else if (activeReward.type === 'free_gift') {
-                    deliveryFee = STANDARD_DELIVERY;
-                    productDiscount = 0;
-                    savingsAmount = 850;
-                    if (discountRow) {
-                        discountRow.style.display = 'flex';
-                        if (discountLabel) discountLabel.textContent = `✦ REWARD (GOTHIC GIFT):`;
-                        if (discountVal) discountVal.innerHTML = `<span style="color: #4ade80; font-weight: 800;">INCLUDED (Rs. 0)</span>`;
-                    }
-                } else if (activeReward.type === 'order_upgrade') {
-                    deliveryFee = STANDARD_DELIVERY;
-                    productDiscount = 0;
-                    savingsAmount = 500;
-                    if (discountRow) {
-                        discountRow.style.display = 'flex';
-                        if (discountLabel) discountLabel.textContent = `✦ REWARD (VIP UPGRADE):`;
-                        if (discountVal) discountVal.innerHTML = `<span style="color: #4ade80; font-weight: 800;">VIP UNBOXING (Rs. 0)</span>`;
-                    }
+                } else {
+                    // For free_gift and order_upgrade: NO discount row, NO savings badge!
+                    if (discountRow) discountRow.style.display = 'none';
                 }
             } else {
                 if (discountRow) discountRow.style.display = 'none';
             }
 
-            const finalTotal = Math.max(0, rawSubtotal - productDiscount) + deliveryFee;
+            // Final total payable:
+            const effectiveProductsSubtotal = Math.max(0, rawSubtotal - productDiscount);
+            const isFreeShipping = activeReward && activeReward.type === 'free_shipping';
+            const effectiveDeliveryFee = isFreeShipping ? 0 : deliveryFee;
+            const finalTotal = effectiveProductsSubtotal + effectiveDeliveryFee;
             const formattedTotal = 'Rs.\u00A0' + finalTotal.toLocaleString('en-PK');
 
             // Tier 1: Original Subtotal display
             if (elOriginalSubtotal) {
                 if (productDiscount > 0) {
-                    elOriginalSubtotal.innerHTML = `<span style="text-decoration: line-through; opacity: 0.65; color: #a0a0a0;">Rs. ${rawSubtotal.toLocaleString('en-PK')}</span> <span style="color: #ffe8be; font-weight: 800; margin-left: 4px;">Rs. ${(rawSubtotal - productDiscount).toLocaleString('en-PK')}</span>`;
+                    elOriginalSubtotal.innerHTML = `<span style="text-decoration: line-through; opacity: 0.65; color: #a0a0a0;">Rs. ${rawSubtotal.toLocaleString('en-PK')}</span> <span style="color: #ffe8be; font-weight: 800; margin-left: 4px;">Rs. ${effectiveProductsSubtotal.toLocaleString('en-PK')}</span>`;
                 } else {
                     elOriginalSubtotal.textContent = `Rs. ${rawSubtotal.toLocaleString('en-PK')}`;
                 }
@@ -3052,14 +3073,14 @@
 
             // Tier 2: Delivery Fee display
             if (elDeliveryValue) {
-                if (deliveryFee === 0) {
-                    elDeliveryValue.innerHTML = `<span style="text-decoration: line-through; opacity: 0.65; color: #a0a0a0;">Rs. 250</span> <span style="color: #4ade80; font-weight: 800; margin-left: 4px;">FREE (Rs. 0)</span>`;
+                if (isFreeShipping) {
+                    elDeliveryValue.innerHTML = `<span style="text-decoration: line-through; opacity: 0.65; color: #a0a0a0;">Rs. ${deliveryFee.toLocaleString('en-PK')}</span> <span style="color: #4ade80; font-weight: 800; margin-left: 4px;">FREE (Rs. 0)</span>`;
                 } else {
                     elDeliveryValue.textContent = `Rs. ${deliveryFee.toLocaleString('en-PK')}`;
                 }
             }
 
-            // Tier 4: Dominant Total & Savings Badge (Unbreakable Single Line)
+            // Tier 4: Dominant Total & Savings Badge
             const elStep1Total = document.getElementById('checkoutStep1Total');
             const elSummaryTotal = document.getElementById('checkoutSummaryTotal');
             const elSummaryCount = document.getElementById('checkoutSummaryCount');
@@ -3069,9 +3090,9 @@
             if (elSummaryCount) elSummaryCount.textContent = count;
 
             if (savingsBadge) {
-                if (savingsAmount > 0) {
+                if (savingsAmount > 0 && activeReward && (activeReward.type === 'percentage_discount' || activeReward.type === 'free_shipping')) {
                     savingsBadge.style.display = 'inline-block';
-                    savingsBadge.textContent = `✦ YOU SAVED Rs. ${savingsAmount.toLocaleString('en-PK')}`;
+                    savingsBadge.textContent = `✦ YOU SAVED Rs. ${savingsAmount.toLocaleString('en-PK')} (${savingsType})`;
                 } else {
                     savingsBadge.style.display = 'none';
                 }
@@ -3084,15 +3105,15 @@
                 if (itemEntries.length > 0) {
                     step1PreviewEl.style.display = 'flex';
                     let previewHtml = `
-                        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255, 232, 190, 0.12); padding-bottom: 6px;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255, 232, 190, 0.12); padding-bottom: 6px; flex-wrap: wrap; gap: 4px;">
                             <span class="font-mono text-muted" style="font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700;">SELECTED ARTIFACTS (${count})</span>
-                            <span class="font-mono" style="font-size: 0.72rem; color: #ffe8be; font-weight: 800;">${formattedTotal}</span>
+                            <span class="font-mono" style="font-size: 0.72rem; color: #ffe8be; font-weight: 800;">Rs. ${rawSubtotal.toLocaleString('en-PK')}</span>
                         </div>
                         <div style="display: flex; flex-direction: column; gap: 6px;">
                             ${itemEntries.map(([pid, it]) => {
                                 const lineTotal = (Number(it.priceNum || 0) * Number(it.qty || 1)).toLocaleString('en-PK');
                                 return `
-                                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
                                         <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
                                             ${it.img ? `<img src="${it.img}" style="width: 30px; height: 30px; border-radius: 4px; object-fit: cover; border: 1px solid rgba(255,232,190,0.25); flex-shrink: 0;">` : ''}
                                             <div style="display: flex; flex-direction: column; min-width: 0;">
@@ -3108,28 +3129,28 @@
 
                     if (activeReward && activeReward.type === 'free_gift') {
                         previewHtml += `
-                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 4px; border-top: 1px solid rgba(255, 232, 190, 0.08);">
+                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 6px; border-top: 1px solid rgba(255, 232, 190, 0.08); flex-wrap: wrap;">
                                 <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
                                     <div style="width: 30px; height: 30px; border-radius: 4px; background: rgba(139, 0, 0, 0.2); border: 1px solid rgba(255, 232, 190, 0.25); display: flex; align-items: center; justify-content: center; font-size: 0.95rem; flex-shrink: 0;">🎁</div>
                                     <div style="display: flex; flex-direction: column; min-width: 0;">
                                         <span style="font-size: 0.76rem; font-weight: 700; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">✦ Free Gothic Artifact Gift</span>
-                                        <span class="font-mono" style="font-size: 0.60rem; color: #ff9999;">Tarot Reward &bull; Enclosed in Parcel</span>
+                                        <span class="font-mono" style="font-size: 0.60rem; color: #ff9999;">Tarot Reward &bull; Artifact Enclosed in Parcel</span>
                                     </div>
                                 </div>
-                                <span class="font-mono" style="font-size: 0.76rem; color: #4ade80; font-weight: 800; flex-shrink: 0; white-space: nowrap;">FREE (Rs. 0)</span>
+                                <span class="font-mono" style="font-size: 0.68rem; color: #4ade80; font-weight: 800; flex-shrink: 0; background: rgba(74, 222, 128, 0.1); border: 1px solid rgba(74, 222, 128, 0.25); padding: 2px 6px; border-radius: 3px;">GIFT ENCLOSED</span>
                             </div>
                         `;
                     } else if (activeReward && activeReward.type === 'order_upgrade') {
                         previewHtml += `
-                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 4px; border-top: 1px solid rgba(255, 232, 190, 0.08);">
+                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 6px; border-top: 1px solid rgba(255, 232, 190, 0.08); flex-wrap: wrap;">
                                 <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
                                     <div style="width: 30px; height: 30px; border-radius: 4px; background: rgba(139, 0, 0, 0.2); border: 1px solid rgba(255, 232, 190, 0.25); display: flex; align-items: center; justify-content: center; font-size: 0.95rem; flex-shrink: 0;">👑</div>
                                     <div style="display: flex; flex-direction: column; min-width: 0;">
                                         <span style="font-size: 0.76rem; font-weight: 700; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">✦ VIP Order Packaging Upgrade</span>
-                                        <span class="font-mono" style="font-size: 0.60rem; color: #ff9999;">Tarot Reward &bull; Premium Packaging</span>
+                                        <span class="font-mono" style="font-size: 0.60rem; color: #ff9999;">Tarot Reward &bull; your order upgraded</span>
                                     </div>
                                 </div>
-                                <span class="font-mono" style="font-size: 0.76rem; color: #4ade80; font-weight: 800; flex-shrink: 0; white-space: nowrap;">FREE (Rs. 0)</span>
+                                <span class="font-mono" style="font-size: 0.68rem; color: #4ade80; font-weight: 800; flex-shrink: 0; background: rgba(74, 222, 128, 0.1); border: 1px solid rgba(74, 222, 128, 0.25); padding: 2px 6px; border-radius: 3px;">UPGRADED</span>
                             </div>
                         `;
                     }
@@ -3169,7 +3190,7 @@
                                     <span style="font-size: 0.9rem;">🎁</span>
                                     <span style="font-weight: 700; color: #ffe8be; font-size: 0.74rem;">✦ Free Gothic Artifact Gift (Claimed)</span>
                                 </div>
-                                <span class="font-mono" style="color: #4ade80; font-weight: 800; font-size: 0.70rem;">FREE (Rs. 0)</span>
+                                <span class="font-mono" style="color: #4ade80; font-weight: 800; font-size: 0.70rem;">GIFT ENCLOSED</span>
                             </div>
                         `;
                     } else if (activeReward.type === 'order_upgrade') {
@@ -3179,7 +3200,7 @@
                                     <span style="font-size: 0.9rem;">👑</span>
                                     <span style="font-weight: 700; color: #ffe8be; font-size: 0.74rem;">✦ VIP Packaging Upgrade (Claimed)</span>
                                 </div>
-                                <span class="font-mono" style="color: #4ade80; font-weight: 800; font-size: 0.70rem;">FREE (Rs. 0)</span>
+                                <span class="font-mono" style="color: #4ade80; font-weight: 800; font-size: 0.70rem;">UPGRADED</span>
                             </div>
                         `;
                     } else {
@@ -3201,11 +3222,12 @@
 
         function goToStep(stepNum) {
             const activeReward = getActiveDailyReward();
+            const deliveryFee = getCheckoutDeliveryFee();
             const isFreeShippingCod = (selectedPaymentMethod === 'cod' && activeReward && activeReward.type === 'free_shipping');
             if (stepNum > 1 && !paymentScreenshotDataUrl && !isFreeShippingCod) {
                 const isCod = (selectedPaymentMethod === 'cod');
                 const msg = isCod
-                    ? 'Payment proof screenshot is mandatory for Courier Deposit (Rs. 250) before advancing.'
+                    ? `Payment proof screenshot is mandatory for Courier Deposit (Rs. ${deliveryFee.toLocaleString('en-PK')}) before advancing.`
                     : 'Payment proof screenshot is mandatory for full payment before advancing.';
                 if (typeof showLuxuryAlert === 'function') {
                     showLuxuryAlert(msg, 'PAYMENT PROOF REQUIRED', 'error');
@@ -3265,6 +3287,7 @@
 
         function selectPaymentMethod(method) {
             selectedPaymentMethod = method;
+            window.selectedPaymentMethod = method;
             const cardCod = document.getElementById('payCardCod');
             const cardAdv = document.getElementById('payCardAdvance');
             const subtag = document.getElementById('advanceBoxSubtag');
@@ -3283,25 +3306,21 @@
             if (cardCod) cardCod.classList.toggle('selected', method === 'cod');
             if (cardAdv) cardAdv.classList.toggle('selected', method === 'advance');
 
+            const currentMap = getActiveCheckoutItems();
             const rawSubtotal = checkoutTotalPrice();
             const activeReward = getActiveDailyReward();
-            const STANDARD_DELIVERY = 250;
+            const deliveryFee = getCheckoutDeliveryFee(currentMap);
+            const isFreeShipping = activeReward && activeReward.type === 'free_shipping';
 
-            let deliveryFee = STANDARD_DELIVERY;
             let productDiscount = 0;
-
-            if (activeReward) {
-                if (activeReward.type === 'free_shipping') {
-                    deliveryFee = 0;
-                } else if (activeReward.type === 'percentage_discount') {
-                    deliveryFee = STANDARD_DELIVERY;
-                    const pct = Number(activeReward.value || 10);
-                    productDiscount = Math.round(rawSubtotal * (pct / 100));
-                }
+            if (activeReward && activeReward.type === 'percentage_discount') {
+                const pct = Number(activeReward.value || 10);
+                productDiscount = Math.round(rawSubtotal * (pct / 100));
             }
 
-            const finalTotal = Math.max(0, rawSubtotal - productDiscount) + deliveryFee;
-            const isFreeShipping = activeReward && activeReward.type === 'free_shipping';
+            const effectiveProductsSubtotal = Math.max(0, rawSubtotal - productDiscount);
+            const effectiveDeliveryFee = isFreeShipping ? 0 : deliveryFee;
+            const finalTotal = effectiveProductsSubtotal + effectiveDeliveryFee;
 
             if (method === 'cod') {
                 if (isFreeShipping) {
@@ -3311,34 +3330,34 @@
                     if (codSubtextDeposit) codSubtextDeposit.innerHTML = '<strong style="color: #4ade80;">Rs. 0 deposit (Waived)</strong>';
                     if (depLabel) depLabel.textContent = 'DUE NOW (WAIVED)';
                     if (balLabel) balLabel.textContent = 'DUE AT DOORSTEP';
-                    if (depEl) depEl.innerHTML = '<span class="deposit-waived-strike" style="text-decoration: line-through; opacity: 0.5; font-size: 0.85rem; margin-right: 4px;">Rs. 250</span><span style="color: #4ade80; font-weight: 800;">Rs. 0</span>';
+                    if (depEl) depEl.innerHTML = `<span class="deposit-waived-strike" style="text-decoration: line-through; opacity: 0.5; font-size: 0.85rem; margin-right: 4px;">Rs. ${deliveryFee.toLocaleString('en-PK')}</span><span style="color: #4ade80; font-weight: 800;">Rs. 0</span>`;
                     if (depSub) depSub.textContent = 'Deposit waived (Free Delivery)';
-                    if (balEl) balEl.textContent = `Rs. ${finalTotal.toLocaleString('en-PK')}`;
+                    if (balEl) balEl.textContent = `Rs. ${effectiveProductsSubtotal.toLocaleString('en-PK')}`;
                     if (balSub) balSub.textContent = 'Full balance at doorstep';
                 } else {
-                    // Standard COD: Rs. 250 courier deposit applies, bank transfer box and proof upload must be shown
-                    const depositAmount = 250;
-                    const balanceAmount = Math.max(0, finalTotal - depositAmount);
+                    // Standard COD: Advance deposit is the cumulative courier delivery fee
+                    const depositAmount = deliveryFee;
+                    const balanceAmount = effectiveProductsSubtotal;
                     if (advPaymentBox) advPaymentBox.style.display = 'flex';
                     if (freeDeliveryCodBanner) freeDeliveryCodBanner.style.display = 'none';
-                    if (codSubtextDeposit) codSubtextDeposit.innerHTML = '<strong style="color: #ffe8be;">Courier Advance Deposit (Rs. 250)</strong>';
+                    if (codSubtextDeposit) codSubtextDeposit.innerHTML = `<strong style="color: #ffe8be;">Courier Advance Deposit (Rs. ${deliveryFee.toLocaleString('en-PK')})</strong>`;
                     if (subtag) {
-                        subtag.textContent = 'Courier Deposit (Rs. 250)';
+                        subtag.textContent = `Courier Deposit (Rs. ${deliveryFee.toLocaleString('en-PK')})`;
                         subtag.style.color = '#ffe8be';
                         subtag.style.background = 'rgba(255, 232, 190, 0.12)';
                         subtag.style.borderColor = 'rgba(255, 232, 190, 0.25)';
                     }
                     if (depLabel) depLabel.textContent = 'DUE NOW (DEPOSIT)';
                     if (balLabel) balLabel.textContent = 'DUE AT DOORSTEP';
-                    if (depEl) depEl.textContent = 'Rs. 250';
+                    if (depEl) depEl.textContent = `Rs. ${depositAmount.toLocaleString('en-PK')}`;
                     if (depSub) depSub.textContent = 'Courier Advance Deposit';
                     if (balEl) balEl.textContent = `Rs. ${balanceAmount.toLocaleString('en-PK')}`;
                     if (balSub) balSub.textContent = 'Cash on parcel delivery';
-                    if (ssTitle) ssTitle.textContent = 'UPLOAD RS. 250 COURIER DEPOSIT SCREENSHOT *';
-                    if (dropText) dropText.textContent = 'Tap to attach Rs. 250 deposit screenshot receipt';
+                    if (ssTitle) ssTitle.textContent = `UPLOAD RS. ${deliveryFee.toLocaleString('en-PK')} COURIER DEPOSIT SCREENSHOT *`;
+                    if (dropText) dropText.textContent = `Tap to attach Rs. ${deliveryFee.toLocaleString('en-PK')} deposit screenshot receipt`;
                 }
             } else {
-                // Advance Full Payment: Always show bank transfer box and require mandatory proof screenshot
+                // Advance Full Payment: 100% of finalTotal
                 if (advPaymentBox) advPaymentBox.style.display = 'flex';
                 if (freeDeliveryCodBanner) freeDeliveryCodBanner.style.display = 'none';
                 if (subtag) {
@@ -3359,7 +3378,7 @@
         }
         window.selectPaymentMethod = selectPaymentMethod;
 
-                function copyAccountDetail(elementId, label, btnId) {
+        function copyAccountDetail(elementId, label, btnId) {
             const el = document.getElementById(elementId);
             if (!el) return;
             const raw = el.getAttribute('data-copy') || el.textContent;
@@ -3412,6 +3431,10 @@
 
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(text).catch(() => {});
+            }
+
+            if (typeof showLuxuryToast === 'function') {
+                showLuxuryToast(`${label || 'Account details'} copied to clipboard`, '📋');
             }
         }
         window.copyAccountDetail = copyAccountDetail;
@@ -3468,13 +3491,14 @@
         window.handlePaymentScreenshotUpload = handlePaymentScreenshotUpload;
         window.setPaymentScreenshotDataUrl = function(data) { paymentScreenshotDataUrl = data; };
 
-                function proceedToStep2() {
+        function proceedToStep2() {
             const activeReward = getActiveDailyReward();
+            const deliveryFee = getCheckoutDeliveryFee();
             const isFreeShippingCod = (selectedPaymentMethod === 'cod' && activeReward && activeReward.type === 'free_shipping');
             if (!paymentScreenshotDataUrl && !isFreeShippingCod) {
                 const isCod = (selectedPaymentMethod === 'cod');
                 const msg = isCod
-                    ? 'Payment proof is strictly required! Please upload a screenshot of your Courier Delivery Fee (Rs. 250) advance deposit transfer before proceeding.'
+                    ? `Payment proof is strictly required! Please upload a screenshot of your Courier Delivery Fee (Rs. ${deliveryFee.toLocaleString('en-PK')}) advance deposit transfer before proceeding.`
                     : 'Payment proof is strictly required! Please upload a screenshot of your full payment transfer before proceeding.';
                 const title = isCod ? 'DEPOSIT PROOF REQUIRED' : 'PAYMENT PROOF REQUIRED';
                 if (typeof showLuxuryAlert === 'function') {
@@ -3536,13 +3560,21 @@
             const activeMap = getActiveCheckoutItems();
             const activeReward = getActiveDailyReward();
             const isFreeShippingCod = (selectedPaymentMethod === 'cod' && activeReward && activeReward.type === 'free_shipping');
+            const deliveryFee = getCheckoutDeliveryFee(activeMap);
+            const rawSubtotal = checkoutTotalPrice();
 
-            let calculatedTotal = checkoutTotalPrice();
             let discountAmt = 0;
-            if (activeReward && activeReward.type === 'percentage_discount') {
-                discountAmt = Math.round(calculatedTotal * (Number(activeReward.value || 0) / 100));
-                calculatedTotal = Math.max(0, calculatedTotal - discountAmt);
+            let deliveryFeeWaived = 0;
+            if (activeReward) {
+                if (activeReward.type === 'percentage_discount') {
+                    discountAmt = Math.round(rawSubtotal * (Number(activeReward.value || 10) / 100));
+                } else if (activeReward.type === 'free_shipping') {
+                    deliveryFeeWaived = deliveryFee;
+                }
             }
+
+            const effectiveProductsSubtotal = Math.max(0, rawSubtotal - discountAmt);
+            const calculatedTotal = effectiveProductsSubtotal + (activeReward && activeReward.type === 'free_shipping' ? 0 : deliveryFee);
 
             const rewardMeta = activeReward ? {
                 code: activeReward.code,
@@ -3550,6 +3582,7 @@
                 type: activeReward.type,
                 value: activeReward.value,
                 discount_amount: discountAmt,
+                delivery_fee_waived: deliveryFeeWaived,
                 deposit_waived: isFreeShippingCod
             } : null;
 
@@ -3572,7 +3605,7 @@
             if (!paymentScreenshotDataUrl && !isFreeShippingCod) {
                 const isCod = (selectedPaymentMethod === 'cod');
                 const msg = isCod
-                    ? 'Payment proof screenshot is mandatory for deposit verification before placing your order.'
+                    ? `Payment proof screenshot is mandatory for deposit verification (Rs. ${deliveryFee.toLocaleString('en-PK')}) before placing your order.`
                     : 'Payment proof screenshot is mandatory for full payment verification before placing your order.';
                 if (typeof showLuxuryAlert === 'function') {
                     showLuxuryAlert(msg, 'PAYMENT PROOF REQUIRED', 'error');
@@ -3581,7 +3614,6 @@
                 return;
             }
 
-            const totalAmount = checkoutTotalPrice();
             isSubmittingOrder = true;
 
             const submitBtn = document.getElementById('checkoutSubmitOrderBtn');
@@ -3600,20 +3632,7 @@
                 }
 
                 const isCod = selectedPaymentMethod === 'cod';
-                let calculatedSubtotal = totalAmount;
-                let discountAmt = 0;
-                let deliveryFee = 250;
-                if (activeReward) {
-                    if (activeReward.type === 'free_shipping') {
-                        deliveryFee = 0;
-                    } else if (activeReward.type === 'percentage_discount') {
-                        discountAmt = Math.round(totalAmount * (Number(activeReward.value || 0) / 100));
-                        deliveryFee = 250;
-                    }
-                }
-
-                const calculatedTotal = Math.max(0, calculatedSubtotal - discountAmt) + deliveryFee;
-                const depositAmt = (isFreeShippingCod) ? 0 : (isCod ? Math.min(calculatedTotal, 250) : calculatedTotal);
+                const depositAmt = (isFreeShippingCod) ? 0 : (isCod ? deliveryFee : calculatedTotal);
 
                 const orderPayload = {
                     customer_name: name,
@@ -3626,7 +3645,7 @@
                     payment_method: selectedPaymentMethod,
                     advance_amount: depositAmt,
                     deposit_paid: depositAmt,
-                    delivery_fee: deliveryFee,
+                    delivery_fee: (activeReward && activeReward.type === 'free_shipping') ? 0 : deliveryFee,
                     payment_screenshot_url: uploadedScreenshotUrl,
                     items: (function() {
                         const finalItems = [...itemsArray];
@@ -3651,18 +3670,18 @@
                         type: activeReward.type,
                         value: activeReward.value,
                         discount_amount: discountAmt,
-                        delivery_waived: deliveryFee === 0,
+                        delivery_waived: deliveryFeeWaived > 0,
                         deposit_waived: isFreeShippingCod
                     } : null
                 };
 
                 // Mark reward redeemed in localStorage
                 try {
-                    const rawState = localStorage.getItem('gn_tarot_ritual_v13');
+                    const rawState = localStorage.getItem('gn_tarot_ritual_v14');
                     if (rawState) {
                         const parsed = JSON.parse(rawState);
                         parsed.redeemed = true;
-                        localStorage.setItem('gn_tarot_ritual_v13', JSON.stringify(parsed));
+                        localStorage.setItem('gn_tarot_ritual_v14', JSON.stringify(parsed));
                     }
                 } catch(e) {}
 
@@ -3728,7 +3747,7 @@
             } finally {
                 isSubmittingOrder = false;
                 if (submitBtn) submitBtn.disabled = false;
-                if (btnText) btnText.innerHTML = `PROCEED`;
+                if (btnText) btnText.innerHTML = 'PROCEED';
             }
         }
         window.submitFinalOrder = submitFinalOrder;
@@ -3778,7 +3797,7 @@
                     `;
                 }
 
-                const depositPaid = isAdvance ? total : (order.advance_amount !== undefined ? order.advance_amount : (order.deposit_paid !== undefined ? order.deposit_paid : 250));
+                const depositPaid = isAdvance ? total : (order.advance_amount !== undefined && order.advance_amount !== null ? order.advance_amount : (order.deposit_paid !== undefined && order.deposit_paid !== null ? order.deposit_paid : (order.delivery_fee !== undefined ? order.delivery_fee : 0)));
                 const isZeroDeposit = !isAdvance && Number(depositPaid) === 0;
                 const totalNum = Number(String(total).replace(/,/g, '')) || 0;
                 const balanceOnDelivery = isAdvance ? 0 : Math.max(0, totalNum - Number(depositPaid));
@@ -3935,10 +3954,10 @@
 
         <div class="tarot-stage-container">
             <!-- Header (Occult Eyebrow, Large Authority Title, No Reset Button) -->
-            <div class="tarot-header" style="margin-bottom: 16px; text-align: center;">
-                <div class="tarot-eyebrow font-mono" style="font-size: 0.72rem; color: #dcd3c5; letter-spacing: 0.26em; text-transform: uppercase; margin-bottom: 6px; font-weight: 700;">✦ GOTHIC OCCULT ORACLE ✦</div>
-                <h2 class="tarot-title" id="tarotStageTitle" style="font-family: var(--font-serif); font-size: clamp(2.45rem, 7.2vw, 3.6rem); font-weight: 900; color: #ffffff; letter-spacing: 0.14em; text-transform: uppercase; margin: 0 0 8px 0; text-shadow: 0 2px 10px rgba(0,0,0,0.95);">DRAW YOUR CARD</h2>
-                <div class="tarot-subtext font-mono" id="tarotStageSubtext" style="font-size: clamp(0.72rem, 2.5vw, 0.86rem); color: #dcd3c5; letter-spacing: 0.08em;">— ✦ What you choose will remain bound for 48 hours. ✦ —</div>
+            <div class="tarot-header" style="text-align: center;">
+                <div class="tarot-eyebrow font-mono" style="color: #e5c158; text-transform: uppercase; font-weight: 800;">✦ GOTHIC OCCULT ORACLE ✦</div>
+                <h2 class="tarot-title" id="tarotStageTitle">PICK YOUR CARD</h2>
+                <div class="tarot-subtext font-mono" id="tarotStageSubtext">— ✦ What you choose will remain bound for 48 hours. ✦ —</div>
             </div>
 
             <!-- Dramatic CHOOSE ! Impact Banner -->
@@ -3954,19 +3973,21 @@
                     <div class="tarot-flash"></div>
                     <div class="tarot-card-inner">
                         <!-- Front -->
-                        <div class="tarot-face tarot-front" style="background: #080306; border-color: rgba(139, 26, 39, 0.85); box-shadow: 0 14px 34px rgba(0, 0, 0, 0.98), inset 0 0 0 1px rgba(255, 255, 255, 0.06);">
+                        <div class="tarot-face tarot-front" style="background: radial-gradient(ellipse at 50% 15%, rgba(30, 10, 20, 0.99) 0%, #080306 65%, #020102 100%); border-color: rgba(197, 48, 48, 0.85); box-shadow: 0 16px 40px rgba(0, 0, 0, 0.98), inset 0 0 0 1.5px rgba(212, 175, 55, 0.4), inset 0 0 32px rgba(139, 0, 0, 0.5);">
                             <div style="display: flex; align-items: center; justify-content: center; width: 100%;">
-                                <span class="font-mono tarot-roman-title" style="color: #e2d7c5; font-weight: 800;">I &bull; PRIMUS</span>
+                                <div class="tarot-card-top-pill" style="border-color: rgba(197, 48, 48, 0.55);">
+                                    <span style="color: #f5e6c8; white-space: nowrap;">✦ I &bull; PRIMUS</span>
+                                </div>
                             </div>
-                            <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; margin: auto 0; text-align: center;">
-                                <div class="tarot-roman-numeral-front" style="color: #8b1a27;">I</div>
-                                <span class="font-serif" style="font-size: 1.35rem; font-weight: 900; color: #ffffff; letter-spacing: 0.04em;">ORDER UPGRADE</span>
-                                <span class="font-mono" style="font-size: 0.66rem; color: #dcd3c5; opacity: 0.95;">VIP Unboxing &amp; Packaging</span>
+                            <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; margin: auto 0; text-align: center; width: 100%;">
+                                <div class="tarot-roman-numeral-front" style="color: #c53030; font-family: 'Playfair Display', Georgia, serif; line-height: 1; text-shadow: 0 3px 12px rgba(0,0,0,0.98);">I</div>
+                                <span class="tarot-card-offer-title font-serif" style="font-weight: 900; color: #ffffff; letter-spacing: 0.04em; text-shadow: 0 2px 8px rgba(0,0,0,0.95);">ORDER UPGRADE</span>
+                                <span class="tarot-card-subtext font-mono" style="color: #ded6c9; opacity: 0.95; line-height: 1.35; max-width: 92%;">your order upgraded</span>
                             </div>
-                            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 80%; margin-top: auto; opacity: 0.5;">
-                                <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #8b1a27, transparent);"></span>
-                                <span style="color: #8b1a27; font-size: 0.6rem;">✦</span>
-                                <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #8b1a27, transparent);"></span>
+                            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 75%; margin-top: auto; opacity: 0.6;">
+                                <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #c53030, transparent);"></span>
+                                <span style="color: #c53030; font-size: 0.6rem;">✦</span>
+                                <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #c53030, transparent);"></span>
                             </div>
                         </div>
                         <!-- Back -->
@@ -3981,19 +4002,21 @@
                     <div class="tarot-flash"></div>
                     <div class="tarot-card-inner">
                         <!-- Front -->
-                        <div class="tarot-face tarot-front" style="background: #080306; border-color: rgba(138, 112, 66, 0.85); box-shadow: 0 14px 34px rgba(0, 0, 0, 0.98), inset 0 0 0 1px rgba(255, 255, 255, 0.06);">
+                        <div class="tarot-face tarot-front" style="background: radial-gradient(ellipse at 50% 15%, rgba(30, 10, 20, 0.99) 0%, #080306 65%, #020102 100%); border-color: rgba(212, 175, 55, 0.85); box-shadow: 0 16px 40px rgba(0, 0, 0, 0.98), inset 0 0 0 1.5px rgba(212, 175, 55, 0.4), inset 0 0 32px rgba(139, 0, 0, 0.5);">
                             <div style="display: flex; align-items: center; justify-content: center; width: 100%;">
-                                <span class="font-mono tarot-roman-title" style="color: #e2d7c5; font-weight: 800;">II &bull; SECUNDUS</span>
+                                <div class="tarot-card-top-pill" style="border-color: rgba(212, 175, 55, 0.55);">
+                                    <span style="color: #f5e6c8; white-space: nowrap;">✦ II &bull; SECUNDUS</span>
+                                </div>
                             </div>
-                            <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; margin: auto 0; text-align: center;">
-                                <div class="tarot-roman-numeral-front" style="color: #8a7042;">II</div>
-                                <span class="font-serif" style="font-size: 1.35rem; font-weight: 900; color: #ffffff; letter-spacing: 0.04em;">FREE DELIVERY</span>
-                                <span class="font-mono" style="font-size: 0.66rem; color: #dcd3c5; opacity: 0.95;">Courier Deposit Waived (Rs. 0)</span>
+                            <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; margin: auto 0; text-align: center; width: 100%;">
+                                <div class="tarot-roman-numeral-front" style="color: #d4af37; font-family: 'Playfair Display', Georgia, serif; line-height: 1; text-shadow: 0 3px 12px rgba(0,0,0,0.98);">II</div>
+                                <span class="tarot-card-offer-title font-serif" style="font-weight: 900; color: #ffffff; letter-spacing: 0.04em; text-shadow: 0 2px 8px rgba(0,0,0,0.95);">FREE DELIVERY</span>
+                                <span class="tarot-card-subtext font-mono" style="color: #ded6c9; opacity: 0.95; line-height: 1.35; max-width: 92%;">Courier Deposit Waived (Rs. 0)</span>
                             </div>
-                            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 80%; margin-top: auto; opacity: 0.5;">
-                                <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #8a7042, transparent);"></span>
-                                <span style="color: #8a7042; font-size: 0.6rem;">✦</span>
-                                <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #8a7042, transparent);"></span>
+                            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 75%; margin-top: auto; opacity: 0.6;">
+                                <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #d4af37, transparent);"></span>
+                                <span style="color: #d4af37; font-size: 0.6rem;">✦</span>
+                                <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #d4af37, transparent);"></span>
                             </div>
                         </div>
                         <!-- Back -->
@@ -4008,19 +4031,21 @@
                     <div class="tarot-flash"></div>
                     <div class="tarot-card-inner">
                         <!-- Front -->
-                        <div class="tarot-face tarot-front" style="background: #080306; border-color: rgba(158, 27, 43, 0.85); box-shadow: 0 14px 34px rgba(0, 0, 0, 0.98), inset 0 0 0 1px rgba(255, 255, 255, 0.06);">
+                        <div class="tarot-face tarot-front" style="background: radial-gradient(ellipse at 50% 15%, rgba(30, 10, 20, 0.99) 0%, #080306 65%, #020102 100%); border-color: rgba(225, 29, 72, 0.85); box-shadow: 0 16px 40px rgba(0, 0, 0, 0.98), inset 0 0 0 1.5px rgba(212, 175, 55, 0.4), inset 0 0 32px rgba(139, 0, 0, 0.5);">
                             <div style="display: flex; align-items: center; justify-content: center; width: 100%;">
-                                <span class="font-mono tarot-roman-title" style="color: #e2d7c5; font-weight: 800;">III &bull; TERTIUS</span>
+                                <div class="tarot-card-top-pill" style="border-color: rgba(225, 29, 72, 0.55);">
+                                    <span style="color: #f5e6c8; white-space: nowrap;">✦ III &bull; TERTIUS</span>
+                                </div>
                             </div>
-                            <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; margin: auto 0; text-align: center;">
-                                <div class="tarot-roman-numeral-front" style="color: #9e1b2b;">III</div>
-                                <span class="font-serif" style="font-size: 1.30rem; font-weight: 900; color: #ffffff; letter-spacing: 0.04em;">FREE GOTHIC GIFT</span>
-                                <span class="font-mono" style="font-size: 0.66rem; color: #dcd3c5; opacity: 0.95;">Artifact Enclosed in Parcel</span>
+                            <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; margin: auto 0; text-align: center; width: 100%;">
+                                <div class="tarot-roman-numeral-front" style="color: #e11d48; font-family: 'Playfair Display', Georgia, serif; line-height: 1; text-shadow: 0 3px 12px rgba(0,0,0,0.98);">III</div>
+                                <span class="tarot-card-offer-title font-serif" style="font-weight: 900; color: #ffffff; letter-spacing: 0.04em; text-shadow: 0 2px 8px rgba(0,0,0,0.95);">FREE GOTHIC GIFT</span>
+                                <span class="tarot-card-subtext font-mono" style="color: #ded6c9; opacity: 0.95; line-height: 1.35; max-width: 92%;">Artifact Enclosed in Parcel</span>
                             </div>
-                            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 80%; margin-top: auto; opacity: 0.5;">
-                                <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #9e1b2b, transparent);"></span>
-                                <span style="color: #9e1b2b; font-size: 0.6rem;">✦</span>
-                                <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #9e1b2b, transparent);"></span>
+                            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 75%; margin-top: auto; opacity: 0.6;">
+                                <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #e11d48, transparent);"></span>
+                                <span style="color: #e11d48; font-size: 0.6rem;">✦</span>
+                                <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #e11d48, transparent);"></span>
                             </div>
                         </div>
                         <!-- Back -->
@@ -4035,19 +4060,21 @@
                     <div class="tarot-flash"></div>
                     <div class="tarot-card-inner">
                         <!-- Front -->
-                        <div class="tarot-face tarot-front" style="background: #080306; border-color: rgba(125, 99, 55, 0.85); box-shadow: 0 14px 34px rgba(0, 0, 0, 0.98), inset 0 0 0 1px rgba(255, 255, 255, 0.06);">
+                        <div class="tarot-face tarot-front" style="background: radial-gradient(ellipse at 50% 15%, rgba(30, 10, 20, 0.99) 0%, #080306 65%, #020102 100%); border-color: rgba(234, 179, 8, 0.85); box-shadow: 0 16px 40px rgba(0, 0, 0, 0.98), inset 0 0 0 1.5px rgba(212, 175, 55, 0.4), inset 0 0 32px rgba(139, 0, 0, 0.5);">
                             <div style="display: flex; align-items: center; justify-content: center; width: 100%;">
-                                <span class="font-mono tarot-roman-title" style="color: #e2d7c5; font-weight: 800;">IV &bull; QUARTUS</span>
+                                <div class="tarot-card-top-pill" style="border-color: rgba(234, 179, 8, 0.55);">
+                                    <span style="color: #f5e6c8; white-space: nowrap;">✦ IV &bull; QUARTUS</span>
+                                </div>
                             </div>
-                            <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; margin: auto 0; text-align: center;">
-                                <div class="tarot-roman-numeral-front" style="color: #7d6337;">IV</div>
-                                <span class="font-serif" style="font-size: 1.45rem; font-weight: 900; color: #ffffff; letter-spacing: 0.04em;">10% OFF</span>
-                                <span class="font-mono" style="font-size: 0.66rem; color: #dcd3c5; opacity: 0.95;">Instant Cart Deduction</span>
+                            <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; margin: auto 0; text-align: center; width: 100%;">
+                                <div class="tarot-roman-numeral-front" style="color: #eab308; font-family: 'Playfair Display', Georgia, serif; line-height: 1; text-shadow: 0 3px 12px rgba(0,0,0,0.98);">IV</div>
+                                <span class="tarot-card-offer-title font-serif" style="font-weight: 900; color: #ffffff; letter-spacing: 0.04em; text-shadow: 0 2px 8px rgba(0,0,0,0.95);">10% OFF</span>
+                                <span class="tarot-card-subtext font-mono" style="color: #ded6c9; opacity: 0.95; line-height: 1.35; max-width: 92%;">Instant Cart Deduction</span>
                             </div>
-                            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 80%; margin-top: auto; opacity: 0.5;">
-                                <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #7d6337, transparent);"></span>
-                                <span style="color: #7d6337; font-size: 0.6rem;">✦</span>
-                                <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #7d6337, transparent);"></span>
+                            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 75%; margin-top: auto; opacity: 0.6;">
+                                <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #eab308, transparent);"></span>
+                                <span style="color: #eab308; font-size: 0.6rem;">✦</span>
+                                <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #eab308, transparent);"></span>
                             </div>
                         </div>
                         <!-- Back -->
@@ -4075,12 +4102,12 @@
 
             <!-- Fortune Claim Container (Revealed after pick) -->
             <div id="tarotClaimBox" class="tarot-claim-box" style="display: none;">
-                <div style="display: flex; flex-direction: column; align-items: center; gap: 6px;">
-                    <span class="font-mono" style="font-size: 0.68rem; color: #dcd3c5; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;">✦ DESTINY BOUND FOR 48 HOURS ✦</span>
-                    <span id="tarotClaimTitle" class="font-serif" style="font-size: 1.55rem; font-weight: 900; color: #ffffff; text-align: center; letter-spacing: 0.04em;">FREE GOTHIC GIFT</span>
-                    <span id="tarotClaimDesc" class="font-mono" style="font-size: 0.76rem; color: #e2d7c5; opacity: 0.95; text-align: center; line-height: 1.4;">Complimentary handcrafted gothic jewelry artifact enclosed in parcel.</span>
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%;">
+                    <span class="tarot-claim-subtitle font-mono" style="color: #dcd3c5; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;">✦ DESTINY BOUND FOR 48 HOURS ✦</span>
+                    <span id="tarotClaimTitle" class="tarot-claim-title font-serif" style="font-weight: 900; color: #ffffff; text-align: center; letter-spacing: 0.04em;">FREE GOTHIC GIFT</span>
+                    <span id="tarotClaimDesc" class="tarot-claim-desc font-mono" style="color: #e2d7c5; opacity: 0.95; text-align: center; line-height: 1.4;">Complimentary handcrafted gothic jewelry artifact enclosed in parcel.</span>
                 </div>
-                <button type="button" class="tarot-claim-btn" onclick="closeTarotOverlay(false)">
+                <button type="button" id="tarotClaimBtn" class="tarot-claim-btn" onclick="closeTarotOverlay(false)">
                     <span>CLAIM &amp; ENTER STORE</span>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
                 </button>
@@ -4088,8 +4115,8 @@
         </div>
     </div>
 
-    <!-- Persistent Floating Reward Pill (Active on Storefront with Live 48h Countdown) -->
-    <div id="floatingRewardPill" class="floating-reward-pill" style="display: none;" onclick="openTarotDetailsModal()">
+    <!-- Persistent Floating Reward Pill (Active on Storefront with Live 48h Countdown - Silent Ambient Badge) -->
+    <div id="floatingRewardPill" class="floating-reward-pill" style="display: none;">
         <div class="floating-reward-icon">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
         </div>
@@ -4103,25 +4130,6 @@
         <span class="font-mono" style="font-size: 0.62rem; color: #ffe8be; background: rgba(139, 0, 0, 0.25); padding: 2px 7px; border-radius: 4px; border: 1px solid rgba(139, 20, 30, 0.6); flex-shrink: 0;">ACTIVE</span>
     </div>
 
-    <!-- Dedicated Cyber-Occult Destiny Details Modal (Triggered via Floating Pill) -->
-    <div id="tarotDestinyModal" class="tarot-destiny-modal-overlay" onclick="closeTarotDetailsModal(event)" role="dialog" aria-modal="true" aria-label="Active Occult Fortune Details">
-        <div class="tarot-destiny-modal-content" onclick="event.stopPropagation()">
-            <button type="button" class="tarot-destiny-modal-close" onclick="closeTarotDetailsModal()" aria-label="Close">✕</button>
-            <div style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px;">
-                <div class="tarot-destiny-countdown-badge font-mono">
-                    <span style="color: #ff9999;">✦ ACTIVE DESTINY:</span>
-                    <span id="destinyModalTimer">47h 59m 30s</span>
-                </div>
-                <h3 id="destinyModalTitle" class="font-serif" style="font-size: 1.6rem; font-weight: 800; color: #ffffff; margin: 0; text-shadow: 0 2px 10px rgba(0,0,0,0.9);">FREE GOTHIC GIFT</h3>
-                <p id="destinyModalDesc" class="font-mono" style="font-size: 0.80rem; color: #ffe8be; opacity: 0.90; line-height: 1.5; margin: 6px 0 16px 0;">Complimentary handcrafted gothic jewelry artifact enclosed in parcel.</p>
-                <div style="display: flex; gap: 10px; width: 100%;">
-                    <button type="button" class="pdp-btn-secondary font-mono" style="flex: 1; padding: 10px; font-size: 0.74rem;" onclick="closeTarotDetailsModal()">CONTINUE SHOPPING</button>
-                    <button type="button" class="pdp-btn-primary font-mono" style="flex: 1; padding: 10px; font-size: 0.74rem;" onclick="closeTarotDetailsModal(); openCheckout();">VIEW CART &amp; CHECKOUT</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Script Controller for Tarot Overlay, True Card Swapping & Contextual Badges -->
     <script>
         const INITIAL_REWARDS_CONFIG = [
@@ -4130,12 +4138,12 @@
                 roman: "I",
                 name: "PRIMUS",
                 title: "ORDER UPGRADE",
-                desc: "VIP packaging & complimentary artifact upgrade included.",
+                desc: "your order upgraded",
                 offer: "ORDER UPGRADE",
-                subtext: "VIP Unboxing & Packaging",
+                subtext: "your order upgraded",
                 type: "order_upgrade",
                 value: 0,
-                accent: "#8b1a27"
+                accent: "#c53030"
             },
             {
                 id: "reward_freeship",
@@ -4147,7 +4155,7 @@
                 subtext: "Courier Deposit Waived (Rs. 0)",
                 type: "free_shipping",
                 value: 0,
-                accent: "#8a7042"
+                accent: "#d4af37"
             },
             {
                 id: "reward_gift",
@@ -4159,7 +4167,7 @@
                 subtext: "Artifact Enclosed in Parcel",
                 type: "free_gift",
                 value: 0,
-                accent: "#9e1b2b"
+                accent: "#e11d48"
             },
             {
                 id: "reward_discount",
@@ -4171,7 +4179,7 @@
                 subtext: "Instant Cart Deduction",
                 type: "percentage_discount",
                 value: 10,
-                accent: "#7d6337"
+                accent: "#eab308"
             }
         ];
 
@@ -4183,14 +4191,15 @@
             hasShuffled: false,
             selectedReward: null
         };
+        window.tarotState = tarotState;
 
         const FORTY_EIGHT_HOURS = 48 * 60 * 60 * 1000;
-        const TAROT_STORAGE_KEY = 'gn_tarot_ritual_v13';
+        const TAROT_STORAGE_KEY = 'gn_tarot_ritual_v14';
         let countdownTimerInterval = null;
 
         // Clean up any legacy storage keys from previous builds
         (function cleanupLegacyStorage() {
-            const legacyKeys = ['gn_tarot_ritual_v12', 'gn_daily_card_v11', 'gn_daily_card_v10', 'gn_daily_card_v9', 'gn_daily_card_v8', 'gn_daily_card_v7', 'gn_daily_card_v6', 'gn_daily_card_v5', 'gn_daily_card_v4', 'gn_daily_card_state'];
+            const legacyKeys = ['gn_tarot_ritual_v13', 'gn_tarot_ritual_v12', 'gn_daily_card_v11', 'gn_daily_card_v10', 'gn_daily_card_v9', 'gn_daily_card_v8', 'gn_daily_card_v7', 'gn_daily_card_v6', 'gn_daily_card_v5', 'gn_daily_card_v4', 'gn_daily_card_state'];
             legacyKeys.forEach(k => {
                 try { localStorage.removeItem(k); } catch(e) {}
             });
@@ -4200,7 +4209,7 @@
         window.resetTarotRitual = function() {
             try {
                 localStorage.removeItem(TAROT_STORAGE_KEY);
-                ['gn_tarot_ritual_v13', 'gn_tarot_ritual_v12', 'gn_daily_card_v11', 'gn_daily_card_v10'].forEach(k => {
+                ['gn_tarot_ritual_v14', 'gn_tarot_ritual_v13', 'gn_tarot_ritual_v12', 'gn_daily_card_v11', 'gn_daily_card_v10'].forEach(k => {
                     try { localStorage.removeItem(k); } catch(e) {}
                 });
             } catch(e) {}
@@ -4222,32 +4231,84 @@
                 const raw = localStorage.getItem(TAROT_STORAGE_KEY);
                 if (!raw) return null;
                 const parsed = JSON.parse(raw);
-                if (parsed && parsed.timestamp && parsed.reward) {
-                    const elapsed = Date.now() - parsed.timestamp;
-                    if (elapsed < FORTY_EIGHT_HOURS) {
-                        return parsed;
-                    } else {
-                        // Expired beyond 48 hours: purge and require redraw
-                        localStorage.removeItem(TAROT_STORAGE_KEY);
-                        window.activeDailyReward = null;
-                    }
+                if (!parsed) return null;
+
+                const expiresAt = Number(parsed.expiresAt) || (Number(parsed.timestamp || parsed.claimedAt || 0) + FORTY_EIGHT_HOURS);
+                const remaining = expiresAt - Date.now();
+
+                // If reward was chosen/claimed and 48 hours passed: purge and require redraw
+                if ((parsed.step === 'claimed' || parsed.step === 'revealed' || parsed.reward || parsed.selectedReward) && remaining <= 0) {
+                    localStorage.removeItem(TAROT_STORAGE_KEY);
+                    window.activeDailyReward = null;
+                    return null;
                 }
+
+                const step = parsed.step || (parsed.reward ? 'claimed' : 'initial');
+                const reward = parsed.reward || parsed.selectedReward || parsed.claimedReward || null;
+
+                return {
+                    ...parsed,
+                    step: step,
+                    reward: reward,
+                    selectedReward: reward || parsed.selectedReward,
+                    claimedReward: reward || parsed.claimedReward,
+                    shuffledRewards: Array.isArray(parsed.shuffledRewards) ? parsed.shuffledRewards : null,
+                    cardIndex: (parsed.cardIndex !== undefined && parsed.cardIndex !== null) ? Number(parsed.cardIndex) : null,
+                    expiresAt: expiresAt > Date.now() ? expiresAt : Date.now() + FORTY_EIGHT_HOURS
+                };
             } catch(e) {}
             return null;
         }
 
-        function saveDailyRewardState(reward, cardIdx) {
-            const data = {
-                timestamp: Date.now(),
-                cardIndex: cardIdx,
-                reward: reward,
-                redeemed: false
-            };
+        function saveDailyRewardState(stepOrReward, extraData = {}) {
+            let step = 'claimed';
+            let dataToSave = {};
+            const now = Date.now();
+            const expiresAt = now + FORTY_EIGHT_HOURS;
+
+            let existing = {};
             try {
-                localStorage.setItem(TAROT_STORAGE_KEY, JSON.stringify(data));
+                const raw = localStorage.getItem(TAROT_STORAGE_KEY);
+                if (raw) existing = JSON.parse(raw) || {};
             } catch(e) {}
-            window.activeDailyReward = reward;
-            startDailyRewardTimer(data.timestamp);
+
+            if (typeof stepOrReward === 'string') {
+                step = stepOrReward;
+                dataToSave = {
+                    ...existing,
+                    ...extraData,
+                    step: step
+                };
+            } else if (typeof stepOrReward === 'object' && stepOrReward !== null) {
+                const cardIdx = (typeof extraData === 'number') ? extraData : (extraData.cardIndex !== undefined ? extraData.cardIndex : existing.cardIndex);
+                step = extraData.step || (existing.step === 'claimed' ? 'claimed' : 'revealed');
+                dataToSave = {
+                    ...existing,
+                    step: step,
+                    selectedReward: stepOrReward,
+                    reward: stepOrReward,
+                    claimedReward: stepOrReward,
+                    cardIndex: cardIdx
+                };
+            }
+
+            if (dataToSave.step === 'revealed' || dataToSave.step === 'claimed') {
+                if (!dataToSave.claimedAt) dataToSave.claimedAt = now;
+                if (!dataToSave.timestamp) dataToSave.timestamp = now;
+                if (!dataToSave.expiresAt) dataToSave.expiresAt = expiresAt;
+                if (dataToSave.redeemed === undefined) dataToSave.redeemed = false;
+                if (dataToSave.selectedReward && !dataToSave.reward) dataToSave.reward = dataToSave.selectedReward;
+                if (dataToSave.reward && !dataToSave.selectedReward) dataToSave.selectedReward = dataToSave.reward;
+                if (dataToSave.reward && !dataToSave.claimedReward) dataToSave.claimedReward = dataToSave.reward;
+                window.activeDailyReward = dataToSave.reward || dataToSave.selectedReward;
+                if (dataToSave.step === 'claimed') {
+                    startDailyRewardTimer(dataToSave.expiresAt);
+                }
+            }
+
+            try {
+                localStorage.setItem(TAROT_STORAGE_KEY, JSON.stringify(dataToSave));
+            } catch(e) {}
         }
 
         // Crypto-grade Fisher-Yates array shuffle (Guarantees non-identical permutation)
@@ -4277,22 +4338,24 @@
         function renderCardFront(cardWrapper, reward, index) {
             const front = cardWrapper.querySelector('.tarot-front');
             if (!front) return;
-            front.style.background = '#080306';
-            front.style.borderColor = `${reward.accent || '#8b1a27'}d9`;
-            front.style.boxShadow = `0 14px 34px rgba(0, 0, 0, 0.98), inset 0 0 0 1px rgba(255, 255, 255, 0.06)`;
+            front.style.background = 'radial-gradient(ellipse at 50% 15%, rgba(30, 10, 20, 0.99) 0%, #080306 65%, #020102 100%)';
+            front.style.borderColor = `${reward.accent || '#d4af37'}`;
+            front.style.boxShadow = `0 16px 40px rgba(0, 0, 0, 0.98), inset 0 0 0 1.5px rgba(212, 175, 55, 0.4), inset 0 0 32px rgba(139, 0, 0, 0.5)`;
             front.innerHTML = `
                 <div style="display: flex; align-items: center; justify-content: center; width: 100%;">
-                    <span class="font-mono tarot-roman-title" style="color: #e2d7c5; font-weight: 800; font-size: 0.70rem; letter-spacing: 0.16em;">${reward.roman} &bull; ${reward.name}</span>
+                    <div class="tarot-card-top-pill" style="border-color: ${reward.accent || '#d4af37'}88;">
+                        <span style="color: #f5e6c8; white-space: nowrap;">✦ ${reward.roman} &bull; ${reward.name}</span>
+                    </div>
                 </div>
-                <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; margin: auto 0; text-align: center;">
-                    <div class="tarot-roman-numeral-front" style="color: ${reward.accent || '#8b1a27'}; font-family: 'Playfair Display', Georgia, serif; font-size: 3.2rem; font-weight: 900; line-height: 1; text-shadow: 0 2px 8px rgba(0,0,0,0.9);">${reward.roman}</div>
-                    <span class="font-serif" style="font-size: 1.35rem; font-weight: 900; color: #ffffff; letter-spacing: 0.04em;">${reward.offer}</span>
-                    <span class="font-mono" style="font-size: 0.66rem; color: #dcd3c5; opacity: 0.95; line-height: 1.3;">${reward.subtext}</span>
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; margin: auto 0; text-align: center; width: 100%;">
+                    <div class="tarot-roman-numeral-front" style="color: ${reward.accent || '#e5c158'}; font-family: 'Playfair Display', Georgia, serif; line-height: 1; text-shadow: 0 3px 12px rgba(0,0,0,0.98);">${reward.roman}</div>
+                    <span class="tarot-card-offer-title font-serif" style="font-weight: 900; color: #ffffff; letter-spacing: 0.04em; text-shadow: 0 2px 8px rgba(0,0,0,0.95);">${reward.offer}</span>
+                    <span class="tarot-card-subtext font-mono" style="color: #ded6c9; opacity: 0.95; line-height: 1.35; max-width: 92%;">${reward.subtext}</span>
                 </div>
-                <div style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 80%; margin-top: auto; opacity: 0.5;">
-                    <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, ${reward.accent || '#8b1a27'}, transparent);"></span>
-                    <span style="color: ${reward.accent || '#8b1a27'}; font-size: 0.6rem;">✦</span>
-                    <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, ${reward.accent || '#8b1a27'}, transparent);"></span>
+                <div style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 75%; margin-top: auto; opacity: 0.6;">
+                    <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, ${reward.accent || '#d4af37'}, transparent);"></span>
+                    <span style="color: ${reward.accent || '#d4af37'}; font-size: 0.6rem;">✦</span>
+                    <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, ${reward.accent || '#d4af37'}, transparent);"></span>
                 </div>
             `;
         }
@@ -4341,7 +4404,6 @@
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 if (typeof closeCheckout === 'function') closeCheckout();
-                if (typeof closeTarotDetailsModal === 'function') closeTarotDetailsModal();
                 if (typeof closePdpModal === 'function') closePdpModal();
             }
         });
@@ -4497,19 +4559,28 @@
             });
         }
 
-        // Live 48-Hour Countdown Timer for Floating Reward Pill
-        function startDailyRewardTimer(startTime) {
-            if (countdownTimerInterval) clearInterval(countdownTimerInterval);
+        // Live Immutable 48-Hour Countdown Timer for Floating Reward Pill
+        function startDailyRewardTimer(targetTimestamp) {
+            if (countdownTimerInterval) {
+                clearInterval(countdownTimerInterval);
+                countdownTimerInterval = null;
+            }
+
+            // Target timestamp is the immutable epoch expiration time
+            const expiresAt = (Number(targetTimestamp) > Date.now() + 100000) 
+                ? Number(targetTimestamp) 
+                : (Number(targetTimestamp || Date.now()) + FORTY_EIGHT_HOURS);
 
             function updateTimer() {
                 const now = Date.now();
-                const remaining = (startTime + FORTY_EIGHT_HOURS) - now;
+                const remaining = expiresAt - now;
                 const timerEl = document.getElementById('floatingPillTimer');
-                const destinyTimerEl = document.getElementById('destinyModalTimer');
 
                 if (remaining <= 0) {
-                    clearInterval(countdownTimerInterval);
-                    countdownTimerInterval = null;
+                    if (countdownTimerInterval) {
+                        clearInterval(countdownTimerInterval);
+                        countdownTimerInterval = null;
+                    }
                     try { localStorage.removeItem(TAROT_STORAGE_KEY); } catch(e) {}
                     window.activeDailyReward = null;
 
@@ -4534,17 +4605,31 @@
                 const hrs = Math.floor(remaining / (1000 * 60 * 60));
                 const mins = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
                 const secs = Math.floor((remaining % (1000 * 60)) / 1000);
+                const formattedStr = `${hrs}h ${mins < 10 ? '0' : ''}${mins}m ${secs < 10 ? '0' : ''}${secs}s`;
 
                 if (timerEl) {
-                    timerEl.textContent = `${hrs}h ${mins < 10 ? '0' : ''}${mins}m ${secs < 10 ? '0' : ''}${secs}s`;
-                }
-                if (destinyTimerEl) {
-                    destinyTimerEl.textContent = `${hrs}h ${mins}m ${secs}s remaining`;
+                    timerEl.textContent = formattedStr;
                 }
             }
 
             updateTimer();
             countdownTimerInterval = setInterval(updateTimer, 1000);
+
+            // Wall-clock synchronization hooks (tab focus, visibility change, device wake)
+            if (!window._tarotTimerSyncAttached) {
+                window._tarotTimerSyncAttached = true;
+                const syncOnWake = () => {
+                    const stored = getStoredDailyReward();
+                    if (stored && stored.expiresAt) {
+                        startDailyRewardTimer(stored.expiresAt);
+                    }
+                };
+                window.addEventListener('focus', syncOnWake);
+                document.addEventListener('visibilitychange', () => {
+                    if (!document.hidden) syncOnWake();
+                });
+                window.addEventListener('pageshow', syncOnWake);
+            }
         }
 
         function initTarotRitual(force = false) {
@@ -4555,47 +4640,156 @@
             const shuffleBox = document.getElementById('tarotShuffleActionBox');
             const claimBox = document.getElementById('tarotClaimBox');
             const impactWrap = document.getElementById('tarotChooseImpactWrap');
+            const stageTitle = document.getElementById('tarotStageTitle');
+            const stageSubtext = document.getElementById('tarotStageSubtext');
 
-            // Ironclad Rule: If user has a valid active reward in the last 48 hours, NEVER allow reshuffle!
-            if (stored) {
+            // 1. If stored reward is already CLAIMED and within 48 hours: overlay stays closed, badge active
+            if (stored && stored.step === 'claimed' && stored.reward && !force) {
                 document.documentElement.classList.remove('tarot-pending');
                 if (overlay) {
                     overlay.style.display = 'none';
-                    overlay.classList.remove('active', 'card-focused');
+                    overlay.classList.remove('active', 'closing', 'card-focused');
                 }
                 document.body.style.overflow = '';
                 window.activeDailyReward = stored.reward;
                 updateFloatingPill(stored.reward);
                 updateInPageContextualPolicy(stored.reward);
-                startDailyRewardTimer(stored.timestamp);
+                startDailyRewardTimer(stored.expiresAt);
                 return;
             }
 
+            // Otherwise, Tarot Ritual Overlay must be OPEN
             document.documentElement.classList.add('tarot-pending');
             if (overlay) {
                 overlay.style.display = 'flex';
-                overlay.classList.remove('closing', 'card-focused');
+                overlay.classList.remove('closing');
                 overlay.classList.add('active');
                 document.body.style.overflow = 'hidden';
                 initTarotCanvas();
             }
-
-            tarotState.isShuffling = false;
-            tarotState.isReadyToPick = false;
-            tarotState.hasShuffled = false;
-            tarotState.selectedReward = null;
-
-            if (claimBox) claimBox.style.display = 'none';
             if (impactWrap) {
                 impactWrap.classList.remove('active');
                 impactWrap.style.display = 'none';
             }
+
+            // 2. If stored state is REVEALED: restore card revealed, claim box open, title "HERE IS YOUR REWARD!"
+            if (stored && stored.step === 'revealed' && (stored.selectedReward || stored.reward)) {
+                const reward = stored.selectedReward || stored.reward;
+                const chosenIdx = (stored.cardIndex !== null && stored.cardIndex !== undefined) ? stored.cardIndex : 0;
+
+                if (Array.isArray(stored.shuffledRewards) && stored.shuffledRewards.length === 4) {
+                    activeCardRewards = [...stored.shuffledRewards];
+                } else {
+                    activeCardRewards = [...INITIAL_REWARDS_CONFIG];
+                    activeCardRewards[chosenIdx] = reward;
+                }
+
+                tarotState.isShuffling = false;
+                tarotState.isReadyToPick = false;
+                tarotState.hasShuffled = true;
+                tarotState.selectedReward = reward;
+                window.activeDailyReward = reward;
+
+                if (overlay) overlay.classList.add('card-focused');
+                if (stage) stage.className = 'tarot-cards-stage has-picked';
+
+                if (stageTitle) {
+                    stageTitle.textContent = 'HERE IS YOUR REWARD!';
+                    stageTitle.classList.remove('shuffling-text');
+                }
+                if (stageSubtext) {
+                    stageSubtext.textContent = '— ✦ Your occult destiny is bound for 48 hours. ✦ —';
+                }
+
+                if (shuffleBox) {
+                    shuffleBox.classList.add('hidden');
+                    shuffleBox.style.display = 'none';
+                }
+
+                wrappers.forEach((w, idx) => {
+                    w.setAttribute('data-card-index', idx);
+                    w.onclick = null;
+                    w.style.transform = '';
+                    renderCardFront(w, activeCardRewards[idx], idx);
+
+                    if (idx === chosenIdx) {
+                        w.classList.add('chosen-one', 'flipped', 'flash-active');
+                        w.classList.remove('face-down', 'ready-to-pick', 'dimmed');
+                    } else {
+                        w.classList.add('dimmed');
+                        w.classList.remove('chosen-one', 'ready-to-pick', 'flash-active', 'flipped', 'face-down');
+                    }
+                });
+
+                if (claimBox) {
+                    const titleEl = document.getElementById('tarotClaimTitle');
+                    const descEl = document.getElementById('tarotClaimDesc');
+                    if (titleEl) titleEl.textContent = reward.title;
+                    if (descEl) descEl.textContent = reward.desc;
+                    claimBox.style.display = 'flex';
+                }
+
+                return;
+            }
+
+            // 3. If stored state is READY_TO_PICK: restore cards face-down in shuffled state, ready to pick
+            if (stored && stored.step === 'ready_to_pick') {
+                if (Array.isArray(stored.shuffledRewards) && stored.shuffledRewards.length === 4) {
+                    activeCardRewards = [...stored.shuffledRewards];
+                } else {
+                    activeCardRewards = cryptoShuffleArray(INITIAL_REWARDS_CONFIG);
+                }
+
+                tarotState.isShuffling = false;
+                tarotState.isReadyToPick = true;
+                tarotState.hasShuffled = true;
+                tarotState.selectedReward = null;
+                window.activeDailyReward = null;
+
+                if (overlay) overlay.classList.remove('card-focused');
+                if (stage) stage.className = 'tarot-cards-stage';
+
+                if (stageTitle) {
+                    stageTitle.textContent = 'PICK YOUR CARD';
+                    stageTitle.classList.remove('shuffling-text');
+                }
+                if (stageSubtext) {
+                    stageSubtext.textContent = '— ✦ What you choose will remain bound for 48 hours. ✦ —';
+                }
+
+                if (shuffleBox) {
+                    shuffleBox.classList.add('hidden');
+                    shuffleBox.style.display = 'none';
+                }
+                if (claimBox) claimBox.style.display = 'none';
+
+                wrappers.forEach((w, idx) => {
+                    w.setAttribute('data-card-index', idx);
+                    w.onclick = () => handleTarotCardSelect(idx);
+                    w.classList.remove('flipped', 'chosen-one', 'flash-active', 'dimmed');
+                    w.classList.add('face-down', 'ready-to-pick');
+                    w.style.transform = '';
+                    renderCardFront(w, activeCardRewards[idx], idx);
+                });
+
+                attachCardTiltListeners();
+                return;
+            }
+
+            // 4. Default: INITIAL step - fresh visit, cards face-up, shuffle button visible
+            tarotState.isShuffling = false;
+            tarotState.isReadyToPick = false;
+            tarotState.hasShuffled = false;
+            tarotState.selectedReward = null;
+            window.activeDailyReward = null;
+
+            if (overlay) overlay.classList.remove('card-focused');
+            if (stage) stage.className = 'tarot-cards-stage';
+
+            if (claimBox) claimBox.style.display = 'none';
             if (shuffleBox) {
                 shuffleBox.classList.remove('hidden');
                 shuffleBox.style.display = 'flex';
-            }
-            if (stage) {
-                stage.className = 'tarot-cards-stage';
             }
 
             activeCardRewards = [...INITIAL_REWARDS_CONFIG];
@@ -4604,44 +4798,46 @@
                 w.classList.remove('face-down', 'chosen-one', 'flash-active', 'dimmed', 'ready-to-pick');
                 w.classList.add('flipped');
                 w.style.transform = '';
+                w.onclick = null;
             });
 
-            const stageTitle = document.getElementById('tarotStageTitle');
-            const stageSubtext = document.getElementById('tarotStageSubtext');
-            if (stageTitle) stageTitle.textContent = 'DRAW YOUR CARD';
-            if (stageSubtext) stageSubtext.textContent = '— ✦ What you choose will remain bound for 48 hours. ✦ —';
+            if (stageTitle) {
+                stageTitle.textContent = 'PICK YOUR CARD';
+                stageTitle.classList.remove('shuffling-text');
+            }
+            if (stageSubtext) {
+                stageSubtext.textContent = '— ✦ What you choose will remain bound for 48 hours. ✦ —';
+            }
 
             attachCardTiltListeners();
         }
 
         window.openTarotRitual = function(force = false) {
             const stored = getStoredDailyReward();
-            if (stored) {
+            if (stored && stored.step === 'claimed' && stored.reward && !force) {
                 if (typeof showLuxuryToast === 'function') {
                     showLuxuryToast(`✦ ACTIVE DESTINY: ${stored.reward.title} (48h Bound)`, '🎴');
                 }
-                if (typeof openTarotDetailsModal === 'function') {
-                    openTarotDetailsModal();
-                }
                 return;
             }
-            initTarotRitual(false);
+            initTarotRitual(force);
         };
 
-        // USER CLICKS THE "SHUFFLE CARDS" BUTTON
-        function triggerMajesticShuffle() {
+        // USER CLICKS THE "SHUFFLE CARDS" BUTTON - MULTI-PASS 7+ SECOND HIGH-VELOCITY SHUFFLE
+        async function triggerMajesticShuffle() {
             if (tarotState.isShuffling) return;
             tarotState.isShuffling = true;
             tarotState.isReadyToPick = false;
 
             const shuffleBox = document.getElementById('tarotShuffleActionBox');
             const stage = document.getElementById('tarotCardsStage');
-            const wrappers = document.querySelectorAll('.tarot-card-wrapper');
+            let wrappers = Array.from(document.querySelectorAll('.tarot-card-wrapper'));
             const impactWrap = document.getElementById('tarotChooseImpactWrap');
+            const stageTitle = document.getElementById('tarotStageTitle');
 
             if (shuffleBox) {
                 shuffleBox.classList.add('hidden');
-                setTimeout(() => { shuffleBox.style.display = 'none'; }, 260);
+                setTimeout(() => { shuffleBox.style.display = 'none'; }, 240);
             }
 
             // Step 1: Immediately flip all cards to face-down (turn their side, hiding offers beneath them)
@@ -4651,68 +4847,118 @@
                 w.style.transform = '';
             });
 
-            const patternIdx = Math.floor(Math.random() * 5) + 1;
-            const durationSec = (1.30 + Math.random() * 0.35).toFixed(2);
-            const durationMs = Math.round(Number(durationSec) * 1000);
+            // Update title to "SHUFFLING" with pulsing mystical glow
+            if (stageTitle) {
+                stageTitle.textContent = 'SHUFFLING';
+                stageTitle.classList.add('shuffling-text');
+            }
 
-            // Step 2: Wait 550ms for the 3D flip animation to finish completely before shuffle movement starts
-            setTimeout(() => {
+            // Dedicated initial flip completion delay
+            await new Promise(resolve => setTimeout(resolve, 280));
+
+            const PERMUTATIONS = {
+                1: [3, 2, 1, 0],
+                2: [1, 3, 0, 2],
+                3: [2, 0, 3, 1],
+                4: [1, 3, 2, 0],
+                5: [3, 0, 1, 2]
+            };
+
+            // Multi-pass loop: Total duration >= 7.0 seconds (e.g. 10 passes * ~720ms = ~7.2s)
+            const TARGET_TOTAL_MS = 7200;
+            const startTime = Date.now();
+            let passCount = 0;
+            let lastPattern = 0;
+
+            while ((Date.now() - startTime) < TARGET_TOTAL_MS || passCount < 9) {
+                passCount++;
+
+                // Pick a pattern different from previous pass
+                let patternIdx;
+                do {
+                    patternIdx = Math.floor(Math.random() * 5) + 1;
+                } while (patternIdx === lastPattern);
+                lastPattern = patternIdx;
+
+                // High velocity swap: 0.70s - 0.76s per pass
+                const passDurSec = (0.70 + Math.random() * 0.06).toFixed(2);
+                const passDurMs = Math.round(Number(passDurSec) * 1000);
+
                 if (stage) {
-                    stage.style.setProperty('--shuffle-dur', `${durationSec}s`);
+                    stage.style.setProperty('--shuffle-dur', `${passDurSec}s`);
+                    stage.className = 'tarot-cards-stage';
+                    void stage.offsetWidth; // Force reflow to cleanly trigger CSS animation
                     stage.className = `tarot-cards-stage shuffling-active shuffle-pattern-${patternIdx}`;
                 }
 
-                activeCardRewards = cryptoShuffleArray(INITIAL_REWARDS_CONFIG);
-
-                setTimeout(() => {
+                // Occasionally trigger canvas shockwave during intense shuffle
+                if (passCount % 3 === 0 && typeof triggerTarotShockwave === 'function') {
                     triggerTarotShockwave();
+                }
 
-                    const PERMUTATIONS = {
-                        1: [3, 2, 1, 0],
-                        2: [1, 3, 0, 2],
-                        3: [2, 0, 3, 1],
-                        4: [1, 3, 2, 0],
-                        5: [3, 0, 1, 2]
-                    };
-                    const destOrder = PERMUTATIONS[patternIdx] || [3, 2, 1, 0];
-                    const currentWrappers = Array.from(stage.querySelectorAll('.tarot-card-wrapper'));
-                    const newOrderedWrappers = destOrder.map(oldIdx => currentWrappers[oldIdx]);
+                await new Promise(resolve => setTimeout(resolve, passDurMs));
 
-                    if (stage) {
-                        stage.className = 'tarot-cards-stage';
-                        stage.innerHTML = '';
-                        newOrderedWrappers.forEach((w, newSlotIdx) => {
-                            stage.appendChild(w);
-                            w.setAttribute('data-card-index', newSlotIdx);
-                            w.onclick = () => handleTarotCardSelect(newSlotIdx);
-                            w.classList.remove('flipped', 'chosen-one', 'dimmed');
-                            w.classList.add('face-down', 'ready-to-pick');
-                            w.style.transform = '';
-                            renderCardFront(w, activeCardRewards[newSlotIdx], newSlotIdx);
-                        });
-                    }
+                // Reorder DOM cards to match this pass's permutation seamlessly
+                const destOrder = PERMUTATIONS[patternIdx] || [3, 2, 1, 0];
+                const currentWrappers = Array.from(stage.querySelectorAll('.tarot-card-wrapper'));
+                const newOrderedWrappers = destOrder.map(oldIdx => currentWrappers[oldIdx]);
 
-                    attachCardTiltListeners();
+                if (stage) {
+                    stage.className = 'tarot-cards-stage';
+                    stage.innerHTML = '';
+                    newOrderedWrappers.forEach(w => {
+                        w.style.transform = '';
+                        w.classList.add('face-down');
+                        w.classList.remove('flipped', 'ready-to-pick');
+                        stage.appendChild(w);
+                    });
+                }
+            }
 
-                    if (impactWrap) {
-                        impactWrap.style.display = 'block';
-                        impactWrap.classList.add('active');
-                    }
+            // Shuffle concludes after 7+ seconds
+            triggerTarotShockwave();
 
-                    tarotState.isShuffling = false;
-                    tarotState.hasShuffled = true;
-                    tarotState.isReadyToPick = true;
+            // Generate cryptographic randomized final rewards mapping
+            activeCardRewards = cryptoShuffleArray(INITIAL_REWARDS_CONFIG);
 
-                    setTimeout(() => {
-                        if (impactWrap) {
-                            impactWrap.classList.remove('active');
-                            impactWrap.style.display = 'none';
-                        }
-                    }, 1400);
+            // Persist ready_to_pick state in localStorage
+            saveDailyRewardState('ready_to_pick', {
+                shuffledRewards: activeCardRewards
+            });
 
-                }, durationMs);
+            const finalWrappers = Array.from(stage.querySelectorAll('.tarot-card-wrapper'));
+            finalWrappers.forEach((w, newSlotIdx) => {
+                w.setAttribute('data-card-index', newSlotIdx);
+                w.onclick = () => handleTarotCardSelect(newSlotIdx);
+                w.classList.remove('flipped', 'chosen-one', 'dimmed');
+                w.classList.add('face-down', 'ready-to-pick');
+                w.style.transform = '';
+                renderCardFront(w, activeCardRewards[newSlotIdx], newSlotIdx);
+            });
 
-            }, 550); // 550ms dedicated flip completion delay
+            attachCardTiltListeners();
+
+            // Restore title to "PICK YOUR CARD"
+            if (stageTitle) {
+                stageTitle.textContent = 'PICK YOUR CARD';
+                stageTitle.classList.remove('shuffling-text');
+            }
+
+            if (impactWrap) {
+                impactWrap.style.display = 'block';
+                impactWrap.classList.add('active');
+            }
+
+            tarotState.isShuffling = false;
+            tarotState.hasShuffled = true;
+            tarotState.isReadyToPick = true;
+
+            setTimeout(() => {
+                if (impactWrap) {
+                    impactWrap.classList.remove('active');
+                    impactWrap.style.display = 'none';
+                }
+            }, 1200);
         }
 
         // When user selects a card: Reveal only the selected card by flipping it face-up
@@ -4728,11 +4974,16 @@
                 stage.className = 'tarot-cards-stage has-picked';
             }
 
-            // Update title to "HERE IS YOUR REWARD"
+            // Update title to "HERE IS YOUR REWARD!"
             const stageTitle = document.getElementById('tarotStageTitle');
             const stageSubtext = document.getElementById('tarotStageSubtext');
-            if (stageTitle) stageTitle.textContent = 'HERE IS YOUR REWARD';
-            if (stageSubtext) stageSubtext.textContent = '— ✦ Your occult destiny is bound for 48 hours. ✦ —';
+            if (stageTitle) {
+                stageTitle.textContent = 'HERE IS YOUR REWARD!';
+                stageTitle.classList.remove('shuffling-text');
+            }
+            if (stageSubtext) {
+                stageSubtext.textContent = '— ✦ Your occult destiny is bound for 48 hours. ✦ —';
+            }
 
             const reward = activeCardRewards[cardIndex] || activeCardRewards[0];
             tarotState.selectedReward = reward;
@@ -4755,7 +5006,13 @@
                 }
             });
 
-            saveDailyRewardState(reward, cardIndex);
+            saveDailyRewardState('revealed', {
+                selectedReward: reward,
+                reward: reward,
+                claimedReward: reward,
+                cardIndex: cardIndex,
+                shuffledRewards: activeCardRewards
+            });
 
             setTimeout(() => {
                 const claimBox = document.getElementById('tarotClaimBox');
@@ -4770,16 +5027,33 @@
                         claimBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                     } catch(e) {}
                 }
-            }, 350);
+            }, 300);
         }
 
         // Close Overlay & Enter Storefront
         function closeTarotOverlay(isDirectSkip = false) {
-            if (!tarotState.selectedReward && !isDirectSkip) {
+            const stored = getStoredDailyReward();
+            const reward = tarotState.selectedReward || stored?.selectedReward || stored?.reward || window.activeDailyReward;
+
+            if (!reward && !isDirectSkip) {
                 if (typeof showLuxuryAlert === 'function') {
                     showLuxuryAlert("Thou must choose thy card of destiny to enter the realm.", "RITUAL REQUIRED", "warning");
                 }
                 return;
+            }
+
+            if (reward) {
+                const chosenIdx = (stored && stored.cardIndex !== undefined && stored.cardIndex !== null)
+                    ? stored.cardIndex
+                    : (tarotState.selectedReward ? activeCardRewards.findIndex(r => r.id === tarotState.selectedReward.id) : 0);
+
+                saveDailyRewardState('claimed', {
+                    selectedReward: reward,
+                    reward: reward,
+                    claimedReward: reward,
+                    cardIndex: chosenIdx >= 0 ? chosenIdx : 0,
+                    shuffledRewards: activeCardRewards
+                });
             }
 
             document.documentElement.classList.remove('tarot-pending');
@@ -4793,13 +5067,12 @@
                 }, 450);
             }
 
-            const stored = getStoredDailyReward();
-            const reward = tarotState.selectedReward || stored?.reward || window.activeDailyReward;
             if (reward) {
                 updateFloatingPill(reward);
                 updateInPageContextualPolicy(reward);
-                if (stored && stored.timestamp) {
-                    startDailyRewardTimer(stored.timestamp);
+                const updatedStored = getStoredDailyReward();
+                if (updatedStored && updatedStored.expiresAt) {
+                    startDailyRewardTimer(updatedStored.expiresAt);
                 }
                 if (typeof updateCheckoutTotals === 'function') updateCheckoutTotals();
             }
@@ -4817,63 +5090,22 @@
             pill.style.display = 'flex';
         }
 
-        function openTarotDetailsModal() {
-            const stored = getStoredDailyReward();
-            const reward = stored?.reward || window.activeDailyReward;
-            if (!reward) {
-                initTarotRitual(false);
-                return;
-            }
-
-            const modal = document.getElementById('tarotDestinyModal');
-            const title = document.getElementById('destinyModalTitle');
-            const desc = document.getElementById('destinyModalDesc');
-            const timerEl = document.getElementById('destinyModalTimer');
-
-            if (title) title.textContent = reward.offer || reward.title;
-            if (desc) desc.textContent = reward.desc;
-
-            if (stored && stored.timestamp && timerEl) {
-                const remaining = (stored.timestamp + FORTY_EIGHT_HOURS) - Date.now();
-                const hrs = Math.max(0, Math.floor(remaining / (1000 * 60 * 60)));
-                const mins = Math.max(0, Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60)));
-                const secs = Math.max(0, Math.floor((remaining % (1000 * 60)) / 1000));
-                timerEl.textContent = `${hrs}h ${mins}m ${secs}s remaining`;
-            }
-
-            if (modal) {
-                modal.classList.add('active');
-                document.body.style.overflow = 'hidden';
-            }
-        }
-        window.openTarotDetailsModal = openTarotDetailsModal;
-
-        function closeTarotDetailsModal(event) {
-            if (event && event.target && event.target !== event.currentTarget && !event.target.classList.contains('tarot-destiny-modal-close') && !event.target.closest('.tarot-destiny-modal-close') && !event.target.classList.contains('pdp-btn-secondary') && !event.target.classList.contains('pdp-btn-primary')) {
-                return;
-            }
-            const modal = document.getElementById('tarotDestinyModal');
-            if (modal) {
-                modal.classList.remove('active');
-                document.body.style.overflow = '';
-            }
-        }
-        window.closeTarotDetailsModal = closeTarotDetailsModal;
-
         // In-page Contextual Strike-through: Cut the advance deposit number when Free Delivery is active
         function updateInPageContextualPolicy(reward) {
             const depositDoms = document.querySelectorAll('.checkout-advance-badge, .deposit-policy-badge, #checkoutStep1Deposit, [data-deposit-notice]');
+            const deliveryFee = (typeof getCheckoutDeliveryFee === 'function') ? getCheckoutDeliveryFee() : 250;
+            const payMethod = (typeof selectedPaymentMethod !== 'undefined') ? selectedPaymentMethod : (window.selectedPaymentMethod || 'cod');
             if (!reward || reward.type !== 'free_shipping') {
                 depositDoms.forEach(el => {
-                    if (el.id === 'checkoutStep1Deposit' && selectedPaymentMethod === 'cod') {
-                        el.innerHTML = `Rs. 250`;
+                    if (el.id === 'checkoutStep1Deposit' && payMethod === 'cod') {
+                        el.innerHTML = `Rs. ${deliveryFee.toLocaleString('en-PK')}`;
                     }
                 });
                 return;
             }
             depositDoms.forEach(el => {
                 if (el.id === 'checkoutStep1Deposit') {
-                    el.innerHTML = `<span class="deposit-waived-strike" style="text-decoration: line-through; opacity: 0.5; font-size: 0.85rem; margin-right: 4px;">Rs. 250</span><span style="color: #4ade80; font-weight: 800;">Rs. 0</span>`;
+                    el.innerHTML = `<span class="deposit-waived-strike" style="text-decoration: line-through; opacity: 0.5; font-size: 0.85rem; margin-right: 4px;">Rs. ${deliveryFee.toLocaleString('en-PK')}</span><span style="color: #4ade80; font-weight: 800;">Rs. 0</span>`;
                 }
             });
         }
