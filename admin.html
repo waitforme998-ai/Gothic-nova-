@@ -4116,6 +4116,9 @@
             const currentStock = Number(products[idx].stock || 0);
             const newStock = Math.max(0, currentStock + delta);
             products[idx].stock = newStock;
+            if (newStock > 0 && products[idx].active === false) {
+                products[idx].active = true;
+            }
 
             // 1. Update manual stock input in Product Sheet if open
             const sheetStockInput = document.getElementById('single-product-stock');
@@ -4123,67 +4126,21 @@
                 sheetStockInput.value = newStock;
             }
 
-            // 2. Update Desktop Table Row
-            const row = document.querySelector(`.catalog-row[data-pid="${pid}"]`);
-            if (row) {
-                const stockCell = row.querySelector('.stock-cell');
-                if (stockCell) {
-                    stockCell.textContent = newStock;
-                    stockCell.className = 'stock-cell font-mono' + (newStock === 0 ? ' sold-out' : (newStock <= 3 ? ' low-stock' : ''));
-                }
-                const badge = row.querySelector('.stock-status-badge');
-                if (badge) {
-                    if (newStock === 0) {
-                        badge.className = 'stock-status-badge out';
-                        badge.textContent = 'Sold Out';
-                    } else if (newStock <= 3) {
-                        badge.className = 'stock-status-badge low';
-                        badge.textContent = `Low (${newStock})`;
-                    } else {
-                        badge.className = 'stock-status-badge in';
-                        badge.textContent = `In Stock (${newStock})`;
-                    }
-                }
-            }
-
-            // 3. Update Mobile Catalog Card
-            const card = document.querySelector(`.catalog-card[data-pid="${pid}"]`);
-            if (card) {
-                const qtyVal = card.querySelector('.catalog-qty-val');
-                if (qtyVal) {
-                    qtyVal.textContent = newStock;
-                    const isSoldOut = newStock === 0;
-                    const isLowStock = !isSoldOut && newStock <= Number(products[idx].threshold || 3);
-                    qtyVal.className = 'catalog-qty-val' + (isSoldOut ? ' sold-out' : (isLowStock ? ' low-stock' : ''));
-                }
-                const imgWrap = card.querySelector('.catalog-card-img-wrap');
-                if (imgWrap) {
-                    const oldBadge = imgWrap.querySelector('.stock-badge');
-                    if (oldBadge) oldBadge.remove();
-                    if (newStock === 0) {
-                        imgWrap.insertAdjacentHTML('beforeend', '<span class="stock-badge out-stock">Sold Out</span>');
-                    } else if (newStock <= Number(products[idx].threshold || 3)) {
-                        imgWrap.insertAdjacentHTML('beforeend', `<span class="stock-badge low-stock">Low (${newStock})</span>`);
-                    }
-                }
-            }
-
-            // 4. Persist immediately to localStorage
+            // 2. Persist immediately to localStorage & memory
             localStorage.setItem('gn_products', JSON.stringify(products));
+            window.gn_products = products;
 
-            // 5. Update overview stats
-            const activeProds = products.filter(p => p.active !== false);
-            const totalValuation = activeProds.reduce((sum, p) => sum + (Number(p.price || 0) * Number(p.stock || 0)), 0);
-            const valEl = document.getElementById('stat-total-valuation');
-            if (valEl) valEl.textContent = `Rs. ${totalValuation.toLocaleString('en-PK')}`;
+            // 3. Instant UI re-render (Updates Low Stock Alerts, Count Badges, Open Accordions, and Valuation)
+            renderDashboard();
 
-            // 6. Sync with Storefront
+            // 4. Sync with Storefront
             try { 
                 window.dispatchEvent(new Event('storage'));
+                window.dispatchEvent(new Event('productsLoaded'));
                 window.dispatchEvent(new CustomEvent('gn:productsUpdated', { detail: { products } }));
             } catch(e) {}
 
-            // 7. Background save to Supabase
+            // 5. Background save to Supabase
             if (window.SupabaseEngine) {
                 window.SupabaseEngine.saveProduct(products[idx]).catch(() => {});
             }
@@ -5114,6 +5071,7 @@
                     
                     updateOrdersHeaderMetrics();
                     renderOrdersAdmin();
+                    renderDashboard();
                     showToast(`Order #${orderNum} deleted & stock replenished`);
 
                     if (window.SupabaseEngine) {
@@ -5184,6 +5142,7 @@
             localStorage.setItem('gn_orders', JSON.stringify(adminOrders));
             updateOrdersHeaderMetrics();
             renderOrdersAdmin();
+            renderDashboard();
 
             try {
                 window.dispatchEvent(new Event('ordersUpdated'));

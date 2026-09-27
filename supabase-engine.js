@@ -969,24 +969,20 @@
 
         async deleteOrder(orderId) {
             const now = new Date().toISOString();
+            let localOrders = this._getMockOrders();
+            const targetOrder = localOrders.find(o => String(o.id) === String(orderId) || String(o.order_number) === String(orderId));
+            
             try {
                 let deletedList = JSON.parse(localStorage.getItem('gn_deleted_orders') || '[]');
                 if (!Array.isArray(deletedList)) deletedList = [];
                 deletedList.push(String(orderId));
+                if (targetOrder) {
+                    if (targetOrder.id) deletedList.push(String(targetOrder.id));
+                    if (targetOrder.order_number) deletedList.push(String(targetOrder.order_number));
+                }
                 localStorage.setItem('gn_deleted_orders', JSON.stringify([...new Set(deletedList)]));
             } catch(e) {}
 
-            let localOrders = this._getMockOrders();
-            const targetOrder = localOrders.find(o => String(o.id) === String(orderId) || String(o.order_number) === String(orderId));
-            if (targetOrder) {
-                try {
-                    let deletedList = JSON.parse(localStorage.getItem('gn_deleted_orders') || '[]');
-                    if (targetOrder.id) deletedList.push(String(targetOrder.id));
-                    if (targetOrder.order_number) deletedList.push(String(targetOrder.order_number));
-                    localStorage.setItem('gn_deleted_orders', JSON.stringify([...new Set(deletedList)]));
-                } catch(e) {}
-            }
-            
             // Clean up Supabase Storage file if screenshot was attached
             if (this.isLive && supabase && targetOrder && targetOrder.payment_screenshot_url) {
                 try {
@@ -1008,23 +1004,18 @@
 
             if (this.isLive && supabase) {
                 try {
-                    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(orderId));
-                    let delRes = null;
-                    if (isUuid) {
-                        delRes = await supabase.from('gn_orders').delete().eq('id', orderId);
-                    } else if (!isNaN(Number(orderId))) {
-                        delRes = await supabase.from('gn_orders').delete().eq('order_number', Number(orderId));
-                    } else {
-                        delRes = await supabase.from('gn_orders').delete().eq('id', orderId);
+                    // Try direct ID delete (string & numeric)
+                    await supabase.from('gn_orders').delete().eq('id', orderId);
+                    if (!isNaN(Number(orderId))) {
+                        await supabase.from('gn_orders').delete().eq('id', Number(orderId));
                     }
-
-                    if (delRes && delRes.error) {
-                        // Fallback soft delete
-                        if (isUuid) {
-                            await supabase.from('gn_orders').update({ is_deleted: true, deleted_at: now, customer_name: '__TEST_DELETED__', status: 'Cancelled' }).eq('id', orderId);
-                        } else if (!isNaN(Number(orderId))) {
-                            await supabase.from('gn_orders').update({ is_deleted: true, deleted_at: now, customer_name: '__TEST_DELETED__', status: 'Cancelled' }).eq('order_number', Number(orderId));
-                        }
+                    if (targetOrder && targetOrder.order_number) {
+                        await supabase.from('gn_orders').delete().eq('order_number', Number(targetOrder.order_number));
+                    }
+                    // Fallback soft delete
+                    await supabase.from('gn_orders').update({ is_deleted: true, deleted_at: now, customer_name: '__TEST_DELETED__', status: 'Cancelled' }).eq('id', orderId);
+                    if (!isNaN(Number(orderId))) {
+                        await supabase.from('gn_orders').update({ is_deleted: true, deleted_at: now, customer_name: '__TEST_DELETED__', status: 'Cancelled' }).eq('id', Number(orderId));
                     }
                 } catch (e) {
                     console.warn("Supabase deleteOrder exception:", e);
@@ -1050,13 +1041,12 @@
 
             if (this.isLive && supabase) {
                 try {
-                    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(orderId));
-                    if (isUuid) {
-                        await supabase.from('gn_orders').update({ status: newStatus, updated_at: now }).eq('id', orderId);
-                    } else if (!isNaN(Number(orderId))) {
-                        await supabase.from('gn_orders').update({ status: newStatus, updated_at: now }).eq('order_number', Number(orderId));
-                    } else {
-                        await supabase.from('gn_orders').update({ status: newStatus, updated_at: now }).eq('id', orderId);
+                    await supabase.from('gn_orders').update({ status: newStatus, updated_at: now }).eq('id', orderId);
+                    if (!isNaN(Number(orderId))) {
+                        await supabase.from('gn_orders').update({ status: newStatus, updated_at: now }).eq('id', Number(orderId));
+                    }
+                    if (idx >= 0 && localOrders[idx].order_number) {
+                        await supabase.from('gn_orders').update({ status: newStatus, updated_at: now }).eq('order_number', Number(localOrders[idx].order_number));
                     }
                 } catch (e) {
                     console.warn("Supabase updateOrderStatus exception:", e);
