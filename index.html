@@ -97,21 +97,50 @@
         let storedProducts = null;
         try {
             const raw = localStorage.getItem('gn_products');
-            if (raw) storedProducts = JSON.parse(raw);
+            if (raw !== null) {
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed)) storedProducts = parsed;
+            }
         } catch(e) {}
-        window.gn_products = (storedProducts && storedProducts.length) ? storedProducts : defaultProducts;
+        window.gn_products = (storedProducts !== null) ? storedProducts : defaultProducts;
 
         // Async Background Sync (Supabase Dual-Mode)
         window.addEventListener('DOMContentLoaded', async function() {
             if (window.SupabaseEngine) {
                 try {
                     let prods = await window.SupabaseEngine.getProducts();
-                    if (prods && prods.length) {
+                    if (Array.isArray(prods)) {
                         window.gn_products = prods;
+                        localStorage.setItem('gn_products', JSON.stringify(prods));
+                        if (typeof window.refreshStorefrontCatalog === 'function') {
+                            window.refreshStorefrontCatalog();
+                        }
                         window.dispatchEvent(new Event('productsLoaded'));
                     }
                 } catch(e) {
-                    console.error("Supabase error:", e);
+                    console.error("Supabase sync notice:", e);
+                }
+
+                // Sync announcements from cloud
+                if (typeof window.SupabaseEngine.getAnnouncements === 'function') {
+                    try {
+                        const ann = await window.SupabaseEngine.getAnnouncements();
+                        if (Array.isArray(ann)) {
+                            localStorage.setItem('gn_announcements', JSON.stringify(ann));
+                            if (typeof window.renderSaleTicker === 'function') window.renderSaleTicker();
+                        }
+                    } catch(e) {}
+                }
+
+                // Sync reviews from cloud
+                if (typeof window.SupabaseEngine.getReviews === 'function') {
+                    try {
+                        const revs = await window.SupabaseEngine.getReviews();
+                        if (Array.isArray(revs) && revs.length > 0) {
+                            localStorage.setItem('gn_reviews', JSON.stringify(revs));
+                            if (typeof window.renderCustomerReviews === 'function') window.renderCustomerReviews();
+                        }
+                    } catch(e) {}
                 }
             }
         });
@@ -670,18 +699,21 @@
                 ];
 
                 function getAllProducts() {
-                    let prods = null;
-                    try {
-                        const raw = localStorage.getItem('gn_products');
-                        if (raw) {
-                            const parsed = JSON.parse(raw);
-                            if (Array.isArray(parsed) && parsed.length > 0) prods = parsed;
-                        }
-                    } catch(e) {}
-                    if (!prods || !prods.length) prods = window.gn_products;
-                    if (!prods || !prods.length) prods = defaultSeedProducts;
-                    window.gn_products = prods;
-                    return prods.filter(p => p.active !== false);
+                    let prods = window.gn_products;
+                    if (!prods) {
+                        try {
+                            const raw = localStorage.getItem('gn_products');
+                            if (raw !== null) {
+                                const parsed = JSON.parse(raw);
+                                if (Array.isArray(parsed)) prods = parsed;
+                            }
+                        } catch(e) {}
+                    }
+                    if (prods === null || !Array.isArray(prods)) {
+                        prods = defaultSeedProducts;
+                        window.gn_products = prods;
+                    }
+                    return prods.filter(p => p && p.active !== false);
                 }
                 window.getAllProducts = getAllProducts;
 
@@ -1328,9 +1360,9 @@
                 function refreshStorefrontCatalog() {
                     try {
                         const raw = localStorage.getItem('gn_products');
-                        if (raw) {
+                        if (raw !== null) {
                             const parsed = JSON.parse(raw);
-                            if (Array.isArray(parsed) && parsed.length > 0) {
+                            if (Array.isArray(parsed)) {
                                 window.gn_products = parsed;
                             }
                         }
@@ -1398,16 +1430,27 @@
                 window.addEventListener('reviewsUpdated', () => {
                     if (typeof window.renderCustomerReviews === 'function') window.renderCustomerReviews();
                 });
+                window.addEventListener('announcementsUpdated', () => {
+                    if (typeof window.renderSaleTicker === 'function') window.renderSaleTicker();
+                });
 
                 try {
                     if (typeof BroadcastChannel !== 'undefined') {
                         const syncChannel = new BroadcastChannel('gn_store_sync');
                         syncChannel.onmessage = function(ev) {
                             if (ev && ev.data) {
-                                if (ev.data.type === 'PRODUCTS_UPDATED' && Array.isArray(ev.data.products) && ev.data.products.length > 0) {
+                                if (ev.data.type === 'PRODUCTS_UPDATED' && Array.isArray(ev.data.products)) {
                                     window.gn_products = ev.data.products;
                                     try { localStorage.setItem('gn_products', JSON.stringify(ev.data.products)); } catch(e) {}
                                     refreshStorefrontCatalog();
+                                }
+                                if (ev.data.type === 'ANNOUNCEMENTS_UPDATED' && Array.isArray(ev.data.announcements)) {
+                                    try { localStorage.setItem('gn_announcements', JSON.stringify(ev.data.announcements)); } catch(e) {}
+                                    if (typeof window.renderSaleTicker === 'function') window.renderSaleTicker();
+                                }
+                                if (ev.data.type === 'REVIEWS_UPDATED' && Array.isArray(ev.data.reviews)) {
+                                    try { localStorage.setItem('gn_reviews', JSON.stringify(ev.data.reviews)); } catch(e) {}
+                                    if (typeof window.renderCustomerReviews === 'function') window.renderCustomerReviews();
                                 }
                             }
                         };

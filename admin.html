@@ -3810,9 +3810,9 @@
         async function loadProducts() {
             try {
                 const stored = localStorage.getItem('gn_products');
-                if (stored) {
+                if (stored !== null) {
                     const parsed = JSON.parse(stored);
-                    if (Array.isArray(parsed) && parsed.length > 0) {
+                    if (Array.isArray(parsed)) {
                         products = parsed;
                         window.gn_products = products;
                     }
@@ -3822,13 +3822,14 @@
             if (window.SupabaseEngine) {
                 try {
                     const prods = await window.SupabaseEngine.getProducts();
-                    if (prods && prods.length > 0) {
+                    if (Array.isArray(prods)) {
                         products = prods;
                         window.gn_products = products;
+                        localStorage.setItem('gn_products', JSON.stringify(products));
                     }
                 } catch(e) {}
             }
-            if (!products || products.length === 0) {
+            if (products === null) {
                 products = [...defaultCatalog];
                 window.gn_products = products;
             }
@@ -4590,6 +4591,7 @@
             const isMockOrder = (o) => {
                 if (!o) return true;
                 if (o.is_deleted || o.deleted_at || o.customer_name === '__TEST_DELETED__') return true;
+                if (o.customer_name && (o.customer_name === '__GN_STORE_SYNC__' || String(o.customer_name).startsWith('__GN_'))) return true;
                 if (deletedSet.has(String(o.id)) || deletedSet.has(String(o.order_number))) return true;
                 if (o.is_sample || o.is_dummy || o.is_mock) return true;
                 const name = String(o.customer_name || '').toLowerCase().trim();
@@ -5879,6 +5881,8 @@
             } catch(e) {}
             renderDashboard();
             window.dispatchEvent(new Event('productsLoaded'));
+            window.dispatchEvent(new Event('storage'));
+            broadcastProductsUpdate(products);
             return newItems;
         }
         window.commitProductsToStore = commitProductsToStore;
@@ -6986,8 +6990,17 @@
             ];
         }
 
-        function loadAnnouncementsIntoAdmin() {
-            const offers = getStoredAnnouncements();
+        async function loadAnnouncementsIntoAdmin() {
+            let offers = getStoredAnnouncements();
+            if (window.SupabaseEngine && typeof window.SupabaseEngine.getAnnouncements === 'function') {
+                try {
+                    const cloudAnn = await window.SupabaseEngine.getAnnouncements();
+                    if (Array.isArray(cloudAnn)) {
+                        offers = cloudAnn;
+                        localStorage.setItem('gn_announcements', JSON.stringify(offers));
+                    }
+                } catch(e) {}
+            }
             for (let i = 1; i <= 5; i++) {
                 const input = document.getElementById(`announcementInput${i}`);
                 if (input) {
@@ -7014,12 +7027,20 @@
             localStorage.setItem('gn_announcements', JSON.stringify(offers));
             updateAnnouncementsBadge(offers.length);
 
-            // Supabase store settings integration if table is available
-            if (window.SupabaseEngine && typeof window.SupabaseEngine.saveStoreSetting === 'function') {
+            if (window.SupabaseEngine && typeof window.SupabaseEngine.saveAnnouncements === 'function') {
                 try {
-                    await window.SupabaseEngine.saveStoreSetting('announcements', offers);
+                    await window.SupabaseEngine.saveAnnouncements(offers);
                 } catch(e) {}
             }
+
+            try {
+                window.dispatchEvent(new Event('announcementsUpdated'));
+                window.dispatchEvent(new Event('storage'));
+                if (typeof BroadcastChannel !== 'undefined') {
+                    const bc = new BroadcastChannel('gn_store_sync');
+                    bc.postMessage({ type: 'ANNOUNCEMENTS_UPDATED', announcements: offers });
+                }
+            } catch(e) {}
 
             showToast('Top announcements saved successfully!');
         }
