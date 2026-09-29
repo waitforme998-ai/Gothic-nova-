@@ -618,11 +618,30 @@
         <!-- MATHEMATICALLY BALANCED DROP GRID -->
         <div class="drop-grid" id="main-drop-grid"></div>
 
+        <!-- DISCREET LUXURY LOAD MORE CONTROLLER (ACTIVATES AFTER 12 PRODUCTS) -->
+        <div class="catalog-load-more-wrap" id="catalogLoadMoreWrap" style="display: none;">
+            <div class="catalog-load-more-progress">
+                <span class="catalog-progress-text" id="catalogProgressText">Showing 12 of 24 pieces</span>
+                <div class="catalog-progress-bar-track">
+                    <div class="catalog-progress-bar-fill" id="catalogProgressBarFill" style="width: 50%;"></div>
+                </div>
+            </div>
+            <button type="button" class="catalog-load-more-btn" id="catalogLoadMoreBtn" onclick="handleCatalogLoadMore()">
+                <span class="catalog-load-more-label" id="catalogLoadMoreLabel">DISCOVER MORE ARTIFACTS</span>
+                <svg class="catalog-load-more-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 9l6 6 6-6"/>
+                </svg>
+            </button>
+        </div>
+
         <!-- LIGHTWEIGHT CATALOG SCRIPT ENGINE & DYNAMIC CATEGORIES -->
         <script>
             (function() {
                 window.currentCategory = 'all';
                 window.searchQuery = '';
+                window.CATALOG_BATCH_SIZE = 12;
+                window.catalogVisibleCount = 12;
+                window.prevCatalogVisibleCount = 0;
 
                 // Dynamic Edge Fade Indicators with RAF Throttling for 120fps Scroll Performance
                 let catFadeRaf = null;
@@ -834,6 +853,8 @@
                             e.preventDefault();
                             const filterVal = this.getAttribute('data-filter') || 'all';
                             window.currentCategory = filterVal;
+                            window.catalogVisibleCount = window.CATALOG_BATCH_SIZE || 12;
+                            window.prevCatalogVisibleCount = 0;
                             renderCategoryTabs();
                             window.renderMainCatalog();
                         });
@@ -895,6 +916,8 @@
                     // Update category
                     const cleanSlug = (!categorySlug || categorySlug === 'all') ? 'all' : categorySlug.toLowerCase();
                     window.currentCategory = cleanSlug;
+                    window.catalogVisibleCount = window.CATALOG_BATCH_SIZE || 12;
+                    window.prevCatalogVisibleCount = 0;
 
                     // Re-render tabs with updated active state
                     renderCategoryTabs();
@@ -921,6 +944,8 @@
 
                     // Reset category to all so search matches across catalog
                     window.currentCategory = 'all';
+                    window.catalogVisibleCount = window.CATALOG_BATCH_SIZE || 12;
+                    window.prevCatalogVisibleCount = 0;
                     renderCategoryTabs();
 
                     if (window.renderMainCatalog) window.renderMainCatalog();
@@ -960,7 +985,7 @@
                     window.addEventListener('resize', updateCatFades);
                 }
 
-                function buildProductCardHTML(p) {
+                function buildProductCardHTML(p, isNewlyLoaded = false) {
                     const isSoldOut = Number(p.stock || 0) === 0;
                     const saleVal = p.salePrice !== undefined && p.salePrice !== null ? p.salePrice : p.saleprice;
                     const priceVal = Number(p.price || 0);
@@ -985,9 +1010,10 @@
                     const disabledAttr = isSoldOut ? ' disabled aria-disabled="true"' : '';
                     const ctaText = isSoldOut ? 'SOLD OUT' : 'VIEW OPTIONS';
                     const stampHtml = isSoldOut ? `<div class="sold-out-stamp font-mono">SOLD OUT</div>` : '';
+                    const newlyLoadedClass = isNewlyLoaded ? ' card-newly-loaded' : '';
 
                     return `
-                        <div class="product-card${soldOutClass}" data-product-id="${safeId}" data-category="${safeCat}" data-img="${escapeHtml(p.img)}" onclick="if(!${isSoldOut}) window.openPdpModal('${safeId}')">
+                        <div class="product-card${soldOutClass}${newlyLoadedClass}" data-product-id="${safeId}" data-category="${safeCat}" data-img="${escapeHtml(p.img)}" onclick="if(!${isSoldOut}) window.openPdpModal('${safeId}')">
                             <div class="corner-flare flare-tl"></div><div class="corner-flare flare-tr"></div>
                             <div class="corner-flare flare-bl"></div><div class="corner-flare flare-br"></div>
                             <div class="card-img-wrapper">
@@ -1010,8 +1036,23 @@
                     `;
                 }
 
-                window.renderMainCatalog = function() {
+                window.handleCatalogLoadMore = function() {
+                    const prevCount = window.catalogVisibleCount || 12;
+                    window.prevCatalogVisibleCount = prevCount;
+                    window.catalogVisibleCount = prevCount + (window.CATALOG_BATCH_SIZE || 12);
+                    if (typeof window.renderMainCatalog === 'function') {
+                        window.renderMainCatalog(true);
+                    }
+                };
+
+                window.renderMainCatalog = function(isAppending = false) {
                     const grid = document.getElementById('main-drop-grid');
+                    const loadMoreWrap = document.getElementById('catalogLoadMoreWrap');
+                    const progressText = document.getElementById('catalogProgressText');
+                    const progressBarFill = document.getElementById('catalogProgressBarFill');
+                    const loadMoreBtn = document.getElementById('catalogLoadMoreBtn');
+                    const loadMoreLabel = document.getElementById('catalogLoadMoreLabel');
+
                     if (!grid) return;
 
                     let list = getAllProducts();
@@ -1028,7 +1069,9 @@
                         );
                     }
 
-                    if (list.length === 0) {
+                    const totalCount = list.length;
+
+                    if (totalCount === 0) {
                         grid.innerHTML = `
                             <div class="gothic-empty-state-box">
                                 <div class="gothic-empty-icon-wrap">
@@ -1045,10 +1088,51 @@
                                 </button>
                             </div>
                         `;
+                        if (loadMoreWrap) loadMoreWrap.style.display = 'none';
                         return;
                     }
 
-                    grid.innerHTML = list.map(p => buildProductCardHTML(p)).join('');
+                    if (!window.catalogVisibleCount || window.catalogVisibleCount < window.CATALOG_BATCH_SIZE) {
+                        window.catalogVisibleCount = window.CATALOG_BATCH_SIZE;
+                    }
+
+                    const visibleCount = Math.min(window.catalogVisibleCount, totalCount);
+                    const visibleList = list.slice(0, visibleCount);
+
+                    grid.innerHTML = visibleList.map((p, idx) => {
+                        const isNew = isAppending && idx >= (window.prevCatalogVisibleCount || 0);
+                        return buildProductCardHTML(p, isNew);
+                    }).join('');
+
+                    // Manage Load More controller display and status
+                    if (loadMoreWrap) {
+                        if (totalCount <= window.CATALOG_BATCH_SIZE) {
+                            // Total count is 12 or less: hide load more completely
+                            loadMoreWrap.style.display = 'none';
+                        } else if (visibleCount < totalCount) {
+                            // More items remain to be discovered
+                            loadMoreWrap.style.display = 'flex';
+                            const remaining = totalCount - visibleCount;
+                            const nextBatch = Math.min(window.CATALOG_BATCH_SIZE, remaining);
+                            const percentage = Math.min(100, Math.round((visibleCount / totalCount) * 100));
+
+                            if (progressText) {
+                                progressText.textContent = `Showing ${visibleCount} of ${totalCount} pieces`;
+                            }
+                            if (progressBarFill) {
+                                progressBarFill.style.width = `${percentage}%`;
+                            }
+                            if (loadMoreLabel) {
+                                loadMoreLabel.textContent = `DISCOVER MORE ARTIFACTS (+${nextBatch})`;
+                            }
+                            if (loadMoreBtn) {
+                                loadMoreBtn.style.display = 'inline-flex';
+                            }
+                        } else {
+                            // All items currently visible
+                            loadMoreWrap.style.display = 'none';
+                        }
+                    }
                 };
 
                 // Dynamic Customer Reviews Renderer (Synced with Admin Panel & Supabase Stale-While-Revalidate)
@@ -2553,6 +2637,16 @@
                     if (allTab) allTab.classList.add('active');
                 }
                 window.currentCategory = 'all';
+
+                // Automatically expand catalog visible batch if target product is beyond 12
+                try {
+                    const prods = (typeof getAllProducts === 'function') ? getAllProducts() : (window.gn_products || []);
+                    const targetIdx = prods.findIndex(p => String(p.id) === String(productId));
+                    if (targetIdx >= 0 && targetIdx >= (window.catalogVisibleCount || 12)) {
+                        window.catalogVisibleCount = Math.ceil((targetIdx + 1) / (window.CATALOG_BATCH_SIZE || 12)) * (window.CATALOG_BATCH_SIZE || 12);
+                    }
+                } catch(e) {}
+
                 if (typeof window.renderMainCatalog === 'function') window.renderMainCatalog();
 
                 setTimeout(() => {
