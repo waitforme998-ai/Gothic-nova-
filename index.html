@@ -4844,7 +4844,7 @@
             initTarotRitual(force);
         };
 
-        // USER CLICKS THE "SHUFFLE CARDS" BUTTON - MULTI-PASS 7+ SECOND HIGH-VELOCITY SHUFFLE
+        // USER CLICKS THE "SHUFFLE CARDS" BUTTON - EXACT 5.0 SECOND ULTRA-SMOOTH HIGH-VELOCITY SHUFFLE
         async function triggerMajesticShuffle() {
             if (tarotState.isShuffling) return;
 
@@ -4864,13 +4864,13 @@
 
             const shuffleBox = document.getElementById('tarotShuffleActionBox');
             const stage = document.getElementById('tarotCardsStage');
-            let wrappers = Array.from(document.querySelectorAll('.tarot-card-wrapper'));
+            const wrappers = Array.from(document.querySelectorAll('.tarot-card-wrapper'));
             const impactWrap = document.getElementById('tarotChooseImpactWrap');
             const stageTitle = document.getElementById('tarotStageTitle');
 
             if (shuffleBox) {
                 shuffleBox.classList.add('hidden');
-                setTimeout(() => { shuffleBox.style.display = 'none'; }, 240);
+                setTimeout(() => { shuffleBox.style.display = 'none'; }, 200);
             }
 
             // Step 1: Immediately flip all cards to face-down (turn their side, hiding offers beneath them)
@@ -4886,70 +4886,51 @@
                 stageTitle.classList.add('shuffling-text');
             }
 
-            // Dedicated initial flip completion delay
-            await new Promise(resolve => setTimeout(resolve, 280));
+            // Dedicated initial flip completion delay (200ms)
+            await new Promise(resolve => setTimeout(resolve, 200));
 
-            const PERMUTATIONS = {
-                1: [3, 2, 1, 0],
-                2: [1, 3, 0, 2],
-                3: [2, 0, 3, 1],
-                4: [1, 3, 2, 0],
-                5: [3, 0, 1, 2]
-            };
-
-            // Multi-pass loop: Total duration >= 7.0 seconds (e.g. 10 passes * ~720ms = ~7.2s)
-            const TARGET_TOTAL_MS = 7200;
+            // EXACT 5.0 SECOND TOTAL SHUFFLE (5000ms from button click to ready-to-pick)
+            // 200ms initial flip + 10 x 460ms high-velocity seamless passes (4600ms) + 200ms final resolution = 5000ms
+            const TARGET_TOTAL_MS = 5000;
             const startTime = Date.now();
+            const PASS_DURATION_MS = 460;
             let passCount = 0;
             let lastPattern = 0;
 
-            while ((Date.now() - startTime) < TARGET_TOTAL_MS || passCount < 9) {
+            while ((Date.now() - startTime + PASS_DURATION_MS) <= (TARGET_TOTAL_MS - 100) && passCount < 10) {
                 passCount++;
 
-                // Pick a pattern different from previous pass
+                // Pick a pattern different from previous pass for maximum unpredictable variety
                 let patternIdx;
                 do {
                     patternIdx = Math.floor(Math.random() * 5) + 1;
                 } while (patternIdx === lastPattern);
                 lastPattern = patternIdx;
 
-                // High velocity swap: 0.70s - 0.76s per pass
-                const passDurSec = (0.70 + Math.random() * 0.06).toFixed(2);
-                const passDurMs = Math.round(Number(passDurSec) * 1000);
+                const passDurSec = (PASS_DURATION_MS / 1000).toFixed(2);
 
                 if (stage) {
                     stage.style.setProperty('--shuffle-dur', `${passDurSec}s`);
-                    stage.className = 'tarot-cards-stage';
-                    void stage.offsetWidth; // Force reflow to cleanly trigger CSS animation
                     stage.className = `tarot-cards-stage shuffling-active shuffle-pattern-${patternIdx}`;
                 }
 
-                // Occasionally trigger canvas shockwave during intense shuffle
-                if (passCount % 3 === 0 && typeof triggerTarotShockwave === 'function') {
+                // Mystical shockwave pulses during high-speed passes
+                if ((passCount === 3 || passCount === 6 || passCount === 9) && typeof triggerTarotShockwave === 'function') {
                     triggerTarotShockwave();
                 }
 
-                await new Promise(resolve => setTimeout(resolve, passDurMs));
-
-                // Reorder DOM cards to match this pass's permutation seamlessly
-                const destOrder = PERMUTATIONS[patternIdx] || [3, 2, 1, 0];
-                const currentWrappers = Array.from(stage.querySelectorAll('.tarot-card-wrapper'));
-                const newOrderedWrappers = destOrder.map(oldIdx => currentWrappers[oldIdx]);
-
-                if (stage) {
-                    stage.className = 'tarot-cards-stage';
-                    stage.innerHTML = '';
-                    newOrderedWrappers.forEach(w => {
-                        w.style.transform = '';
-                        w.classList.add('face-down');
-                        w.classList.remove('flipped', 'ready-to-pick');
-                        stage.appendChild(w);
-                    });
-                }
+                await new Promise(resolve => setTimeout(resolve, PASS_DURATION_MS));
             }
 
-            // Shuffle concludes after 7+ seconds
-            triggerTarotShockwave();
+            // Conclude shuffle animation
+            if (stage) {
+                stage.className = 'tarot-cards-stage';
+            }
+
+            // Final majestic Tarot shockwave burst
+            if (typeof triggerTarotShockwave === 'function') {
+                triggerTarotShockwave();
+            }
 
             // Generate cryptographic randomized final rewards mapping
             activeCardRewards = cryptoShuffleArray(INITIAL_REWARDS_CONFIG);
