@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Realm Uncharted | Gothic Nova</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background-color: #050508;
+            color: #e5e5e7;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .gothic-bg-glow {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(138, 26, 46, 0.18) 0%, rgba(5, 5, 8, 0) 70%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 1;
+        }
+        .container {
+            position: relative;
+            z-index: 2;
+            max-width: 580px;
+            width: 90%;
+            padding: 48px 36px;
+            background: rgba(13, 13, 18, 0.85);
+            border: 1px solid rgba(197, 168, 128, 0.25);
+            border-radius: 12px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(138, 26, 46, 0.15);
+            backdrop-filter: blur(16px);
+            text-align: center;
+        }
+        .logo-symbol {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            border: 1px solid rgba(197, 168, 128, 0.4);
+            background: rgba(20, 9, 15, 0.6);
+            margin-bottom: 24px;
+        }
+        .logo-symbol svg {
+            width: 32px;
+            height: 32px;
+            fill: #c5a880;
+        }
+        .error-code {
+            font-family: 'Cinzel', serif;
+            font-size: 5rem;
+            font-weight: 900;
+            letter-spacing: 6px;
+            color: #c5a880;
+            line-height: 1;
+            margin-bottom: 12px;
+            text-shadow: 0 0 25px rgba(197, 168, 128, 0.3);
+        }
+        .error-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1.25rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: #f2ede9;
+            margin-bottom: 16px;
+        }
+        .error-desc {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: #a89a9d;
+            margin-bottom: 36px;
+            font-weight: 300;
+        }
+        .action-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        @media (min-width: 480px) {
+            .action-group {
+                flex-direction: row;
+                justify-content: center;
+            }
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 14px 24px;
+            font-family: 'Cinzel', serif;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            text-decoration: none;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #8a1a2e 0%, #5c0f1f 100%);
+            color: #ffffff;
+            border: 1px solid rgba(197, 168, 128, 0.4);
+            box-shadow: 0 4px 15px rgba(92, 15, 31, 0.4);
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #a12038 0%, #701326 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(138, 26, 46, 0.6);
+        }
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.04);
+            color: #c5a880;
+            border: 1px solid rgba(197, 168, 128, 0.3);
+        }
+        .btn-secondary:hover {
+            background: rgba(197, 168, 128, 0.1);
+            color: #ffffff;
+            border-color: #c5a880;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="gothic-bg-glow"></div>
+    <div class="container">
+        <div class="logo-symbol">
+            <svg viewBox="0 0 24 24">
+                <path d="M12 2L9.5 8.5L3 11L9.5 13.5L12 20L14.5 13.5L21 11L14.5 8.5L12 2Z"/>
+            </svg>
+        </div>
+        <div class="error-code">404</div>
+        <h1 class="error-title">Realm Uncharted</h1>
+        <p class="error-desc">The sanctuary path or relic you seek has faded into the void. Verify the address or journey back to the collection.</p>
+        <div class="action-group">
+            <a href="/" class="btn btn-primary">Return to Sanctuary</a>
+            <a href="/admin" class="btn btn-secondary">Admin Portal</a>
+        </div>
+    </div>
+</body>
+</html>

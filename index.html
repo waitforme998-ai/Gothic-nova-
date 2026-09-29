@@ -1050,31 +1050,11 @@
                     grid.innerHTML = list.map(p => buildProductCardHTML(p)).join('');
                 };
 
-                // Dynamic Customer Reviews Renderer (Synced with Admin Panel)
-                window.renderCustomerReviews = async function() {
+                // Dynamic Customer Reviews Renderer (Synced with Admin Panel & Supabase Stale-While-Revalidate)
+                function renderReviewsToDOM(revs) {
                     const track = document.getElementById('customer-reviews-track');
                     if (!track) return;
-                    let revs = [];
-                    
-                    // 1. Check local storage first (immediate sync when edited in Admin)
-                    try {
-                        const raw = localStorage.getItem('gn_reviews');
-                        if (raw) {
-                            const parsed = JSON.parse(raw);
-                            if (Array.isArray(parsed) && parsed.length) revs = parsed;
-                        }
-                    } catch(e) {}
-
-                    // 2. Fallback to Supabase if not locally modified
-                    if ((!revs || !revs.length) && window.SupabaseEngine) {
-                        try {
-                            const supaRevs = await window.SupabaseEngine.getReviews();
-                            if (Array.isArray(supaRevs) && supaRevs.length) revs = supaRevs;
-                        } catch(e) {}
-                    }
-
-                    // 3. Fallback to sample reviews
-                    if (!revs || !revs.length) {
+                    if (!Array.isArray(revs) || !revs.length) {
                         revs = [
                             { customer_name: "Sarah M.", location: "Pakistan", rating: 5, review_text: "The Venom Spider Ring exceeded all expectations. Incredibly detailed craftsmanship." },
                             { customer_name: "Arjun K.", location: "Pakistan", rating: 5, review_text: "Reaper Pendant is a showstopper. Everyone asks where I got it." },
@@ -1109,6 +1089,32 @@
                             </div>
                         `;
                     }).join('');
+                }
+
+                window.renderCustomerReviews = async function() {
+                    // 1. Instant 0ms Render from LocalStorage or default
+                    let cached = [];
+                    try {
+                        const raw = localStorage.getItem('gn_reviews');
+                        if (raw) {
+                            const parsed = JSON.parse(raw);
+                            if (Array.isArray(parsed) && parsed.length) cached = parsed;
+                        }
+                    } catch(e) {}
+                    renderReviewsToDOM(cached);
+
+                    // 2. Asynchronously revalidate from Supabase Cloud
+                    if (window.SupabaseEngine && typeof window.SupabaseEngine.getReviews === 'function') {
+                        try {
+                            const supaRevs = await window.SupabaseEngine.getReviews();
+                            if (Array.isArray(supaRevs) && supaRevs.length) {
+                                try { localStorage.setItem('gn_reviews', JSON.stringify(supaRevs)); } catch(e) {}
+                                renderReviewsToDOM(supaRevs);
+                            }
+                        } catch(err) {
+                            console.warn("Reviews cloud sync notice:", err);
+                        }
+                    }
                 };
 
                 function initCatalogControls() {

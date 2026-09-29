@@ -5650,6 +5650,8 @@
                     adminReviews = adminReviews.filter(r => String(r.id) !== String(id));
                     try {
                         localStorage.setItem('gn_reviews', JSON.stringify(adminReviews));
+                        window.dispatchEvent(new Event('reviewsUpdated'));
+                        window.dispatchEvent(new Event('storage'));
                     } catch(e) {}
                     renderReviewsAdmin();
                     showToast('Review removed.');

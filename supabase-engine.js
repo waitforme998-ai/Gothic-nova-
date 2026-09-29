@@ -428,20 +428,6 @@
             return true;
         },
 
-        async deleteReview(id) {
-            let local = this._getMockReviews().filter(r => String(r.id) !== String(id));
-            localStorage.setItem('gn_reviews', JSON.stringify(local));
-            window.dispatchEvent(new Event('reviewsUpdated'));
-
-            if (this.isLive) {
-                try {
-                    await supabase.from('gn_reviews').delete().eq('id', id);
-                } catch (e) {
-                    console.warn("Supabase deleteReview error:", e);
-                }
-            }
-        },
-
         // =========================================================================
         // 4. HERO SLIDER API
         // =========================================================================
