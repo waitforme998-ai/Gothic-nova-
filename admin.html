@@ -75,6 +75,8 @@
             tap-highlight-color: transparent !important;
         }
 
+        @keyframes adminSpin { 100% { transform: rotate(360deg); } }
+
         /* CUSTOM SCROLLBAR */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
@@ -3787,6 +3789,37 @@
             });
         }
 
+        // --- BUTTON STATE FEEDBACK HELPER ---
+        function setButtonLoading(btn, loadingText) {
+            if (!btn) return null;
+            const originalHtml = btn.innerHTML;
+            const originalBg = btn.style.background;
+            const originalOpacity = btn.style.opacity;
+            btn.disabled = true;
+            btn.style.opacity = '0.85';
+            btn.innerHTML = `<span style="display:inline-flex;align-items:center;gap:6px;"><svg style="animation:adminSpin 0.75s linear infinite;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> ${loadingText || 'SAVING...'}</span>`;
+            return {
+                success(successText = 'SAVED ✓', cb) {
+                    btn.style.opacity = '1';
+                    btn.style.background = '#28a745';
+                    btn.innerHTML = successText;
+                    setTimeout(() => {
+                        btn.disabled = false;
+                        btn.innerHTML = originalHtml;
+                        btn.style.background = originalBg;
+                        btn.style.opacity = originalOpacity;
+                        if (typeof cb === 'function') cb();
+                    }, 500);
+                },
+                reset() {
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
+                    btn.style.background = originalBg;
+                    btn.style.opacity = originalOpacity;
+                }
+            };
+        }
+
         // --- PRODUCT DATA HELPERS ---
         let gnAdminBroadcastChannel = null;
         function getGnAdminBroadcastChannel() {
@@ -3976,7 +4009,9 @@
             const catList = getCategoryList();
             const renderCustomOptions = (listEl, dropdownId) => {
                 if (!listEl) return;
-                listEl.innerHTML = catList.map(c =>
+                const generalOption = `<div class="custom-dropdown-option" data-value="general" onclick="selectCustomDropdownOption('${dropdownId}', 'general', 'GENERAL')">GENERAL</div>`;
+                const filtered = catList.filter(c => c && String(c.id).toLowerCase() !== 'general');
+                listEl.innerHTML = generalOption + filtered.map(c =>
                     `<div class="custom-dropdown-option" data-value="${c.id}" onclick="selectCustomDropdownOption('${dropdownId}', '${c.id}', '${escapeQuote(c.name.toUpperCase())}')">${c.name.toUpperCase()}</div>`
                 ).join('');
             };
@@ -3992,7 +4027,9 @@
         }
 
         // --- CATEGORY CRUD ---
+        let isCategoryCreating = false;
         window.createCategoryFromManagement = async function() {
+            if (isCategoryCreating) return;
             const input = document.getElementById('newCategoryNameInput');
             if (!input) return;
             const rawName = input.value.replace(/[<>]/g, '').trim().slice(0, 40);
@@ -4002,17 +4039,30 @@
             const catList = getCategoryList();
             if (catList.some(c => c.id.toLowerCase() === slug)) { showToast("Category already exists", true); return; }
             
-            const newCat = { id: slug, name: rawName };
-            catList.push(newCat);
-            saveCategoryList(catList);
-            if (window.SupabaseEngine) {
-                try { await window.SupabaseEngine.saveCategory(newCat); } catch(e) {}
-            }
+            isCategoryCreating = true;
             input.value = '';
-            renderDashboard();
-            populateCategoryDropdowns();
-            showToast(`Category "${rawName}" created!`);
-            try { window.dispatchEvent(new Event('storage')); } catch(e) {}
+
+            const addBtn = document.querySelector('.add-cat-form button');
+            const btnState = setButtonLoading(addBtn, 'ADDING...');
+
+            try {
+                const newCat = { id: slug, name: rawName };
+                catList.push(newCat);
+                saveCategoryList(catList);
+                if (window.SupabaseEngine && typeof window.SupabaseEngine.saveCategory === 'function') {
+                    try { await window.SupabaseEngine.saveCategory(newCat); } catch(e) {}
+                }
+                renderDashboard();
+                populateCategoryDropdowns();
+                if (btnState) btnState.success('ADDED ✓');
+                showToast(`Category "${rawName}" created!`);
+                try { window.dispatchEvent(new Event('storage')); } catch(e) {}
+            } catch(err) {
+                if (btnState) btnState.reset();
+                showToast("Failed to create category", true);
+            } finally {
+                isCategoryCreating = false;
+            }
         };
 
         window.promptRenameCategory = async function(slug, currentName) {
@@ -5364,6 +5414,7 @@
             const ratingInput = document.getElementById('newReviewRatingInput');
             const prodInput = document.getElementById('newReviewProductInput');
             const textInput = document.getElementById('newReviewTextInput');
+            const saveBtn = document.getElementById('saveNewReviewBtn');
 
             const author = authorInput ? authorInput.value.trim() : '';
             const location = locInput ? locInput.value.trim() : 'Pakistan';
@@ -5381,6 +5432,8 @@
                 if (textInput) textInput.focus();
                 return;
             }
+
+            const btnState = setButtonLoading(saveBtn, 'SAVING...');
 
             const revObj = {
                 id: 'rev_' + Date.now(),
@@ -5411,9 +5464,13 @@
             if (prodInput) prodInput.value = '';
             if (textInput) textInput.value = '';
             setPickerRating('newReview', 5);
-            toggleAddReviewForm(false);
-            renderReviewsAdmin();
+
+            if (btnState) btnState.success('SAVED ✓');
             showToast('Review added successfully!');
+            setTimeout(() => {
+                toggleAddReviewForm(false);
+                renderReviewsAdmin();
+            }, 350);
         }
         window.createReviewFromInlineForm = createReviewFromInlineForm;
 
@@ -5758,8 +5815,18 @@
             window.currentEditingProductId = null;
             singleProductStockImages = [];
             document.getElementById('singleSheetTitle').textContent = 'Add Product';
-            document.getElementById('saveSingleProductBtn').textContent = 'Save Product';
+            const saveBtn = document.getElementById('saveSingleProductBtn');
+            if (saveBtn) {
+                saveBtn.textContent = 'Save Product';
+                saveBtn.disabled = false;
+                saveBtn.style.background = '';
+                saveBtn.style.opacity = '';
+            }
             populateCategoryDropdowns();
+            const catHidden = document.getElementById('single-product-category');
+            const catTrigger = document.getElementById('singleCatTrigger');
+            if (catHidden) catHidden.value = 'general';
+            if (catTrigger) catTrigger.textContent = 'GENERAL';
             renderSingleStockImages();
             openModal(productSheet);
         };
@@ -5769,7 +5836,13 @@
             if (!product) { showToast("Not found", true); return; }
             window.currentEditingProductId = pid;
             document.getElementById('singleSheetTitle').textContent = `Edit: ${product.name || 'Product'}`;
-            document.getElementById('saveSingleProductBtn').textContent = 'Save Changes';
+            const saveBtn = document.getElementById('saveSingleProductBtn');
+            if (saveBtn) {
+                saveBtn.textContent = 'Save Changes';
+                saveBtn.disabled = false;
+                saveBtn.style.background = '';
+                saveBtn.style.opacity = '';
+            }
             singleSelectedImg = product.img || '';
             const chosenPreview = document.getElementById('chosen-img-preview');
             const uploadPlaceholder = document.getElementById('upload-placeholder');
@@ -5784,12 +5857,11 @@
             populateCategoryDropdowns();
             const catHidden = document.getElementById('single-product-category');
             const catTrigger = document.getElementById('singleCatTrigger');
-            if (product.category) {
-                catHidden.value = product.category.toLowerCase();
-                const catList = getCategoryList();
-                const found = catList.find(c => c.id === product.category.toLowerCase());
-                catTrigger.textContent = found ? found.name.toUpperCase() : product.category.toUpperCase();
-            }
+            const catVal = (product.category || 'general').toLowerCase();
+            catHidden.value = catVal;
+            const catList = getCategoryList();
+            const found = catList.find(c => c.id === catVal);
+            catTrigger.textContent = found ? found.name.toUpperCase() : catVal.toUpperCase();
 
             document.getElementById('single-product-price').value = product.price || '';
             document.getElementById('single-product-sale-price').value = (product.salePrice !== null && product.salePrice !== undefined) ? product.salePrice : '';
@@ -5802,35 +5874,48 @@
         };
 
         async function saveSingleProduct(btn) {
+            const saveBtn = btn || document.getElementById('saveSingleProductBtn');
             const name = document.getElementById('single-product-name').value.trim();
             const price = parseFloat(document.getElementById('single-product-price').value);
             const salePriceVal = document.getElementById('single-product-sale-price').value.trim();
             const stock = parseInt(document.getElementById('single-product-stock').value, 10);
             const threshold = parseInt(document.getElementById('single-product-threshold').value, 10);
-            const category = document.getElementById('single-product-category').value;
+            let category = (document.getElementById('single-product-category')?.value || '').trim().toLowerCase();
+            if (!category) category = 'general';
             const desc = document.getElementById('single-product-desc')?.value.trim() || '';
 
             if (!singleSelectedImg) { showToast("Select a product image", true); return; }
-            if (!category) { showToast("Select a category", true); return; }
             if (!name) { showToast("Enter a product name", true); document.getElementById('single-product-name')?.focus(); return; }
             if (isNaN(price) || price < 0) { showToast("Enter a valid price", true); document.getElementById('single-product-price')?.focus(); return; }
+
+            const btnState = setButtonLoading(saveBtn, 'SAVING...');
 
             if (window.currentEditingProductId) {
                 const existing = products.find(p => String(p.id) === String(window.currentEditingProductId));
                 if (existing) {
-                    existing.name = name; existing.category = category; existing.img = singleSelectedImg;
-                    existing.price = price; existing.salePrice = salePriceVal ? parseFloat(salePriceVal) : null;
-                    existing.stock = isNaN(stock) ? 10 : stock; existing.threshold = isNaN(threshold) ? 3 : threshold;
+                    existing.name = name; 
+                    existing.category = category; 
+                    existing.img = singleSelectedImg;
+                    existing.price = price; 
+                    existing.salePrice = salePriceVal ? parseFloat(salePriceVal) : null;
+                    existing.stock = isNaN(stock) ? 10 : stock; 
+                    existing.threshold = isNaN(threshold) ? 3 : threshold;
                     existing.desc = desc;
                     existing.description = desc;
                     existing.stock_images = [...singleProductStockImages];
                     existing.stockImages = [...singleProductStockImages];
                     saveProducts();
-                    if (window.SupabaseEngine) { try { await window.SupabaseEngine.saveProduct(existing); } catch(e) {} }
-                    renderDashboard(); closeAllModals();
+                    if (window.SupabaseEngine) { 
+                        try { await window.SupabaseEngine.saveProduct(existing); } catch(e) {} 
+                    }
+                    renderDashboard(); 
+                    if (btnState) btnState.success('SAVED ✓');
                     showToast(`"${existing.name}" updated!`);
-                    try { window.dispatchEvent(new Event('storage')); window.dispatchEvent(new Event('productsLoaded')); } catch(e) {}
-                    window.currentEditingProductId = null;
+                    setTimeout(() => {
+                        closeAllModals();
+                        try { window.dispatchEvent(new Event('storage')); window.dispatchEvent(new Event('productsLoaded')); } catch(e) {}
+                        window.currentEditingProductId = null;
+                    }, 400);
                     return;
                 }
             }
@@ -5850,8 +5935,15 @@
             };
             try {
                 const saved = await commitProductsToStore([itemToSave]);
-                closeAllModals(); showToast(`"${saved[0].name}" saved!`);
-            } catch(e) { showToast("Failed to save", true); }
+                if (btnState) btnState.success('SAVED ✓');
+                showToast(`"${saved[0].name}" saved!`);
+                setTimeout(() => {
+                    closeAllModals();
+                }, 400);
+            } catch(e) { 
+                if (btnState) btnState.reset();
+                showToast("Failed to save", true); 
+            }
         }
         window.saveSingleProduct = saveSingleProduct;
 
@@ -5877,7 +5969,11 @@
             window.gn_products = products;
             try {
                 localStorage.setItem('gn_products', JSON.stringify(products));
-                if (window.SupabaseEngine) { for (const p of newItems) await window.SupabaseEngine.saveProduct(p); }
+                if (window.SupabaseEngine && typeof window.SupabaseEngine.saveProductsBulk === 'function') {
+                    await window.SupabaseEngine.saveProductsBulk(products);
+                } else if (window.SupabaseEngine) {
+                    for (const p of newItems) await window.SupabaseEngine.saveProduct(p);
+                }
             } catch(e) {}
             renderDashboard();
             window.dispatchEvent(new Event('productsLoaded'));
@@ -6403,24 +6499,27 @@
             
             isBulkCommitting = true;
             const commitBtn = document.getElementById('bulkCommitBtn');
+            const btnState = setButtonLoading(commitBtn, 'PUBLISHING BATCH...');
             const allButtons = document.querySelectorAll('#bulkStageReview button');
-            allButtons.forEach(b => { b.disabled = true; b.style.opacity = '0.5'; });
-            if (commitBtn) commitBtn.textContent = 'Publishing...';
+            allButtons.forEach(b => { if (b !== commitBtn) { b.disabled = true; b.style.opacity = '0.5'; } });
 
             try {
                 const batchToSave = [...bulkQueue];
                 bulkQueue = [];
                 window.bulkQueue = bulkQueue;
                 const saved = await commitProductsToStore(batchToSave);
-                closeAllModals();
+                if (btnState) btnState.success('PUBLISHED ✓');
                 showToast(`${saved.length} items published!`);
+                setTimeout(() => {
+                    closeAllModals();
+                }, 400);
             } catch(e) { 
+                if (btnState) btnState.reset();
                 closeAllModals(); 
                 showToast("Committed locally"); 
             } finally {
                 isBulkCommitting = false;
                 allButtons.forEach(b => { b.disabled = false; b.style.opacity = '1'; });
-                if (commitBtn) commitBtn.textContent = 'Confirm & Publish';
             }
         }
         window.commitBatchToStore = commitBatchToStore;
@@ -6571,10 +6670,21 @@
             emptyState.style.display = 'none';
             resultsContainer.style.display = 'block';
 
+            // Filter Categories
+            const catList = getCategoryList();
+            const matchedCategories = catList.filter(c => {
+                const catName = (c.name || '').toLowerCase();
+                const catId = (c.id || '').toLowerCase();
+                return catName.includes(query) || catId.includes(query);
+            });
+
             // Filter Products
             const matchedProducts = products.filter(p => {
                 const name = (p.name || '').toLowerCase();
                 const cat = (p.category || '').toLowerCase();
+                const catObj = catList.find(c => c.id === cat);
+                const catDisplayName = (catObj ? catObj.name : '').toLowerCase();
+                const desc = (p.desc || p.description || '').toLowerCase();
                 const price = String(p.price || '');
                 const sale = String(p.salePrice || '');
                 const stock = Number(p.stock || 0);
@@ -6587,6 +6697,8 @@
 
                 return name.includes(query) ||
                        cat.includes(query) ||
+                       catDisplayName.includes(query) ||
+                       desc.includes(query) ||
                        price.includes(query) ||
                        sale.includes(query) ||
                        isSoldOutMatch ||
@@ -6611,14 +6723,6 @@
                        comment.includes(query) ||
                        (query.length <= 2 && rating === query) ||
                        isStarQuery;
-            });
-
-            // Filter Categories
-            const catList = getCategoryList();
-            const matchedCategories = catList.filter(c => {
-                const catName = (c.name || '').toLowerCase();
-                const catId = (c.id || '').toLowerCase();
-                return catName.includes(query) || catId.includes(query);
             });
 
             // Filter Orders
@@ -6978,16 +7082,12 @@
         function getStoredAnnouncements() {
             try {
                 const raw = localStorage.getItem('gn_announcements');
-                if (raw) {
+                if (raw !== null) {
                     const parsed = JSON.parse(raw);
                     if (Array.isArray(parsed)) return parsed;
                 }
             } catch(e) {}
-            return [
-                "EARLY ACCESS: 15% OFF ALL PENDANTS WITH CODE 'NOVA15'",
-                "FREE SHIPPING ON ORDERS OVER RS. 5000",
-                "LIMITED EDITION REAPER CHAIN DROPS TONIGHT"
-            ];
+            return [];
         }
 
         async function loadAnnouncementsIntoAdmin() {
@@ -7017,6 +7117,9 @@
         }
 
         async function saveAnnouncementsFromAdmin() {
+            const saveBtn = document.getElementById('saveAnnouncementsBtn');
+            const btnState = setButtonLoading(saveBtn, 'SAVING...');
+
             const offers = [];
             for (let i = 1; i <= 5; i++) {
                 const input = document.getElementById(`announcementInput${i}`);
@@ -7042,6 +7145,7 @@
                 }
             } catch(e) {}
 
+            if (btnState) btnState.success('SAVED ✓');
             showToast('Top announcements saved successfully!');
         }
         window.saveAnnouncementsFromAdmin = saveAnnouncementsFromAdmin;

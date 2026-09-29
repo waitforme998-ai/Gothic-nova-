@@ -394,55 +394,91 @@
         },
 
         // =========================================================================
-        // 2. CATEGORIES API
+        // 2. CATEGORIES API (CLOUD SYNCED ACROSS ALL CUSTOMERS & ADMIN)
         // =========================================================================
         async getCategories() {
-            if (this.isLive) {
+            let localCats = null;
+            try {
+                const raw = localStorage.getItem('gn_categories_meta');
+                if (raw !== null) localCats = JSON.parse(raw);
+            } catch(e) {}
+
+            if (this.isLive && supabase) {
                 try {
                     const cloudState = await this._getCloudSyncState();
-                    if (cloudState && Array.isArray(cloudState.categories) && cloudState.categories.length > 0) {
+                    if (cloudState && Array.isArray(cloudState.categories)) {
                         localStorage.setItem('gn_categories_meta', JSON.stringify(cloudState.categories));
                         return cloudState.categories;
-                    }
-                    const { data, error } = await supabase
-                        .from('gn_categories')
-                        .select('*')
-                        .order('display_order', { ascending: true });
-                    
-                    if (!error && Array.isArray(data) && data.length > 0) {
-                        localStorage.setItem('gn_categories_meta', JSON.stringify(data));
-                        return data;
                     }
                 } catch (err) {
                     console.warn("Notice: Fetching categories:", err);
                 }
             }
+            if (Array.isArray(localCats)) return localCats;
             return this._getMockCategories();
         },
 
         async saveCategory(category) {
+            const cleanSlug = String(category.id || category.slug || category.name || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+            const cleanName = (category.name || cleanSlug).trim();
+            if (!cleanSlug) return null;
+
             const payload = {
-                id: String(category.id).trim().toLowerCase(),
-                name: category.name || category.id,
+                id: cleanSlug,
+                name: cleanName,
                 display_order: Number(category.display_order || 0)
             };
 
-            let localCats = this._getMockCategories();
-            const idx = localCats.findIndex(c => c.id === payload.id);
-            if (idx >= 0) localCats[idx] = payload;
-            else localCats.push(payload);
-            localStorage.setItem('gn_categories_meta', JSON.stringify(localCats));
+            let localCats = [];
+            try {
+                const stored = localStorage.getItem('gn_categories_meta');
+                if (stored !== null) localCats = JSON.parse(stored);
+            } catch(e) {}
+            if (!Array.isArray(localCats) || !localCats.length) {
+                localCats = this._getMockCategories();
+            }
 
+            const idx = localCats.findIndex(c => String(c.id).toLowerCase() === cleanSlug);
+            if (idx >= 0) localCats[idx] = { ...localCats[idx], ...payload };
+            else localCats.push(payload);
+
+            localStorage.setItem('gn_categories_meta', JSON.stringify(localCats));
             await this._saveCloudSyncState({ categories: localCats });
+
+            try {
+                window.dispatchEvent(new Event('storage'));
+                if (typeof BroadcastChannel !== 'undefined') {
+                    const bc = new BroadcastChannel('gn_store_sync');
+                    bc.postMessage({ type: 'CATEGORIES_UPDATED', categories: localCats });
+                }
+            } catch(e) {}
+
             return payload;
         },
 
         async deleteCategory(id) {
             const cleanId = String(id).trim().toLowerCase();
-            let localCats = this._getMockCategories().filter(c => c.id !== cleanId);
+            let localCats = [];
+            try {
+                const stored = localStorage.getItem('gn_categories_meta');
+                if (stored !== null) localCats = JSON.parse(stored);
+            } catch(e) {}
+            if (!Array.isArray(localCats) || !localCats.length) {
+                localCats = this._getMockCategories();
+            }
+            localCats = localCats.filter(c => String(c.id).toLowerCase() !== cleanId);
             localStorage.setItem('gn_categories_meta', JSON.stringify(localCats));
 
             await this._saveCloudSyncState({ categories: localCats });
+
+            try {
+                window.dispatchEvent(new Event('storage'));
+                if (typeof BroadcastChannel !== 'undefined') {
+                    const bc = new BroadcastChannel('gn_store_sync');
+                    bc.postMessage({ type: 'CATEGORIES_UPDATED', categories: localCats });
+                }
+            } catch(e) {}
+
             return true;
         },
 
@@ -453,32 +489,26 @@
             let localRevs = null;
             try {
                 const raw = localStorage.getItem('gn_reviews');
-                if (raw) localRevs = JSON.parse(raw);
+                if (raw !== null) localRevs = JSON.parse(raw);
             } catch(e) {}
 
             if (this.isLive && supabase) {
                 try {
                     const cloudState = await this._getCloudSyncState();
                     if (cloudState && Array.isArray(cloudState.reviews)) {
-                        if (cloudState.reviews.length > 0) {
-                            localStorage.setItem('gn_reviews', JSON.stringify(cloudState.reviews));
-                            return cloudState.reviews;
-                        }
+                        localStorage.setItem('gn_reviews', JSON.stringify(cloudState.reviews));
+                        return cloudState.reviews;
                     }
                 } catch(e) {
                     console.warn("Notice: Fetching reviews from cloud:", e);
                 }
             }
 
-            if (Array.isArray(localRevs) && localRevs.length > 0) {
+            if (Array.isArray(localRevs)) {
                 return localRevs;
             }
 
-            const initialReviews = this._getMockReviews();
-            if (this.isLive && supabase) {
-                this._saveCloudSyncState({ reviews: initialReviews }).catch(() => {});
-            }
-            return initialReviews;
+            return [];
         },
 
         async saveReview(review) {
@@ -497,9 +527,11 @@
             let local = [];
             try {
                 const raw = localStorage.getItem('gn_reviews');
-                if (raw) local = JSON.parse(raw);
+                if (raw !== null) {
+                    const parsed = JSON.parse(raw);
+                    if (Array.isArray(parsed)) local = parsed;
+                }
             } catch(e) {}
-            if (!Array.isArray(local) || !local.length) local = this._getMockReviews();
 
             const idx = local.findIndex(r => String(r.id) === String(payload.id));
             if (idx >= 0) local[idx] = { ...local[idx], ...payload };
@@ -525,9 +557,11 @@
             let local = [];
             try {
                 const raw = localStorage.getItem('gn_reviews');
-                if (raw) local = JSON.parse(raw);
+                if (raw !== null) {
+                    const parsed = JSON.parse(raw);
+                    if (Array.isArray(parsed)) local = parsed;
+                }
             } catch(e) {}
-            if (!Array.isArray(local) || !local.length) local = this._getMockReviews();
 
             local = local.filter(r => String(r.id) !== cleanId);
             localStorage.setItem('gn_reviews', JSON.stringify(local));
@@ -546,13 +580,13 @@
         },
 
         // =========================================================================
-        // ANNOUNCEMENTS & STORE SETTINGS API
+        // ANNOUNCEMENTS & STORE SETTINGS API (CLOUD SYNCED)
         // =========================================================================
         async getAnnouncements() {
             let localAnn = null;
             try {
                 const raw = localStorage.getItem('gn_announcements');
-                if (raw) localAnn = JSON.parse(raw);
+                if (raw !== null) localAnn = JSON.parse(raw);
             } catch(e) {}
 
             if (this.isLive && supabase) {
@@ -566,11 +600,7 @@
             }
 
             if (Array.isArray(localAnn)) return localAnn;
-            return [
-                "EARLY ACCESS: 15% OFF ALL PENDANTS WITH CODE 'NOVA15'",
-                "FREE SHIPPING ON ORDERS OVER RS. 5000",
-                "LIMITED EDITION REAPER CHAIN DROPS TONIGHT"
-            ];
+            return [];
         },
 
         async saveAnnouncements(offers) {

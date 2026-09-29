@@ -136,9 +136,21 @@
                 if (typeof window.SupabaseEngine.getReviews === 'function') {
                     try {
                         const revs = await window.SupabaseEngine.getReviews();
-                        if (Array.isArray(revs) && revs.length > 0) {
+                        if (Array.isArray(revs)) {
                             localStorage.setItem('gn_reviews', JSON.stringify(revs));
                             if (typeof window.renderCustomerReviews === 'function') window.renderCustomerReviews();
+                        }
+                    } catch(e) {}
+                }
+
+                // Sync categories from cloud
+                if (typeof window.SupabaseEngine.getCategories === 'function') {
+                    try {
+                        const cats = await window.SupabaseEngine.getCategories();
+                        if (Array.isArray(cats)) {
+                            localStorage.setItem('gn_categories_meta', JSON.stringify(cats));
+                            if (typeof renderCategoryTabs === 'function') renderCategoryTabs();
+                            if (typeof renderSearchCategoryChips === 'function') renderSearchCategoryChips();
                         }
                     } catch(e) {}
                 }
@@ -1452,6 +1464,11 @@
                                     try { localStorage.setItem('gn_reviews', JSON.stringify(ev.data.reviews)); } catch(e) {}
                                     if (typeof window.renderCustomerReviews === 'function') window.renderCustomerReviews();
                                 }
+                                if (ev.data.type === 'CATEGORIES_UPDATED' && Array.isArray(ev.data.categories)) {
+                                    try { localStorage.setItem('gn_categories_meta', JSON.stringify(ev.data.categories)); } catch(e) {}
+                                    if (typeof renderCategoryTabs === 'function') renderCategoryTabs();
+                                    if (typeof renderSearchCategoryChips === 'function') renderSearchCategoryChips();
+                                }
                             }
                         };
                     }
@@ -2277,14 +2294,10 @@
                 metaList.forEach(m => {
                     if (m && m.id) {
                         const slug = String(m.id).trim().toLowerCase();
-                        if (liveCatSlugs.has(slug) || liveCatSlugs.size === 0) {
-                            map.set(slug, m.name || (slug.charAt(0).toUpperCase() + slug.slice(1)));
-                        }
+                        map.set(slug, m.name || (slug.charAt(0).toUpperCase() + slug.slice(1)));
                     } else if (typeof m === 'string' && m.trim()) {
                         const slug = m.trim().toLowerCase();
-                        if (liveCatSlugs.has(slug) || liveCatSlugs.size === 0) {
-                            map.set(slug, slug.charAt(0).toUpperCase() + slug.slice(1));
-                        }
+                        map.set(slug, slug.charAt(0).toUpperCase() + slug.slice(1));
                     }
                 });
             }
@@ -2294,6 +2307,8 @@
                     map.set(slug, slug.charAt(0).toUpperCase() + slug.slice(1));
                 }
             });
+
+            map.delete('general');
 
             if (map.size === 0) {
                 container.innerHTML = '<span style="font-size:0.75rem; color:var(--color-text-muted); padding: 4px 0;">No categories available</span>';
@@ -2350,12 +2365,33 @@
             if (emptyState) emptyState.style.display = 'none';
             if (resultsContainer) resultsContainer.style.display = 'flex';
 
+            let metaList = [];
+            try {
+                const rawMeta = localStorage.getItem('gn_categories_meta');
+                if (rawMeta) metaList = JSON.parse(rawMeta);
+            } catch(e) {}
+            const catMap = new Map();
+            if (Array.isArray(metaList)) {
+                metaList.forEach(m => {
+                    if (m && m.id) catMap.set(String(m.id).toLowerCase(), (m.name || m.id).toLowerCase());
+                    else if (typeof m === 'string') catMap.set(m.toLowerCase(), m.toLowerCase());
+                });
+            }
+
             const products = (typeof getAllProducts === 'function') ? getAllProducts() : (window.gn_products || []);
+            const normalizedQuery = query.replace(/[^a-z0-9]/g, '');
             const matches = products.filter(p => {
                 const name = (p.name || '').toLowerCase();
-                const cat = (p.category || '').toLowerCase();
+                const catSlug = (p.category || '').toLowerCase();
+                const catName = catMap.get(catSlug) || catSlug;
                 const desc = (p.desc || p.description || '').toLowerCase();
-                return name.includes(query) || cat.includes(query) || desc.includes(query);
+                
+                const normName = name.replace(/[^a-z0-9]/g, '');
+                const normCat = catName.replace(/[^a-z0-9]/g, '');
+                const normDesc = desc.replace(/[^a-z0-9]/g, '');
+
+                return name.includes(query) || catSlug.includes(query) || catName.includes(query) || desc.includes(query) ||
+                       (normalizedQuery && (normName.includes(normalizedQuery) || normCat.includes(normalizedQuery) || normDesc.includes(normalizedQuery)));
             });
 
             if (matches.length === 0) {
