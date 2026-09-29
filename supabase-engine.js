@@ -358,10 +358,28 @@
                         .order('created_at', { ascending: false });
                     
                     if (error) throw error;
-                    if (data && Array.isArray(data)) {
+                    if (data && Array.isArray(data) && data.length > 0) {
                         const cleaned = data.filter(r => r && !deletedRevs.has(String(r.id)));
                         localStorage.setItem('gn_reviews', JSON.stringify(cleaned));
                         return cleaned;
+                    } else if (data && Array.isArray(data) && data.length === 0) {
+                        const mocks = this._getMockReviews().filter(r => r && !deletedRevs.has(String(r.id)));
+                        try {
+                            const seedPayload = mocks.map(m => ({
+                                id: m.id,
+                                author: m.author || m.customer_name,
+                                customer_name: m.customer_name || m.author,
+                                location: m.location || 'Pakistan',
+                                rating: m.rating || 5,
+                                comment: m.comment || m.review_text,
+                                review_text: m.review_text || m.comment,
+                                product_name: m.product_name || 'Gothic Artifact',
+                                is_sample: true
+                            }));
+                            supabase.from('gn_reviews').upsert(seedPayload).then(() => {}).catch(() => {});
+                        } catch(seedErr) {}
+                        localStorage.setItem('gn_reviews', JSON.stringify(mocks));
+                        return mocks;
                     }
                 } catch (err) {
                     return this._getMockReviews().filter(r => r && !deletedRevs.has(String(r.id)));
@@ -1140,7 +1158,7 @@
                 const raw = localStorage.getItem('gn_reviews');
                 if (raw) {
                     const parsed = JSON.parse(raw);
-                    if (Array.isArray(parsed)) return parsed;
+                    if (Array.isArray(parsed) && parsed.length > 0) return parsed;
                 }
             } catch(e) {}
             localStorage.setItem('gn_reviews', JSON.stringify(defaultReviews));

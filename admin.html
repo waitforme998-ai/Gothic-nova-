@@ -5272,23 +5272,28 @@
             if (window.SupabaseEngine) {
                 try {
                     const raw = await window.SupabaseEngine.getReviews();
-                    if (raw && Array.isArray(raw)) loaded = raw;
+                    if (raw && Array.isArray(raw) && raw.length > 0) loaded = raw;
                 } catch(e) {}
             }
-            if (loaded === null) {
+            if (!loaded || !loaded.length) {
                 try {
                     const raw = localStorage.getItem('gn_reviews');
-                    if (raw !== null) loaded = JSON.parse(raw);
+                    if (raw) {
+                        const parsed = JSON.parse(raw);
+                        if (Array.isArray(parsed) && parsed.length > 0) loaded = parsed;
+                    }
                 } catch(e) {}
             }
-            if (loaded === null) {
+            if (!loaded || !loaded.length) {
                 loaded = [
                     { id: "r1", author: "Sarah M.", customer_name: "Sarah M.", location: "Pakistan", rating: 5, comment: "The Venom Spider Ring exceeded all expectations. Incredibly detailed craftsmanship.", review_text: "The Venom Spider Ring exceeded all expectations. Incredibly detailed craftsmanship.", product_name: "Venom Spider Ring", is_verified: true },
                     { id: "r2", author: "Arjun K.", customer_name: "Arjun K.", location: "Pakistan", rating: 5, comment: "Reaper Pendant is a showstopper. Everyone asks where I got it.", review_text: "Reaper Pendant is a showstopper. Everyone asks where I got it.", product_name: "Reaper Pendant", is_verified: true },
                     { id: "r3", author: "Emily R.", customer_name: "Emily R.", location: "Pakistan", rating: 5, comment: "Obsidian Helix is the most beautiful chain I own. Dark and elegant.", review_text: "Obsidian Helix is the most beautiful chain I own. Dark and elegant.", product_name: "Obsidian Helix", is_verified: true },
                     { id: "r4", author: "Zain A.", customer_name: "Zain A.", location: "Pakistan", rating: 5, comment: "Fast shipping, premium packaging. This brand is the real deal.", review_text: "Fast shipping, premium packaging. This brand is the real deal.", product_name: "General Store", is_verified: true },
                     { id: "r5", author: "Priya S.", customer_name: "Priya S.", location: "Pakistan", rating: 4, comment: "Crimson Cross choker — I get compliments every single time.", review_text: "Crimson Cross choker — I get compliments every single time.", product_name: "Crimson Cross", is_verified: true },
-                    { id: "r6", author: "Liam T.", customer_name: "Liam T.", location: "Pakistan", rating: 5, comment: "Spine Bracelet fits perfectly. Heavy, solid, worth every rupee.", review_text: "Spine Bracelet fits perfectly. Heavy, solid, worth every rupee.", product_name: "Spine Bracelet", is_verified: true }
+                    { id: "r6", author: "Liam T.", customer_name: "Liam T.", location: "Pakistan", rating: 5, comment: "Spine Bracelet fits perfectly. Heavy, solid, worth every rupee.", review_text: "Spine Bracelet fits perfectly. Heavy, solid, worth every rupee.", product_name: "Spine Bracelet", is_verified: true },
+                    { id: "r7", author: "Noor F.", customer_name: "Noor F.", location: "Pakistan", rating: 5, comment: "Ordered two pieces. Both arrived flawless. Gothic Nova is unmatched.", review_text: "Ordered two pieces. Both arrived flawless. Gothic Nova is unmatched.", product_name: "General Store", is_verified: true },
+                    { id: "r8", author: "James W.", customer_name: "James W.", location: "Pakistan", rating: 5, comment: "The gothic aesthetic is exactly what I was looking for. Masterpiece.", review_text: "The gothic aesthetic is exactly what I was looking for. Masterpiece.", product_name: "General Store", is_verified: true }
                 ];
             }
             let deletedRevs = new Set();
