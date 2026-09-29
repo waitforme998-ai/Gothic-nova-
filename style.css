@@ -104,6 +104,41 @@ body, button, a, nav, .product-card, .filter-tab, .pdp-thumb-item, .card-actions
     -webkit-tap-highlight-color: transparent !important;
 }
 
+/* iOS Safari & WebKit Auto-Detection Link Reset (Prevents blue text on phone numbers, prices, IBANs, dates) */
+a[href^="tel"],
+a[href^="mailto"],
+a[href^="sms"],
+[x-apple-data-detectors],
+[x-apple-data-detectors-result] {
+    color: inherit !important;
+    text-decoration: none !important;
+    font-size: inherit !important;
+    font-family: inherit !important;
+    font-weight: inherit !important;
+    line-height: inherit !important;
+}
+
+/* Ensure monetary figures, account strings, and checkout price indicators retain luxury palette across all devices */
+.payable-amount,
+#checkoutStep1Total,
+#checkoutOriginalSubtotal,
+.pdp-modal-price,
+.pdp-modal-sale-price,
+.product-card-price,
+.cart-item-price,
+.order-row-price {
+    color: #ffe8be !important;
+    -webkit-text-fill-color: #ffe8be !important;
+}
+
+#checkoutStep1Deposit,
+#checkoutStep1Balance,
+#bankAccNo,
+#jazzCashAccNo {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+}
+
 html {
     font-family: var(--font-body);
     font-size: 16px;
