@@ -178,13 +178,24 @@
                 return _cachedSyncState;
             }
 
+            const CANONICAL_SYNC_ID = 'a29dc3da-0d01-4ba1-a1cf-d6f0ce82571e';
             try {
-                const { data, error } = await supabase
+                let { data, error } = await supabase
                     .from('gn_orders')
                     .select('id, items, updated_at')
-                    .eq('customer_name', '__GN_STORE_SYNC__')
-                    .order('created_at', { ascending: false })
+                    .eq('id', CANONICAL_SYNC_ID)
                     .limit(1);
+
+                if (error || !data || data.length === 0) {
+                    const fallbackRes = await supabase
+                        .from('gn_orders')
+                        .select('id, items, updated_at')
+                        .eq('customer_name', '__GN_STORE_SYNC__')
+                        .order('updated_at', { ascending: false })
+                        .limit(1);
+                    data = fallbackRes.data;
+                    error = fallbackRes.error;
+                }
 
                 if (!error && Array.isArray(data) && data.length > 0 && data[0] && data[0].items) {
                     const rawItems = data[0].items;
@@ -288,7 +299,7 @@
             const safeHeroSlides = getSafeDataset('hero_slides', 'gn_hero_slides', []);
 
             _cachedSyncState = {
-                syncRecordId: current?.syncRecordId || _cachedSyncState?.syncRecordId,
+                syncRecordId: current?.syncRecordId || _cachedSyncState?.syncRecordId || 'a29dc3da-0d01-4ba1-a1cf-d6f0ce82571e',
                 products: safeProducts,
                 categories: safeCategories,
                 reviews: safeReviews,
@@ -361,34 +372,39 @@
 
                             if (this.isLive && supabase) {
                                 try {
-                                    const { data, error: insertErr } = await supabase
+                                    const targetId = _cachedSyncState?.syncRecordId || 'a29dc3da-0d01-4ba1-a1cf-d6f0ce82571e';
+                                    const { data: updateData, error: updateErr } = await supabase
                                         .from('gn_orders')
-                                        .insert({
-                                            customer_name: '__GN_STORE_SYNC__',
-                                            phone_number: '00000000000',
-                                            house_flat_no: 'SYSTEM',
-                                            street_address: 'SYSTEM',
-                                            city: 'SYSTEM',
-                                            province: 'SYSTEM',
-                                            nearest_landmark: 'SYSTEM',
-                                            payment_method: 'cod',
+                                        .update({
                                             items: merged,
-                                            total_amount: 0,
-                                            status: 'Cancelled'
+                                            updated_at: new Date().toISOString()
                                         })
+                                        .eq('id', targetId)
                                         .select();
-                                    if (!insertErr && data && data[0]) {
-                                        const newRecordId = data[0].id;
-                                        if (_cachedSyncState) _cachedSyncState.syncRecordId = newRecordId;
-                                        console.log("⚡ Gothic Nova Cloud Sync: Master snapshot saved to Supabase Cloud!", newRecordId);
-                                        
-                                        // Asynchronously purge older duplicate sync records so the cloud database stays clean
-                                        supabase.from('gn_orders')
-                                            .delete()
-                                            .eq('customer_name', '__GN_STORE_SYNC__')
-                                            .neq('id', newRecordId)
-                                            .then(() => {})
-                                            .catch(() => {});
+
+                                    if (!updateErr && updateData && updateData.length > 0) {
+                                        console.log("⚡ Gothic Nova Cloud Sync: Master snapshot updated in-place on Supabase Cloud!", targetId);
+                                    } else {
+                                        const { data: insData } = await supabase
+                                            .from('gn_orders')
+                                            .insert({
+                                                id: targetId,
+                                                customer_name: '__GN_STORE_SYNC__',
+                                                phone_number: '00000000000',
+                                                house_flat_no: 'SYSTEM',
+                                                street_address: 'SYSTEM',
+                                                city: 'SYSTEM',
+                                                province: 'SYSTEM',
+                                                nearest_landmark: 'SYSTEM',
+                                                payment_method: 'cod',
+                                                items: merged,
+                                                total_amount: 0,
+                                                status: 'Cancelled'
+                                            })
+                                            .select();
+                                        if (insData && insData[0] && _cachedSyncState) {
+                                            _cachedSyncState.syncRecordId = insData[0].id;
+                                        }
                                     }
                                 } catch (e) {
                                     console.warn("Supabase push notice:", e);
@@ -400,7 +416,7 @@
                             resolve(_cachedSyncState);
                         }
                     });
-                }, 100);
+                }, 60);
             });
         },
 

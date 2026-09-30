@@ -7403,11 +7403,11 @@
                 toggleCategoriesSection(true);
             }
 
-            // 2. Ensure the category accordion is expanded
-            if (product && product.category) {
+            // 2. Ensure only the target category accordion is expanded
+            openCategoryAccordions.clear();
+            if (product && product.category && product.category.toLowerCase() !== 'all') {
                 const catSlug = String(product.category).trim().toLowerCase();
                 openCategoryAccordions.add(catSlug);
-                openCategoryAccordions.add('all');
             } else {
                 openCategoryAccordions.add('all');
             }
@@ -7662,6 +7662,7 @@
                     }
                 }
                 localStorage.setItem('gn_announcements', JSON.stringify(offers));
+                renderAnnouncementInputs(offers);
                 updateAnnouncementsBadge(offers.length);
 
                 try {
@@ -7673,14 +7674,16 @@
                     }
                 } catch(e) {}
 
-                if (btnState) btnState.success('SAVED ✓');
-                showToast('Top announcements saved successfully!');
-
                 if (window.SupabaseEngine && typeof window.SupabaseEngine.saveAnnouncements === 'function') {
                     try {
                         await window.SupabaseEngine.saveAnnouncements(offers);
-                    } catch(e) {}
+                    } catch(e) {
+                        console.warn("Supabase announcement save notice:", e);
+                    }
                 }
+
+                if (btnState) btnState.success('SAVED ✓');
+                showToast('Top announcements saved successfully!');
             } catch(e) {
                 if (btnState) btnState.reset();
                 showToast('Failed to save announcements', true);

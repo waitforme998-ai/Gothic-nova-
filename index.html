@@ -4408,18 +4408,25 @@
                 if (typeof closeExpandingSearch === 'function') closeExpandingSearch();
                 if (typeof closeSearchDropdown === 'function') closeSearchDropdown();
 
-                const catTabs = document.querySelectorAll('.category-filter-container .filter-tab');
+                const prods = (typeof getAllProducts === 'function') ? getAllProducts() : (window.gn_products || []);
+                const targetProd = prods.find(p => String(p.id) === String(productId));
+                const targetCat = (targetProd && targetProd.category ? String(targetProd.category).trim().toLowerCase() : 'all') || 'all';
+
+                window.currentCategory = targetCat;
+
+                // Update active tab in container and expanded drawer
+                const catTabs = document.querySelectorAll('#categoryFilterContainer .filter-tab, #categoryExpandedDrawer .filter-tab');
                 if (catTabs && catTabs.length) {
-                    catTabs.forEach(t => t.classList.remove('active'));
-                    const allTab = document.querySelector('.category-filter-container .filter-tab[data-filter="all"]');
-                    if (allTab) allTab.classList.add('active');
+                    catTabs.forEach(t => {
+                        const filterVal = (t.getAttribute('data-filter') || '').toLowerCase();
+                        t.classList.toggle('active', filterVal === targetCat);
+                    });
                 }
-                window.currentCategory = 'all';
 
                 // Automatically expand catalog visible batch if target product is beyond 12
                 try {
-                    const prods = (typeof getAllProducts === 'function') ? getAllProducts() : (window.gn_products || []);
-                    const targetIdx = prods.findIndex(p => String(p.id) === String(productId));
+                    const filteredProds = targetCat === 'all' ? prods : prods.filter(p => (p.category || '').toLowerCase() === targetCat);
+                    const targetIdx = filteredProds.findIndex(p => String(p.id) === String(productId));
                     if (targetIdx >= 0 && targetIdx >= (window.catalogVisibleCount || 12)) {
                         window.catalogVisibleCount = Math.ceil((targetIdx + 1) / (window.CATALOG_BATCH_SIZE || 12)) * (window.CATALOG_BATCH_SIZE || 12);
                     }
@@ -4439,7 +4446,7 @@
                         const activeDrop = document.getElementById('active-drop') || document.getElementById('main-drop-grid');
                         if (activeDrop) activeDrop.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     }
-                }, 80);
+                }, 120);
             };
             window.scrollToProduct = window.navigateToProductCard;
 
