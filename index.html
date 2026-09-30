@@ -2185,26 +2185,60 @@
             <div class="reviews-header-bar" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 18px; padding: 0 8px;">
                 <h2 class="font-serif" style="font-size: clamp(1.8rem, 4vw, 2.4rem); font-weight: 700; color: #ffffff; margin: 0; letter-spacing: 0.05em; text-transform: uppercase;">OUR REVIEWS</h2>
                 <div style="display: flex; align-items: center; gap: 6px; background: rgba(92, 15, 31, 0.45); border: 1px solid rgba(255, 59, 92, 0.4); padding: 5px 14px; border-radius: 4px;">
-                    <span id="reviewsAvgBadge" class="font-mono" style="font-size: 0.82rem; color: #ffe8be; font-weight: 700; letter-spacing: 0.04em;">4.9 / 5</span>
+                    <span id="reviewsAvgBadge" class="font-mono" style="font-size: 0.82rem; color: #ffe8be; font-weight: 700; letter-spacing: 0.04em;">5.0 / 5</span>
                 </div>
             </div>
 
-            <!-- Reviews Track -->
+            <!-- Reviews Track (0ms Instant First-Paint Cache) -->
             <div class="reviews-scroll-container" id="reviewsScrollContainer" style="display: flex; gap: 16px; overflow-x: auto; padding: 6px 4px 18px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none;">
                 <div id="customer-reviews-track" style="display: flex; gap: 16px; width: max-content;"></div>
             </div>
+            <script>
+                (function() {
+                    try {
+                        var defaultInitialRevs = [
+                            { id: "rev_1", author: "Baqir", customer_name: "Baqir", rating: 5, comment: "Best ever quality necklace never thought it would be exactly as it is shown.", review_text: "Best ever quality necklace never thought it would be exactly as it is shown.", location: "Pakistan", is_verified: true, product_name: "Spider necklace" }
+                        ];
+                        var storedRevs = null;
+                        try {
+                            var raw = localStorage.getItem('gn_reviews');
+                            if (raw) {
+                                var p = JSON.parse(raw);
+                                if (Array.isArray(p) && p.length > 0) storedRevs = p;
+                            }
+                        } catch(e) {}
+                        var useRevs = storedRevs || defaultInitialRevs;
+                        var valid = useRevs.filter(function(r) { return r && !r.is_sample && !r.is_mock && !String(r.id || '').startsWith('r_mock'); });
+                        if (valid.length === 0) valid = defaultInitialRevs;
+                        var track = document.getElementById('customer-reviews-track');
+                        if (track && valid.length > 0) {
+                            var validRatings = valid.map(function(r) { return Number(r.rating || r.stars || 5); }).filter(function(n) { return !isNaN(n) && n > 0; });
+                            var avg = validRatings.length ? (validRatings.reduce(function(a,b){return a+b;},0) / validRatings.length) : 5.0;
+                            var avgEl = document.getElementById('reviewsAvgBadge');
+                            if (avgEl) avgEl.textContent = (Math.round(avg * 10) / 10).toFixed(1) + ' / 5';
+                            track.innerHTML = valid.map(function(r) {
+                                var rating = Math.max(1, Math.min(5, Number(r.rating || r.stars || 5)));
+                                var stars = '★'.repeat(rating) + '☆'.repeat(5 - rating);
+                                var author = r.author || r.customer_name || 'Verified Customer';
+                                var loc = r.location || 'Pakistan';
+                                var text = r.comment || r.review_text || '';
+                                return '<div class="review-card" style="background: rgba(20, 9, 15, 0.96); border: 1px solid rgba(92, 15, 31, 0.45); border-radius: 6px; padding: 18px 20px; width: 280px; min-height: 140px; flex-shrink: 0; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 8px 24px rgba(0,0,0,0.6);">' +
+                                    '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">' +
+                                    '<div style="display: flex; color: #ffe8be; font-size: 0.88rem; letter-spacing: 2px;">' + stars + '</div></div>' +
+                                    '<p style="font-size: 0.82rem; line-height: 1.5; color: var(--color-text-primary); font-style: italic; margin-bottom: 12px; flex-grow: 1; word-break: break-word;">"' + text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '"</p>' +
+                                    '<span style="font-family: var(--font-mono); font-size: 0.70rem; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.08em;">— ' + author.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') + ' <span style="opacity: 0.65; font-weight: 400; text-transform: none;">• ' + loc.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</span></span>' +
+                                    '</div>';
+                            }).join('');
+                        }
+                    } catch(e) {}
+                })();
+            </script>
         </section>
 
         <!-- CATEGORY FILTERS (DYNAMIC GOTHIC BACKDROP BANNER WITH INLINE PUSH-DOWN DRAWER) -->
         <div class="category-filter-wrapper reveal-element" id="catalogSection" style="margin-top: 10px; margin-bottom: 16px;">
             <div class="cat-fade-left" id="catFadeLeft"></div>
-            <div class="category-filter-container" id="categoryFilterContainer">
-                <button class="filter-tab active" data-filter="all">All</button>
-                <button class="filter-tab" data-filter="chains">Chains</button>
-                <button class="filter-tab" data-filter="rings">Rings</button>
-                <button class="filter-tab" data-filter="bracelets">Bracelets</button>
-                <button class="filter-tab" data-filter="pendants">Pendants</button>
-            </div>
+            <div class="category-filter-container" id="categoryFilterContainer"></div>
             <div class="category-expanded-drawer" id="categoryExpandedDrawer"></div>
             <div class="cat-fade-right" id="catFadeRight"></div>
         </div>
@@ -2263,6 +2297,19 @@
                     { id: "6", name: "Reaper Pendant", category: "pendants", img: "assets/reaper_pendant.png", price: 8999, salePrice: 7499, stock: 15, threshold: 3, active: true }
                 ];
 
+                function normalizeProductCategorySlug(p) {
+                    let cat = (p && p.category ? String(p.category) : '').trim().toLowerCase();
+                    if (!cat || cat === 'general' || cat === 'all') {
+                        const name = (p && p.name ? String(p.name) : '').toLowerCase();
+                        if (name.includes('ring') || name.includes('claw') || name.includes('spider')) cat = 'rings';
+                        else if (name.includes('chain') || name.includes('choker') || name.includes('helix') || name.includes('cross') || name.includes('necklace')) cat = 'chains';
+                        else if (name.includes('bracelet') || name.includes('spine') || name.includes('bangle') || name.includes('pearl')) cat = 'bracelets';
+                        else if (name.includes('pendant') || name.includes('reaper') || name.includes('heart') || name.includes('blood') || name.includes('dragon')) cat = 'pendants';
+                        else cat = 'rings';
+                    }
+                    return cat;
+                }
+
                 function getAllProducts() {
                     let prods = window.gn_products;
                     if (!prods) {
@@ -2278,7 +2325,10 @@
                         prods = defaultSeedProducts;
                         window.gn_products = prods;
                     }
-                    return prods.filter(p => p && p.active !== false);
+                    return prods.filter(p => p && p.active !== false).map(p => ({
+                        ...p,
+                        category: normalizeProductCategorySlug(p)
+                    }));
                 }
                 window.getAllProducts = getAllProducts;
 
@@ -2317,8 +2367,8 @@
                     }
 
                     const standard = {
-                        chains: 'Chains',
                         rings: 'Rings',
+                        chains: 'Chains',
                         bracelets: 'Bracelets',
                         pendants: 'Pendants'
                     };
@@ -2354,52 +2404,45 @@
                     const metaMap = new Map();
                     const ordered = [];
                     const standardDefaults = [
-                        { id: 'chains', name: 'Chains' },
                         { id: 'rings', name: 'Rings' },
+                        { id: 'chains', name: 'Chains' },
                         { id: 'bracelets', name: 'Bracelets' },
                         { id: 'pendants', name: 'Pendants' }
                     ];
 
-                    if (rawMeta === null && rawCats.length === 0) {
-                        standardDefaults.forEach(c => {
-                            metaMap.set(c.id.toLowerCase(), c.name);
-                            ordered.push(c.id.toLowerCase());
+                    if (Array.isArray(metaList) && metaList.length > 0) {
+                        metaList.forEach(m => {
+                            if (typeof m === 'string' && m.trim()) {
+                                const slug = m.trim().toLowerCase();
+                                if (slug !== 'general' && slug !== 'all') {
+                                    metaMap.set(slug, slug.charAt(0).toUpperCase() + slug.slice(1));
+                                    if (!ordered.includes(slug)) ordered.push(slug);
+                                }
+                            } else if (m && m.id) {
+                                const slug = String(m.id).trim().toLowerCase();
+                                if (slug !== 'general' && slug !== 'all') {
+                                    metaMap.set(slug, m.name || (slug.charAt(0).toUpperCase() + slug.slice(1)));
+                                    if (!ordered.includes(slug)) ordered.push(slug);
+                                }
+                            }
                         });
-                    } else {
-                        if (Array.isArray(metaList) && metaList.length > 0) {
-                            metaList.forEach(m => {
-                                if (typeof m === 'string' && m.trim()) {
-                                    const slug = m.trim().toLowerCase();
-                                    if (slug !== 'general' && slug !== 'all') {
-                                        metaMap.set(slug, slug.charAt(0).toUpperCase() + slug.slice(1));
-                                        if (!ordered.includes(slug)) ordered.push(slug);
-                                    }
-                                } else if (m && m.id) {
-                                    const slug = String(m.id).trim().toLowerCase();
-                                    if (slug !== 'general' && slug !== 'all') {
-                                        metaMap.set(slug, m.name || (slug.charAt(0).toUpperCase() + slug.slice(1)));
-                                        if (!ordered.includes(slug)) ordered.push(slug);
-                                    }
+                    }
+                    if (Array.isArray(rawCats) && rawCats.length > 0) {
+                        rawCats.forEach(c => {
+                            if (typeof c === 'string' && c.trim()) {
+                                const slug = c.trim().toLowerCase();
+                                if (slug !== 'general' && slug !== 'all' && !metaMap.has(slug)) {
+                                    metaMap.set(slug, slug.charAt(0).toUpperCase() + slug.slice(1));
+                                    if (!ordered.includes(slug)) ordered.push(slug);
                                 }
-                            });
-                        }
-                        if (Array.isArray(rawCats) && rawCats.length > 0) {
-                            rawCats.forEach(c => {
-                                if (typeof c === 'string' && c.trim()) {
-                                    const slug = c.trim().toLowerCase();
-                                    if (slug !== 'general' && slug !== 'all' && !metaMap.has(slug)) {
-                                        metaMap.set(slug, slug.charAt(0).toUpperCase() + slug.slice(1));
-                                        if (!ordered.includes(slug)) ordered.push(slug);
-                                    }
-                                } else if (c && c.id) {
-                                    const slug = String(c.id).trim().toLowerCase();
-                                    if (slug !== 'general' && slug !== 'all' && !metaMap.has(slug)) {
-                                        metaMap.set(slug, c.name || slug);
-                                        if (!ordered.includes(slug)) ordered.push(slug);
-                                    }
+                            } else if (c && c.id) {
+                                const slug = String(c.id).trim().toLowerCase();
+                                if (slug !== 'general' && slug !== 'all' && !metaMap.has(slug)) {
+                                    metaMap.set(slug, c.name || slug);
+                                    if (!ordered.includes(slug)) ordered.push(slug);
                                 }
-                            });
-                        }
+                            }
+                        });
                     }
 
                     const products = getAllProducts();
@@ -2413,6 +2456,13 @@
                         }
                     });
 
+                    if (ordered.length === 0) {
+                        standardDefaults.forEach(c => {
+                            metaMap.set(c.id.toLowerCase(), c.name);
+                            ordered.push(c.id.toLowerCase());
+                        });
+                    }
+
                     metaMap.delete('general');
                     metaMap.delete('all');
 
@@ -2420,12 +2470,12 @@
                     const primaryCats = ordered.slice(0, primaryLimit);
                     const overflowCats = ordered.slice(primaryLimit);
 
-                    let primaryHtml = `<button class="filter-tab ${window.currentCategory === 'all' ? 'active' : ''}" data-filter="all">ALL</button>`;
+                    let primaryHtml = `<button type="button" class="filter-tab ${window.currentCategory === 'all' ? 'active' : ''}" data-filter="all">ALL</button>`;
                     
                     primaryCats.forEach(cat => {
                         const title = (metaMap.get(cat) || (cat.charAt(0).toUpperCase() + cat.slice(1))).toUpperCase();
                         const isActive = window.currentCategory === cat ? 'active' : '';
-                        primaryHtml += `<button class="filter-tab ${isActive}" data-filter="${cat}">${escapeHtml(title)}</button>`;
+                        primaryHtml += `<button type="button" class="filter-tab ${isActive}" data-filter="${cat}">${escapeHtml(title)}</button>`;
                     });
 
                     if (overflowCats.length > 0) {

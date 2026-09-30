@@ -3963,13 +3963,31 @@
             } catch(e) {}
         }
 
+        function normalizeProductCategoryForAdmin(p, catList) {
+            let cat = (p && p.category ? String(p.category) : '').trim().toLowerCase();
+            if (!cat || cat === 'general' || cat === 'all') {
+                const name = (p && p.name ? String(p.name) : '').toLowerCase();
+                if (name.includes('ring') || name.includes('claw') || name.includes('spider')) cat = 'rings';
+                else if (name.includes('chain') || name.includes('choker') || name.includes('helix') || name.includes('cross') || name.includes('necklace')) cat = 'chains';
+                else if (name.includes('bracelet') || name.includes('spine') || name.includes('bangle') || name.includes('pearl')) cat = 'bracelets';
+                else if (name.includes('pendant') || name.includes('reaper') || name.includes('heart') || name.includes('blood') || name.includes('dragon')) cat = 'pendants';
+                else if (Array.isArray(catList) && catList.length > 0 && catList[0].id) cat = String(catList[0].id).toLowerCase();
+                else cat = 'rings';
+            }
+            return cat;
+        }
+
         async function loadProducts() {
+            const currentCatList = getCategoryList();
             try {
                 const stored = localStorage.getItem('gn_products');
                 if (stored !== null) {
                     const parsed = JSON.parse(stored);
                     if (Array.isArray(parsed)) {
-                        products = parsed;
+                        products = parsed.map(p => ({
+                            ...p,
+                            category: normalizeProductCategoryForAdmin(p, currentCatList)
+                        }));
                         window.gn_products = products;
                     }
                 }
@@ -3979,14 +3997,20 @@
                 try {
                     const prods = await window.SupabaseEngine.getProducts();
                     if (Array.isArray(prods)) {
-                        products = prods;
+                        products = prods.map(p => ({
+                            ...p,
+                            category: normalizeProductCategoryForAdmin(p, currentCatList)
+                        }));
                         window.gn_products = products;
                         localStorage.setItem('gn_products', JSON.stringify(products));
                     }
                 } catch(e) {}
             }
             if (products === null) {
-                products = [...defaultCatalog];
+                products = defaultCatalog.map(p => ({
+                    ...p,
+                    category: normalizeProductCategoryForAdmin(p, currentCatList)
+                }));
                 window.gn_products = products;
             }
             return products;
@@ -3994,6 +4018,11 @@
 
         function saveProducts() {
             try { 
+                const currentCatList = getCategoryList();
+                products = products.map(p => ({
+                    ...p,
+                    category: normalizeProductCategoryForAdmin(p, currentCatList)
+                }));
                 localStorage.setItem('gn_products', JSON.stringify(products)); 
                 window.gn_products = products; 
                 broadcastProductsUpdate(products);
@@ -4798,8 +4827,15 @@
 
             try {
                 // 1. COLLECT ALL LOCAL ADMIN DATA
-                const currentProds = Array.isArray(products) ? products : [];
                 const currentCats = getCategoryList();
+                const currentProds = (Array.isArray(products) ? products : []).map(p => ({
+                    ...p,
+                    category: normalizeProductCategoryForAdmin(p, currentCats)
+                }));
+                products = currentProds;
+                window.gn_products = products;
+                try { localStorage.setItem('gn_products', JSON.stringify(products)); } catch(e) {}
+
                 const currentRevs = Array.isArray(adminReviews) ? adminReviews : [];
                 const currentAnn = getStoredAnnouncements();
 
