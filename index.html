@@ -2302,14 +2302,7 @@
 
                 function normalizeProductCategorySlug(p) {
                     let cat = (p && p.category ? String(p.category) : '').trim().toLowerCase();
-                    if (!cat || cat === 'general' || cat === 'all') {
-                        const name = (p && p.name ? String(p.name) : '').toLowerCase();
-                        if (name.includes('ring') || name.includes('claw') || name.includes('spider')) cat = 'rings';
-                        else if (name.includes('chain') || name.includes('choker') || name.includes('helix') || name.includes('cross') || name.includes('necklace')) cat = 'chains';
-                        else if (name.includes('bracelet') || name.includes('spine') || name.includes('bangle') || name.includes('pearl')) cat = 'bracelets';
-                        else if (name.includes('pendant') || name.includes('reaper') || name.includes('heart') || name.includes('blood') || name.includes('dragon')) cat = 'pendants';
-                        else cat = 'rings';
-                    }
+                    if (!cat || cat === 'general') return 'all';
                     return cat;
                 }
 
@@ -2392,6 +2385,12 @@
                         container.parentNode.insertBefore(drawer, container.nextSibling);
                     }
 
+                    let deletedCatSet = new Set();
+                    try {
+                        const rawDel = localStorage.getItem('gn_deleted_categories');
+                        if (rawDel) JSON.parse(rawDel).forEach(d => deletedCatSet.add(String(d).toLowerCase()));
+                    } catch(e) {}
+
                     let metaList = [];
                     try {
                         const rawMeta = localStorage.getItem('gn_categories_meta');
@@ -2417,13 +2416,13 @@
                         metaList.forEach(m => {
                             if (typeof m === 'string' && m.trim()) {
                                 const slug = m.trim().toLowerCase();
-                                if (slug !== 'general' && slug !== 'all') {
+                                if (slug !== 'general' && slug !== 'all' && !deletedCatSet.has(slug)) {
                                     metaMap.set(slug, slug.charAt(0).toUpperCase() + slug.slice(1));
                                     if (!ordered.includes(slug)) ordered.push(slug);
                                 }
                             } else if (m && m.id) {
                                 const slug = String(m.id).trim().toLowerCase();
-                                if (slug !== 'general' && slug !== 'all') {
+                                if (slug !== 'general' && slug !== 'all' && !deletedCatSet.has(slug)) {
                                     metaMap.set(slug, m.name || (slug.charAt(0).toUpperCase() + slug.slice(1)));
                                     if (!ordered.includes(slug)) ordered.push(slug);
                                 }
@@ -2433,13 +2432,13 @@
                         rawCats.forEach(c => {
                             if (typeof c === 'string' && c.trim()) {
                                 const slug = c.trim().toLowerCase();
-                                if (slug !== 'general' && slug !== 'all' && !metaMap.has(slug)) {
+                                if (slug !== 'general' && slug !== 'all' && !deletedCatSet.has(slug) && !metaMap.has(slug)) {
                                     metaMap.set(slug, slug.charAt(0).toUpperCase() + slug.slice(1));
                                     if (!ordered.includes(slug)) ordered.push(slug);
                                 }
                             } else if (c && c.id) {
                                 const slug = String(c.id).trim().toLowerCase();
-                                if (slug !== 'general' && slug !== 'all' && !metaMap.has(slug)) {
+                                if (slug !== 'general' && slug !== 'all' && !deletedCatSet.has(slug) && !metaMap.has(slug)) {
                                     metaMap.set(slug, c.name || slug);
                                     if (!ordered.includes(slug)) ordered.push(slug);
                                 }
@@ -2450,7 +2449,7 @@
                         products.forEach(p => {
                             if (p.category && String(p.category).trim() !== '' && p.active !== false) {
                                 const slug = String(p.category).trim().toLowerCase();
-                                if (!metaMap.has(slug) && slug !== 'general' && slug !== 'all') {
+                                if (!metaMap.has(slug) && slug !== 'general' && slug !== 'all' && !deletedCatSet.has(slug)) {
                                     metaMap.set(slug, slug.charAt(0).toUpperCase() + slug.slice(1));
                                     if (!ordered.includes(slug)) ordered.push(slug);
                                 }
@@ -2460,13 +2459,26 @@
 
                     if (ordered.length === 0) {
                         standardDefaults.forEach(c => {
-                            metaMap.set(c.id.toLowerCase(), c.name);
-                            ordered.push(c.id.toLowerCase());
+                            if (!deletedCatSet.has(c.id.toLowerCase())) {
+                                metaMap.set(c.id.toLowerCase(), c.name);
+                                ordered.push(c.id.toLowerCase());
+                            }
                         });
                     }
 
                     metaMap.delete('general');
                     metaMap.delete('all');
+
+                    // Dynamically update top navbar menu dropdown
+                    const navDropdown = document.getElementById('navMenuDropdown');
+                    if (navDropdown) {
+                        let dropdownHtml = `<a href="javascript:void(0)" onclick="selectCategoryAndScroll('all')" style="display:block;padding:10px 20px;font-size:0.85rem;color:var(--color-text-primary);text-decoration:none;font-weight:500;">All Collections</a><hr style="border:none;border-top:1px solid var(--color-border);margin:6px 0;">`;
+                        ordered.forEach(slug => {
+                            const title = metaMap.get(slug) || (slug.charAt(0).toUpperCase() + slug.slice(1));
+                            dropdownHtml += `<a href="javascript:void(0)" onclick="selectCategoryAndScroll('${escapeHtml(slug)}')" style="display:block;padding:10px 20px;font-size:0.85rem;color:var(--color-text-primary);text-decoration:none;font-weight:500;">${escapeHtml(title)}</a>`;
+                        });
+                        navDropdown.innerHTML = dropdownHtml;
+                    }
 
                     const primaryLimit = 3;
                     const primaryCats = ordered.slice(0, primaryLimit);

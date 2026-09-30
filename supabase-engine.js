@@ -202,8 +202,17 @@
                         if (rawDel) JSON.parse(rawDel).forEach(id => deletedReviewSet.add(String(id)));
                     } catch(e) {}
 
+                    let deletedCategorySet = new Set();
+                    try {
+                        const rawDel = localStorage.getItem('gn_deleted_categories');
+                        if (rawDel) JSON.parse(rawDel).forEach(id => deletedCategorySet.add(String(id).toLowerCase()));
+                    } catch(e) {}
+
                     const rawProds = Array.isArray(rawItems.products) ? rawItems.products : (_cachedSyncState?.products || []);
                     const filteredProds = rawProds.filter(p => p && !deletedProductSet.has(String(p.id)));
+
+                    const rawCats = Array.isArray(rawItems.categories) ? rawItems.categories : (_cachedSyncState?.categories || defaultCategories);
+                    const filteredCats = rawCats.filter(c => c && c.id && !deletedCategorySet.has(String(c.id).toLowerCase()));
 
                     const rawRevs = Array.isArray(rawItems.reviews) ? rawItems.reviews : (_cachedSyncState?.reviews || []);
                     const filteredRevs = rawRevs.filter(r => r && !deletedReviewSet.has(String(r.id)));
@@ -211,7 +220,7 @@
                     _cachedSyncState = {
                         syncRecordId: data[0].id,
                         products: filteredProds,
-                        categories: Array.isArray(rawItems.categories) ? rawItems.categories : (_cachedSyncState?.categories || defaultCategories),
+                        categories: filteredCats,
                         reviews: filteredRevs,
                         announcements: Array.isArray(rawItems.announcements) ? rawItems.announcements : (_cachedSyncState?.announcements || []),
                         hero_slides: Array.isArray(rawItems.hero_slides) ? rawItems.hero_slides : (_cachedSyncState?.hero_slides || []),
@@ -250,6 +259,12 @@
                 if (rawDel) JSON.parse(rawDel).forEach(id => deletedReviewSet.add(String(id)));
             } catch(e) {}
 
+            let deletedCategorySet = new Set();
+            try {
+                const rawDel = localStorage.getItem('gn_deleted_categories');
+                if (rawDel) JSON.parse(rawDel).forEach(id => deletedCategorySet.add(String(id).toLowerCase()));
+            } catch(e) {}
+
             // 2. Safe field extraction that prioritizes partial update, localStorage (active user edits), memory, then fresh cloud state
             const getSafeDataset = (key, storageKey, fallback = []) => {
                 if (partial[key] !== undefined) return partial[key];
@@ -267,7 +282,7 @@
             };
 
             let safeProducts = getSafeDataset('products', 'gn_products', []).filter(p => p && !deletedProductSet.has(String(p.id)));
-            const safeCategories = getSafeDataset('categories', 'gn_categories_meta', defaultCategories);
+            const safeCategories = getSafeDataset('categories', 'gn_categories_meta', defaultCategories).filter(c => c && c.id && !deletedCategorySet.has(String(c.id).toLowerCase()));
             let safeReviews = getSafeDataset('reviews', 'gn_reviews', []).filter(r => r && !deletedReviewSet.has(String(r.id)));
             const safeAnnouncements = getSafeDataset('announcements', 'gn_announcements', []);
             const safeHeroSlides = getSafeDataset('hero_slides', 'gn_hero_slides', []);
@@ -315,7 +330,7 @@
                             };
 
                             let mergedProducts = resolveFinalField('products', 'gn_products', safeProducts, []).filter(p => p && !deletedProductSet.has(String(p.id)));
-                            let mergedCategories = resolveFinalField('categories', 'gn_categories_meta', safeCategories, defaultCategories);
+                            let mergedCategories = resolveFinalField('categories', 'gn_categories_meta', safeCategories, defaultCategories).filter(c => c && c.id && !deletedCategorySet.has(String(c.id).toLowerCase()));
                             let mergedReviews = resolveFinalField('reviews', 'gn_reviews', safeReviews, []).filter(r => r && !deletedReviewSet.has(String(r.id)));
                             let mergedAnnouncements = resolveFinalField('announcements', 'gn_announcements', safeAnnouncements, []);
                             let mergedHeroSlides = resolveFinalField('hero_slides', 'gn_hero_slides', safeHeroSlides, []);
@@ -325,7 +340,7 @@
                                 mergedProducts = freshCloud.products.filter(p => p && !deletedProductSet.has(String(p.id)));
                             }
                             if (payloadToSave.categories === undefined && (!mergedCategories || mergedCategories.length === 0) && freshCloud && Array.isArray(freshCloud.categories) && freshCloud.categories.length > 0) {
-                                mergedCategories = freshCloud.categories;
+                                mergedCategories = freshCloud.categories.filter(c => c && c.id && !deletedCategorySet.has(String(c.id).toLowerCase()));
                             }
                             if (payloadToSave.reviews === undefined && (!mergedReviews || mergedReviews.length === 0) && freshCloud && Array.isArray(freshCloud.reviews) && freshCloud.reviews.length > 0) {
                                 mergedReviews = freshCloud.reviews.filter(r => r && !deletedReviewSet.has(String(r.id)));
@@ -534,7 +549,7 @@
             const normalized = {
                 id: String(product.id || Date.now()),
                 name: (product.name || 'Gothic Artifact').trim(),
-                category: (product.category || 'rings').trim().toLowerCase(),
+                category: (product.category || 'all').trim().toLowerCase(),
                 price: Number(product.price || 0),
                 sale_price: (product.salePrice !== undefined && product.salePrice !== null && product.salePrice !== '') ? Number(product.salePrice) : ((product.sale_price !== undefined && product.sale_price !== null && product.sale_price !== '') ? Number(product.sale_price) : null),
                 salePrice: (product.salePrice !== undefined && product.salePrice !== null && product.salePrice !== '') ? Number(product.salePrice) : ((product.sale_price !== undefined && product.sale_price !== null && product.sale_price !== '') ? Number(product.sale_price) : null),
@@ -643,7 +658,7 @@
                 return {
                     id: String(product.id || (Date.now() + idx)),
                     name: (product.name || `Artifact #${idx + 1}`).trim(),
-                    category: (product.category || 'rings').trim().toLowerCase(),
+                    category: (product.category || 'all').trim().toLowerCase(),
                     price: Number(product.price || 0),
                     sale_price: (product.salePrice !== undefined && product.salePrice !== null && product.salePrice !== '') ? Number(product.salePrice) : ((product.sale_price !== undefined && product.sale_price !== null && product.sale_price !== '') ? Number(product.sale_price) : null),
                     salePrice: (product.salePrice !== undefined && product.salePrice !== null && product.salePrice !== '') ? Number(product.salePrice) : ((product.sale_price !== undefined && product.sale_price !== null && product.sale_price !== '') ? Number(product.sale_price) : null),
@@ -669,18 +684,30 @@
         // 2. CATEGORIES API
         // =========================================================================
         async getCategories() {
+            let deletedCategorySet = new Set();
+            try {
+                const rawDel = localStorage.getItem('gn_deleted_categories');
+                if (rawDel) JSON.parse(rawDel).forEach(id => deletedCategorySet.add(String(id).toLowerCase()));
+            } catch(e) {}
+
             let localCats = null;
             try {
                 const raw = localStorage.getItem('gn_categories_meta');
-                if (raw !== null) localCats = JSON.parse(raw);
+                if (raw !== null) {
+                    const parsed = JSON.parse(raw);
+                    if (Array.isArray(parsed)) {
+                        localCats = parsed.filter(c => c && c.id && !deletedCategorySet.has(String(c.id).toLowerCase()));
+                    }
+                }
             } catch(e) {}
 
             if (this.isLive && supabase) {
                 try {
-                    const cloudState = await this._getCloudSyncState();
+                    const cloudState = await this._getCloudSyncState(true);
                     if (cloudState && Array.isArray(cloudState.categories)) {
-                        try { localStorage.setItem('gn_categories_meta', JSON.stringify(cloudState.categories)); } catch(e) {}
-                        return cloudState.categories;
+                        const filtered = cloudState.categories.filter(c => c && c.id && !deletedCategorySet.has(String(c.id).toLowerCase()));
+                        try { localStorage.setItem('gn_categories_meta', JSON.stringify(filtered)); } catch(e) {}
+                        return filtered;
                     }
                 } catch (err) {
                     console.warn("Notice: Fetching categories:", err);
@@ -689,14 +716,24 @@
 
             if (Array.isArray(localCats)) return localCats;
 
-            try { localStorage.setItem('gn_categories_meta', JSON.stringify(defaultCategories)); } catch(e) {}
-            return defaultCategories;
+            const initialCats = defaultCategories.filter(c => c && c.id && !deletedCategorySet.has(String(c.id).toLowerCase()));
+            try { localStorage.setItem('gn_categories_meta', JSON.stringify(initialCats)); } catch(e) {}
+            return initialCats;
         },
 
         async saveCategory(category) {
             const cleanSlug = String(category.id || category.slug || category.name || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
             const cleanName = (category.name || cleanSlug).trim();
             if (!cleanSlug) return null;
+
+            // Remove from tombstone if re-adding
+            try {
+                let deletedList = JSON.parse(localStorage.getItem('gn_deleted_categories') || '[]');
+                if (Array.isArray(deletedList)) {
+                    deletedList = deletedList.filter(id => String(id).toLowerCase() !== cleanSlug);
+                    localStorage.setItem('gn_deleted_categories', JSON.stringify(deletedList));
+                }
+            } catch(e) {}
 
             const payload = {
                 id: cleanSlug,
@@ -726,6 +763,17 @@
         async saveCategoryList(categories) {
             if (!Array.isArray(categories)) return false;
             const cleanList = categories.filter(c => c && c.id && String(c.id).toLowerCase() !== 'general' && String(c.id).toLowerCase() !== 'all');
+            
+            // Clear from tombstones
+            try {
+                let deletedList = JSON.parse(localStorage.getItem('gn_deleted_categories') || '[]');
+                if (Array.isArray(deletedList)) {
+                    const activeSlugs = new Set(cleanList.map(c => String(c.id).toLowerCase()));
+                    deletedList = deletedList.filter(id => !activeSlugs.has(String(id).toLowerCase()));
+                    localStorage.setItem('gn_deleted_categories', JSON.stringify(deletedList));
+                }
+            } catch(e) {}
+
             try {
                 localStorage.setItem('gn_categories_meta', JSON.stringify(cleanList));
                 localStorage.setItem('gn_categories', JSON.stringify(cleanList.map(c => c.id)));
@@ -736,18 +784,31 @@
 
         async deleteCategory(id) {
             const cleanId = String(id).trim().toLowerCase();
+            
+            // 1. Record in persistent tombstone
+            let deletedList = [];
+            try {
+                const rawDel = localStorage.getItem('gn_deleted_categories');
+                if (rawDel) deletedList = JSON.parse(rawDel);
+            } catch(e) {}
+            if (!Array.isArray(deletedList)) deletedList = [];
+            deletedList.push(cleanId);
+            try { localStorage.setItem('gn_deleted_categories', JSON.stringify([...new Set(deletedList)])); } catch(e) {}
+
             let localCats = [];
             try {
                 const stored = localStorage.getItem('gn_categories_meta');
                 if (stored !== null) localCats = JSON.parse(stored);
             } catch(e) {}
-            if (!Array.isArray(localCats)) localCats = defaultCategories;
+            if (!Array.isArray(localCats)) localCats = [...defaultCategories];
             
-            localCats = localCats.filter(c => String(c.id).toLowerCase() !== cleanId);
-            try { localStorage.setItem('gn_categories_meta', JSON.stringify(localCats)); } catch(e) {}
-            try { localStorage.setItem('gn_categories', JSON.stringify(localCats.map(c => c.id))); } catch(e) {}
+            localCats = localCats.filter(c => c && String(c.id).toLowerCase() !== cleanId);
+            try { 
+                localStorage.setItem('gn_categories_meta', JSON.stringify(localCats)); 
+                localStorage.setItem('gn_categories', JSON.stringify(localCats.map(c => c.id)));
+            } catch(e) {}
 
-            // Reassign any local products that were attached to this category
+            // 2. Reassign any products attached to this deleted category to 'all' (NEVER hardcode to rings)
             let localProds = [];
             try {
                 const storedP = localStorage.getItem('gn_products');
@@ -758,18 +819,27 @@
                 localProds = localProds.map(p => {
                     if (p && String(p.category).trim().toLowerCase() === cleanId) {
                         productsModified = true;
-                        return { ...p, category: (localCats[0] ? localCats[0].id : 'all') };
+                        return { ...p, category: 'all' };
                     }
                     return p;
                 });
                 if (productsModified) {
-                    try { localStorage.setItem('gn_products', JSON.stringify(localProds)); } catch(e) {}
+                    try { 
+                        localStorage.setItem('gn_products', JSON.stringify(localProds)); 
+                        window.gn_products = localProds;
+                    } catch(e) {}
                 }
             }
 
-            const payload = { categories: localCats };
-            if (productsModified) payload.products = localProds;
+            if (_cachedSyncState) {
+                _cachedSyncState.categories = localCats;
+                if (productsModified) _cachedSyncState.products = localProds;
+            }
 
+            const payload = { 
+                categories: localCats,
+                ...(productsModified ? { products: localProds } : {})
+            };
             await this._saveCloudSyncState(payload);
             return true;
         },

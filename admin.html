@@ -3983,15 +3983,7 @@
 
         function normalizeProductCategoryForAdmin(p, catList) {
             let cat = (p && p.category ? String(p.category) : '').trim().toLowerCase();
-            if (!cat || cat === 'general' || cat === 'all') {
-                const name = (p && p.name ? String(p.name) : '').toLowerCase();
-                if (name.includes('ring') || name.includes('claw') || name.includes('spider')) cat = 'rings';
-                else if (name.includes('chain') || name.includes('choker') || name.includes('helix') || name.includes('cross') || name.includes('necklace')) cat = 'chains';
-                else if (name.includes('bracelet') || name.includes('spine') || name.includes('bangle') || name.includes('pearl')) cat = 'bracelets';
-                else if (name.includes('pendant') || name.includes('reaper') || name.includes('heart') || name.includes('blood') || name.includes('dragon')) cat = 'pendants';
-                else if (Array.isArray(catList) && catList.length > 0 && catList[0].id) cat = String(catList[0].id).toLowerCase();
-                else cat = 'rings';
-            }
+            if (!cat || cat === 'general') return 'all';
             return cat;
         }
 
@@ -4052,6 +4044,12 @@
         window.customCategories = window.customCategories || [];
 
         function getCategoryList() {
+            let deletedSet = new Set();
+            try {
+                const rawDel = localStorage.getItem('gn_deleted_categories');
+                if (rawDel) JSON.parse(rawDel).forEach(d => deletedSet.add(String(d).toLowerCase()));
+            } catch(e) {}
+
             let meta = null;
             try { 
                 const stored = localStorage.getItem('gn_categories_meta'); 
@@ -4066,25 +4064,25 @@
             const map = new Map();
             if (meta === null) {
                 // First ever initialization
-                standard.forEach(c => map.set(c.id.toLowerCase(), c.name));
+                standard.forEach(c => {
+                    if (!deletedSet.has(c.id.toLowerCase())) {
+                        map.set(c.id.toLowerCase(), c.name);
+                    }
+                });
             } else if (Array.isArray(meta)) {
                 meta.forEach(c => {
                     if (c && c.id) {
                         const slug = String(c.id).trim().toLowerCase();
-                        if (slug !== 'general' && slug !== 'all' && slug !== '') {
+                        if (slug !== 'general' && slug !== 'all' && slug !== '' && !deletedSet.has(slug)) {
                             map.set(slug, c.name || (slug.charAt(0).toUpperCase() + slug.slice(1)));
                         }
                     } else if (typeof c === 'string' && c.trim()) {
                         const slug = c.trim().toLowerCase();
-                        if (slug !== 'general' && slug !== 'all' && slug !== '') {
+                        if (slug !== 'general' && slug !== 'all' && slug !== '' && !deletedSet.has(slug)) {
                             map.set(slug, slug.charAt(0).toUpperCase() + slug.slice(1));
                         }
                     }
                 });
-            }
-
-            if (map.size === 0) {
-                standard.forEach(c => map.set(c.id.toLowerCase(), c.name));
             }
 
             return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
@@ -4093,6 +4091,17 @@
         function saveCategoryList(list) {
             try {
                 const cleanList = (list || []).filter(c => c && c.id && String(c.id).toLowerCase() !== 'general' && String(c.id).toLowerCase() !== 'all');
+                
+                // Clear active categories from tombstone
+                try {
+                    let deletedList = JSON.parse(localStorage.getItem('gn_deleted_categories') || '[]');
+                    if (Array.isArray(deletedList)) {
+                        const activeSlugs = new Set(cleanList.map(c => String(c.id).toLowerCase()));
+                        deletedList = deletedList.filter(id => !activeSlugs.has(String(id).toLowerCase()));
+                        localStorage.setItem('gn_deleted_categories', JSON.stringify(deletedList));
+                    }
+                } catch(e) {}
+
                 localStorage.setItem('gn_categories_meta', JSON.stringify(cleanList));
                 localStorage.setItem('gn_categories', JSON.stringify(cleanList.map(c => c.id)));
                 window.customCategories = cleanList.map(c => c.id);
@@ -4294,11 +4303,19 @@
                 confirmText: 'Delete Category',
                 isDanger: true,
                 onConfirm: async () => {
-                    // 1. Instantly remove category from local list
+                    // 1. Record in tombstone
+                    try {
+                        let deletedList = JSON.parse(localStorage.getItem('gn_deleted_categories') || '[]');
+                        if (!Array.isArray(deletedList)) deletedList = [];
+                        deletedList.push(cleanSlug);
+                        localStorage.setItem('gn_deleted_categories', JSON.stringify([...new Set(deletedList)]));
+                    } catch(e) {}
+
+                    // 2. Instantly remove category from local list
                     let catList = getCategoryList().filter(c => String(c.id).toLowerCase() !== cleanSlug);
                     saveCategoryList(catList);
 
-                    // 2. If any products were attached to this category, reassign them to 'all'
+                    // 3. If any products were attached to this category, reassign them to 'all' (All Products)
                     let productsModified = false;
                     products = products.map(p => {
                         if (p && String(p.category).trim().toLowerCase() === cleanSlug) {
@@ -4314,20 +4331,22 @@
                         } catch(e) {}
                     }
 
-                    // 3. Clear from open accordions
+                    // 4. Clear from open accordions
                     if (openCategoryAccordions.has(cleanSlug)) {
                         openCategoryAccordions.delete(cleanSlug);
                     }
 
-                    // 4. INSTANT UI UPDATE (0ms)
+                    // 5. INSTANT UI UPDATE (0ms)
                     renderDashboard();
                     populateCategoryDropdowns();
                     showToast(`"${name}" deleted.`);
 
-                    // 5. Broadcast & sync in background without blocking UI
+                    // 6. Broadcast & sync in background without blocking UI
                     try {
                         window.dispatchEvent(new Event('storage'));
+                        window.dispatchEvent(new Event('categoriesUpdated'));
                         window.dispatchEvent(new Event('productsLoaded'));
+                        broadcastCategoriesUpdate(catList);
                         if (productsModified) broadcastProductsUpdate(products);
                     } catch(e) {}
 

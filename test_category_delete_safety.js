@@ -60,17 +60,38 @@ async function testCategoryDeleteSafety() {
     console.log('Simulating deletion of "empty-cat"...');
     await SupabaseEngine.deleteCategory('empty-cat');
 
-    const remainingCats = await SupabaseEngine.getCategories();
-    const remainingProds = await SupabaseEngine.getProducts();
-    const remainingRevs = await SupabaseEngine.getReviews();
-    const remainingAnn = await SupabaseEngine.getAnnouncements();
+    let remainingCats = await SupabaseEngine.getCategories();
+    let remainingProds = await SupabaseEngine.getProducts();
+    let remainingRevs = await SupabaseEngine.getReviews();
+    let remainingAnn = await SupabaseEngine.getAnnouncements();
 
     assert.strictEqual(remainingCats.length, 2, 'Should have 2 categories remaining');
     assert.strictEqual(remainingCats.find(c => c.id === 'empty-cat'), undefined, 'empty-cat should be deleted');
     assert.strictEqual(remainingProds.length, 2, 'Products must remain 100% intact');
     assert.strictEqual(remainingRevs.length, 1, 'Reviews must remain 100% intact');
     assert.strictEqual(remainingAnn.length, 1, 'Announcements must remain 100% intact');
-    console.log('✓ PASS: Deleting category strictly removed only category and kept all products, reviews & announcements intact');
+    console.log('✓ PASS: Deleting empty category strictly removed only category and kept all products, reviews & announcements intact');
+
+    console.log('Simulating deletion of populated "pendants" category...');
+    // 'Dragon Pendant' was in category 'pendants'
+    await SupabaseEngine.deleteCategory('pendants');
+
+    remainingCats = await SupabaseEngine.getCategories();
+    remainingProds = await SupabaseEngine.getProducts();
+
+    assert.strictEqual(remainingCats.length, 1, 'Should have 1 category remaining');
+    assert.strictEqual(remainingCats.find(c => c.id === 'pendants'), undefined, 'pendants category must be deleted');
+    
+    // Check Dragon Pendant was moved to 'all', NOT 'rings'
+    const dragonPendant = remainingProds.find(p => p.id === '2');
+    assert(dragonPendant, 'Dragon pendant must still exist');
+    assert.strictEqual(dragonPendant.category, 'all', 'Dragon pendant category must be set to "all", NOT hardcoded to "rings"');
+    console.log('✓ PASS: Product in deleted category safely reassigned to "all" without hardcoding to rings');
+
+    // Verify tombstone
+    const deletedCats = JSON.parse(localStorage.getItem('gn_deleted_categories') || '[]');
+    assert(deletedCats.includes('pendants'), 'Deleted category must be recorded in gn_deleted_categories tombstone');
+    console.log('✓ PASS: Category tombstone recorded and prevents resurrection');
 }
 
 testCategoryDeleteSafety().then(() => {
