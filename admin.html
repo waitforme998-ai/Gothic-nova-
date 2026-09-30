@@ -7491,25 +7491,36 @@
             return [];
         }
 
+        function renderAnnouncementInputs(offers) {
+            if (!Array.isArray(offers)) offers = getStoredAnnouncements();
+            for (let i = 1; i <= 5; i++) {
+                const input = document.getElementById(`announcementInput${i}`);
+                if (input && !input.matches(':focus')) {
+                    input.value = offers[i - 1] || '';
+                }
+            }
+            updateAnnouncementsBadge(offers.filter(o => o && String(o).trim()).length);
+        }
+        window.renderAnnouncementInputs = renderAnnouncementInputs;
+
         async function loadAnnouncementsIntoAdmin() {
+            // 1. Instant 0ms Paint
             let offers = getStoredAnnouncements();
+            renderAnnouncementInputs(offers);
+
+            // 2. Background Revalidation (Non-blocking)
             if (window.SupabaseEngine && typeof window.SupabaseEngine.getAnnouncements === 'function') {
                 try {
                     const cloudAnn = await window.SupabaseEngine.getAnnouncements();
                     if (Array.isArray(cloudAnn)) {
                         offers = cloudAnn;
                         localStorage.setItem('gn_announcements', JSON.stringify(offers));
+                        renderAnnouncementInputs(offers);
                     }
                 } catch(e) {}
             }
-            for (let i = 1; i <= 5; i++) {
-                const input = document.getElementById(`announcementInput${i}`);
-                if (input) {
-                    input.value = offers[i - 1] || '';
-                }
-            }
-            updateAnnouncementsBadge(offers.filter(o => o && String(o).trim()).length);
         }
+        window.loadAnnouncementsIntoAdmin = loadAnnouncementsIntoAdmin;
         async function loadCategoriesIntoAdmin() {
             if (window.SupabaseEngine && typeof window.SupabaseEngine.getCategories === 'function') {
                 try {
