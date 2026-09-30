@@ -3893,7 +3893,7 @@
             });
         }
 
-        // --- BUTTON STATE FEEDBACK HELPER (GUARANTEED LIFECYCLE) ---
+        // --- BUTTON STATE FEEDBACK HELPER (GUARANTEED LIFECYCLE & ANTI-DOUBLE-CLICK) ---
         function setButtonLoading(btn, loadingText) {
             if (!btn) return { success: (txt, cb) => { if (typeof cb === 'function') cb(); }, reset: () => {} };
             const originalHtml = btn.dataset.originalHtml || btn.innerHTML;
@@ -3904,7 +3904,9 @@
             btn.dataset.originalOpacity = originalOpacity;
 
             btn.disabled = true;
-            btn.style.opacity = '0.9';
+            btn.style.pointerEvents = 'none';
+            btn.style.cursor = 'not-allowed';
+            btn.style.opacity = '0.75';
             btn.innerHTML = `<span style="display:inline-flex;align-items:center;gap:6px;"><svg style="animation:adminSpin 0.75s linear infinite;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> ${loadingText || 'SAVING...'}</span>`;
 
             let isFinished = false;
@@ -3912,29 +3914,36 @@
                 if (isFinished) return;
                 isFinished = true;
                 btn.disabled = false;
+                btn.style.pointerEvents = '';
+                btn.style.cursor = '';
                 btn.innerHTML = btn.dataset.originalHtml || originalHtml;
                 btn.style.background = btn.dataset.originalBg !== undefined ? btn.dataset.originalBg : originalBg;
                 btn.style.opacity = btn.dataset.originalOpacity !== undefined ? btn.dataset.originalOpacity : originalOpacity;
             };
 
-            // Hard safety timeout: ALWAYS force-reset button within 800ms to guarantee zero lockups
-            const safetyTimer = setTimeout(resetBtn, 800);
+            // Safety timeout: Re-enable if no response within 5 seconds
+            const safetyTimer = setTimeout(resetBtn, 5000);
 
             return {
                 success(successText = 'SAVED ✓', cb) {
                     if (isFinished) return;
                     isFinished = true;
                     clearTimeout(safetyTimer);
-                    btn.disabled = false;
+                    btn.disabled = true;
+                    btn.style.pointerEvents = 'none';
+                    btn.style.cursor = 'default';
                     btn.style.opacity = '1';
                     btn.style.background = '#28a745';
                     btn.innerHTML = successText;
                     setTimeout(() => {
+                        btn.disabled = false;
+                        btn.style.pointerEvents = '';
+                        btn.style.cursor = '';
                         btn.innerHTML = btn.dataset.originalHtml || originalHtml;
                         btn.style.background = btn.dataset.originalBg !== undefined ? btn.dataset.originalBg : originalBg;
                         btn.style.opacity = btn.dataset.originalOpacity !== undefined ? btn.dataset.originalOpacity : originalOpacity;
                         if (typeof cb === 'function') cb();
-                    }, 350);
+                    }, 450);
                 },
                 reset() {
                     clearTimeout(safetyTimer);
@@ -5690,7 +5699,9 @@
             }
         };
 
+        let isSavingReviewInlineForm = false;
         async function createReviewFromInlineForm() {
+            if (isSavingReviewInlineForm) return;
             const authorInput = document.getElementById('newReviewAuthorInput');
             const locInput = document.getElementById('newReviewLocationInput');
             const ratingInput = document.getElementById('newReviewRatingInput');
@@ -5715,44 +5726,55 @@
                 return;
             }
 
+            isSavingReviewInlineForm = true;
             const btnState = setButtonLoading(saveBtn, 'SAVING...');
 
-            const revObj = {
-                id: 'rev_' + Date.now(),
-                author,
-                customer_name: author,
-                location: location || 'Pakistan',
-                product_name: product_name || 'Gothic Artifact',
-                rating: rating || 5,
-                comment,
-                review_text: comment,
-                is_verified: true
-            };
-
-            if (window.SupabaseEngine) {
-                try {
-                    await window.SupabaseEngine.saveReview(revObj);
-                } catch(e) {}
-            }
-
-            adminReviews.unshift(revObj);
             try {
-                localStorage.setItem('gn_reviews', JSON.stringify(adminReviews));
-                window.dispatchEvent(new Event('reviewsUpdated'));
-                window.dispatchEvent(new Event('storage'));
-            } catch(e) {}
-            if (authorInput) authorInput.value = '';
-            if (locInput) locInput.value = '';
-            if (prodInput) prodInput.value = '';
-            if (textInput) textInput.value = '';
-            setPickerRating('newReview', 5);
+                const revObj = {
+                    id: 'rev_' + Date.now(),
+                    author,
+                    customer_name: author,
+                    location: location || 'Pakistan',
+                    product_name: product_name || 'Gothic Artifact',
+                    rating: rating || 5,
+                    comment,
+                    review_text: comment,
+                    is_verified: true
+                };
 
-            if (btnState) btnState.success('SAVED ✓');
-            showToast('Review added successfully!');
-            setTimeout(() => {
-                toggleAddReviewForm(false);
-                renderReviewsAdmin();
-            }, 350);
+                adminReviews.unshift(revObj);
+                try {
+                    localStorage.setItem('gn_reviews', JSON.stringify(adminReviews));
+                    window.dispatchEvent(new Event('reviewsUpdated'));
+                    window.dispatchEvent(new Event('storage'));
+                } catch(e) {}
+
+                if (authorInput) authorInput.value = '';
+                if (locInput) locInput.value = '';
+                if (prodInput) prodInput.value = '';
+                if (textInput) textInput.value = '';
+                setPickerRating('newReview', 5);
+
+                if (btnState) btnState.success('SAVED ✓');
+                showToast('Review added successfully!');
+                setTimeout(() => {
+                    toggleAddReviewForm(false);
+                    renderReviewsAdmin();
+                }, 350);
+
+                if (window.SupabaseEngine) {
+                    try {
+                        await window.SupabaseEngine.saveReview(revObj);
+                    } catch(e) {}
+                }
+            } catch(e) {
+                if (btnState) btnState.reset();
+                showToast('Failed to save review', true);
+            } finally {
+                setTimeout(() => {
+                    isSavingReviewInlineForm = false;
+                }, 400);
+            }
         }
         window.createReviewFromInlineForm = createReviewFromInlineForm;
 
@@ -5857,7 +5879,9 @@
             }).join('');
         }
 
+        let isSavingReviewInline = false;
         async function saveReviewInline(revId) {
+            if (isSavingReviewInline) return;
             const rev = adminReviews.find(r => String(r.id) === String(revId));
             if (!rev) return;
 
@@ -5870,27 +5894,32 @@
             if (!author) { showToast("Enter customer name", true); return; }
             if (!comment) { showToast("Enter review comment", true); return; }
 
-            rev.author = author;
-            rev.customer_name = author;
-            rev.location = loc || 'Pakistan';
-            rev.rating = rating;
-            rev.product_name = prod || 'Gothic Artifact';
-            rev.comment = comment;
-            rev.review_text = comment;
-
+            isSavingReviewInline = true;
             try {
-                localStorage.setItem('gn_reviews', JSON.stringify(adminReviews));
-                window.dispatchEvent(new Event('reviewsUpdated'));
-                window.dispatchEvent(new Event('storage'));
-            } catch(e) {}
+                rev.author = author;
+                rev.customer_name = author;
+                rev.location = loc || 'Pakistan';
+                rev.rating = rating;
+                rev.product_name = prod || 'Gothic Artifact';
+                rev.comment = comment;
+                rev.review_text = comment;
 
-            if (window.SupabaseEngine) {
-                try { await window.SupabaseEngine.saveReview(rev); } catch(e) {}
+                try {
+                    localStorage.setItem('gn_reviews', JSON.stringify(adminReviews));
+                    window.dispatchEvent(new Event('reviewsUpdated'));
+                    window.dispatchEvent(new Event('storage'));
+                } catch(e) {}
+
+                openReviewId = null;
+                renderReviewsAdmin();
+                showToast('Review saved!');
+
+                if (window.SupabaseEngine) {
+                    try { await window.SupabaseEngine.saveReview(rev); } catch(e) {}
+                }
+            } finally {
+                setTimeout(() => { isSavingReviewInline = false; }, 300);
             }
-
-            openReviewId = null;
-            renderReviewsAdmin();
-            showToast('Review saved!');
         }
         window.saveReviewInline = saveReviewInline;
 
@@ -5932,7 +5961,10 @@
         }
         window.setReviewRating = setReviewRating;
 
+        let isSavingReviewModal = false;
         async function saveReviewFromModal() {
+            if (isSavingReviewModal) return;
+            const saveBtn = document.getElementById('saveReviewBtn');
             const editId = document.getElementById('review-edit-id').value;
             const author = document.getElementById('review-author-input').value.trim();
             const location = document.getElementById('review-location-input').value.trim();
@@ -5943,40 +5975,53 @@
             if (!author) { showToast("Enter author name", true); return; }
             if (!comment) { showToast("Enter review comment", true); return; }
 
-            const revObj = {
-                id: editId || 'rev_' + Date.now(),
-                author,
-                customer_name: author,
-                location: location || 'Pakistan',
-                product_name: product_name || 'Gothic Artifact',
-                rating,
-                comment,
-                review_text: comment,
-                is_verified: true
-            };
-
-            if (editId) {
-                const idx = adminReviews.findIndex(r => String(r.id) === String(editId));
-                if (idx !== -1) adminReviews[idx] = revObj;
-            } else {
-                adminReviews.push(revObj);
-            }
+            isSavingReviewModal = true;
+            const btnState = setButtonLoading(saveBtn, 'SAVING...');
 
             try {
-                localStorage.setItem('gn_reviews', JSON.stringify(adminReviews));
-                window.dispatchEvent(new Event('reviewsUpdated'));
-                window.dispatchEvent(new Event('storage'));
-            } catch(e) {}
+                const revObj = {
+                    id: editId || 'rev_' + Date.now(),
+                    author,
+                    customer_name: author,
+                    location: location || 'Pakistan',
+                    product_name: product_name || 'Gothic Artifact',
+                    rating,
+                    comment,
+                    review_text: comment,
+                    is_verified: true
+                };
 
-            if (window.SupabaseEngine) {
+                if (editId) {
+                    const idx = adminReviews.findIndex(r => String(r.id) === String(editId));
+                    if (idx !== -1) adminReviews[idx] = revObj;
+                } else {
+                    adminReviews.push(revObj);
+                }
+
                 try {
-                    await window.SupabaseEngine.saveReview(revObj);
-                    showToast("Review saved!");
-                } catch(e) { showToast("Saved review locally", false); }
-            }
+                    localStorage.setItem('gn_reviews', JSON.stringify(adminReviews));
+                    window.dispatchEvent(new Event('reviewsUpdated'));
+                    window.dispatchEvent(new Event('storage'));
+                } catch(e) {}
 
-            closeAllModals();
-            renderReviewsAdmin();
+                if (btnState) btnState.success('SAVED ✓');
+                showToast("Review saved!");
+                setTimeout(() => {
+                    closeAllModals();
+                    renderReviewsAdmin();
+                }, 350);
+
+                if (window.SupabaseEngine) {
+                    try {
+                        await window.SupabaseEngine.saveReview(revObj);
+                    } catch(e) {}
+                }
+            } catch(e) {
+                if (btnState) btnState.reset();
+                showToast("Failed to save review", true);
+            } finally {
+                setTimeout(() => { isSavingReviewModal = false; }, 400);
+            }
         }
         window.saveReviewFromModal = saveReviewFromModal;
 
@@ -6165,7 +6210,9 @@
             setTimeout(() => document.getElementById('single-product-name')?.focus(), 300);
         };
 
+        let isSavingSingleProduct = false;
         async function saveSingleProduct(btn) {
+            if (isSavingSingleProduct) return;
             const saveBtn = btn || document.getElementById('saveSingleProductBtn');
             const name = document.getElementById('single-product-name').value.trim();
             const price = parseFloat(document.getElementById('single-product-price').value);
@@ -6182,54 +6229,56 @@
             if (!name) { showToast("Enter a product name", true); document.getElementById('single-product-name')?.focus(); return; }
             if (isNaN(price) || price < 0) { showToast("Enter a valid price", true); document.getElementById('single-product-price')?.focus(); return; }
 
-            const btnState = setButtonLoading(saveBtn, 'SAVING...');
+            isSavingSingleProduct = true;
+            const btnState = setButtonLoading(saveBtn, 'SAVING PRODUCT...');
 
-            if (window.currentEditingProductId) {
-                const existing = products.find(p => String(p.id) === String(window.currentEditingProductId));
-                if (existing) {
-                    existing.name = name; 
-                    existing.category = category; 
-                    existing.img = singleSelectedImg;
-                    existing.price = price; 
-                    existing.salePrice = salePriceVal ? parseFloat(salePriceVal) : null;
-                    existing.stock = isNaN(stock) ? 10 : stock; 
-                    existing.threshold = isNaN(threshold) ? 3 : threshold;
-                    existing.desc = desc;
-                    existing.description = desc;
-                    existing.stock_images = [...singleProductStockImages];
-                    existing.stockImages = [...singleProductStockImages];
-                    saveProducts();
-                    if (window.SupabaseEngine) { 
-                        try { await window.SupabaseEngine.saveProduct(existing); } catch(e) {} 
-                    }
-                    renderDashboard(); 
-                    if (btnState) btnState.success('SAVED ✓');
-                    showToast(`"${existing.name}" updated!`);
-                    setTimeout(() => {
-                        closeAllModals();
-                        try { window.dispatchEvent(new Event('storage')); window.dispatchEvent(new Event('productsLoaded')); } catch(e) {}
-                        window.currentEditingProductId = null;
-                    }, 400);
-                    return;
-                }
-            }
-
-            const itemToSave = { 
-                name, 
-                category, 
-                img: singleSelectedImg, 
-                price,
-                salePrice: salePriceVal ? parseFloat(salePriceVal) : null, 
-                stock: isNaN(stock) ? 10 : stock, 
-                threshold: isNaN(threshold) ? 3 : threshold, 
-                desc,
-                description: desc,
-                stock_images: [...singleProductStockImages],
-                stockImages: [...singleProductStockImages]
-            };
             try {
+                if (window.currentEditingProductId) {
+                    const existing = products.find(p => String(p.id) === String(window.currentEditingProductId));
+                    if (existing) {
+                        existing.name = name; 
+                        existing.category = category; 
+                        existing.img = singleSelectedImg;
+                        existing.price = price; 
+                        existing.salePrice = salePriceVal ? parseFloat(salePriceVal) : null;
+                        existing.stock = isNaN(stock) ? 10 : stock; 
+                        existing.threshold = isNaN(threshold) ? 3 : threshold;
+                        existing.desc = desc;
+                        existing.description = desc;
+                        existing.stock_images = [...singleProductStockImages];
+                        existing.stockImages = [...singleProductStockImages];
+                        saveProducts();
+                        if (window.SupabaseEngine) { 
+                            try { await window.SupabaseEngine.saveProduct(existing); } catch(e) {} 
+                        }
+                        renderDashboard(); 
+                        if (btnState) btnState.success('SAVED ✓');
+                        showToast(`"${existing.name}" updated!`);
+                        setTimeout(() => {
+                            closeAllModals();
+                            try { window.dispatchEvent(new Event('storage')); window.dispatchEvent(new Event('productsLoaded')); } catch(e) {}
+                            window.currentEditingProductId = null;
+                        }, 400);
+                        return;
+                    }
+                }
+
+                const itemToSave = { 
+                    name, 
+                    category, 
+                    img: singleSelectedImg, 
+                    price,
+                    salePrice: salePriceVal ? parseFloat(salePriceVal) : null, 
+                    stock: isNaN(stock) ? 10 : stock, 
+                    threshold: isNaN(threshold) ? 3 : threshold, 
+                    desc,
+                    description: desc,
+                    stock_images: [...singleProductStockImages],
+                    stockImages: [...singleProductStockImages]
+                };
+
                 const saved = await commitProductsToStore([itemToSave]);
-                if (btnState) btnState.success('SAVED ✓');
+                if (btnState) btnState.success('ADDED ✓');
                 showToast(`"${saved[0].name}" saved!`);
                 setTimeout(() => {
                     closeAllModals();
@@ -6237,6 +6286,10 @@
             } catch(e) { 
                 if (btnState) btnState.reset();
                 showToast("Failed to save", true); 
+            } finally {
+                setTimeout(() => {
+                    isSavingSingleProduct = false;
+                }, 500);
             }
         }
         window.saveSingleProduct = saveSingleProduct;
@@ -7568,37 +7621,47 @@
             if (badge) badge.textContent = String(count);
         }
 
+        let isSavingAnnouncements = false;
         async function saveAnnouncementsFromAdmin() {
+            if (isSavingAnnouncements) return;
             const saveBtn = document.getElementById('saveAnnouncementsBtn');
+            isSavingAnnouncements = true;
             const btnState = setButtonLoading(saveBtn, 'SAVING...');
 
-            const offers = [];
-            for (let i = 1; i <= 5; i++) {
-                const input = document.getElementById(`announcementInput${i}`);
-                if (input && input.value.trim()) {
-                    offers.push(input.value.trim());
-                }
-            }
-            localStorage.setItem('gn_announcements', JSON.stringify(offers));
-            updateAnnouncementsBadge(offers.length);
-
-            if (window.SupabaseEngine && typeof window.SupabaseEngine.saveAnnouncements === 'function') {
-                try {
-                    await window.SupabaseEngine.saveAnnouncements(offers);
-                } catch(e) {}
-            }
-
             try {
-                window.dispatchEvent(new Event('announcementsUpdated'));
-                window.dispatchEvent(new Event('storage'));
-                if (typeof BroadcastChannel !== 'undefined') {
-                    const bc = new BroadcastChannel('gn_store_sync');
-                    bc.postMessage({ type: 'ANNOUNCEMENTS_UPDATED', announcements: offers });
+                const offers = [];
+                for (let i = 1; i <= 5; i++) {
+                    const input = document.getElementById(`announcementInput${i}`);
+                    if (input && input.value.trim()) {
+                        offers.push(input.value.trim());
+                    }
                 }
-            } catch(e) {}
+                localStorage.setItem('gn_announcements', JSON.stringify(offers));
+                updateAnnouncementsBadge(offers.length);
 
-            if (btnState) btnState.success('SAVED ✓');
-            showToast('Top announcements saved successfully!');
+                try {
+                    window.dispatchEvent(new Event('announcementsUpdated'));
+                    window.dispatchEvent(new Event('storage'));
+                    if (typeof BroadcastChannel !== 'undefined') {
+                        const bc = new BroadcastChannel('gn_store_sync');
+                        bc.postMessage({ type: 'ANNOUNCEMENTS_UPDATED', announcements: offers });
+                    }
+                } catch(e) {}
+
+                if (btnState) btnState.success('SAVED ✓');
+                showToast('Top announcements saved successfully!');
+
+                if (window.SupabaseEngine && typeof window.SupabaseEngine.saveAnnouncements === 'function') {
+                    try {
+                        await window.SupabaseEngine.saveAnnouncements(offers);
+                    } catch(e) {}
+                }
+            } catch(e) {
+                if (btnState) btnState.reset();
+                showToast('Failed to save announcements', true);
+            } finally {
+                setTimeout(() => { isSavingAnnouncements = false; }, 400);
+            }
         }
         window.saveAnnouncementsFromAdmin = saveAnnouncementsFromAdmin;
 

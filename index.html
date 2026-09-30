@@ -2042,10 +2042,13 @@
                                     return;
                                 }
                                 e.stopPropagation();
-                                if (typeof window.openPdpModal === 'function') {
-                                    window.openPdpModal(p);
-                                } else if (typeof window.navigateToProductCard === 'function') {
+                                if (typeof window.navigateToProductCard === 'function') {
                                     window.navigateToProductCard(p.id);
+                                } else if (typeof window.scrollToProduct === 'function') {
+                                    window.scrollToProduct(p.id);
+                                } else {
+                                    const targetCard = document.querySelector(`.product-card[data-product-id="${p.id}"]`) || document.getElementById('active-drop');
+                                    if (targetCard) targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
                                 }
                             };
                             itemDiv.innerHTML = `
