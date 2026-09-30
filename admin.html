@@ -3766,7 +3766,20 @@
             }
 
             try {
-                if (pass === 'gothicnova51214') {
+                let isValid = false;
+                if (window.crypto && window.crypto.subtle) {
+                    const msgUint8 = new TextEncoder().encode(pass);
+                    const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+                    const hashArray = Array.from(new Uint8Array(hashBuffer));
+                    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+                    if (hashHex === 'e41082dd946ee4436dea38b033a4aa2494788be193f97f021527ab3e02f72fb6') {
+                        isValid = true;
+                    }
+                } else if (pass === 'gothicnova51214') {
+                    isValid = true;
+                }
+
+                if (isValid) {
                     try {
                         localStorage.setItem('gn_admin_permanent_auth', 'unlocked');
                         localStorage.setItem('gn_admin_session', 'active');
@@ -3845,9 +3858,10 @@
         }
         window.showToast = showToast;
 
-        // --- IMAGE COMPRESSION HELPER ---
-        async function compressImageFile(file, maxWidth = 1000, quality = 0.85) {
+        // --- IMAGE COMPRESSION HELPER (WEBP HIGH-DENSITY WITH JPEG FALLBACK) ---
+        async function compressImageFile(file, maxWidth = 1200, quality = 0.82) {
             return new Promise((resolve) => {
+                if (!file) return resolve('');
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     const img = new Image();
@@ -3863,10 +3877,18 @@
                         canvas.height = h;
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, w, h);
+                        try {
+                            const webpData = canvas.toDataURL('image/webp', quality);
+                            if (webpData && webpData.startsWith('data:image/webp')) {
+                                return resolve(webpData);
+                            }
+                        } catch(err) {}
                         resolve(canvas.toDataURL('image/jpeg', quality));
                     };
+                    img.onerror = () => resolve(e.target.result || '');
                     img.src = e.target.result;
                 };
+                reader.onerror = () => resolve('');
                 reader.readAsDataURL(file);
             });
         }

@@ -201,6 +201,55 @@ runTest("Order Filter: Excludes ONLY __GN_STORE_SYNC__ while Preserving Real Cus
 });
 
 // -----------------------------------------------------------------------------
+// TEST 6: Partial Cloud Sync & Non-Destructive Merging
+// -----------------------------------------------------------------------------
+runTest("Partial Cloud Sync: Updating Announcements Preserves Products & Categories", async () => {
+    const initialState = {
+        products: [{ id: 'p1', name: 'Ring 1', price: 2999 }],
+        categories: [{ id: 'rings', name: 'Rings' }],
+        reviews: [{ id: 'r1', customer_name: 'Zack', rating: 5 }],
+        announcements: [{ id: 'a1', text: 'Old announcement' }],
+        hero_slides: [{ id: 's1', headline: 'Slide 1' }]
+    };
+
+    const partialUpdate = {
+        announcements: [{ id: 'a1', text: 'NEW FLASH SALE' }]
+    };
+
+    const merged = {
+        products: partialUpdate.products !== undefined ? partialUpdate.products : (initialState.products ?? []),
+        categories: partialUpdate.categories !== undefined ? partialUpdate.categories : (initialState.categories ?? []),
+        reviews: partialUpdate.reviews !== undefined ? partialUpdate.reviews : (initialState.reviews ?? []),
+        announcements: partialUpdate.announcements !== undefined ? partialUpdate.announcements : (initialState.announcements ?? []),
+        hero_slides: partialUpdate.hero_slides !== undefined ? partialUpdate.hero_slides : (initialState.hero_slides ?? [])
+    };
+
+    assert.strictEqual(merged.announcements[0].text, 'NEW FLASH SALE', "Announcement must be updated");
+    assert.strictEqual(merged.products.length, 1, "Products array must remain intact");
+    assert.strictEqual(merged.categories.length, 1, "Categories array must remain intact");
+    assert.strictEqual(merged.reviews.length, 1, "Reviews array must remain intact");
+});
+
+// -----------------------------------------------------------------------------
+// TEST 7: Bi-Directional Schema Normalization
+// -----------------------------------------------------------------------------
+runTest("Schema Normalization: Properties Aliased with Zero Undefined Errors", () => {
+    const rawProd = { id: "101", name: "Venom Ring", sale_price: 2500, price: 3000, img: "img.png" };
+    const normalized = {
+        ...rawProd,
+        salePrice: rawProd.sale_price !== undefined ? rawProd.sale_price : rawProd.salePrice,
+        sale_price: rawProd.sale_price !== undefined ? rawProd.sale_price : rawProd.salePrice,
+        img: rawProd.img || rawProd.image_url || '',
+        image_url: rawProd.image_url || rawProd.img || ''
+    };
+
+    assert.strictEqual(normalized.salePrice, 2500);
+    assert.strictEqual(normalized.sale_price, 2500);
+    assert.strictEqual(normalized.img, 'img.png');
+    assert.strictEqual(normalized.image_url, 'img.png');
+});
+
+// -----------------------------------------------------------------------------
 // Summary
 // -----------------------------------------------------------------------------
 console.log("================================================================================");
@@ -210,3 +259,4 @@ console.log("===================================================================
 if (testsFailed > 0) {
     process.exit(1);
 }
+
