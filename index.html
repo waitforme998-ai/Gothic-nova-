@@ -2386,7 +2386,7 @@
                     metaMap.delete('general');
                     metaMap.delete('all');
 
-                    const primaryLimit = (ordered.length >= 4) ? 2 : 3;
+                    const primaryLimit = 4;
                     const primaryCats = ordered.slice(0, primaryLimit);
                     const overflowCats = ordered.slice(primaryLimit);
 
@@ -2401,10 +2401,11 @@
                     if (overflowCats.length > 0) {
                         const isOverflowActive = overflowCats.includes(window.currentCategory);
                         const isDrawerOpen = drawer.classList.contains('open');
+                        const activeOverflowCat = isOverflowActive ? (metaMap.get(window.currentCategory) || window.currentCategory).toUpperCase() : 'MORE';
                         
                         primaryHtml += `
-                            <button type="button" class="filter-tab cat-more-toggle-btn ${isOverflowActive ? 'has-active' : ''} ${isDrawerOpen ? 'open' : ''}" id="catMoreToggleBtn" aria-label="More Categories" aria-expanded="${isDrawerOpen}">
-                                <span id="catMoreLabel">MORE</span>
+                            <button type="button" class="filter-tab cat-more-toggle-btn ${isOverflowActive ? 'active' : ''} ${isDrawerOpen ? 'open' : ''}" id="catMoreToggleBtn" aria-label="More Categories" aria-expanded="${isDrawerOpen}">
+                                <span id="catMoreLabel">${escapeHtml(activeOverflowCat)}</span>
                                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
                             </button>
                         `;

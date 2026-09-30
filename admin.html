@@ -4794,35 +4794,48 @@
 
             if (btn) btn.disabled = true;
             if (icon) icon.classList.add('spinning');
-            if (textEl) textEl.textContent = 'SYNCING...';
+            if (textEl) textEl.textContent = 'PUBLISHING...';
 
             try {
-                const tasks = [
-                    loadOrdersAdmin(false),
-                    (typeof loadReviewsAdmin === 'function') ? loadReviewsAdmin() : Promise.resolve(),
-                    (typeof loadProducts === 'function') ? loadProducts() : Promise.resolve()
-                ];
-                if (typeof loadAnnouncementsIntoAdmin === 'function') {
-                    loadAnnouncementsIntoAdmin();
-                }
-                if (typeof loadCategoriesIntoAdmin === 'function') {
-                    loadCategoriesIntoAdmin();
-                }
-                await Promise.allSettled(tasks);
+                // 1. COLLECT ALL LOCAL ADMIN DATA
+                const currentProds = Array.isArray(products) ? products : [];
+                const currentCats = getCategoryList();
+                const currentRevs = Array.isArray(adminReviews) ? adminReviews : [];
+                const currentAnn = getStoredAnnouncements();
 
-                if (typeof renderDashboard === 'function') {
-                    renderDashboard();
+                // 2. FORCE PERSIST TO CLOUD (SUPABASE)
+                if (window.SupabaseEngine && typeof window.SupabaseEngine.pushAllToCloud === 'function') {
+                    await window.SupabaseEngine.pushAllToCloud({
+                        products: currentProds,
+                        categories: currentCats,
+                        reviews: currentRevs,
+                        announcements: currentAnn
+                    });
+                } else if (window.SupabaseEngine && typeof window.SupabaseEngine._saveCloudSyncState === 'function') {
+                    await window.SupabaseEngine._saveCloudSyncState({
+                        products: currentProds,
+                        categories: currentCats,
+                        reviews: currentRevs,
+                        announcements: currentAnn
+                    });
                 }
-                if (typeof updateAlertsDropdown === 'function') {
-                    updateAlertsDropdown();
-                }
+
+                // 3. PULL INCOMING CUSTOMER ORDERS
+                await loadOrdersAdmin(false);
+
+                // 4. REFRESH LOCAL DOM
+                renderDashboard();
+                renderReviewsAdmin();
+                renderOrdersAdmin();
+                populateCategoryDropdowns();
+                updateOrdersHeaderMetrics();
 
                 if (showFeedback) {
-                    showToast(`Synced (${adminOrders.length} orders, catalog & metrics updated)`);
+                    showToast(`✓ Published ${currentProds.length} products, ${currentCats.length} categories & offers to live store!`);
                 }
             } catch(err) {
                 console.error("Error during admin sync:", err);
-                if (showFeedback) showToast("Sync completed with local fallback");
+                if (showFeedback) showToast("Saved and broadcast locally");
             } finally {
                 if (icon) icon.classList.remove('spinning');
                 if (textEl) textEl.textContent = 'SYNC DATA';

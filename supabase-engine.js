@@ -245,32 +245,41 @@
                             };
 
                             if (this.isLive && supabase) {
+                                let savedSuccessfully = false;
                                 const syncRecordId = current?.syncRecordId;
                                 if (syncRecordId) {
-                                    await supabase
-                                        .from('gn_orders')
-                                        .update({ items: merged, updated_at: new Date().toISOString() })
-                                        .eq('id', syncRecordId);
-                                } else {
-                                    const { data } = await supabase
-                                        .from('gn_orders')
-                                        .insert({
-                                            customer_name: '__GN_STORE_SYNC__',
-                                            phone_number: '00000000000',
-                                            house_flat_no: 'SYSTEM',
-                                            street_address: 'SYSTEM',
-                                            city: 'SYSTEM',
-                                            province: 'SYSTEM',
-                                            nearest_landmark: 'SYSTEM',
-                                            payment_method: 'cod',
-                                            items: merged,
-                                            total_amount: 0,
-                                            status: 'Cancelled'
-                                        })
-                                        .select();
-                                    if (data && data[0]) {
-                                        if (_cachedSyncState) _cachedSyncState.syncRecordId = data[0].id;
-                                    }
+                                    try {
+                                        const { error: updateErr } = await supabase
+                                            .from('gn_orders')
+                                            .update({ items: merged, updated_at: new Date().toISOString() })
+                                            .eq('id', syncRecordId);
+                                        if (!updateErr) savedSuccessfully = true;
+                                    } catch (e) {}
+                                }
+
+                                if (!savedSuccessfully) {
+                                    try {
+                                        const { data, error: insertErr } = await supabase
+                                            .from('gn_orders')
+                                            .insert({
+                                                customer_name: '__GN_STORE_SYNC__',
+                                                phone_number: '00000000000',
+                                                house_flat_no: 'SYSTEM',
+                                                street_address: 'SYSTEM',
+                                                city: 'SYSTEM',
+                                                province: 'SYSTEM',
+                                                nearest_landmark: 'SYSTEM',
+                                                payment_method: 'cod',
+                                                items: merged,
+                                                total_amount: 0,
+                                                status: 'Cancelled'
+                                            })
+                                            .select();
+                                        if (!insertErr && data && data[0]) {
+                                            if (_cachedSyncState) _cachedSyncState.syncRecordId = data[0].id;
+                                            savedSuccessfully = true;
+                                        }
+                                    } catch (e) {}
                                 }
                             }
                             resolve(merged);
@@ -281,6 +290,91 @@
                     });
                 }, 100);
             });
+        },
+
+        async pushAllToCloud(state = {}) {
+            if (!state) state = {};
+            let currentProducts = state.products;
+            if (!currentProducts) {
+                try {
+                    const raw = localStorage.getItem('gn_products');
+                    if (raw) currentProducts = JSON.parse(raw);
+                } catch(e) {}
+            }
+            if (!Array.isArray(currentProducts)) currentProducts = [];
+
+            let currentCats = state.categories;
+            if (!currentCats) {
+                try {
+                    const raw = localStorage.getItem('gn_categories_meta');
+                    if (raw) currentCats = JSON.parse(raw);
+                } catch(e) {}
+            }
+            if (!Array.isArray(currentCats)) currentCats = [];
+
+            let currentRevs = state.reviews;
+            if (!currentRevs) {
+                try {
+                    const raw = localStorage.getItem('gn_reviews');
+                    if (raw) currentRevs = JSON.parse(raw);
+                } catch(e) {}
+            }
+            if (!Array.isArray(currentRevs)) currentRevs = [];
+
+            let currentAnn = state.announcements;
+            if (!currentAnn) {
+                try {
+                    const raw = localStorage.getItem('gn_announcements');
+                    if (raw) currentAnn = JSON.parse(raw);
+                } catch(e) {}
+            }
+            if (!Array.isArray(currentAnn)) currentAnn = [];
+
+            const masterPayload = {
+                products: currentProducts,
+                categories: currentCats,
+                reviews: currentRevs,
+                announcements: currentAnn,
+                updated_at: new Date().toISOString(),
+                version: 2
+            };
+
+            try { localStorage.setItem('gn_products', JSON.stringify(currentProducts)); } catch(e) {}
+            try { localStorage.setItem('gn_categories_meta', JSON.stringify(currentCats)); } catch(e) {}
+            try { localStorage.setItem('gn_reviews', JSON.stringify(currentRevs)); } catch(e) {}
+            try { localStorage.setItem('gn_announcements', JSON.stringify(currentAnn)); } catch(e) {}
+
+            _cachedSyncState = { ...masterPayload };
+            dispatchUniversalSyncEvents(masterPayload);
+
+            if (this.isLive && supabase) {
+                try {
+                    const { data, error } = await supabase
+                        .from('gn_orders')
+                        .insert({
+                            customer_name: '__GN_STORE_SYNC__',
+                            phone_number: '00000000000',
+                            house_flat_no: 'SYSTEM',
+                            street_address: 'SYSTEM',
+                            city: 'SYSTEM',
+                            province: 'SYSTEM',
+                            nearest_landmark: 'SYSTEM',
+                            payment_method: 'cod',
+                            items: masterPayload,
+                            total_amount: 0,
+                            status: 'Cancelled'
+                        })
+                        .select();
+                    if (!error && data && data[0]) {
+                        _cachedSyncState.syncRecordId = data[0].id;
+                        console.log("⚡ Gothic Nova Cloud Sync: Master state successfully published to Supabase Cloud!", data[0].id);
+                    }
+                } catch (cloudErr) {
+                    console.warn("Supabase push notice:", cloudErr);
+                }
+            }
+
+            return masterPayload;
         },
 
         // =========================================================================
