@@ -7585,7 +7585,7 @@
         window.renderAnnouncementInputs = renderAnnouncementInputs;
 
         async function loadAnnouncementsIntoAdmin() {
-            // 1. Instant 0ms Paint
+            // 1. Instant 0ms Paint from local storage
             let offers = getStoredAnnouncements();
             renderAnnouncementInputs(offers);
 
@@ -7594,9 +7594,15 @@
                 try {
                     const cloudAnn = await window.SupabaseEngine.getAnnouncements();
                     if (Array.isArray(cloudAnn)) {
-                        offers = cloudAnn;
-                        localStorage.setItem('gn_announcements', JSON.stringify(offers));
-                        renderAnnouncementInputs(offers);
+                        const anyFocused = [1,2,3,4,5].some(i => {
+                            const el = document.getElementById(`announcementInput${i}`);
+                            return el && el.matches(':focus');
+                        });
+                        if (!anyFocused) {
+                            offers = cloudAnn;
+                            localStorage.setItem('gn_announcements', JSON.stringify(offers));
+                            renderAnnouncementInputs(offers);
+                        }
                     }
                 } catch(e) {}
             }

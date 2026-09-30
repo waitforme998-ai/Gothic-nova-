@@ -217,18 +217,18 @@
                 } catch(e) {}
             }
 
-            // 2. Safe field extraction that prioritizes partial update, then fresh cloud state, then memory, then localStorage
+            // 2. Safe field extraction that prioritizes partial update, localStorage (active user edits), memory, then fresh cloud state
             const getSafeDataset = (key, storageKey, fallback = []) => {
                 if (partial[key] !== undefined) return partial[key];
-                if (current && Array.isArray(current[key]) && current[key].length > 0) return current[key];
-                if (_cachedSyncState && Array.isArray(_cachedSyncState[key]) && _cachedSyncState[key].length > 0) return _cachedSyncState[key];
+                if (_pendingSavePayload && _pendingSavePayload[key] !== undefined) return _pendingSavePayload[key];
                 try {
                     const raw = localStorage.getItem(storageKey);
                     if (raw !== null) {
                         const parsed = JSON.parse(raw);
-                        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+                        if (Array.isArray(parsed)) return parsed;
                     }
                 } catch(e) {}
+                if (_cachedSyncState && Array.isArray(_cachedSyncState[key]) && _cachedSyncState[key].length > 0) return _cachedSyncState[key];
                 if (current && Array.isArray(current[key])) return current[key];
                 return fallback;
             };
@@ -267,22 +267,26 @@
                         _pendingSavePayload = {};
                         try {
                             const freshCloud = await this._getCloudSyncState(true);
+                            const resolveFinalField = (key, storageKey, safeVal, fallback = []) => {
+                                if (payloadToSave[key] !== undefined) return payloadToSave[key];
+                                try {
+                                    const raw = localStorage.getItem(storageKey);
+                                    if (raw !== null) {
+                                        const parsed = JSON.parse(raw);
+                                        if (Array.isArray(parsed)) return parsed;
+                                    }
+                                } catch(e) {}
+                                if (safeVal !== undefined && Array.isArray(safeVal)) return safeVal;
+                                if (freshCloud && Array.isArray(freshCloud[key])) return freshCloud[key];
+                                return fallback;
+                            };
+
                             const merged = {
-                                products: payloadToSave.products !== undefined 
-                                    ? payloadToSave.products 
-                                    : (freshCloud && Array.isArray(freshCloud.products) && freshCloud.products.length > 0 ? freshCloud.products : safeProducts),
-                                categories: payloadToSave.categories !== undefined 
-                                    ? payloadToSave.categories 
-                                    : (freshCloud && Array.isArray(freshCloud.categories) && freshCloud.categories.length > 0 ? freshCloud.categories : safeCategories),
-                                reviews: payloadToSave.reviews !== undefined 
-                                    ? payloadToSave.reviews 
-                                    : (freshCloud && Array.isArray(freshCloud.reviews) && freshCloud.reviews.length > 0 ? freshCloud.reviews : safeReviews),
-                                announcements: payloadToSave.announcements !== undefined 
-                                    ? payloadToSave.announcements 
-                                    : (freshCloud && Array.isArray(freshCloud.announcements) && freshCloud.announcements.length > 0 ? freshCloud.announcements : safeAnnouncements),
-                                hero_slides: payloadToSave.hero_slides !== undefined 
-                                    ? payloadToSave.hero_slides 
-                                    : (freshCloud && Array.isArray(freshCloud.hero_slides) && freshCloud.hero_slides.length > 0 ? freshCloud.hero_slides : safeHeroSlides),
+                                products: resolveFinalField('products', 'gn_products', safeProducts, []),
+                                categories: resolveFinalField('categories', 'gn_categories_meta', safeCategories, defaultCategories),
+                                reviews: resolveFinalField('reviews', 'gn_reviews', safeReviews, []),
+                                announcements: resolveFinalField('announcements', 'gn_announcements', safeAnnouncements, []),
+                                hero_slides: resolveFinalField('hero_slides', 'gn_hero_slides', safeHeroSlides, []),
                                 updated_at: new Date().toISOString(),
                                 version: 2
                             };
