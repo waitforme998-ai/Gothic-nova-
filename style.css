@@ -6313,9 +6313,9 @@ select option {
     height: 100vh;
     height: 100dvh;
     z-index: 999999;
-    background: rgba(0, 0, 0, 0.75) !important;
-    backdrop-filter: blur(3.5px) !important;
-    -webkit-backdrop-filter: blur(3.5px) !important;
+    background: rgba(0, 0, 0, 0.50) !important;
+    backdrop-filter: blur(1.5px) !important;
+    -webkit-backdrop-filter: blur(1.5px) !important;
     display: none;
     align-items: center;
     justify-content: center;
@@ -6329,8 +6329,9 @@ select option {
 }
 
 .daily-tarot-overlay.card-focused {
-    backdrop-filter: blur(3.5px) !important;
-    -webkit-backdrop-filter: blur(3.5px) !important;
+    background: rgba(0, 0, 0, 0.55) !important;
+    backdrop-filter: blur(1.5px) !important;
+    -webkit-backdrop-filter: blur(1.5px) !important;
 }
 
 .daily-tarot-overlay.active {
@@ -6366,24 +6367,24 @@ select option {
     z-index: 1;
 }
 
-/* Enclosed Luxury Modal Box: Distinct E-Commerce Shopping Benefit Container */
+/* Enclosed Luxury Modal Box: Minimal, Sleek, Never Full Screen */
 .tarot-stage-container {
     position: relative;
     z-index: 5;
-    width: min(840px, 94vw);
-    max-height: calc(100vh - 36px);
-    max-height: calc(100dvh - 36px);
-    background: radial-gradient(ellipse at 50% 10%, rgba(26, 10, 18, 0.98) 0%, rgba(10, 4, 8, 0.99) 70%, #030103 100%);
-    border: 1px solid rgba(212, 175, 55, 0.38);
-    border-radius: 12px;
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.95), 0 0 40px rgba(139, 0, 0, 0.3), inset 0 0 1px 1px rgba(212, 175, 55, 0.15);
+    width: min(520px, 92vw);
+    max-height: calc(100vh - 40px);
+    max-height: calc(100dvh - 40px);
+    background: radial-gradient(ellipse at 50% 10%, rgba(26, 10, 18, 0.97) 0%, rgba(12, 4, 9, 0.98) 75%, #050204 100%);
+    border: 1px solid rgba(212, 175, 55, 0.45);
+    border-radius: 14px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.92), 0 0 32px rgba(139, 0, 0, 0.28), inset 0 0 1px 1px rgba(212, 175, 55, 0.18);
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
-    gap: 16px;
+    gap: 10px;
     margin: auto;
-    padding: 24px 20px;
+    padding: 18px 20px 16px 20px;
     box-sizing: border-box;
     overflow-y: auto;
     overflow-x: hidden;
@@ -6394,34 +6395,34 @@ select option {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 6px;
-    margin-bottom: 2px;
+    gap: 3px;
+    margin-bottom: 0px;
 }
 
 .tarot-eyebrow {
     font-family: var(--font-mono);
-    font-size: 0.82rem;
+    font-size: 0.68rem;
     font-weight: 800;
     color: #e5c158;
-    letter-spacing: 0.24em;
+    letter-spacing: 0.20em;
     text-transform: uppercase;
-    text-shadow: 0 0 12px rgba(229, 193, 88, 0.35);
+    text-shadow: 0 0 8px rgba(229, 193, 88, 0.35);
 }
 
 .tarot-title {
     font-family: var(--font-heading, 'Antonio', sans-serif);
-    font-size: clamp(2.2rem, 5.2vw, 3.4rem);
+    font-size: clamp(1.35rem, 4.2vw, 1.85rem);
     font-weight: 900;
-    letter-spacing: 0.10em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     margin: 0;
     color: #fdfbf7;
     background: linear-gradient(180deg, #ffffff 0%, #f1ede6 40%, #c5a059 85%, #8b0000 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.95)) drop-shadow(0 0 18px rgba(139, 0, 0, 0.4));
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.9));
     transition: all 0.25s ease;
-    line-height: 1.1;
+    line-height: 1.15;
 }
 
 .tarot-title.shuffling-text {
@@ -6429,47 +6430,45 @@ select option {
     -webkit-background-clip: text !important;
     -webkit-text-fill-color: transparent !important;
     animation: mysticShufflePulse 0.35s ease-in-out infinite alternate !important;
-    letter-spacing: 0.16em !important;
+    letter-spacing: 0.12em !important;
 }
 
 @keyframes mysticShufflePulse {
     from {
-        filter: drop-shadow(0 0 12px rgba(245, 158, 11, 0.65)) drop-shadow(0 4px 14px rgba(0, 0, 0, 0.95));
+        filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.65)) drop-shadow(0 2px 8px rgba(0, 0, 0, 0.95));
         transform: scale(0.99);
     }
     to {
-        filter: drop-shadow(0 0 22px rgba(220, 38, 38, 0.95)) drop-shadow(0 4px 18px rgba(0, 0, 0, 0.98));
+        filter: drop-shadow(0 0 18px rgba(220, 38, 38, 0.95)) drop-shadow(0 2px 10px rgba(0, 0, 0, 0.98));
         transform: scale(1.01);
     }
 }
 
 .tarot-subtext {
     font-family: var(--font-mono);
-    font-size: clamp(0.82rem, 2.2vw, 0.96rem);
+    font-size: clamp(0.68rem, 1.8vw, 0.76rem);
     color: #ded6c9;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
-    opacity: 0.92;
+    opacity: 0.90;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 6px;
     font-weight: 600;
-    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.9);
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
 }
 
 .tarot-subtext::before,
 .tarot-subtext::after {
     content: "✦";
     color: #c53030;
-    font-size: 0.65rem;
+    font-size: 0.55rem;
     opacity: 0.9;
 }
 
-/* --------------------------------------------------------------------------
-   DRAMATIC 'CHOOSE !' IMPACT TEXT (Gothic Occult Appearance)
-   -------------------------------------------------------------------------- */
+/* DRAMATIC 'CHOOSE !' IMPACT TEXT */
 .tarot-choose-impact-wrap {
     position: absolute;
     top: 48%;
@@ -6509,48 +6508,46 @@ select option {
 .tarot-choose-impact {
     display: inline-block;
     font-family: var(--font-heading, 'Antonio', sans-serif);
-    font-size: clamp(2.8rem, 8.5vw, 4.4rem);
+    font-size: clamp(2.2rem, 6.5vw, 3.2rem);
     font-weight: 900;
-    letter-spacing: 0.22em;
+    letter-spacing: 0.18em;
     color: #ffffff;
     background: linear-gradient(180deg, #ffffff 0%, #f3eee6 45%, #c5a059 80%, #9e1b2b 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 0 26px rgba(139, 0, 0, 0.85)) drop-shadow(0 4px 14px rgba(0, 0, 0, 0.98));
+    filter: drop-shadow(0 0 20px rgba(139, 0, 0, 0.85)) drop-shadow(0 2px 10px rgba(0, 0, 0, 0.98));
 }
 
-/* --------------------------------------------------------------------------
-   4-CARD STAGE (3D Cards) - Zero Overflow, Refined Proportions
-   -------------------------------------------------------------------------- */
+/* 4-CARD STAGE (Compact, Well-Spaced, Zero Overflow) */
 .tarot-cards-stage {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 14px;
+    gap: 10px;
     width: 100%;
-    max-width: 780px;
+    max-width: 470px;
     perspective: 1200px;
-    margin: 4px 0 8px 0;
+    margin: 4px 0 6px 0;
     position: relative;
-    min-height: 270px;
+    min-height: 165px;
     align-items: center;
     justify-items: center;
     box-sizing: border-box;
-    overflow: hidden !important; /* Strict Zero-Overflow Constraint */
+    overflow: hidden !important;
     border-radius: 8px;
-    padding: 6px 4px;
+    padding: 4px;
 }
 
-/* Card Wrapper: Proportioned Occult Tarot Aspect Ratio fitting inside box */
+/* Card Wrapper: Proportioned Occult Tarot Card */
 .tarot-card-wrapper {
     position: relative;
     width: 100%;
-    max-width: 175px;
-    height: 260px;
+    max-width: 105px;
+    height: 155px;
     cursor: default;
     perspective: 1000px;
     transform-style: preserve-3d;
     transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s ease, filter 0.3s ease;
-    border-radius: 10px;
+    border-radius: 8px;
 }
 
 /* 3D Flip Container */
@@ -6560,24 +6557,24 @@ select option {
     height: 100%;
     transform-style: preserve-3d;
     transition: transform 0.45s cubic-bezier(0.4, 0.0, 0.2, 1);
-    border-radius: 10px;
+    border-radius: 8px;
 }
 
-/* State: Face-Up (Reward Revealed) */
+/* State: Face-Up */
 .tarot-card-wrapper.flipped .tarot-card-inner {
     transform: rotateY(0deg);
 }
 
-/* State: Face-Down (Crowned Skull Backing / Offers Hidden) */
+/* State: Face-Down */
 .tarot-card-wrapper.face-down .tarot-card-inner {
     transform: rotateY(180deg);
 }
 
 /* Natural slight organic rotation */
-.tarot-card-wrapper:nth-child(1) { transform: translateY(-2px) rotateZ(-1deg); }
-.tarot-card-wrapper:nth-child(2) { transform: translateY(2px) rotateZ(0.8deg); }
-.tarot-card-wrapper:nth-child(3) { transform: translateY(-2px) rotateZ(-0.8deg); }
-.tarot-card-wrapper:nth-child(4) { transform: translateY(2px) rotateZ(1deg); }
+.tarot-card-wrapper:nth-child(1) { transform: translateY(-1px) rotateZ(-0.8deg); }
+.tarot-card-wrapper:nth-child(2) { transform: translateY(1px) rotateZ(0.6deg); }
+.tarot-card-wrapper:nth-child(3) { transform: translateY(-1px) rotateZ(-0.6deg); }
+.tarot-card-wrapper:nth-child(4) { transform: translateY(1px) rotateZ(0.8deg); }
 
 /* Ready to pick state: Interactive Gothic Golden Aura on Hover */
 .tarot-card-wrapper.ready-to-pick {
@@ -6586,11 +6583,11 @@ select option {
 }
 
 .tarot-card-wrapper.ready-to-pick:hover {
-    transform: translateY(-5px) scale(1.02) !important;
-    filter: drop-shadow(0 14px 32px rgba(0, 0, 0, 0.98)) drop-shadow(0 0 18px rgba(212, 175, 55, 0.45)) !important;
+    transform: translateY(-4px) scale(1.03) !important;
+    filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.98)) drop-shadow(0 0 14px rgba(212, 175, 55, 0.45)) !important;
 }
 
-/* Common Face Styling: Rounded corners, crisp masking, no border artifacts */
+/* Common Face Styling */
 .tarot-face {
     position: absolute;
     top: 0;
@@ -6599,34 +6596,34 @@ select option {
     height: 100%;
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
-    border-radius: 10px;
+    border-radius: 8px;
     overflow: hidden;
     box-sizing: border-box;
 }
 
-/* Card Back: Identical Occult Gothic Crowned Skull Art with Dual Gilded Frame */
+/* Card Back: Gothic Crowned Skull Art */
 .tarot-back {
     transform: rotateY(180deg);
     background-color: #060204;
     background-image: url('assets/gothic_card_back.jpg');
     background-size: cover;
     background-position: center;
-    border: 1.5px solid rgba(212, 175, 55, 0.55);
-    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.98), inset 0 0 0 1px rgba(212, 175, 55, 0.3), inset 0 0 24px rgba(0, 0, 0, 0.96);
+    border: 1.2px solid rgba(212, 175, 55, 0.55);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.95), inset 0 0 0 1px rgba(212, 175, 55, 0.25);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 12px;
+    padding: 8px;
 }
 
-/* Card Front: Revealed Gothic Reward (Pure Obsidian Noir Glass, No Grey, Gilded Bevels) */
+/* Card Front: Revealed Gothic Reward */
 .tarot-front {
     transform: rotateY(0deg);
     background: radial-gradient(ellipse at 50% 15%, rgba(30, 10, 20, 0.99) 0%, #080306 65%, #020102 100%) !important;
-    border: 1.5px solid rgba(212, 175, 55, 0.45);
-    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.98), inset 0 0 0 1.5px rgba(212, 175, 55, 0.4), inset 0 0 24px rgba(139, 0, 0, 0.5) !important;
-    padding: 14px 10px 10px 10px;
+    border: 1.2px solid rgba(212, 175, 55, 0.45);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.95), inset 0 0 0 1px rgba(212, 175, 55, 0.35), inset 0 0 18px rgba(139, 0, 0, 0.4) !important;
+    padding: 8px 6px 6px 6px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -6637,51 +6634,52 @@ select option {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 4px;
-    padding: 3px 8px;
+    gap: 3px;
+    padding: 2px 5px;
     background: rgba(0, 0, 0, 0.85);
     border: 1px solid rgba(212, 175, 55, 0.5);
     border-radius: 999px;
     font-family: var(--font-mono);
-    font-size: 0.68rem;
+    font-size: 0.50rem;
     font-weight: 800;
     color: #f5e6c8;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
 }
 
 .tarot-roman-numeral-front {
     font-family: 'Playfair Display', Georgia, serif;
-    font-size: 3.0rem;
+    font-size: 1.8rem;
     font-weight: 900;
     line-height: 1;
     letter-spacing: 0.02em;
-    margin: 1px 0 3px 0;
+    margin: 1px 0 2px 0;
     user-select: none;
-    filter: drop-shadow(0 3px 10px rgba(0, 0, 0, 0.98));
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.95));
 }
 
 .tarot-front .font-serif,
 .tarot-card-offer-title {
-    font-size: 1.28rem;
+    font-size: 0.78rem;
     font-weight: 900;
     color: #ffffff;
-    letter-spacing: 0.04em;
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.95);
+    letter-spacing: 0.03em;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.95);
     text-align: center;
+    line-height: 1.15;
 }
 
 .tarot-front .font-mono,
 .tarot-card-subtext {
-    font-size: 0.74rem;
+    font-size: 0.56rem;
     color: #ded6c9;
-    opacity: 0.95;
-    line-height: 1.3;
+    opacity: 0.92;
+    line-height: 1.22;
     text-align: center;
-    max-width: 94%;
+    max-width: 96%;
 }
 
-/* Flash effect: High-energy burst */
+/* Flash effect */
 .tarot-flash {
     position: absolute;
     top: 0;
@@ -6692,7 +6690,7 @@ select option {
     opacity: 0;
     pointer-events: none;
     z-index: 10;
-    border-radius: 10px;
+    border-radius: 8px;
 }
 
 .tarot-card-wrapper.flash-active .tarot-flash {
@@ -6713,13 +6711,13 @@ select option {
     transition: opacity 0.35s ease, transform 0.35s ease;
 }
 
-/* Chosen Card: Animates smoothly to center with dominant majestic aura */
+/* Chosen Card */
 .tarot-cards-stage.has-picked {
     display: flex !important;
     justify-content: center !important;
     align-items: center !important;
     min-height: unset !important;
-    margin: 4px auto 8px auto !important;
+    margin: 4px auto 6px auto !important;
 }
 
 .tarot-cards-stage.has-picked .tarot-card-wrapper:not(.chosen-one) {
@@ -6727,8 +6725,9 @@ select option {
 }
 
 .tarot-cards-stage.has-picked .tarot-card-wrapper.chosen-one {
-    width: 195px !important;
-    height: 280px !important;
+    width: 125px !important;
+    max-width: 125px !important;
+    height: 175px !important;
     margin: 0 auto !important;
     transform: none !important;
     z-index: 50 !important;
@@ -6737,18 +6736,18 @@ select option {
 
 @keyframes tarotCenterPop {
     0% {
-        transform: scale(0.92) translateY(8px);
-        filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.8));
+        transform: scale(0.92) translateY(6px);
+        filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.8));
     }
     100% {
         transform: scale(1.0) translateY(0);
-        filter: drop-shadow(0 16px 40px rgba(0, 0, 0, 0.98)) drop-shadow(0 0 28px rgba(212, 175, 55, 0.55));
+        filter: drop-shadow(0 12px 30px rgba(0, 0, 0, 0.98)) drop-shadow(0 0 20px rgba(212, 175, 55, 0.55));
     }
 }
 
 /* --------------------------------------------------------------------------
-   5 ADVANCED ULTRA-SMOOTH SHUFFLE PATTERNS (HIGH-VELOCITY 5-SECOND MYSTIC FLOW)
-   Continuous closed-loop 3D GPU-composited trajectories with zero DOM thrashing
+   5 DYNAMIC, HIGH-VELOCITY SHUFFLE PATTERNS (TRUE POSITION SWAPPING ACROSS STAGE)
+   Slot 1 (0px), Slot 2 (+115px), Slot 3 (+230px), Slot 4 (+345px)
    -------------------------------------------------------------------------- */
 :root {
     --shuffle-dur: 0.46s;
@@ -6760,230 +6759,200 @@ select option {
     pointer-events: none !important;
 }
 
-/* PATTERN 1: HIGH-VELOCITY ARCHCROSS (STRICTLY BOUNDED) */
+/* PATTERN 1: THE GRAND CROSS-SWAP (Cards 1 & 4 Swap Outermost Slots, Cards 2 & 3 Swap Innermost) */
 .tarot-cards-stage.shuffle-pattern-1 .tarot-card-wrapper:nth-child(1),
 .tarot-cards-stage.shuffling-active:not([class*="shuffle-pattern-"]) .tarot-card-wrapper:nth-child(1) {
-    animation: desktopLoopShuffle1 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
+    animation: desktopGrandCross1 var(--shuffle-dur, 0.46s) cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
 }
 .tarot-cards-stage.shuffle-pattern-1 .tarot-card-wrapper:nth-child(2),
 .tarot-cards-stage.shuffling-active:not([class*="shuffle-pattern-"]) .tarot-card-wrapper:nth-child(2) {
-    animation: desktopLoopShuffle2 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
+    animation: desktopGrandCross2 var(--shuffle-dur, 0.46s) cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
 }
 .tarot-cards-stage.shuffle-pattern-1 .tarot-card-wrapper:nth-child(3),
 .tarot-cards-stage.shuffling-active:not([class*="shuffle-pattern-"]) .tarot-card-wrapper:nth-child(3) {
-    animation: desktopLoopShuffle3 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
+    animation: desktopGrandCross3 var(--shuffle-dur, 0.46s) cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
 }
 .tarot-cards-stage.shuffle-pattern-1 .tarot-card-wrapper:nth-child(4),
 .tarot-cards-stage.shuffling-active:not([class*="shuffle-pattern-"]) .tarot-card-wrapper:nth-child(4) {
-    animation: desktopLoopShuffle4 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
+    animation: desktopGrandCross4 var(--shuffle-dur, 0.46s) cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
 }
 
-@keyframes desktopLoopShuffle1 {
-    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 10; }
-    25%  { transform: translate3d(28px, -10px, 20px) rotateZ(2.5deg) scale(1.02); z-index: 30; }
-    50%  { transform: translate3d(24px, 4px, -10px) rotateZ(-2deg) scale(0.98); z-index: 10; }
-    75%  { transform: translate3d(12px, 8px, 15px) rotateZ(1.5deg) scale(1.01); z-index: 25; }
-    100% { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 10; }
+@keyframes desktopGrandCross1 {
+    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 10; }
+    50%  { transform: translate3d(345px, -12px, 30px) rotateZ(6deg) scale(1.08); z-index: 35; }
+    100% { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 10; }
 }
-@keyframes desktopLoopShuffle2 {
-    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 12; }
-    25%  { transform: translate3d(-24px, 10px, -15px) rotateZ(-2.5deg) scale(0.98); z-index: 8; }
-    50%  { transform: translate3d(26px, -8px, 20px) rotateZ(2deg) scale(1.02); z-index: 28; }
-    75%  { transform: translate3d(14px, -6px, 10px) rotateZ(-1deg) scale(1.01); z-index: 20; }
-    100% { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 12; }
+@keyframes desktopGrandCross2 {
+    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(0.6deg); z-index: 12; }
+    50%  { transform: translate3d(115px, 10px, -20px) rotateZ(-4deg) scale(0.94); z-index: 8; }
+    100% { transform: translate3d(0px, 0px, 0px) rotateZ(0.6deg); z-index: 12; }
 }
-@keyframes desktopLoopShuffle3 {
-    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 14; }
-    25%  { transform: translate3d(24px, -8px, 20px) rotateZ(2deg) scale(1.02); z-index: 28; }
-    50%  { transform: translate3d(-26px, 8px, -15px) rotateZ(-2deg) scale(0.98); z-index: 8; }
-    75%  { transform: translate3d(-14px, 6px, 10px) rotateZ(1deg) scale(1.01); z-index: 22; }
-    100% { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 14; }
+@keyframes desktopGrandCross3 {
+    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-0.6deg); z-index: 14; }
+    50%  { transform: translate3d(-115px, -10px, 20px) rotateZ(4deg) scale(1.04); z-index: 28; }
+    100% { transform: translate3d(0px, 0px, 0px) rotateZ(-0.6deg); z-index: 14; }
 }
-@keyframes desktopLoopShuffle4 {
-    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 16; }
-    25%  { transform: translate3d(-28px, 10px, -15px) rotateZ(-2.5deg) scale(0.98); z-index: 6; }
-    50%  { transform: translate3d(-24px, -4px, 20px) rotateZ(2deg) scale(1.02); z-index: 30; }
-    75%  { transform: translate3d(-12px, -8px, 15px) rotateZ(-1.5deg) scale(1.01); z-index: 24; }
-    100% { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 16; }
+@keyframes desktopGrandCross4 {
+    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 16; }
+    50%  { transform: translate3d(-345px, 12px, -30px) rotateZ(-6deg) scale(0.92); z-index: 6; }
+    100% { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 16; }
 }
 
-/* PATTERN 2: 3D CYCLONE VORTEX (STRICTLY BOUNDED) */
+/* PATTERN 2: CENTER DECK CONVERGENCE & RIFFLE FAN */
 .tarot-cards-stage.shuffle-pattern-2 .tarot-card-wrapper:nth-child(1) {
-    animation: desktopSpiral1 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
+    animation: desktopDeckConverge1 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
 }
 .tarot-cards-stage.shuffle-pattern-2 .tarot-card-wrapper:nth-child(2) {
-    animation: desktopSpiral2 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
+    animation: desktopDeckConverge2 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
 }
 .tarot-cards-stage.shuffle-pattern-2 .tarot-card-wrapper:nth-child(3) {
-    animation: desktopSpiral3 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
+    animation: desktopDeckConverge3 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
 }
 .tarot-cards-stage.shuffle-pattern-2 .tarot-card-wrapper:nth-child(4) {
-    animation: desktopSpiral4 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
+    animation: desktopDeckConverge4 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
 }
 
-@keyframes desktopSpiral1 {
-    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 10; }
-    25%  { transform: translate3d(24px, -10px, 20px) rotateZ(2.5deg) scale(1.02); z-index: 28; }
-    50%  { transform: translate3d(28px, 8px, -10px) rotateZ(-2deg) scale(0.98); z-index: 12; }
-    75%  { transform: translate3d(14px, 4px, 10px) rotateZ(1deg) scale(1.01); z-index: 22; }
-    100% { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 10; }
+@keyframes desktopDeckConverge1 {
+    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 10; }
+    40%  { transform: translate3d(172px, 0px, 25px) rotateZ(2deg) scale(1.05); z-index: 30; }
+    65%  { transform: translate3d(180px, -6px, 30px) rotateZ(-3deg) scale(1.06); z-index: 32; }
+    100% { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 10; }
 }
-@keyframes desktopSpiral2 {
-    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 12; }
-    25%  { transform: translate3d(26px, 10px, -15px) rotateZ(-2deg) scale(0.98); z-index: 10; }
-    50%  { transform: translate3d(14px, -10px, 20px) rotateZ(2.5deg) scale(1.02); z-index: 28; }
-    75%  { transform: translate3d(-12px, -4px, 10px) rotateZ(1deg) scale(1.01); z-index: 20; }
-    100% { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 12; }
+@keyframes desktopDeckConverge2 {
+    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(0.6deg); z-index: 12; }
+    40%  { transform: translate3d(57px, 0px, 10px) rotateZ(-1deg) scale(1.0); z-index: 20; }
+    65%  { transform: translate3d(50px, 4px, -15px) rotateZ(2deg) scale(0.96); z-index: 14; }
+    100% { transform: translate3d(0px, 0px, 0px) rotateZ(0.6deg); z-index: 12; }
 }
-@keyframes desktopSpiral3 {
-    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 14; }
-    25%  { transform: translate3d(-26px, -10px, 20px) rotateZ(2deg) scale(1.02); z-index: 28; }
-    50%  { transform: translate3d(-14px, 10px, -15px) rotateZ(-2.5deg) scale(0.98); z-index: 11; }
-    75%  { transform: translate3d(12px, 4px, 10px) rotateZ(-1deg) scale(1.01); z-index: 22; }
-    100% { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 14; }
+@keyframes desktopDeckConverge3 {
+    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-0.6deg); z-index: 14; }
+    40%  { transform: translate3d(-57px, 0px, 15px) rotateZ(1deg) scale(1.0); z-index: 22; }
+    65%  { transform: translate3d(-50px, -4px, 20px) rotateZ(-2deg) scale(1.02); z-index: 24; }
+    100% { transform: translate3d(0px, 0px, 0px) rotateZ(-0.6deg); z-index: 14; }
 }
-@keyframes desktopSpiral4 {
-    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 16; }
-    25%  { transform: translate3d(-24px, 10px, -15px) rotateZ(-2.5deg) scale(0.98); z-index: 8; }
-    50%  { transform: translate3d(-28px, -8px, 20px) rotateZ(2deg) scale(1.02); z-index: 30; }
-    75%  { transform: translate3d(-14px, -4px, 10px) rotateZ(-1deg) scale(1.01); z-index: 24; }
-    100% { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 16; }
+@keyframes desktopDeckConverge4 {
+    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 16; }
+    40%  { transform: translate3d(-172px, 0px, -20px) rotateZ(-2deg) scale(0.95); z-index: 8; }
+    65%  { transform: translate3d(-180px, 6px, -25px) rotateZ(3deg) scale(0.94); z-index: 7; }
+    100% { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 16; }
 }
 
-/* PATTERN 3: RAPID CASCADING RICOCHET (STRICTLY BOUNDED) */
+/* PATTERN 3: 3D CAROUSEL POSITION ROTATION (Cards Rotate Across Slots) */
 .tarot-cards-stage.shuffle-pattern-3 .tarot-card-wrapper:nth-child(1) {
-    animation: desktopRicochet1 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
+    animation: desktopCarousel1 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
 }
 .tarot-cards-stage.shuffle-pattern-3 .tarot-card-wrapper:nth-child(2) {
-    animation: desktopRicochet2 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
+    animation: desktopCarousel2 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
 }
 .tarot-cards-stage.shuffle-pattern-3 .tarot-card-wrapper:nth-child(3) {
-    animation: desktopRicochet3 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
+    animation: desktopCarousel3 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
 }
 .tarot-cards-stage.shuffle-pattern-3 .tarot-card-wrapper:nth-child(4) {
-    animation: desktopRicochet4 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
+    animation: desktopCarousel4 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
 }
 
-@keyframes desktopRicochet1 {
-    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 10; }
-    25%  { transform: translate3d(28px, -8px, 20px) rotateZ(2.5deg) scale(1.02); z-index: 30; }
-    50%  { transform: translate3d(20px, 8px, -10px) rotateZ(-1.5deg) scale(0.98); z-index: 10; }
-    75%  { transform: translate3d(10px, -4px, 10px) rotateZ(1deg) scale(1.01); z-index: 22; }
-    100% { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 10; }
+@keyframes desktopCarousel1 {
+    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 10; }
+    30%  { transform: translate3d(115px, -14px, 25px) rotateZ(3deg) scale(1.06); z-index: 30; }
+    65%  { transform: translate3d(230px, -6px, 15px) rotateZ(1deg) scale(1.02); z-index: 22; }
+    100% { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 10; }
 }
-@keyframes desktopRicochet2 {
-    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 12; }
-    25%  { transform: translate3d(-18px, 8px, -15px) rotateZ(-2deg) scale(0.98); z-index: 8; }
-    50%  { transform: translate3d(24px, -8px, 20px) rotateZ(2deg) scale(1.02); z-index: 26; }
-    75%  { transform: translate3d(16px, 4px, 10px) rotateZ(-1deg) scale(1.01); z-index: 18; }
-    100% { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 12; }
+@keyframes desktopCarousel2 {
+    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(0.6deg); z-index: 12; }
+    30%  { transform: translate3d(115px, 14px, -20px) rotateZ(-3deg) scale(0.94); z-index: 8; }
+    65%  { transform: translate3d(230px, 6px, -10px) rotateZ(-1deg) scale(0.98); z-index: 12; }
+    100% { transform: translate3d(0px, 0px, 0px) rotateZ(0.6deg); z-index: 12; }
 }
-@keyframes desktopRicochet3 {
-    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 14; }
-    25%  { transform: translate3d(18px, -8px, 20px) rotateZ(2deg) scale(1.02); z-index: 28; }
-    50%  { transform: translate3d(-24px, 8px, -15px) rotateZ(-2deg) scale(0.98); z-index: 9; }
-    75%  { transform: translate3d(-16px, -4px, 10px) rotateZ(1deg) scale(1.01); z-index: 20; }
-    100% { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 14; }
+@keyframes desktopCarousel3 {
+    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-0.6deg); z-index: 14; }
+    30%  { transform: translate3d(-115px, -14px, 20px) rotateZ(3deg) scale(1.04); z-index: 28; }
+    65%  { transform: translate3d(-230px, -6px, 10px) rotateZ(1deg) scale(1.01); z-index: 20; }
+    100% { transform: translate3d(0px, 0px, 0px) rotateZ(-0.6deg); z-index: 14; }
 }
-@keyframes desktopRicochet4 {
-    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 16; }
-    25%  { transform: translate3d(-28px, 8px, -15px) rotateZ(-2.5deg) scale(0.98); z-index: 7; }
-    50%  { transform: translate3d(-20px, -8px, 20px) rotateZ(1.5deg) scale(1.02); z-index: 28; }
-    75%  { transform: translate3d(-10px, 4px, 10px) rotateZ(-1deg) scale(1.01); z-index: 22; }
-    100% { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 16; }
+@keyframes desktopCarousel4 {
+    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 16; }
+    30%  { transform: translate3d(-115px, 14px, -25px) rotateZ(-3deg) scale(0.92); z-index: 6; }
+    65%  { transform: translate3d(-230px, 6px, -15px) rotateZ(-1deg) scale(0.96); z-index: 10; }
+    100% { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 16; }
 }
 
-/* PATTERN 4: FUSION SINGULARITY & EXPLOSIVE SCATTER (STRICTLY BOUNDED) */
+/* PATTERN 4: CASCADE PACKET SPLIT & WEAVE */
 .tarot-cards-stage.shuffle-pattern-4 .tarot-card-wrapper:nth-child(1) {
-    animation: desktopScatter1 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
+    animation: desktopCascade1 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
 }
 .tarot-cards-stage.shuffle-pattern-4 .tarot-card-wrapper:nth-child(2) {
-    animation: desktopScatter2 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
+    animation: desktopCascade2 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
 }
 .tarot-cards-stage.shuffle-pattern-4 .tarot-card-wrapper:nth-child(3) {
-    animation: desktopScatter3 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
+    animation: desktopCascade3 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
 }
 .tarot-cards-stage.shuffle-pattern-4 .tarot-card-wrapper:nth-child(4) {
-    animation: desktopScatter4 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
+    animation: desktopCascade4 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
 }
 
-@keyframes desktopScatter1 {
-    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 10; }
-    30%  { transform: translate3d(20px, -6px, -15px) rotateZ(-1.5deg) scale(0.98); z-index: 15; }
-    60%  { transform: translate3d(24px, 6px, 20px) rotateZ(2deg) scale(1.02); z-index: 30; }
-    82%  { transform: translate3d(28px, -4px, 10px) rotateZ(-1deg) scale(1.01); z-index: 22; }
-    100% { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 10; }
+@keyframes desktopCascade1 {
+    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 10; }
+    50%  { transform: translate3d(230px, -10px, 25px) rotateZ(5deg) scale(1.06); z-index: 32; }
+    100% { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 10; }
 }
-@keyframes desktopScatter2 {
-    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 12; }
-    30%  { transform: translate3d(10px, 6px, 15px) rotateZ(1.5deg) scale(1.02); z-index: 26; }
-    60%  { transform: translate3d(10px, -6px, -10px) rotateZ(-1.5deg) scale(0.98); z-index: 12; }
-    82%  { transform: translate3d(-14px, 4px, 10px) rotateZ(1deg) scale(1.01); z-index: 18; }
-    100% { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 12; }
+@keyframes desktopCascade2 {
+    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(0.6deg); z-index: 12; }
+    50%  { transform: translate3d(-115px, 10px, -20px) rotateZ(-4deg) scale(0.94); z-index: 8; }
+    100% { transform: translate3d(0px, 0px, 0px) rotateZ(0.6deg); z-index: 12; }
 }
-@keyframes desktopScatter3 {
-    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 14; }
-    30%  { transform: translate3d(-10px, -6px, -10px) rotateZ(-1.5deg) scale(0.98); z-index: 14; }
-    60%  { transform: translate3d(-10px, 6px, 15px) rotateZ(1.5deg) scale(1.02); z-index: 26; }
-    82%  { transform: translate3d(14px, -4px, 10px) rotateZ(-1deg) scale(1.01); z-index: 20; }
-    100% { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 14; }
+@keyframes desktopCascade3 {
+    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-0.6deg); z-index: 14; }
+    50%  { transform: translate3d(115px, -10px, 20px) rotateZ(4deg) scale(1.04); z-index: 28; }
+    100% { transform: translate3d(0px, 0px, 0px) rotateZ(-0.6deg); z-index: 14; }
 }
-@keyframes desktopScatter4 {
-    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 16; }
-    30%  { transform: translate3d(-20px, 6px, 20px) rotateZ(1.5deg) scale(1.02); z-index: 30; }
-    60%  { transform: translate3d(-20px, -6px, -15px) rotateZ(-2deg) scale(0.98); z-index: 16; }
-    82%  { transform: translate3d(-28px, 4px, 10px) rotateZ(1deg) scale(1.01); z-index: 22; }
-    100% { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 16; }
+@keyframes desktopCascade4 {
+    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 16; }
+    50%  { transform: translate3d(-230px, 10px, -25px) rotateZ(-5deg) scale(0.93); z-index: 6; }
+    100% { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 16; }
 }
 
-/* PATTERN 5: TRIPLE INTERSECT WEAVE (STRICTLY BOUNDED) */
+/* PATTERN 5: HIGH-VELOCITY VORTEX FLOURISH */
 .tarot-cards-stage.shuffle-pattern-5 .tarot-card-wrapper:nth-child(1) {
-    animation: desktopWeave1 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
+    animation: desktopVortex1 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
 }
 .tarot-cards-stage.shuffle-pattern-5 .tarot-card-wrapper:nth-child(2) {
-    animation: desktopWeave2 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
+    animation: desktopVortex2 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
 }
 .tarot-cards-stage.shuffle-pattern-5 .tarot-card-wrapper:nth-child(3) {
-    animation: desktopWeave3 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
+    animation: desktopVortex3 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
 }
 .tarot-cards-stage.shuffle-pattern-5 .tarot-card-wrapper:nth-child(4) {
-    animation: desktopWeave4 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
+    animation: desktopVortex4 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
 }
 
-@keyframes desktopWeave1 {
-    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 10; }
-    25%  { transform: translate3d(20px, 8px, 20px) rotateZ(2deg) scale(1.02); z-index: 28; }
-    50%  { transform: translate3d(28px, -8px, -10px) rotateZ(-2deg) scale(0.98); z-index: 10; }
-    75%  { transform: translate3d(14px, 4px, 10px) rotateZ(1deg) scale(1.01); z-index: 22; }
-    100% { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 10; }
+@keyframes desktopVortex1 {
+    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 10; }
+    30%  { transform: translate3d(345px, 8px, 25px) rotateZ(6deg) scale(1.06); z-index: 32; }
+    70%  { transform: translate3d(172px, -10px, 30px) rotateZ(-4deg) scale(1.04); z-index: 30; }
+    100% { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 10; }
 }
-@keyframes desktopWeave2 {
-    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 12; }
-    25%  { transform: translate3d(-18px, -8px, -15px) rotateZ(-2deg) scale(0.98); z-index: 8; }
-    50%  { transform: translate3d(20px, 8px, 20px) rotateZ(2deg) scale(1.02); z-index: 28; }
-    75%  { transform: translate3d(12px, -4px, 10px) rotateZ(-1deg) scale(1.01); z-index: 18; }
-    100% { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 12; }
+@keyframes desktopVortex2 {
+    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(0.6deg); z-index: 12; }
+    30%  { transform: translate3d(115px, -8px, -20px) rotateZ(-3deg) scale(0.95); z-index: 8; }
+    70%  { transform: translate3d(-57px, 10px, -15px) rotateZ(3deg) scale(0.96); z-index: 12; }
+    100% { transform: translate3d(0px, 0px, 0px) rotateZ(0.6deg); z-index: 12; }
 }
-@keyframes desktopWeave3 {
-    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 14; }
-    25%  { transform: translate3d(18px, 8px, 20px) rotateZ(2deg) scale(1.02); z-index: 28; }
-    50%  { transform: translate3d(-20px, -8px, -15px) rotateZ(-2deg) scale(0.98); z-index: 9; }
-    75%  { transform: translate3d(-12px, 4px, 10px) rotateZ(1deg) scale(1.01); z-index: 20; }
-    100% { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 14; }
+@keyframes desktopVortex3 {
+    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-0.6deg); z-index: 14; }
+    30%  { transform: translate3d(-115px, 8px, 20px) rotateZ(3deg) scale(1.04); z-index: 26; }
+    70%  { transform: translate3d(57px, -10px, 15px) rotateZ(-3deg) scale(1.02); z-index: 24; }
+    100% { transform: translate3d(0px, 0px, 0px) rotateZ(-0.6deg); z-index: 14; }
 }
-@keyframes desktopWeave4 {
-    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 16; }
-    25%  { transform: translate3d(-20px, -8px, -15px) rotateZ(-2deg) scale(0.98); z-index: 7; }
-    50%  { transform: translate3d(-28px, 8px, 20px) rotateZ(2deg) scale(1.02); z-index: 30; }
-    75%  { transform: translate3d(-14px, -4px, 10px) rotateZ(-1deg) scale(1.01); z-index: 22; }
-    100% { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 16; }
+@keyframes desktopVortex4 {
+    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 16; }
+    30%  { transform: translate3d(-345px, -8px, -25px) rotateZ(-6deg) scale(0.92); z-index: 6; }
+    70%  { transform: translate3d(-172px, 10px, -20px) rotateZ(4deg) scale(0.95); z-index: 10; }
+    100% { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 16; }
 }
 
-/* --------------------------------------------------------------------------
-   ENTERPRISE LEVEL SHUFFLE BUTTON: Gilded Gothic Authority
-   -------------------------------------------------------------------------- */
+/* SHUFFLE BUTTON */
 .tarot-shuffle-action-box {
-    margin-top: 14px;
+    margin-top: 8px;
     width: 100%;
     display: flex;
     justify-content: center;
@@ -7004,19 +6973,19 @@ select option {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 12px;
-    padding: 13px 40px;
+    gap: 10px;
+    padding: 10px 32px;
     background: linear-gradient(135deg, rgba(38, 10, 20, 0.98) 0%, rgba(14, 4, 8, 0.99) 50%, rgba(45, 12, 22, 0.98) 100%);
     border: 1.5px solid rgba(212, 175, 55, 0.70);
     border-radius: var(--radius-sm);
     color: #ffffff;
     font-family: var(--font-mono);
-    font-size: 0.90rem;
+    font-size: 0.82rem;
     font-weight: 800;
-    letter-spacing: 0.18em;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
     cursor: pointer;
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.95), 0 0 22px rgba(139, 0, 0, 0.35), inset 0 0 16px rgba(212, 175, 55, 0.15);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.95), 0 0 18px rgba(139, 0, 0, 0.35), inset 0 0 12px rgba(212, 175, 55, 0.15);
     transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
     position: relative;
     overflow: hidden;
@@ -7037,7 +7006,7 @@ select option {
 .tarot-shuffle-btn:hover {
     border-color: #f59e0b;
     color: #ffffff;
-    box-shadow: 0 14px 38px rgba(0, 0, 0, 0.98), 0 0 32px rgba(245, 158, 11, 0.45);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.98), 0 0 26px rgba(245, 158, 11, 0.45);
     transform: translateY(-2px);
 }
 
@@ -7058,35 +7027,33 @@ select option {
     transform: rotate(180deg);
 }
 
-/* --------------------------------------------------------------------------
-   FORTUNE CLAIM CONTAINER (Revealed after pick - Viewport Fit Optimized)
-   -------------------------------------------------------------------------- */
+/* FORTUNE CLAIM CONTAINER (Revealed after pick) */
 .tarot-claim-box {
     position: relative;
     z-index: 50;
     pointer-events: auto;
     width: 100%;
-    max-width: 520px;
+    max-width: 440px;
     background: rgba(8, 2, 6, 0.98);
     border: 1.5px solid rgba(212, 175, 55, 0.65);
     border-radius: var(--radius-md);
-    padding: 16px 24px;
+    padding: 12px 18px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 12px;
-    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.98), 0 0 28px rgba(139, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+    gap: 8px;
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.98), 0 0 22px rgba(139, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
     animation: tarotSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .tarot-claim-subtitle {
-    font-size: 0.80rem;
+    font-size: 0.72rem;
 }
 
 .tarot-claim-box .font-serif,
 .tarot-claim-title,
 #tarotClaimTitle {
-    font-size: 1.75rem;
+    font-size: 1.45rem;
     font-weight: 900;
     color: #ffffff;
     text-align: center;
@@ -7097,55 +7064,40 @@ select option {
 .tarot-claim-box .font-mono,
 .tarot-claim-desc,
 #tarotClaimDesc {
-    font-size: 0.88rem;
+    font-size: 0.78rem;
     color: #e2d7c5;
     opacity: 0.95;
     text-align: center;
-    line-height: 1.4;
+    line-height: 1.35;
     max-width: 95%;
 }
 
 @keyframes tarotSlideUp {
-    from { opacity: 0; transform: translateY(15px); }
+    from { opacity: 0; transform: translateY(12px); }
     to { opacity: 1; transform: translateY(0); }
-}
-
-.tarot-claim-code-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    background: rgba(0, 0, 0, 0.85);
-    border: 1px dashed rgba(212, 175, 55, 0.7);
-    padding: 5px 14px;
-    border-radius: var(--radius-sm);
-    font-family: var(--font-mono);
-    font-size: 0.90rem;
-    font-weight: 800;
-    color: #fdfbf7;
-    letter-spacing: 0.12em;
 }
 
 .tarot-claim-btn {
     width: 100%;
-    max-width: 380px;
+    max-width: 320px;
     background: linear-gradient(135deg, #9e1b2b 0%, #500712 100%);
     border: 1.5px solid rgba(212, 175, 55, 0.65);
     color: #ffffff;
     font-family: var(--font-mono);
-    font-size: 0.95rem;
+    font-size: 0.85rem;
     font-weight: 800;
-    letter-spacing: 0.16em;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
-    padding: 14px 24px;
-    min-height: 48px;
+    padding: 10px 20px;
+    min-height: 42px;
     border-radius: var(--radius-sm);
     cursor: pointer;
     transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    box-shadow: 0 8px 24px rgba(158, 27, 43, 0.45), 0 0 18px rgba(212, 175, 55, 0.25);
+    box-shadow: 0 6px 20px rgba(158, 27, 43, 0.45), 0 0 14px rgba(212, 175, 55, 0.25);
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap: 8px;
 }
 
 .tarot-claim-btn:hover {
@@ -7237,103 +7189,111 @@ html.tarot-pending body {
    -------------------------------------------------------------------------- */
 @media (max-width: 640px) {
     .daily-tarot-overlay {
-        padding: 16px 10px 24px 10px !important;
+        padding: 12px 8px !important;
         justify-content: center !important;
     }
     .tarot-stage-container {
-        gap: 10px !important;
-        padding: 4px !important;
-        max-height: 100dvh !important;
-        justify-content: center !important;
+        width: min(350px, 94vw) !important;
+        padding: 14px 10px 12px 10px !important;
+        gap: 8px !important;
+        border-radius: 12px !important;
     }
     .tarot-header {
-        margin-bottom: 2px !important;
-        gap: 3px !important;
-    }
-    .tarot-eyebrow {
-        font-size: 0.85rem !important;
-        letter-spacing: 0.26em !important;
+        margin-bottom: 0px !important;
+        gap: 2px !important;
     }
     .tarot-title {
-        font-size: clamp(2.4rem, 8.5vw, 3.2rem) !important;
-        line-height: 1.08 !important;
-        letter-spacing: 0.10em !important;
+        font-size: 1.30rem !important;
+        letter-spacing: 0.06em !important;
+    }
+    .tarot-eyebrow {
+        font-size: 0.60rem !important;
+        letter-spacing: 0.14em !important;
     }
     .tarot-subtext {
-        font-size: 0.88rem !important;
-        line-height: 1.35 !important;
-        letter-spacing: 0.08em !important;
-        padding: 0 6px !important;
+        font-size: 0.64rem !important;
+        line-height: 1.25 !important;
+        letter-spacing: 0.02em !important;
+        padding: 0 4px !important;
         text-align: center !important;
         flex-wrap: wrap !important;
     }
+    /* 4 Cards in 1 Row on Mobile (Compact, Well-Spaced, Minimal Height) */
     .tarot-cards-stage {
-        grid-template-columns: repeat(2, 1fr) !important;
-        gap: clamp(8px, 2.5vw, 14px) !important;
-        min-height: unset !important;
-        margin: 4px auto 8px auto !important;
-        max-width: 340px !important;
+        grid-template-columns: repeat(4, 1fr) !important;
+        gap: 6px !important;
+        min-height: 115px !important;
+        margin: 2px auto 4px auto !important;
+        max-width: 320px !important;
+        padding: 2px !important;
     }
     .tarot-card-wrapper {
-        width: clamp(140px, 42vw, 160px) !important;
-        max-width: 160px !important;
-        height: clamp(210px, 29vh, 230px) !important;
+        max-width: 72px !important;
+        height: 108px !important;
+        border-radius: 6px !important;
+    }
+    .tarot-face {
+        border-radius: 6px !important;
+    }
+    .tarot-back {
+        padding: 4px !important;
     }
     .tarot-front {
-        padding: 10px 6px 8px 6px !important;
+        padding: 5px 3px 4px 3px !important;
     }
     .tarot-card-top-pill {
-        font-size: 0.65rem !important;
-        padding: 2px 8px !important;
-        letter-spacing: 0.12em !important;
+        font-size: 0.44rem !important;
+        padding: 1px 4px !important;
+        letter-spacing: 0.06em !important;
     }
     .tarot-roman-numeral-front {
-        font-size: 2.8rem !important;
-        margin: 1px 0 !important;
+        font-size: 1.25rem !important;
+        margin: 0 !important;
     }
     .tarot-front .font-serif,
     .tarot-card-offer-title {
-        font-size: 1.25rem !important;
-        line-height: 1.15 !important;
+        font-size: 0.58rem !important;
+        line-height: 1.1 !important;
     }
     .tarot-front .font-mono,
     .tarot-card-subtext {
-        font-size: 0.72rem !important;
+        font-size: 0.46rem !important;
         white-space: normal !important;
         text-align: center !important;
-        line-height: 1.28 !important;
+        line-height: 1.15 !important;
         max-width: 95% !important;
     }
     .tarot-shuffle-action-box {
-        margin-top: 6px !important;
+        margin-top: 4px !important;
     }
     .tarot-shuffle-btn {
-        padding: 12px 30px !important;
-        font-size: 0.92rem !important;
+        padding: 8px 22px !important;
+        font-size: 0.76rem !important;
+        letter-spacing: 0.12em !important;
     }
     .tarot-claim-box {
-        max-width: 345px !important;
-        padding: 14px 16px !important;
-        gap: 8px !important;
+        max-width: 310px !important;
+        padding: 10px 12px !important;
+        gap: 6px !important;
     }
     .tarot-claim-subtitle {
-        font-size: 0.74rem !important;
+        font-size: 0.68rem !important;
     }
     .tarot-claim-box .font-serif,
     .tarot-claim-title,
     #tarotClaimTitle {
-        font-size: 1.45rem !important;
+        font-size: 1.18rem !important;
     }
     .tarot-claim-box .font-mono,
     .tarot-claim-desc,
     #tarotClaimDesc {
-        font-size: 0.78rem !important;
-        line-height: 1.35 !important;
+        font-size: 0.68rem !important;
+        line-height: 1.25 !important;
     }
     .tarot-claim-btn {
-        min-height: 48px !important;
-        padding: 12px 20px !important;
-        font-size: 0.88rem !important;
+        min-height: 38px !important;
+        padding: 8px 16px !important;
+        font-size: 0.76rem !important;
     }
     .floating-reward-pill {
         bottom: 12px !important;
@@ -7347,244 +7307,216 @@ html.tarot-pending body {
         border-radius: 12px !important;
     }
 
-    /* Chosen card on mobile - Compact Viewport Fit */
+    /* Chosen card on mobile - Compact */
     .tarot-cards-stage.has-picked .tarot-card-wrapper.chosen-one {
-        width: 170px !important;
-        max-width: 170px !important;
-        height: 250px !important;
+        width: 86px !important;
+        max-width: 86px !important;
+        height: 124px !important;
         margin: 2px auto !important;
     }
     .tarot-cards-stage.has-picked .tarot-card-wrapper.chosen-one .tarot-roman-numeral-front {
-        font-size: 3.0rem !important;
+        font-size: 1.5rem !important;
     }
     .tarot-cards-stage.has-picked .tarot-card-wrapper.chosen-one .tarot-front .font-serif,
     .tarot-cards-stage.has-picked .tarot-card-wrapper.chosen-one .tarot-card-offer-title {
-        font-size: 1.30rem !important;
+        font-size: 0.68rem !important;
     }
     .tarot-cards-stage.has-picked .tarot-card-wrapper.chosen-one .tarot-front .font-mono,
     .tarot-cards-stage.has-picked .tarot-card-wrapper.chosen-one .tarot-card-subtext {
-        font-size: 0.74rem !important;
+        font-size: 0.52rem !important;
     }
 
-    /* MOBILE 5 ADVANCED ULTRA-SMOOTH SHUFFLE PATTERNS (HIGH-VELOCITY 5-SECOND MYSTIC FLOW - BOUNDED) */
+    /* MOBILE 5 DYNAMIC SHUFFLE PATTERNS (TRUE POSITION SWAPPING ACROSS MOBILE STAGE) */
     
-    /* Pattern 1: Quad-Corner Cyclone (Bounded) */
+    /* Pattern 1: Mobile Cross-Swap (Cards 1 & 4 Swap Slots ±216px, Cards 2 & 3 Swap ±72px) */
     .tarot-cards-stage.shuffle-pattern-1 .tarot-card-wrapper:nth-child(1),
     .tarot-cards-stage.shuffling-active:not([class*="shuffle-pattern-"]) .tarot-card-wrapper:nth-child(1) {
-        animation: mobileLoopShuffle1 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
+        animation: mobileGrandCross1 var(--shuffle-dur, 0.46s) cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
     }
     .tarot-cards-stage.shuffle-pattern-1 .tarot-card-wrapper:nth-child(2),
     .tarot-cards-stage.shuffling-active:not([class*="shuffle-pattern-"]) .tarot-card-wrapper:nth-child(2) {
-        animation: mobileLoopShuffle2 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
+        animation: mobileGrandCross2 var(--shuffle-dur, 0.46s) cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
     }
     .tarot-cards-stage.shuffle-pattern-1 .tarot-card-wrapper:nth-child(3),
     .tarot-cards-stage.shuffling-active:not([class*="shuffle-pattern-"]) .tarot-card-wrapper:nth-child(3) {
-        animation: mobileLoopShuffle3 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
+        animation: mobileGrandCross3 var(--shuffle-dur, 0.46s) cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
     }
     .tarot-cards-stage.shuffle-pattern-1 .tarot-card-wrapper:nth-child(4),
     .tarot-cards-stage.shuffling-active:not([class*="shuffle-pattern-"]) .tarot-card-wrapper:nth-child(4) {
-        animation: mobileLoopShuffle4 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
+        animation: mobileGrandCross4 var(--shuffle-dur, 0.46s) cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
     }
 
-    @keyframes mobileLoopShuffle1 {
-        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 10; }
-        25%  { transform: translate3d(18px, -8px, 20px) rotateZ(2deg) scale(1.02); z-index: 30; }
-        50%  { transform: translate3d(14px, 8px, -10px) rotateZ(-2deg) scale(0.98); z-index: 10; }
-        75%  { transform: translate3d(6px, 4px, 10px) rotateZ(1deg) scale(1.01); z-index: 24; }
-        100% { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 10; }
+    @keyframes mobileGrandCross1 {
+        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 10; }
+        50%  { transform: translate3d(216px, -10px, 20px) rotateZ(5deg) scale(1.06); z-index: 30; }
+        100% { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 10; }
     }
-    @keyframes mobileLoopShuffle2 {
-        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 12; }
-        25%  { transform: translate3d(-14px, 8px, -15px) rotateZ(-2deg) scale(0.98); z-index: 8; }
-        50%  { transform: translate3d(-18px, -6px, 20px) rotateZ(2deg) scale(1.02); z-index: 28; }
-        75%  { transform: translate3d(-8px, -2px, 10px) rotateZ(-1deg) scale(1.01); z-index: 20; }
-        100% { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 12; }
+    @keyframes mobileGrandCross2 {
+        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(0.6deg); z-index: 12; }
+        50%  { transform: translate3d(72px, 8px, -15px) rotateZ(-3deg) scale(0.94); z-index: 8; }
+        100% { transform: translate3d(0px, 0px, 0px) rotateZ(0.6deg); z-index: 12; }
     }
-    @keyframes mobileLoopShuffle3 {
-        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 14; }
-        25%  { transform: translate3d(14px, -8px, 20px) rotateZ(2deg) scale(1.02); z-index: 28; }
-        50%  { transform: translate3d(18px, 6px, -15px) rotateZ(-2deg) scale(0.98); z-index: 9; }
-        75%  { transform: translate3d(8px, 2px, 10px) rotateZ(1deg) scale(1.01); z-index: 22; }
-        100% { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 14; }
+    @keyframes mobileGrandCross3 {
+        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-0.6deg); z-index: 14; }
+        50%  { transform: translate3d(-72px, -8px, 15px) rotateZ(3deg) scale(1.03); z-index: 28; }
+        100% { transform: translate3d(0px, 0px, 0px) rotateZ(-0.6deg); z-index: 14; }
     }
-    @keyframes mobileLoopShuffle4 {
-        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 16; }
-        25%  { transform: translate3d(-18px, 8px, -15px) rotateZ(-2deg) scale(0.98); z-index: 6; }
-        50%  { transform: translate3d(-14px, -8px, 20px) rotateZ(2deg) scale(1.02); z-index: 30; }
-        75%  { transform: translate3d(-6px, -4px, 10px) rotateZ(-1deg) scale(1.01); z-index: 24; }
-        100% { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 16; }
+    @keyframes mobileGrandCross4 {
+        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 16; }
+        50%  { transform: translate3d(-216px, 10px, -20px) rotateZ(-5deg) scale(0.93); z-index: 6; }
+        100% { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 16; }
     }
 
-    /* Pattern 2: Diagonal Cross & Flip (Bounded) */
+    /* Pattern 2: Mobile Center Deck Converge & Fan */
     .tarot-cards-stage.shuffle-pattern-2 .tarot-card-wrapper:nth-child(1) {
-        animation: mobileSpiral1 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
+        animation: mobileDeckConverge1 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
     }
     .tarot-cards-stage.shuffle-pattern-2 .tarot-card-wrapper:nth-child(2) {
-        animation: mobileSpiral2 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
+        animation: mobileDeckConverge2 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
     }
     .tarot-cards-stage.shuffle-pattern-2 .tarot-card-wrapper:nth-child(3) {
-        animation: mobileSpiral3 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
+        animation: mobileDeckConverge3 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
     }
     .tarot-cards-stage.shuffle-pattern-2 .tarot-card-wrapper:nth-child(4) {
-        animation: mobileSpiral4 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
+        animation: mobileDeckConverge4 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
     }
 
-    @keyframes mobileSpiral1 {
-        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 10; }
-        25%  { transform: translate3d(16px, 8px, 20px) rotateZ(2deg) scale(1.02); z-index: 28; }
-        50%  { transform: translate3d(18px, 12px, -10px) rotateZ(-2deg) scale(0.98); z-index: 10; }
-        75%  { transform: translate3d(8px, 6px, 10px) rotateZ(1deg) scale(1.01); z-index: 22; }
-        100% { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 10; }
+    @keyframes mobileDeckConverge1 {
+        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 10; }
+        40%  { transform: translate3d(108px, 0px, 20px) rotateZ(2deg) scale(1.05); z-index: 30; }
+        65%  { transform: translate3d(115px, -4px, 25px) rotateZ(-2deg) scale(1.06); z-index: 32; }
+        100% { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 10; }
     }
-    @keyframes mobileSpiral2 {
-        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 12; }
-        25%  { transform: translate3d(-8px, 8px, -15px) rotateZ(-2deg) scale(0.98); z-index: 8; }
-        50%  { transform: translate3d(-18px, 12px, 20px) rotateZ(2deg) scale(1.02); z-index: 28; }
-        75%  { transform: translate3d(-8px, 6px, 10px) rotateZ(-1deg) scale(1.01); z-index: 20; }
-        100% { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 12; }
+    @keyframes mobileDeckConverge2 {
+        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(0.6deg); z-index: 12; }
+        40%  { transform: translate3d(36px, 0px, 8px) rotateZ(-1deg) scale(1.0); z-index: 20; }
+        65%  { transform: translate3d(30px, 3px, -10px) rotateZ(2deg) scale(0.96); z-index: 14; }
+        100% { transform: translate3d(0px, 0px, 0px) rotateZ(0.6deg); z-index: 12; }
     }
-    @keyframes mobileSpiral3 {
-        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 14; }
-        25%  { transform: translate3d(8px, -8px, 20px) rotateZ(2deg) scale(1.02); z-index: 28; }
-        50%  { transform: translate3d(18px, -12px, -15px) rotateZ(-2deg) scale(0.98); z-index: 8; }
-        75%  { transform: translate3d(8px, -6px, 10px) rotateZ(1deg) scale(1.01); z-index: 22; }
-        100% { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 14; }
+    @keyframes mobileDeckConverge3 {
+        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-0.6deg); z-index: 14; }
+        40%  { transform: translate3d(-36px, 0px, 10px) rotateZ(1deg) scale(1.0); z-index: 22; }
+        65%  { transform: translate3d(-30px, -3px, 15px) rotateZ(-2deg) scale(1.02); z-index: 24; }
+        100% { transform: translate3d(0px, 0px, 0px) rotateZ(-0.6deg); z-index: 14; }
     }
-    @keyframes mobileSpiral4 {
-        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 16; }
-        25%  { transform: translate3d(-16px, -8px, -15px) rotateZ(-2deg) scale(0.98); z-index: 6; }
-        50%  { transform: translate3d(-18px, -12px, 20px) rotateZ(2deg) scale(1.02); z-index: 30; }
-        75%  { transform: translate3d(-8px, -6px, 10px) rotateZ(-1deg) scale(1.01); z-index: 24; }
-        100% { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 16; }
+    @keyframes mobileDeckConverge4 {
+        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 16; }
+        40%  { transform: translate3d(-108px, 0px, -15px) rotateZ(-2deg) scale(0.95); z-index: 8; }
+        65%  { transform: translate3d(-115px, 4px, -20px) rotateZ(2deg) scale(0.94); z-index: 7; }
+        100% { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 16; }
     }
 
-    /* Pattern 3: Center Matrix Pulse & Fan (Bounded) */
+    /* Pattern 3: Mobile Carousel Rotation */
     .tarot-cards-stage.shuffle-pattern-3 .tarot-card-wrapper:nth-child(1) {
-        animation: mobileRicochet1 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
+        animation: mobileCarousel1 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
     }
     .tarot-cards-stage.shuffle-pattern-3 .tarot-card-wrapper:nth-child(2) {
-        animation: mobileRicochet2 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
+        animation: mobileCarousel2 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
     }
     .tarot-cards-stage.shuffle-pattern-3 .tarot-card-wrapper:nth-child(3) {
-        animation: mobileRicochet3 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
+        animation: mobileCarousel3 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
     }
     .tarot-cards-stage.shuffle-pattern-3 .tarot-card-wrapper:nth-child(4) {
-        animation: mobileRicochet4 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
+        animation: mobileCarousel4 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
     }
 
-    @keyframes mobileRicochet1 {
-        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 10; }
-        25%  { transform: translate3d(10px, 8px, -15px) rotateZ(-2deg) scale(0.98); z-index: 12; }
-        50%  { transform: translate3d(14px, 8px, 20px) rotateZ(2deg) scale(1.02); z-index: 28; }
-        75%  { transform: translate3d(16px, 4px, 10px) rotateZ(-1deg) scale(1.01); z-index: 20; }
-        100% { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 10; }
+    @keyframes mobileCarousel1 {
+        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 10; }
+        30%  { transform: translate3d(72px, -8px, 15px) rotateZ(2deg) scale(1.04); z-index: 28; }
+        65%  { transform: translate3d(144px, -4px, 10px) rotateZ(1deg) scale(1.01); z-index: 20; }
+        100% { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 10; }
     }
-    @keyframes mobileRicochet2 {
-        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 12; }
-        25%  { transform: translate3d(-10px, 8px, 20px) rotateZ(2deg) scale(1.02); z-index: 28; }
-        50%  { transform: translate3d(-10px, 8px, -15px) rotateZ(-2deg) scale(0.98); z-index: 10; }
-        75%  { transform: translate3d(-16px, 4px, 10px) rotateZ(1deg) scale(1.01); z-index: 18; }
-        100% { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 12; }
+    @keyframes mobileCarousel2 {
+        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(0.6deg); z-index: 12; }
+        30%  { transform: translate3d(72px, 8px, -15px) rotateZ(-2deg) scale(0.95); z-index: 8; }
+        65%  { transform: translate3d(144px, 4px, -8px) rotateZ(-1deg) scale(0.98); z-index: 12; }
+        100% { transform: translate3d(0px, 0px, 0px) rotateZ(0.6deg); z-index: 12; }
     }
-    @keyframes mobileRicochet3 {
-        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 14; }
-        25%  { transform: translate3d(10px, -8px, -15px) rotateZ(-2deg) scale(0.98); z-index: 10; }
-        50%  { transform: translate3d(10px, -8px, 20px) rotateZ(2deg) scale(1.02); z-index: 28; }
-        75%  { transform: translate3d(16px, -4px, 10px) rotateZ(-1deg) scale(1.01); z-index: 18; }
-        100% { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 14; }
+    @keyframes mobileCarousel3 {
+        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-0.6deg); z-index: 14; }
+        30%  { transform: translate3d(-72px, -8px, 12px) rotateZ(2deg) scale(1.03); z-index: 26; }
+        65%  { transform: translate3d(-144px, -4px, 8px) rotateZ(1deg) scale(1.01); z-index: 18; }
+        100% { transform: translate3d(0px, 0px, 0px) rotateZ(-0.6deg); z-index: 14; }
     }
-    @keyframes mobileRicochet4 {
-        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 16; }
-        25%  { transform: translate3d(-10px, -8px, 20px) rotateZ(2deg) scale(1.02); z-index: 28; }
-        50%  { transform: translate3d(-10px, -8px, -15px) rotateZ(-2deg) scale(0.98); z-index: 12; }
-        75%  { transform: translate3d(-16px, -4px, 10px) rotateZ(1deg) scale(1.01); z-index: 20; }
-        100% { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 16; }
+    @keyframes mobileCarousel4 {
+        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 16; }
+        30%  { transform: translate3d(-72px, 8px, -18px) rotateZ(-2deg) scale(0.93); z-index: 6; }
+        65%  { transform: translate3d(-144px, 4px, -10px) rotateZ(-1deg) scale(0.96); z-index: 10; }
+        100% { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 16; }
     }
 
-    /* Pattern 4: Vertical Double-Arc Swap (Bounded) */
+    /* Pattern 4: Mobile Cascading Packet Split */
     .tarot-cards-stage.shuffle-pattern-4 .tarot-card-wrapper:nth-child(1) {
-        animation: mobileScatter1 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
+        animation: mobileCascade1 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
     }
     .tarot-cards-stage.shuffle-pattern-4 .tarot-card-wrapper:nth-child(2) {
-        animation: mobileScatter2 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
+        animation: mobileCascade2 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
     }
     .tarot-cards-stage.shuffle-pattern-4 .tarot-card-wrapper:nth-child(3) {
-        animation: mobileScatter3 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
+        animation: mobileCascade3 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
     }
     .tarot-cards-stage.shuffle-pattern-4 .tarot-card-wrapper:nth-child(4) {
-        animation: mobileScatter4 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
+        animation: mobileCascade4 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
     }
 
-    @keyframes mobileScatter1 {
-        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 10; }
-        25%  { transform: translate3d(0px, 16px, 20px) rotateZ(2deg) scale(1.02); z-index: 28; }
-        50%  { transform: translate3d(14px, 16px, -10px) rotateZ(-2deg) scale(0.98); z-index: 10; }
-        75%  { transform: translate3d(14px, 0px, 10px) rotateZ(1deg) scale(1.01); z-index: 20; }
-        100% { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 10; }
+    @keyframes mobileCascade1 {
+        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 10; }
+        50%  { transform: translate3d(144px, -8px, 18px) rotateZ(4deg) scale(1.05); z-index: 30; }
+        100% { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 10; }
     }
-    @keyframes mobileScatter2 {
-        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 12; }
-        25%  { transform: translate3d(0px, 16px, -15px) rotateZ(-2deg) scale(0.98); z-index: 8; }
-        50%  { transform: translate3d(-14px, 16px, 20px) rotateZ(2deg) scale(1.02); z-index: 28; }
-        75%  { transform: translate3d(-14px, 0px, 10px) rotateZ(-1deg) scale(1.01); z-index: 18; }
-        100% { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 12; }
+    @keyframes mobileCascade2 {
+        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(0.6deg); z-index: 12; }
+        50%  { transform: translate3d(-72px, 8px, -15px) rotateZ(-3deg) scale(0.94); z-index: 8; }
+        100% { transform: translate3d(0px, 0px, 0px) rotateZ(0.6deg); z-index: 12; }
     }
-    @keyframes mobileScatter3 {
-        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 14; }
-        25%  { transform: translate3d(0px, -16px, 20px) rotateZ(2deg) scale(1.02); z-index: 28; }
-        50%  { transform: translate3d(-14px, -16px, -15px) rotateZ(-2deg) scale(0.98); z-index: 9; }
-        75%  { transform: translate3d(-14px, 0px, 10px) rotateZ(1deg) scale(1.01); z-index: 20; }
-        100% { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 14; }
+    @keyframes mobileCascade3 {
+        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-0.6deg); z-index: 14; }
+        50%  { transform: translate3d(72px, -8px, 15px) rotateZ(3deg) scale(1.03); z-index: 26; }
+        100% { transform: translate3d(0px, 0px, 0px) rotateZ(-0.6deg); z-index: 14; }
     }
-    @keyframes mobileScatter4 {
-        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 16; }
-        25%  { transform: translate3d(0px, -16px, -15px) rotateZ(-2deg) scale(0.98); z-index: 6; }
-        50%  { transform: translate3d(14px, -16px, 20px) rotateZ(2deg) scale(1.02); z-index: 30; }
-        75%  { transform: translate3d(14px, 0px, 10px) rotateZ(-1deg) scale(1.01); z-index: 22; }
-        100% { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 16; }
+    @keyframes mobileCascade4 {
+        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 16; }
+        50%  { transform: translate3d(-144px, 8px, -18px) rotateZ(-4deg) scale(0.93); z-index: 6; }
+        100% { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 16; }
     }
 
-    /* Pattern 5: Horizontal Counter-Helix (Bounded) */
+    /* Pattern 5: Mobile Vortex Flourish */
     .tarot-cards-stage.shuffle-pattern-5 .tarot-card-wrapper:nth-child(1) {
-        animation: mobileWeave1 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
+        animation: mobileVortex1 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
     }
     .tarot-cards-stage.shuffle-pattern-5 .tarot-card-wrapper:nth-child(2) {
-        animation: mobileWeave2 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
+        animation: mobileVortex2 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
     }
     .tarot-cards-stage.shuffle-pattern-5 .tarot-card-wrapper:nth-child(3) {
-        animation: mobileWeave3 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
+        animation: mobileVortex3 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
     }
     .tarot-cards-stage.shuffle-pattern-5 .tarot-card-wrapper:nth-child(4) {
-        animation: mobileWeave4 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
+        animation: mobileVortex4 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
     }
 
-    @keyframes mobileWeave1 {
-        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 10; }
-        25%  { transform: translate3d(14px, 0px, 20px) rotateZ(2deg) scale(1.02); z-index: 28; }
-        50%  { transform: translate3d(14px, 8px, -10px) rotateZ(-2deg) scale(0.98); z-index: 10; }
-        75%  { transform: translate3d(0px, 8px, 10px) rotateZ(1deg) scale(1.01); z-index: 20; }
-        100% { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 10; }
+    @keyframes mobileVortex1 {
+        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 10; }
+        30%  { transform: translate3d(216px, 6px, 18px) rotateZ(4deg) scale(1.05); z-index: 30; }
+        70%  { transform: translate3d(108px, -6px, 20px) rotateZ(-3deg) scale(1.03); z-index: 28; }
+        100% { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 10; }
     }
-    @keyframes mobileWeave2 {
-        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 12; }
-        25%  { transform: translate3d(-14px, 0px, -15px) rotateZ(-2deg) scale(0.98); z-index: 8; }
-        50%  { transform: translate3d(-14px, 8px, 20px) rotateZ(2deg) scale(1.02); z-index: 28; }
-        75%  { transform: translate3d(0px, 8px, 10px) rotateZ(-1deg) scale(1.01); z-index: 18; }
-        100% { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 12; }
+    @keyframes mobileVortex2 {
+        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(0.6deg); z-index: 12; }
+        30%  { transform: translate3d(72px, -6px, -15px) rotateZ(-2deg) scale(0.95); z-index: 8; }
+        70%  { transform: translate3d(-36px, 6px, -12px) rotateZ(2deg) scale(0.96); z-index: 12; }
+        100% { transform: translate3d(0px, 0px, 0px) rotateZ(0.6deg); z-index: 12; }
     }
-    @keyframes mobileWeave3 {
-        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 14; }
-        25%  { transform: translate3d(14px, 0px, 20px) rotateZ(2deg) scale(1.02); z-index: 28; }
-        50%  { transform: translate3d(14px, -8px, -15px) rotateZ(-2deg) scale(0.98); z-index: 9; }
-        75%  { transform: translate3d(0px, -8px, 10px) rotateZ(1deg) scale(1.01); z-index: 20; }
-        100% { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 14; }
+    @keyframes mobileVortex3 {
+        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-0.6deg); z-index: 14; }
+        30%  { transform: translate3d(-72px, 6px, 15px) rotateZ(2deg) scale(1.03); z-index: 24; }
+        70%  { transform: translate3d(36px, -6px, 12px) rotateZ(-2deg) scale(1.01); z-index: 22; }
+        100% { transform: translate3d(0px, 0px, 0px) rotateZ(-0.6deg); z-index: 14; }
     }
-    @keyframes mobileWeave4 {
-        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 16; }
-        25%  { transform: translate3d(-14px, 0px, -15px) rotateZ(-2deg) scale(0.98); z-index: 6; }
-        50%  { transform: translate3d(-14px, -8px, 20px) rotateZ(2deg) scale(1.02); z-index: 30; }
-        75%  { transform: translate3d(0px, -8px, 10px) rotateZ(-1deg) scale(1.01); z-index: 22; }
-        100% { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 16; }
+    @keyframes mobileVortex4 {
+        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 16; }
+        30%  { transform: translate3d(-216px, -6px, -18px) rotateZ(-4deg) scale(0.93); z-index: 6; }
+        70%  { transform: translate3d(-108px, 6px, -15px) rotateZ(3deg) scale(0.95); z-index: 10; }
+        100% { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 16; }
     }
 
     /* Mobile Text Overflow & Bank Grid Fixes */

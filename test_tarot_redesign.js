@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const assert = require('assert');
 
-console.log('🔮 Running Comprehensive Tarot Redesign Verification Suite...\n');
+console.log('🔮 Running Comprehensive Tarot Redesign Verification Suite (Minimal Modal & Dynamic Slot Shuffling)...\n');
 
 const stylePath = path.join(__dirname, 'style.css');
 const indexPath = path.join(__dirname, 'index.html');
@@ -10,32 +10,36 @@ const indexPath = path.join(__dirname, 'index.html');
 const styleContent = fs.readFileSync(stylePath, 'utf8');
 const indexContent = fs.readFileSync(indexPath, 'utf8');
 
-// 1. Check style.css overlay backdrop and modal box
-console.log('Testing 1: Backdrop low blur & modal container enclosure...');
-assert(styleContent.includes('backdrop-filter: blur(3.5px) !important;'), 'Backdrop filter must be blur(3.5px)');
-assert(styleContent.includes('background: rgba(0, 0, 0, 0.75) !important;'), 'Overlay background must be rgba(0, 0, 0, 0.75)');
-assert(styleContent.includes('width: min(840px, 94vw);'), 'Modal container must have min(840px, 94vw)');
-assert(styleContent.includes('border: 1px solid rgba(212, 175, 55, 0.38);'), 'Modal container must have gold border');
-assert(styleContent.includes('border-radius: 12px;'), 'Modal container must have rounded corners');
-console.log('✓ Backdrop low blur & modal container verified.\n');
+// 1. Check style.css overlay backdrop and minimal modal box
+console.log('Testing 1: High storefront visibility (low blur/dim) & compact modal box...');
+assert(styleContent.includes('backdrop-filter: blur(1.5px) !important;'), 'Backdrop filter must be minimal blur(1.5px) for store visibility');
+assert(styleContent.includes('background: rgba(0, 0, 0, 0.50) !important;'), 'Overlay background must be light rgba(0, 0, 0, 0.50)');
+assert(styleContent.includes('width: min(520px, 92vw);'), 'Modal container must be compact min(520px, 92vw)');
+assert(styleContent.includes('border-radius: 14px;'), 'Modal container must have 14px border radius');
+console.log('✓ High background visibility & compact modal container verified.\n');
 
-// 2. Check strict container containment and zero overflow
-console.log('Testing 2: Strict zero-overflow & bounded card stage...');
-assert(styleContent.includes('overflow: hidden !important; /* Strict Zero-Overflow Constraint */'), 'tarot-cards-stage must have overflow: hidden');
-assert(styleContent.includes('max-width: 780px;'), 'tarot-cards-stage max-width must be 780px');
-assert(styleContent.includes('max-width: 175px;'), 'tarot-card-wrapper max-width must be 175px');
-console.log('✓ Container zero-overflow verified.\n');
+// 2. Check compact card stage and well-spaced card dimensions
+console.log('Testing 2: Compact, well-spaced card stage...');
+assert(styleContent.includes('overflow: hidden !important;'), 'tarot-cards-stage must have overflow: hidden');
+assert(styleContent.includes('max-width: 470px;'), 'tarot-cards-stage max-width must be compact 470px');
+assert(styleContent.includes('max-width: 105px;'), 'tarot-card-wrapper max-width must be compact 105px');
+assert(styleContent.includes('height: 155px;'), 'tarot-card-wrapper height must be compact 155px');
+console.log('✓ Compact, well-spaced card dimensions verified.\n');
 
-// 3. Check desktop and mobile shuffle keyframes clamping
-console.log('Testing 3: Shuffle keyframes clamping (all <= 32px translations)...');
-assert(styleContent.includes('@keyframes desktopLoopShuffle1'), 'desktopLoopShuffle1 keyframe must exist');
-assert(!styleContent.includes('464px') && !styleContent.includes('696px'), 'Desktop shuffle must not have large offsets');
-assert(styleContent.includes('translate3d(28px, -10px, 20px)'), 'Desktop shuffle 1 should use clamped 28px offset');
+// 3. Check 5 Dynamic Slot-Swapping Shuffle Patterns (Desktop & Mobile)
+console.log('Testing 3: Dynamic slot-swapping shuffle animations across stage...');
+assert(styleContent.includes('@keyframes desktopGrandCross1'), 'desktopGrandCross1 keyframe must exist');
+assert(styleContent.includes('translate3d(345px,'), 'Desktop shuffle pattern 1 must swap full stage width (345px)');
+assert(styleContent.includes('@keyframes desktopDeckConverge1'), 'desktopDeckConverge1 keyframe must exist');
+assert(styleContent.includes('@keyframes desktopCarousel1'), 'desktopCarousel1 keyframe must exist');
+assert(styleContent.includes('@keyframes desktopCascade1'), 'desktopCascade1 keyframe must exist');
+assert(styleContent.includes('@keyframes desktopVortex1'), 'desktopVortex1 keyframe must exist');
 
-assert(styleContent.includes('@keyframes mobileLoopShuffle1'), 'mobileLoopShuffle1 keyframe must exist');
-assert(!styleContent.includes('140px, 190px'), 'Mobile shuffle must not have 140px/190px offsets');
-assert(styleContent.includes('translate3d(18px, -8px, 20px)'), 'Mobile shuffle 1 should use clamped 18px offset');
-console.log('✓ All shuffle keyframe offsets are strictly clamped within boundaries.\n');
+assert(styleContent.includes('@keyframes mobileGrandCross1'), 'mobileGrandCross1 keyframe must exist');
+assert(styleContent.includes('translate3d(216px,'), 'Mobile shuffle pattern 1 must swap full mobile stage width (216px)');
+assert(styleContent.includes('@keyframes mobileDeckConverge1'), 'mobileDeckConverge1 keyframe must exist');
+assert(styleContent.includes('@keyframes mobileCarousel1'), 'mobileCarousel1 keyframe must exist');
+console.log('✓ Dynamic slot-swapping shuffle animations verified across all 5 patterns.\n');
 
 // 4. Check HTML Markup for Initial 3-Stage Shopping Reward Copy
 console.log('Testing 4: HTML Markup initial copy...');
