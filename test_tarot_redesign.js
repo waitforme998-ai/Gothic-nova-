@@ -12,8 +12,8 @@ const indexContent = fs.readFileSync(indexPath, 'utf8');
 
 // 1. Check style.css overlay backdrop and minimal 2x2 modal box
 console.log('Testing 1: High storefront visibility (low blur/dim) & compact 2x2 modal box...');
-assert(styleContent.includes('backdrop-filter: blur(1.5px) !important;'), 'Backdrop filter must be minimal blur(1.5px) for store visibility');
-assert(styleContent.includes('background: rgba(0, 0, 0, 0.50) !important;'), 'Overlay background must be light rgba(0, 0, 0, 0.50)');
+assert(styleContent.includes('backdrop-filter: blur(1.0px) !important;'), 'Backdrop filter must be minimal blur(1.0px) for high store visibility');
+assert(styleContent.includes('background: rgba(0, 0, 0, 0.42) !important;'), 'Overlay background must be light translucent rgba(0, 0, 0, 0.42)');
 assert(styleContent.includes('width: min(390px, 92vw);'), 'Modal container must be compact min(390px, 92vw) for 2x2 grid');
 assert(styleContent.includes('border-radius: 14px;'), 'Modal container must have 14px border radius');
 console.log('✓ High background visibility & compact modal container verified.\n');

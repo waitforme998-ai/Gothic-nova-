@@ -6313,9 +6313,9 @@ select option {
     height: 100vh;
     height: 100dvh;
     z-index: 999999;
-    background: rgba(0, 0, 0, 0.50) !important;
-    backdrop-filter: blur(1.5px) !important;
-    -webkit-backdrop-filter: blur(1.5px) !important;
+    background: rgba(0, 0, 0, 0.42) !important;
+    backdrop-filter: blur(1.0px) !important;
+    -webkit-backdrop-filter: blur(1.0px) !important;
     display: none;
     align-items: center;
     justify-content: center;
@@ -6329,9 +6329,9 @@ select option {
 }
 
 .daily-tarot-overlay.card-focused {
-    background: rgba(0, 0, 0, 0.55) !important;
-    backdrop-filter: blur(1.5px) !important;
-    -webkit-backdrop-filter: blur(1.5px) !important;
+    background: rgba(0, 0, 0, 0.48) !important;
+    backdrop-filter: blur(1.0px) !important;
+    -webkit-backdrop-filter: blur(1.0px) !important;
 }
 
 .daily-tarot-overlay.active {
