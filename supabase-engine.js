@@ -1,17 +1,20 @@
 // supabase-engine.js
 // GOTHIC NOVA - Enterprise Dual-Mode & Live Supabase Data Adapter
 // Seamlessly bridges Supabase PostgreSQL Cloud & LocalStorage fallback
+// Unified Master State Document in gn_orders (__GN_STORE_SYNC__)
 
 (function() {
+    'use strict';
+
     const DEFAULT_SUPABASE_URL = 'https://ogjyubekshcxcirlboue.supabase.co';
     const DEFAULT_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9nanl1YmVrc2hjeGNpcmxib3VlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2MzU3NzIsImV4cCI6MjEwNTIxMTc3Mn0.DgLLeJfRhTgJhJsDhj5LSmxjk9U7q7FYskX-QB10BiM';
 
-    const SUPABASE_URL = localStorage.getItem('gn_supabase_url') || DEFAULT_SUPABASE_URL; 
-    const SUPABASE_ANON_KEY = localStorage.getItem('gn_supabase_anon_key') || DEFAULT_SUPABASE_ANON_KEY; 
+    const SUPABASE_URL = (typeof localStorage !== 'undefined' && localStorage.getItem('gn_supabase_url')) || DEFAULT_SUPABASE_URL; 
+    const SUPABASE_ANON_KEY = (typeof localStorage !== 'undefined' && localStorage.getItem('gn_supabase_anon_key')) || DEFAULT_SUPABASE_ANON_KEY; 
     
     let supabase = null;
 
-    if (SUPABASE_URL && SUPABASE_ANON_KEY && window.supabase) {
+    if (SUPABASE_URL && SUPABASE_ANON_KEY && typeof window !== 'undefined' && window.supabase) {
         try {
             supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
                 auth: {
@@ -28,14 +31,14 @@
         console.log("⚡ Gothic Nova Supabase Engine: MOCKUP Mode (localStorage).");
     }
 
-    // Default Seed Catalog
+    // Default Seed Catalog (Only used for very first cold start when no database state exists)
     const defaultCatalog = [
-        { id: "1", name: "Venom Spider Ring", category: "rings", img: "assets/venom_spider_ring.png", price: 3499, sale_price: null, stock: 15, threshold: 3, description: "Intricate spider silhouette ring cast in 316L solid surgical steel.", active: true, display_order: 1 },
-        { id: "2", name: "Crimson Cross", category: "chains", img: "assets/crimson_cross_choker.png", price: 5999, sale_price: 4499, stock: 8, threshold: 3, description: "Heavyweight gothic cross choker with crimson blood-drop stone inlay.", active: true, display_order: 2 },
-        { id: "3", name: "Obsidian Helix", category: "chains", img: "assets/obsidian_helix_chain.png", price: 5999, sale_price: null, stock: 12, threshold: 3, description: "Interlocking matte obsidian link chain with industrial quick-release clasp.", active: true, display_order: 3 },
-        { id: "4", name: "Shadow Claw", category: "rings", img: "assets/shadow_claw_ring.png", price: 3899, sale_price: null, stock: 10, threshold: 3, description: "Full-finger articulated talon ring engineered for effortless movement.", active: true, display_order: 4 },
-        { id: "5", name: "Spine Bracelet", category: "bracelets", img: "assets/spine_bracelet.png", price: 6899, sale_price: null, stock: 5, threshold: 3, description: "Vertebrae link bracelet with gothic cyber-matte finish.", active: true, display_order: 5 },
-        { id: "6", name: "Reaper Pendant", category: "pendants", img: "assets/reaper_pendant.png", price: 8999, sale_price: 7499, stock: 15, threshold: 3, description: "Solid onyx and stainless steel reaper emblem with 60cm rope chain.", active: true, display_order: 6 }
+        { id: "1", name: "Venom Spider Ring", category: "rings", img: "assets/venom_spider_ring.png", price: 3499, sale_price: null, salePrice: null, stock: 15, threshold: 3, description: "Intricate spider silhouette ring cast in 316L solid surgical steel.", active: true, display_order: 1 },
+        { id: "2", name: "Crimson Cross", category: "chains", img: "assets/crimson_cross_choker.png", price: 5999, sale_price: 4499, salePrice: 4499, stock: 8, threshold: 3, description: "Heavyweight gothic cross choker with crimson blood-drop stone inlay.", active: true, display_order: 2 },
+        { id: "3", name: "Obsidian Helix", category: "chains", img: "assets/obsidian_helix_chain.png", price: 5999, sale_price: null, salePrice: null, stock: 12, threshold: 3, description: "Interlocking matte obsidian link chain with industrial quick-release clasp.", active: true, display_order: 3 },
+        { id: "4", name: "Shadow Claw", category: "rings", img: "assets/shadow_claw_ring.png", price: 3899, sale_price: null, salePrice: null, stock: 10, threshold: 3, description: "Full-finger articulated talon ring engineered for effortless movement.", active: true, display_order: 4 },
+        { id: "5", name: "Spine Bracelet", category: "bracelets", img: "assets/spine_bracelet.png", price: 6899, sale_price: null, salePrice: null, stock: 5, threshold: 3, description: "Vertebrae link bracelet with gothic cyber-matte finish.", active: true, display_order: 5 },
+        { id: "6", name: "Reaper Pendant", category: "pendants", img: "assets/reaper_pendant.png", price: 8999, sale_price: 7499, salePrice: 7499, stock: 15, threshold: 3, description: "Solid onyx and stainless steel reaper emblem with 60cm rope chain.", active: true, display_order: 6 }
     ];
 
     // Default Seed Categories
@@ -46,7 +49,7 @@
         { id: "pendants", name: "Pendants", display_order: 4 }
     ];
 
-    // Default Seed Reviews (Unified Author and Customer Name fields)
+    // Default Seed Reviews
     const defaultReviews = [
         { id: "r1", customer_name: "Sarah M.", author: "Sarah M.", location: "Pakistan", rating: 5, review_text: "The Venom Spider Ring exceeded all expectations. Incredibly detailed craftsmanship.", comment: "The Venom Spider Ring exceeded all expectations. Incredibly detailed craftsmanship.", product_name: "Venom Spider Ring", is_sample: true },
         { id: "r2", customer_name: "Arjun K.", author: "Arjun K.", location: "Pakistan", rating: 5, review_text: "Reaper Pendant is a showstopper. Everyone asks where I got it.", comment: "Reaper Pendant is a showstopper. Everyone asks where I got it.", product_name: "Reaper Pendant", is_sample: true },
@@ -58,7 +61,7 @@
         { id: "r8", customer_name: "James W.", author: "James W.", location: "Pakistan", rating: 5, review_text: "The gothic aesthetic is exactly what I was looking for. Masterpiece.", comment: "The gothic aesthetic is exactly what I was looking for. Masterpiece.", product_name: "General Store", is_sample: true }
     ];
 
-    // Default Seed Hero Slides (Synchronized Hero Artworks)
+    // Default Seed Hero Slides
     const defaultHeroSlides = [
         { 
             id: "s1", 
@@ -110,6 +113,53 @@
         }
     ];
 
+    // Concurrency & Debounce Controls
+    let _cachedSyncState = null;
+    let _syncSavePromiseChain = Promise.resolve();
+    let _pendingSavePayload = {};
+    let _saveDebounceTimeout = null;
+
+    function getStoreSyncBroadcastChannel() {
+        if (typeof BroadcastChannel !== 'undefined') {
+            try {
+                return new BroadcastChannel('gn_store_sync');
+            } catch (e) {}
+        }
+        return null;
+    }
+
+    function dispatchUniversalSyncEvents(updatedState) {
+        if (typeof window === 'undefined') return;
+        try {
+            if (updatedState.products !== undefined) {
+                window.dispatchEvent(new Event('productsUpdated'));
+                window.dispatchEvent(new Event('productsLoaded'));
+                window.dispatchEvent(new CustomEvent('gn:productsUpdated', { detail: { products: updatedState.products } }));
+            }
+            if (updatedState.categories !== undefined) {
+                window.dispatchEvent(new Event('categoriesUpdated'));
+            }
+            if (updatedState.reviews !== undefined) {
+                window.dispatchEvent(new Event('reviewsUpdated'));
+            }
+            if (updatedState.announcements !== undefined) {
+                window.dispatchEvent(new Event('announcementsUpdated'));
+            }
+            if (updatedState.hero_slides !== undefined) {
+                window.dispatchEvent(new Event('heroSlidesUpdated'));
+            }
+            window.dispatchEvent(new Event('storage'));
+            window.dispatchEvent(new CustomEvent('gn:storeSyncUpdated', { detail: updatedState }));
+
+            const bc = getStoreSyncBroadcastChannel();
+            if (bc) {
+                bc.postMessage({ type: 'STORE_SYNC_UPDATED', state: updatedState, timestamp: Date.now() });
+            }
+        } catch (e) {
+            console.warn("Event dispatch notice:", e);
+        }
+    }
+
     window.SupabaseEngine = {
         client: supabase,
         isLive: !!supabase,
@@ -117,70 +167,120 @@
         // =========================================================================
         // CLOUD STORE STATE SYNCHRONIZATION ENGINE
         // Guarantees real-time cross-device sync for products, reviews, announcements,
-        // and categories using Supabase cloud storage with zero RLS barriers.
+        // categories, and hero slides using Supabase cloud storage with zero RLS barriers.
         // =========================================================================
-        async _getCloudSyncState() {
-            if (!this.isLive || !supabase) return null;
+        async _getCloudSyncState(forceFresh = false) {
+            if (!this.isLive || !supabase) {
+                return _cachedSyncState;
+            }
+            if (!forceFresh && _cachedSyncState) {
+                return _cachedSyncState;
+            }
+
             try {
                 const { data, error } = await supabase
                     .from('gn_orders')
-                    .select('id, items')
+                    .select('id, items, updated_at')
                     .eq('customer_name', '__GN_STORE_SYNC__')
                     .order('created_at', { ascending: false })
                     .limit(1);
+
                 if (!error && Array.isArray(data) && data.length > 0 && data[0] && data[0].items) {
-                    return { syncRecordId: data[0].id, ...data[0].items };
+                    const rawItems = data[0].items;
+                    _cachedSyncState = {
+                        syncRecordId: data[0].id,
+                        products: Array.isArray(rawItems.products) ? rawItems.products : undefined,
+                        categories: Array.isArray(rawItems.categories) ? rawItems.categories : undefined,
+                        reviews: Array.isArray(rawItems.reviews) ? rawItems.reviews : undefined,
+                        announcements: Array.isArray(rawItems.announcements) ? rawItems.announcements : undefined,
+                        hero_slides: Array.isArray(rawItems.hero_slides) ? rawItems.hero_slides : undefined,
+                        updated_at: data[0].updated_at || rawItems.updated_at || Date.now(),
+                        version: 2
+                    };
+                    return _cachedSyncState;
                 }
-            } catch(e) {
+            } catch (e) {
                 console.warn("Notice: Fetching cloud sync state:", e);
             }
-            return null;
+            return _cachedSyncState;
         },
 
         async _saveCloudSyncState(partial) {
-            let currentState = {};
-            try {
-                const fetched = await this._getCloudSyncState();
-                if (fetched) currentState = { ...fetched };
-            } catch(e) {}
+            // Merge into in-memory cached state immediately
+            if (!_cachedSyncState) {
+                _cachedSyncState = { products: [], categories: [], reviews: [], announcements: [], hero_slides: [] };
+            }
+            if (partial.products !== undefined) _cachedSyncState.products = partial.products;
+            if (partial.categories !== undefined) _cachedSyncState.categories = partial.categories;
+            if (partial.reviews !== undefined) _cachedSyncState.reviews = partial.reviews;
+            if (partial.announcements !== undefined) _cachedSyncState.announcements = partial.announcements;
+            if (partial.hero_slides !== undefined) _cachedSyncState.hero_slides = partial.hero_slides;
+            _cachedSyncState.updated_at = Date.now();
 
-            const merged = {
-                products: partial.products !== undefined ? partial.products : (currentState.products !== undefined ? currentState.products : []),
-                reviews: partial.reviews !== undefined ? partial.reviews : (currentState.reviews !== undefined ? currentState.reviews : []),
-                announcements: partial.announcements !== undefined ? partial.announcements : (currentState.announcements !== undefined ? currentState.announcements : []),
-                categories: partial.categories !== undefined ? partial.categories : (currentState.categories !== undefined ? currentState.categories : [])
+            _pendingSavePayload = {
+                ..._pendingSavePayload,
+                ...partial
             };
 
-            if (this.isLive && supabase) {
-                try {
-                    const syncRecordId = currentState.syncRecordId;
-                    if (syncRecordId) {
-                        await supabase
-                            .from('gn_orders')
-                            .update({ items: merged, updated_at: new Date().toISOString() })
-                            .eq('id', syncRecordId);
-                    } else {
-                        await supabase
-                            .from('gn_orders')
-                            .insert({
-                                customer_name: '__GN_STORE_SYNC__',
-                                phone_number: '00000000000',
-                                house_flat_no: 'SYSTEM',
-                                street_address: 'SYSTEM',
-                                city: 'SYSTEM',
-                                province: 'SYSTEM',
-                                nearest_landmark: 'SYSTEM',
-                                payment_method: 'cod',
-                                items: merged,
-                                total_amount: 0,
-                                status: 'Cancelled'
-                            });
-                    }
-                } catch(e) {
-                    console.warn("Notice: Persisting cloud sync state:", e);
-                }
-            }
-            return merged;
+            // Dispatch instant local feedback across all tabs on current device
+            dispatchUniversalSyncEvents(partial);
+
+            // Queue the cloud persist sequentially to eliminate race conditions
+            return new Promise((resolve) => {
+                if (_saveDebounceTimeout) clearTimeout(_saveDebounceTimeout);
+                _saveDebounceTimeout = setTimeout(() => {
+                    _syncSavePromiseChain = _syncSavePromiseChain.then(async () => {
+                        const payloadToSave = { ..._pendingSavePayload };
+                        _pendingSavePayload = {};
+                        try {
+                            const current = await this._getCloudSyncState();
+                            const merged = {
+                                products: payloadToSave.products !== undefined ? payloadToSave.products : (current?.products ?? []),
+                                categories: payloadToSave.categories !== undefined ? payloadToSave.categories : (current?.categories ?? []),
+                                reviews: payloadToSave.reviews !== undefined ? payloadToSave.reviews : (current?.reviews ?? []),
+                                announcements: payloadToSave.announcements !== undefined ? payloadToSave.announcements : (current?.announcements ?? []),
+                                hero_slides: payloadToSave.hero_slides !== undefined ? payloadToSave.hero_slides : (current?.hero_slides ?? []),
+                                updated_at: new Date().toISOString(),
+                                version: 2
+                            };
+
+                            if (this.isLive && supabase) {
+                                const syncRecordId = current?.syncRecordId;
+                                if (syncRecordId) {
+                                    await supabase
+                                        .from('gn_orders')
+                                        .update({ items: merged, updated_at: new Date().toISOString() })
+                                        .eq('id', syncRecordId);
+                                } else {
+                                    const { data } = await supabase
+                                        .from('gn_orders')
+                                        .insert({
+                                            customer_name: '__GN_STORE_SYNC__',
+                                            phone_number: '00000000000',
+                                            house_flat_no: 'SYSTEM',
+                                            street_address: 'SYSTEM',
+                                            city: 'SYSTEM',
+                                            province: 'SYSTEM',
+                                            nearest_landmark: 'SYSTEM',
+                                            payment_method: 'cod',
+                                            items: merged,
+                                            total_amount: 0,
+                                            status: 'Cancelled'
+                                        })
+                                        .select();
+                                    if (data && data[0]) {
+                                        if (_cachedSyncState) _cachedSyncState.syncRecordId = data[0].id;
+                                    }
+                                }
+                            }
+                            resolve(merged);
+                        } catch (err) {
+                            console.warn("Notice: Persisting cloud sync state:", err);
+                            resolve(_cachedSyncState);
+                        }
+                    });
+                }, 100);
+            });
         },
 
         // =========================================================================
@@ -194,19 +294,19 @@
                     const parsed = JSON.parse(rawLocal);
                     if (Array.isArray(parsed)) localProds = parsed;
                 }
-            } catch(e) {}
+            } catch (e) {}
 
             if (this.isLive && supabase) {
                 try {
-                    // 1. First priority: Fetch from Cloud Sync State
+                    // 1. Primary: Unified Cloud Sync Document
                     const cloudState = await this._getCloudSyncState();
                     if (cloudState && Array.isArray(cloudState.products)) {
                         const cloudProds = cloudState.products;
-                        localStorage.setItem('gn_products', JSON.stringify(cloudProds));
+                        try { localStorage.setItem('gn_products', JSON.stringify(cloudProds)); } catch(e) {}
                         return cloudProds;
                     }
 
-                    // 2. Second priority: Direct gn_products table check
+                    // 2. Secondary: Check gn_products table directly
                     const { data, error } = await supabase
                         .from('gn_products')
                         .select('*')
@@ -219,7 +319,7 @@
                             salePrice: p.sale_price !== undefined ? p.sale_price : p.salePrice,
                             sale_price: p.sale_price !== undefined ? p.sale_price : p.salePrice
                         }));
-                        localStorage.setItem('gn_products', JSON.stringify(normalized));
+                        try { localStorage.setItem('gn_products', JSON.stringify(normalized)); } catch(e) {}
                         this._saveCloudSyncState({ products: normalized }).catch(() => {});
                         return normalized;
                     }
@@ -228,11 +328,14 @@
                 }
             }
 
+            // If local storage exists (even if [] empty array), respect it (Anti-Ghost)
             if (Array.isArray(localProds)) {
                 return localProds;
             }
 
-            const initialSeed = this._getMockProducts();
+            // Only seed on initial cold start when nothing exists anywhere
+            const initialSeed = defaultCatalog;
+            try { localStorage.setItem('gn_products', JSON.stringify(initialSeed)); } catch(e) {}
             if (this.isLive && supabase) {
                 this._saveCloudSyncState({ products: initialSeed }).catch(() => {});
             }
@@ -272,15 +375,16 @@
             if (idx >= 0) localList[idx] = normalized;
             else localList.push(normalized);
 
-            localStorage.setItem('gn_products', JSON.stringify(localList));
+            try { localStorage.setItem('gn_products', JSON.stringify(localList)); } catch(e) {}
 
-            // 2. Persist to Cloud Sync State across all customer and admin devices
+            // 2. Persist to Master Cloud State
             await this._saveCloudSyncState({ products: localList });
 
-            // 3. Optional update on gn_products table
+            // 3. Best-effort write to gn_products table (if table exists and writable)
             if (this.isLive && supabase) {
                 try {
-                    await supabase.from('gn_products').update({
+                    await supabase.from('gn_products').upsert({
+                        id: normalized.id,
                         name: normalized.name,
                         category: normalized.category,
                         price: normalized.price,
@@ -291,19 +395,9 @@
                         img: normalized.img,
                         active: normalized.active,
                         display_order: normalized.display_order
-                    }).eq('id', normalized.id);
+                    });
                 } catch(e) {}
             }
-
-            try {
-                window.dispatchEvent(new Event('productsLoaded'));
-                window.dispatchEvent(new Event('productsUpdated'));
-                window.dispatchEvent(new Event('storage'));
-                if (typeof BroadcastChannel !== 'undefined') {
-                    const bc = new BroadcastChannel('gn_store_sync');
-                    bc.postMessage({ type: 'PRODUCTS_UPDATED', products: localList });
-                }
-            } catch(e) {}
 
             return [normalized];
         },
@@ -318,29 +412,25 @@
             if (!Array.isArray(localList)) localList = [];
 
             localList = localList.filter(p => String(p.id) !== cleanId);
-            localStorage.setItem('gn_products', JSON.stringify(localList));
+            try { localStorage.setItem('gn_products', JSON.stringify(localList)); } catch(e) {}
 
-            // Persist to Cloud Sync State
+            // Record in deleted registry
+            try {
+                let deletedList = JSON.parse(localStorage.getItem('gn_deleted_products') || '[]');
+                if (!Array.isArray(deletedList)) deletedList = [];
+                deletedList.push(cleanId);
+                localStorage.setItem('gn_deleted_products', JSON.stringify([...new Set(deletedList)]));
+            } catch(e) {}
+
+            // Persist to Master Cloud State
             await this._saveCloudSyncState({ products: localList });
 
-            // Direct gn_products deletion
+            // Best-effort delete from gn_products
             if (this.isLive && supabase) {
                 try {
                     await supabase.from('gn_products').delete().eq('id', cleanId);
-                } catch (err) {
-                    console.warn("Supabase deleteProduct notice:", err);
-                }
+                } catch (err) {}
             }
-
-            try {
-                window.dispatchEvent(new Event('productsLoaded'));
-                window.dispatchEvent(new Event('productsUpdated'));
-                window.dispatchEvent(new Event('storage'));
-                if (typeof BroadcastChannel !== 'undefined') {
-                    const bc = new BroadcastChannel('gn_store_sync');
-                    bc.postMessage({ type: 'PRODUCTS_UPDATED', products: localList });
-                }
-            } catch(e) {}
 
             return true;
         },
@@ -368,33 +458,13 @@
                 };
             });
 
-            localStorage.setItem('gn_products', JSON.stringify(normalizedArray));
+            try { localStorage.setItem('gn_products', JSON.stringify(normalizedArray)); } catch(e) {}
             await this._saveCloudSyncState({ products: normalizedArray });
-
-            try {
-                window.dispatchEvent(new Event('productsLoaded'));
-                window.dispatchEvent(new Event('productsUpdated'));
-                window.dispatchEvent(new Event('storage'));
-                if (typeof BroadcastChannel !== 'undefined') {
-                    const bc = new BroadcastChannel('gn_store_sync');
-                    bc.postMessage({ type: 'PRODUCTS_UPDATED', products: normalizedArray });
-                }
-            } catch(e) {}
-
             return normalizedArray;
         },
 
-        async _seedProductsCloud() {
-            if (!this.isLive) return;
-            try {
-                await this._saveCloudSyncState({ products: defaultCatalog });
-            } catch (e) {
-                console.warn("Auto-seed products notice:", e);
-            }
-        },
-
         // =========================================================================
-        // 2. CATEGORIES API (CLOUD SYNCED ACROSS ALL CUSTOMERS & ADMIN)
+        // 2. CATEGORIES API
         // =========================================================================
         async getCategories() {
             let localCats = null;
@@ -407,15 +477,18 @@
                 try {
                     const cloudState = await this._getCloudSyncState();
                     if (cloudState && Array.isArray(cloudState.categories)) {
-                        localStorage.setItem('gn_categories_meta', JSON.stringify(cloudState.categories));
+                        try { localStorage.setItem('gn_categories_meta', JSON.stringify(cloudState.categories)); } catch(e) {}
                         return cloudState.categories;
                     }
                 } catch (err) {
                     console.warn("Notice: Fetching categories:", err);
                 }
             }
+
             if (Array.isArray(localCats)) return localCats;
-            return this._getMockCategories();
+
+            try { localStorage.setItem('gn_categories_meta', JSON.stringify(defaultCategories)); } catch(e) {}
+            return defaultCategories;
         },
 
         async saveCategory(category) {
@@ -434,25 +507,14 @@
                 const stored = localStorage.getItem('gn_categories_meta');
                 if (stored !== null) localCats = JSON.parse(stored);
             } catch(e) {}
-            if (!Array.isArray(localCats) || !localCats.length) {
-                localCats = this._getMockCategories();
-            }
+            if (!Array.isArray(localCats)) localCats = defaultCategories;
 
             const idx = localCats.findIndex(c => String(c.id).toLowerCase() === cleanSlug);
             if (idx >= 0) localCats[idx] = { ...localCats[idx], ...payload };
             else localCats.push(payload);
 
-            localStorage.setItem('gn_categories_meta', JSON.stringify(localCats));
+            try { localStorage.setItem('gn_categories_meta', JSON.stringify(localCats)); } catch(e) {}
             await this._saveCloudSyncState({ categories: localCats });
-
-            try {
-                window.dispatchEvent(new Event('storage'));
-                if (typeof BroadcastChannel !== 'undefined') {
-                    const bc = new BroadcastChannel('gn_store_sync');
-                    bc.postMessage({ type: 'CATEGORIES_UPDATED', categories: localCats });
-                }
-            } catch(e) {}
-
             return payload;
         },
 
@@ -463,40 +525,33 @@
                 const stored = localStorage.getItem('gn_categories_meta');
                 if (stored !== null) localCats = JSON.parse(stored);
             } catch(e) {}
-            if (!Array.isArray(localCats) || !localCats.length) {
-                localCats = this._getMockCategories();
-            }
+            if (!Array.isArray(localCats)) localCats = defaultCategories;
+            
             localCats = localCats.filter(c => String(c.id).toLowerCase() !== cleanId);
-            localStorage.setItem('gn_categories_meta', JSON.stringify(localCats));
+            try { localStorage.setItem('gn_categories_meta', JSON.stringify(localCats)); } catch(e) {}
 
             await this._saveCloudSyncState({ categories: localCats });
-
-            try {
-                window.dispatchEvent(new Event('storage'));
-                if (typeof BroadcastChannel !== 'undefined') {
-                    const bc = new BroadcastChannel('gn_store_sync');
-                    bc.postMessage({ type: 'CATEGORIES_UPDATED', categories: localCats });
-                }
-            } catch(e) {}
-
             return true;
         },
 
         // =========================================================================
-        // 3. CUSTOMER REVIEWS API (CLOUD SYNCED ACROSS ALL CUSTOMERS & ADMIN)
+        // 3. CUSTOMER REVIEWS API (Strict Anti-Ghost)
         // =========================================================================
         async getReviews() {
             let localRevs = null;
             try {
                 const raw = localStorage.getItem('gn_reviews');
-                if (raw !== null) localRevs = JSON.parse(raw);
+                if (raw !== null) {
+                    const parsed = JSON.parse(raw);
+                    if (Array.isArray(parsed)) localRevs = parsed;
+                }
             } catch(e) {}
 
             if (this.isLive && supabase) {
                 try {
                     const cloudState = await this._getCloudSyncState();
                     if (cloudState && Array.isArray(cloudState.reviews)) {
-                        localStorage.setItem('gn_reviews', JSON.stringify(cloudState.reviews));
+                        try { localStorage.setItem('gn_reviews', JSON.stringify(cloudState.reviews)); } catch(e) {}
                         return cloudState.reviews;
                     }
                 } catch(e) {
@@ -504,10 +559,12 @@
                 }
             }
 
+            // Anti-Ghost: If local storage has [] (empty array), return it! NEVER inject 8 sample reviews!
             if (Array.isArray(localRevs)) {
                 return localRevs;
             }
 
+            // Cold start default (first install only)
             return [];
         },
 
@@ -537,18 +594,8 @@
             if (idx >= 0) local[idx] = { ...local[idx], ...payload };
             else local.unshift(payload);
 
-            localStorage.setItem('gn_reviews', JSON.stringify(local));
+            try { localStorage.setItem('gn_reviews', JSON.stringify(local)); } catch(e) {}
             await this._saveCloudSyncState({ reviews: local });
-
-            try {
-                window.dispatchEvent(new Event('reviewsUpdated'));
-                window.dispatchEvent(new Event('storage'));
-                if (typeof BroadcastChannel !== 'undefined') {
-                    const bc = new BroadcastChannel('gn_store_sync');
-                    bc.postMessage({ type: 'REVIEWS_UPDATED', reviews: local });
-                }
-            } catch(e) {}
-
             return payload;
         },
 
@@ -564,36 +611,38 @@
             } catch(e) {}
 
             local = local.filter(r => String(r.id) !== cleanId);
-            localStorage.setItem('gn_reviews', JSON.stringify(local));
-            await this._saveCloudSyncState({ reviews: local });
+            try { localStorage.setItem('gn_reviews', JSON.stringify(local)); } catch(e) {}
 
+            // Persist to deleted registry
             try {
-                window.dispatchEvent(new Event('reviewsUpdated'));
-                window.dispatchEvent(new Event('storage'));
-                if (typeof BroadcastChannel !== 'undefined') {
-                    const bc = new BroadcastChannel('gn_store_sync');
-                    bc.postMessage({ type: 'REVIEWS_UPDATED', reviews: local });
-                }
+                let deletedList = JSON.parse(localStorage.getItem('gn_deleted_reviews') || '[]');
+                if (!Array.isArray(deletedList)) deletedList = [];
+                deletedList.push(cleanId);
+                localStorage.setItem('gn_deleted_reviews', JSON.stringify([...new Set(deletedList)]));
             } catch(e) {}
 
+            await this._saveCloudSyncState({ reviews: local });
             return true;
         },
 
         // =========================================================================
-        // ANNOUNCEMENTS & STORE SETTINGS API (CLOUD SYNCED)
+        // 4. ANNOUNCEMENTS API
         // =========================================================================
         async getAnnouncements() {
             let localAnn = null;
             try {
                 const raw = localStorage.getItem('gn_announcements');
-                if (raw !== null) localAnn = JSON.parse(raw);
+                if (raw !== null) {
+                    const parsed = JSON.parse(raw);
+                    if (Array.isArray(parsed)) localAnn = parsed;
+                }
             } catch(e) {}
 
             if (this.isLive && supabase) {
                 try {
                     const cloudState = await this._getCloudSyncState();
                     if (cloudState && Array.isArray(cloudState.announcements)) {
-                        localStorage.setItem('gn_announcements', JSON.stringify(cloudState.announcements));
+                        try { localStorage.setItem('gn_announcements', JSON.stringify(cloudState.announcements)); } catch(e) {}
                         return cloudState.announcements;
                     }
                 } catch(e) {}
@@ -605,16 +654,8 @@
 
         async saveAnnouncements(offers) {
             const cleanOffers = Array.isArray(offers) ? offers.map(o => String(o).trim()).filter(Boolean) : [];
-            localStorage.setItem('gn_announcements', JSON.stringify(cleanOffers));
+            try { localStorage.setItem('gn_announcements', JSON.stringify(cleanOffers)); } catch(e) {}
             await this._saveCloudSyncState({ announcements: cleanOffers });
-            try {
-                window.dispatchEvent(new Event('announcementsUpdated'));
-                window.dispatchEvent(new Event('storage'));
-                if (typeof BroadcastChannel !== 'undefined') {
-                    const bc = new BroadcastChannel('gn_store_sync');
-                    bc.postMessage({ type: 'ANNOUNCEMENTS_UPDATED', announcements: cleanOffers });
-                }
-            } catch(e) {}
             return cleanOffers;
         },
 
@@ -645,80 +686,31 @@
         },
 
         // =========================================================================
-        // 4. HERO SLIDER API
+        // 5. HERO SLIDER DROPS API
         // =========================================================================
         async getHeroSlides() {
-            let slides = null;
-            if (this.isLive) {
+            let localSlides = null;
+            try {
+                const raw = localStorage.getItem('gn_hero_slides');
+                if (raw !== null) {
+                    const parsed = JSON.parse(raw);
+                    if (Array.isArray(parsed)) localSlides = parsed;
+                }
+            } catch(e) {}
+
+            if (this.isLive && supabase) {
                 try {
-                    const { data, error } = await supabase
-                        .from('gn_hero_slides')
-                        .select('*')
-                        .order('display_order', { ascending: true });
-                    
-                    if (error) throw error;
-                    if (data && data.length > 0) {
-                        slides = data;
-                    } else {
-                        await supabase.from('gn_hero_slides').upsert(defaultHeroSlides);
-                        slides = defaultHeroSlides;
+                    const cloudState = await this._getCloudSyncState();
+                    if (cloudState && Array.isArray(cloudState.hero_slides)) {
+                        try { localStorage.setItem('gn_hero_slides', JSON.stringify(cloudState.hero_slides)); } catch(e) {}
+                        return cloudState.hero_slides;
                     }
-                } catch (err) {
-                    console.warn("Supabase fetch hero slides notice:", err);
-                }
+                } catch(e) {}
             }
 
-            if (!slides || slides.length === 0) {
-                slides = this._getMockHeroSlides();
-            }
-
-            // Normalization & Image Fix
-            const normalized = slides.map((s, idx) => {
-                let imgPath = s.image_url || s.img || s.image;
-                // Fix legacy / mismatched default placeholder images (e.g. product photos or silhouette)
-                const isProductOrSilhouette = !imgPath || 
-                    imgPath.includes('subject_silhouette.png') || 
-                    imgPath.includes('reaper_pendant.png') || 
-                    imgPath.includes('crimson_cross_choker.png') || 
-                    imgPath.includes('venom_spider_ring.png') || 
-                    imgPath.includes('shadow_claw_ring.png') || 
-                    imgPath.includes('spine_bracelet.png') || 
-                    imgPath.includes('obsidian_helix_chain.png');
-
-                if (isProductOrSilhouette) {
-                    if (s.id === 's1' || idx === 0) imgPath = 'assets/hero_gothic_bg.png';
-                    else if (s.id === 's2' || idx === 1) imgPath = 'assets/gothic_cathedral_bg.jpg';
-                    else if (s.id === 's3' || idx === 2) imgPath = 'assets/hero_original_bg.webp';
-                    else imgPath = 'assets/hero_gothic_bg.png';
-                }
-
-                const headline = s.headline || s.title || (idx === 0 ? 'GOTHIC NOVA // IMMORTAL DROP' : (idx === 1 ? 'REAPER COLLECTION' : 'CRIMSON & HELIX'));
-                const subtext = s.subtext || s.subtitle || 'Gothic × Japanese Jewelry. Handcrafted artifacts.';
-                const ctaText = s.button_label || s.buttonLabel || s.cta_text || (idx === 1 ? 'Shop Pendants' : (idx === 2 ? 'Explore Chains' : 'Explore Drop'));
-                const ctaLink = s.button_link || s.buttonLink || s.cta_link || (idx === 1 ? 'index.html?cat=pendants' : (idx === 2 ? 'index.html?cat=chains' : '#active-drop'));
-                const isActive = s.active !== undefined ? s.active : (s.is_active !== undefined ? s.is_active : true);
-
-                return {
-                    id: s.id || `s_${idx + 1}`,
-                    headline,
-                    title: headline,
-                    subtext,
-                    subtitle: subtext,
-                    button_label: ctaText,
-                    cta_text: ctaText,
-                    button_link: ctaLink,
-                    cta_link: ctaLink,
-                    img: imgPath,
-                    image_url: imgPath,
-                    image: imgPath,
-                    display_order: Number(s.display_order || s.displayOrder || idx + 1),
-                    active: isActive,
-                    is_active: isActive
-                };
-            });
-
-            localStorage.setItem('gn_hero_slides', JSON.stringify(normalized));
-            return normalized;
+            if (Array.isArray(localSlides)) return localSlides;
+            try { localStorage.setItem('gn_hero_slides', JSON.stringify(defaultHeroSlides)); } catch(e) {}
+            return defaultHeroSlides;
         },
 
         async saveHeroSlide(slide) {
@@ -730,6 +722,7 @@
             const isActive = slide.active !== undefined ? slide.active : (slide.is_active !== false);
 
             const payload = {
+                id: slide.id || ('s_' + Date.now()),
                 headline: headline,
                 title: headline,
                 subtext: subtext,
@@ -745,52 +738,45 @@
                 active: isActive,
                 is_active: isActive
             };
-            if (slide.id) {
-                payload.id = slide.id;
-            } else {
-                payload.id = 's_' + Date.now();
-            }
 
-            let local = this._getMockHeroSlides();
+            let local = [];
+            try {
+                const raw = localStorage.getItem('gn_hero_slides');
+                if (raw) local = JSON.parse(raw);
+            } catch(e) {}
+            if (!Array.isArray(local)) local = defaultHeroSlides;
+
             const idx = local.findIndex(s => String(s.id) === String(payload.id));
             if (idx >= 0) local[idx] = payload;
             else local.push(payload);
-            localStorage.setItem('gn_hero_slides', JSON.stringify(local));
 
-            if (this.isLive) {
-                try {
-                    const { data, error } = await supabase.from('gn_hero_slides').upsert(payload).select();
-                    if (error) console.warn("Save hero slide error:", error);
-                    return data ? data[0] : payload;
-                } catch (e) {
-                    console.warn("Supabase saveHeroSlide error:", e);
-                }
-            }
+            try { localStorage.setItem('gn_hero_slides', JSON.stringify(local)); } catch(e) {}
+            await this._saveCloudSyncState({ hero_slides: local });
             return payload;
         },
 
         async deleteHeroSlide(id) {
-            let local = this._getMockHeroSlides().filter(s => String(s.id) !== String(id));
-            localStorage.setItem('gn_hero_slides', JSON.stringify(local));
+            let local = [];
+            try {
+                const raw = localStorage.getItem('gn_hero_slides');
+                if (raw) local = JSON.parse(raw);
+            } catch(e) {}
+            if (!Array.isArray(local)) local = defaultHeroSlides;
 
-            if (this.isLive) {
-                try {
-                    await supabase.from('gn_hero_slides').delete().eq('id', id);
-                } catch (e) {
-                    console.warn("Supabase deleteHeroSlide error:", e);
-                }
-            }
+            local = local.filter(s => String(s.id) !== String(id));
+            try { localStorage.setItem('gn_hero_slides', JSON.stringify(local)); } catch(e) {}
+            await this._saveCloudSyncState({ hero_slides: local });
+            return true;
         },
 
         // =========================================================================
-        // 5. SUPABASE AUTH INTEGRATION
+        // 6. SUPABASE AUTH INTEGRATION
         // =========================================================================
         async signIn(email, password) {
             if (!this.isLive) {
-                // Offline / Local Mock login validation
                 if (password === 'gothicnova51214' || password === 'admin') {
                     const mockSession = { user: { email: email || 'admin@gothicnova.com' }, token: 'mock-jwt-token' };
-                    sessionStorage.setItem('gn_admin_session', JSON.stringify(mockSession));
+                    try { sessionStorage.setItem('gn_admin_session', JSON.stringify(mockSession)); } catch(e) {}
                     return { data: { session: mockSession, user: mockSession.user }, error: null };
                 }
                 return { data: null, error: { message: 'Invalid admin credentials.' } };
@@ -798,12 +784,12 @@
 
             try {
                 const { data, error } = await supabase.auth.signInWithPassword({
-                    email: email.trim(),
+                    email: (email || '').trim(),
                     password: password
                 });
                 if (error) throw error;
                 if (data && data.session) {
-                    sessionStorage.setItem('gn_admin_session', JSON.stringify(data.session));
+                    try { sessionStorage.setItem('gn_admin_session', JSON.stringify(data.session)); } catch(e) {}
                 }
                 return { data, error: null };
             } catch (err) {
@@ -812,38 +798,46 @@
         },
 
         async signOut() {
-            sessionStorage.removeItem('gn_admin_session');
-            if (this.isLive) {
-                try {
-                    await supabase.auth.signOut();
-                } catch (e) {}
+            try { sessionStorage.removeItem('gn_admin_session'); } catch(e) {}
+            if (this.isLive && supabase) {
+                try { await supabase.auth.signOut(); } catch (e) {}
             }
         },
 
         async getSession() {
-            if (this.isLive) {
+            if (this.isLive && supabase) {
                 try {
                     const { data } = await supabase.auth.getSession();
                     if (data && data.session) return data.session;
                 } catch (e) {}
             }
-            const stored = sessionStorage.getItem('gn_admin_session');
-            if (stored) {
-                try { return JSON.parse(stored); } catch(e) {}
-            }
+            try {
+                const stored = sessionStorage.getItem('gn_admin_session');
+                if (stored) return JSON.parse(stored);
+            } catch(e) {}
             return null;
         },
 
         // =========================================================================
-        // 6. STORAGE MEDIA UPLOAD
+        // 7. STORAGE MEDIA UPLOADS
         // =========================================================================
+        _fileToDataUrl(fileOrBlob) {
+            if (typeof fileOrBlob === 'string') return Promise.resolve(fileOrBlob);
+            return new Promise((resolve) => {
+                if (!fileOrBlob || typeof FileReader === 'undefined') { resolve(''); return; }
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.onerror = () => resolve('');
+                reader.readAsDataURL(fileOrBlob);
+            });
+        },
+
         async uploadMedia(fileOrBase64, filename = '') {
-            if (!this.isLive) return fileOrBase64;
+            if (!this.isLive || !supabase) return fileOrBase64;
 
             try {
                 let blob = fileOrBase64;
                 if (typeof fileOrBase64 === 'string' && fileOrBase64.startsWith('data:')) {
-                    // Convert data URL to Blob
                     const byteString = atob(fileOrBase64.split(',')[1]);
                     const mimeString = fileOrBase64.split(',')[0].split(':')[1].split(';')[0];
                     const ab = new ArrayBuffer(byteString.length);
@@ -855,7 +849,7 @@
                 const cleanName = (filename || 'media_' + Date.now()).replace(/[^a-zA-Z0-9_.-]/g, '_');
                 const path = `uploads/${Date.now()}_${cleanName}.webp`;
 
-                const { data, error } = await supabase.storage
+                const { error } = await supabase.storage
                     .from('product-media')
                     .upload(path, blob, {
                         cacheControl: '3600',
@@ -864,7 +858,6 @@
                     });
 
                 if (error) {
-                    console.warn("Supabase Storage upload warning, using local data URL:", error);
                     return fileOrBase64;
                 }
 
@@ -874,78 +867,18 @@
 
                 return publicUrlData && publicUrlData.publicUrl ? publicUrlData.publicUrl : fileOrBase64;
             } catch (err) {
-                console.warn("Storage upload exception, falling back:", err);
                 return fileOrBase64;
             }
         },
 
-        async saveReview(review) {
-            const payload = {
-                id: review.id || ('rev_' + Date.now()),
-                author: review.author || review.customer_name || review.name || 'Verified Customer',
-                customer_name: review.customer_name || review.author || review.name || 'Verified Customer',
-                location: review.location || 'Pakistan',
-                rating: Math.max(1, Math.min(5, Number(review.rating || review.stars || 5))),
-                comment: review.comment || review.review_text || review.text || '',
-                review_text: review.review_text || review.comment || review.text || '',
-                product_name: review.product_name || review.productName || 'Gothic Artifact',
-                is_sample: Boolean(review.is_sample || review.isSample || false)
-            };
-
-            let local = this._getMockReviews();
-            const idx = local.findIndex(r => String(r.id) === String(payload.id));
-            if (idx >= 0) {
-                local[idx] = { ...local[idx], ...payload };
-            } else {
-                local.unshift(payload);
-            }
-            localStorage.setItem('gn_reviews', JSON.stringify(local));
-            window.dispatchEvent(new Event('reviewsUpdated'));
-            window.dispatchEvent(new Event('storage'));
-
-            if (this.isLive) {
-                try {
-                    const { data, error } = await supabase.from('gn_reviews').upsert(payload).select();
-                    if (error) console.warn("Save review error:", error);
-                    return data ? data[0] : payload;
-                } catch (e) {
-                    console.warn("Supabase saveReview error:", e);
-                }
-            }
-            return payload;
-        },
-
-        async deleteReview(id) {
-            try {
-                let deletedList = JSON.parse(localStorage.getItem('gn_deleted_reviews') || '[]');
-                if (!Array.isArray(deletedList)) deletedList = [];
-                deletedList.push(String(id));
-                localStorage.setItem('gn_deleted_reviews', JSON.stringify([...new Set(deletedList)]));
-            } catch(e) {}
-
-            let local = this._getMockReviews().filter(r => String(r.id) !== String(id));
-            localStorage.setItem('gn_reviews', JSON.stringify(local));
-            window.dispatchEvent(new Event('reviewsUpdated'));
-            window.dispatchEvent(new Event('storage'));
-
+        async uploadProductImage(file, path) {
             if (this.isLive && supabase) {
                 try {
-                    await supabase.from('gn_reviews').delete().eq('id', id);
-                } catch (e) {
-                    console.warn("Supabase deleteReview error:", e);
-                }
-            }
-            return true;
-        },
-
-        async uploadProductImage(file, path) {
-            if (this.isLive) {
-                try {
-                    const fileExt = file.name ? file.name.split('.').pop() : 'png';
+                    const fileExt = file && file.name ? file.name.split('.').pop() : 'png';
                     const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
                     const filePath = path ? `${path}/${fileName}` : fileName;
 
-                    const { data, error } = await supabase.storage
+                    const { error } = await supabase.storage
                         .from('product-media')
                         .upload(filePath, file, {
                             cacheControl: '3600',
@@ -960,7 +893,6 @@
 
                     return publicUrlData.publicUrl;
                 } catch (err) {
-                    console.warn("Storage upload failed, converting to Base64 data URL:", err);
                     return await this._fileToDataUrl(file);
                 }
             }
@@ -988,7 +920,7 @@
                     const fileName = `slip_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
                     const filePath = `slips/${fileName}`;
 
-                    const { data, error } = await supabase.storage
+                    const { error } = await supabase.storage
                         .from('payment_slips')
                         .upload(filePath, fileToUpload, {
                             cacheControl: '3600',
@@ -996,8 +928,6 @@
                         });
 
                     if (error) {
-                        console.warn("Upload to payment_slips bucket failed, trying product-media:", error);
-                        // Fallback to product-media bucket if payment_slips bucket is pending creation
                         const fallbackRes = await supabase.storage.from('product-media').upload(`payment_slips/${fileName}`, fileToUpload, { cacheControl: '3600', upsert: true });
                         if (!fallbackRes.error) {
                             const { data: fbUrl } = supabase.storage.from('product-media').getPublicUrl(`payment_slips/${fileName}`);
@@ -1012,7 +942,6 @@
 
                     return publicUrlData && publicUrlData.publicUrl ? publicUrlData.publicUrl : await this._fileToDataUrl(fileOrBlob);
                 } catch (err) {
-                    console.warn("Storage upload failed, falling back to data URL:", err);
                     return await this._fileToDataUrl(fileOrBlob);
                 }
             }
@@ -1020,10 +949,9 @@
         },
 
         // =========================================================================
-        // 7. ORDERS MANAGEMENT (ON-SITE CHECKOUT & SUPABASE BACKEND)
+        // 8. ORDERS MANAGEMENT & PIPELINE
         // =========================================================================
         async createOrder(orderData) {
-            // Server-level validation
             const requiredFields = ['customer_name', 'phone_number', 'house_flat_no', 'street_address', 'city', 'province', 'nearest_landmark', 'payment_method'];
             for (const field of requiredFields) {
                 if (!orderData[field] || !String(orderData[field]).trim()) {
@@ -1089,30 +1017,36 @@
                         createdOrder = { ...orderPayload, ...data[0] };
                     }
                 } catch (err) {
-                    console.warn("Supabase createOrder insert error, falling back to local storage:", err);
+                    console.warn("Supabase createOrder insert notice:", err);
                 }
             }
 
             if (!createdOrder) {
-                // Fallback sequential order counter
                 let currentCounter = Number(localStorage.getItem('gn_order_counter') || 0);
                 currentCounter += 1;
-                localStorage.setItem('gn_order_counter', String(currentCounter));
-
+                try { localStorage.setItem('gn_order_counter', String(currentCounter)); } catch(e) {}
                 createdOrder = {
-                    ...orderPayload,
-                    id: 'ord_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
-                    order_number: currentCounter
+                    id: 'ord_' + Date.now(),
+                    order_number: 1000 + currentCounter,
+                    ...orderPayload
                 };
             }
 
-            // Update local cache
-            const localOrders = this._getMockOrders();
+            // Update local orders list
+            let localOrders = [];
+            try {
+                const raw = localStorage.getItem('gn_orders');
+                if (raw) localOrders = JSON.parse(raw);
+            } catch(e) {}
+            if (!Array.isArray(localOrders)) localOrders = [];
             localOrders.unshift(createdOrder);
-            localStorage.setItem('gn_orders', JSON.stringify(localOrders));
+            try { localStorage.setItem('gn_orders', JSON.stringify(localOrders)); } catch(e) {}
 
-            window.dispatchEvent(new Event('ordersUpdated'));
-            window.dispatchEvent(new Event('storage'));
+            try {
+                window.dispatchEvent(new Event('ordersUpdated'));
+                const bc = getStoreSyncBroadcastChannel();
+                if (bc) bc.postMessage({ type: 'ORDER_CREATED', order: createdOrder });
+            } catch(e) {}
 
             return createdOrder;
         },
@@ -1149,6 +1083,7 @@
                         const remoteIds = new Set(data.map(o => String(o.id)));
                         const remoteOrderNums = new Set(data.map(o => String(o.order_number)));
 
+                        // Strict filter: Exclude ONLY the system synchronization record
                         const validRemote = data.filter(o => {
                             if (!o) return false;
                             if (o.is_deleted || o.deleted_at || o.customer_name === '__TEST_DELETED__') return false;
@@ -1161,7 +1096,6 @@
                             if (cached) {
                                 if (cached.card_reward_applied && !o.card_reward_applied) merged.card_reward_applied = cached.card_reward_applied;
                                 if (cached.status && cached.status !== o.status) {
-                                    // Preserve local optimistic status change
                                     merged.status = cached.status;
                                 }
                             }
@@ -1176,86 +1110,75 @@
                         );
 
                         const combined = [...validRemote, ...localOnly];
-                        localStorage.setItem('gn_orders', JSON.stringify(combined));
+                        try { localStorage.setItem('gn_orders', JSON.stringify(combined)); } catch(e) {}
                         return combined;
                     }
                 } catch (e) {
                     console.warn("Supabase getOrders error, using local fallback:", e);
                 }
             }
-            return this._getMockOrders().filter(o => !deletedSet.has(String(o.id)) && !deletedSet.has(String(o.order_number)));
+
+            // Fallback to local storage
+            let cachedList = [];
+            try {
+                const raw = localStorage.getItem('gn_orders');
+                if (raw) cachedList = JSON.parse(raw);
+            } catch(e) {}
+            if (!Array.isArray(cachedList)) cachedList = [];
+            return cachedList.filter(o => o && !deletedSet.has(String(o.id)) && !deletedSet.has(String(o.order_number)) && !(o.customer_name && (o.customer_name === '__GN_STORE_SYNC__' || String(o.customer_name).startsWith('__GN_'))));
         },
 
         async deleteOrder(orderId) {
-            const now = new Date().toISOString();
-            let localOrders = this._getMockOrders();
-            const targetOrder = localOrders.find(o => String(o.id) === String(orderId) || String(o.order_number) === String(orderId));
-            
+            let deletedSet = new Set();
             try {
                 let deletedList = JSON.parse(localStorage.getItem('gn_deleted_orders') || '[]');
                 if (!Array.isArray(deletedList)) deletedList = [];
                 deletedList.push(String(orderId));
-                if (targetOrder) {
-                    if (targetOrder.id) deletedList.push(String(targetOrder.id));
-                    if (targetOrder.order_number) deletedList.push(String(targetOrder.order_number));
-                }
                 localStorage.setItem('gn_deleted_orders', JSON.stringify([...new Set(deletedList)]));
             } catch(e) {}
 
-            // Clean up Supabase Storage file if screenshot was attached
-            if (this.isLive && supabase && targetOrder && targetOrder.payment_screenshot_url) {
-                try {
-                    const url = targetOrder.payment_screenshot_url;
-                    if (url.includes('/payment_slips/') || url.includes('/product-media/')) {
-                        const parts = url.split('/payment_slips/');
-                        if (parts.length > 1) {
-                            const fileName = parts[1].split('?')[0];
-                            await supabase.storage.from('payment_slips').remove([fileName, `slips/${fileName}`]);
-                        }
-                    }
-                } catch (err) {
-                    console.warn("Supabase storage slip removal notice:", err);
-                }
+            let localOrders = [];
+            try {
+                const raw = localStorage.getItem('gn_orders');
+                if (raw) localOrders = JSON.parse(raw);
+            } catch(e) {}
+            if (Array.isArray(localOrders)) {
+                localOrders = localOrders.filter(o => String(o.id) !== String(orderId) && String(o.order_number) !== String(orderId));
+                try { localStorage.setItem('gn_orders', JSON.stringify(localOrders)); } catch(e) {}
             }
-
-            localOrders = localOrders.filter(o => String(o.id) !== String(orderId) && String(o.order_number) !== String(orderId));
-            localStorage.setItem('gn_orders', JSON.stringify(localOrders));
 
             if (this.isLive && supabase) {
                 try {
-                    // Try direct ID delete (string & numeric)
                     await supabase.from('gn_orders').delete().eq('id', orderId);
                     if (!isNaN(Number(orderId))) {
                         await supabase.from('gn_orders').delete().eq('id', Number(orderId));
                     }
-                    if (targetOrder && targetOrder.order_number) {
-                        await supabase.from('gn_orders').delete().eq('order_number', Number(targetOrder.order_number));
-                    }
-                    // Fallback soft delete
-                    await supabase.from('gn_orders').update({ is_deleted: true, deleted_at: now, customer_name: '__TEST_DELETED__', status: 'Cancelled' }).eq('id', orderId);
-                    if (!isNaN(Number(orderId))) {
-                        await supabase.from('gn_orders').update({ is_deleted: true, deleted_at: now, customer_name: '__TEST_DELETED__', status: 'Cancelled' }).eq('id', Number(orderId));
-                    }
-                } catch (e) {
-                    console.warn("Supabase deleteOrder exception:", e);
-                }
+                } catch (e) {}
             }
+
+            try {
+                window.dispatchEvent(new Event('ordersUpdated'));
+                const bc = getStoreSyncBroadcastChannel();
+                if (bc) bc.postMessage({ type: 'ORDER_DELETED', orderId });
+            } catch(e) {}
+
             return true;
         },
 
         async updateOrderStatus(orderId, newStatus) {
-            const validStatuses = ['Pending', 'Delivered', 'Cancelled'];
-            if (!validStatuses.includes(newStatus)) {
-                throw new Error(`Invalid status: ${newStatus}`);
-            }
-
             const now = new Date().toISOString();
-            let localOrders = this._getMockOrders();
+            let localOrders = [];
+            try {
+                const raw = localStorage.getItem('gn_orders');
+                if (raw) localOrders = JSON.parse(raw);
+            } catch(e) {}
+            if (!Array.isArray(localOrders)) localOrders = [];
+
             const idx = localOrders.findIndex(o => String(o.id) === String(orderId) || String(o.order_number) === String(orderId));
             if (idx >= 0) {
                 localOrders[idx].status = newStatus;
                 localOrders[idx].updated_at = now;
-                localStorage.setItem('gn_orders', JSON.stringify(localOrders));
+                try { localStorage.setItem('gn_orders', JSON.stringify(localOrders)); } catch(e) {}
             }
 
             if (this.isLive && supabase) {
@@ -1264,26 +1187,39 @@
                     if (!isNaN(Number(orderId))) {
                         await supabase.from('gn_orders').update({ status: newStatus, updated_at: now }).eq('id', Number(orderId));
                     }
-                    if (idx >= 0 && localOrders[idx].order_number) {
-                        await supabase.from('gn_orders').update({ status: newStatus, updated_at: now }).eq('order_number', Number(localOrders[idx].order_number));
-                    }
-                } catch (e) {
-                    console.warn("Supabase updateOrderStatus exception:", e);
-                }
+                } catch (e) {}
             }
+
+            try {
+                window.dispatchEvent(new Event('ordersUpdated'));
+                const bc = getStoreSyncBroadcastChannel();
+                if (bc) bc.postMessage({ type: 'ORDER_STATUS_UPDATED', orderId, status: newStatus });
+            } catch(e) {}
 
             return idx >= 0 ? localOrders[idx] : null;
         },
 
         // =========================================================================
-        // 7. REALTIME SUBSCRIPTIONS
+        // 9. REALTIME SUBSCRIPTIONS
         // =========================================================================
         subscribeRealtime(callback) {
             if (!this.isLive || !supabase) return null;
 
             try {
                 const channel = supabase
-                    .channel('schema-db-changes')
+                    .channel('gn-universal-realtime')
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'gn_orders' }, payload => {
+                        const rec = payload.new || payload.old;
+                        if (rec && rec.customer_name === '__GN_STORE_SYNC__') {
+                            // Re-fetch master sync state and dispatch universal events
+                            this._getCloudSyncState(true).then(freshState => {
+                                if (freshState) dispatchUniversalSyncEvents(freshState);
+                            });
+                        } else {
+                            window.dispatchEvent(new Event('ordersUpdated'));
+                        }
+                        if (callback) callback({ type: 'order', payload });
+                    })
                     .on('postgres_changes', { event: '*', schema: 'public', table: 'gn_products' }, payload => {
                         window.dispatchEvent(new Event('productsUpdated'));
                         if (callback) callback({ type: 'product', payload });
@@ -1300,136 +1236,41 @@
                         window.dispatchEvent(new Event('heroSlidesUpdated'));
                         if (callback) callback({ type: 'hero_slide', payload });
                     })
-                    .on('postgres_changes', { event: '*', schema: 'public', table: 'gn_orders' }, payload => {
-                        window.dispatchEvent(new Event('ordersUpdated'));
-                        if (callback) callback({ type: 'order', payload });
-                    })
                     .subscribe();
 
                 return channel;
             } catch (e) {
-                console.warn("Realtime subscription error:", e);
+                console.warn("Realtime subscription notice:", e);
                 return null;
             }
         },
 
-        // =========================================================================
-        // 8. LOCAL MOCK FALLBACKS
-        // =========================================================================
-        _getMockProducts() {
-            try {
-                const raw = localStorage.getItem('gn_products');
-                if (raw) {
-                    const parsed = JSON.parse(raw);
-                    if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-                }
-            } catch(e) {}
-            localStorage.setItem('gn_products', JSON.stringify(defaultCatalog));
-            return defaultCatalog;
-        },
-
-        _saveMockProduct(p) {
-            let list = this._getMockProducts();
-            const idx = list.findIndex(item => String(item.id) === String(p.id));
-            if (idx >= 0) list[idx] = { ...list[idx], ...p };
-            else list.push(p);
-            localStorage.setItem('gn_products', JSON.stringify(list));
-        },
-
-        _deleteMockProduct(id) {
-            let list = this._getMockProducts().filter(p => String(p.id) !== String(id));
-            localStorage.setItem('gn_products', JSON.stringify(list));
-        },
-
-        _getMockCategories() {
-            try {
-                const raw = localStorage.getItem('gn_categories_meta');
-                if (raw) {
-                    const parsed = JSON.parse(raw);
-                    if (Array.isArray(parsed)) return parsed;
-                }
-            } catch(e) {}
-            localStorage.setItem('gn_categories_meta', JSON.stringify(defaultCategories));
-            return defaultCategories;
-        },
-
-        _getMockReviews() {
-            try {
-                const raw = localStorage.getItem('gn_reviews');
-                if (raw) {
-                    const parsed = JSON.parse(raw);
-                    if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-                }
-            } catch(e) {}
-            localStorage.setItem('gn_reviews', JSON.stringify(defaultReviews));
-            return defaultReviews;
-        },
-
-        _getMockHeroSlides() {
-            try {
-                const raw = localStorage.getItem('gn_hero_slides');
-                if (raw) {
-                    const parsed = JSON.parse(raw);
-                    if (Array.isArray(parsed)) return parsed;
-                }
-            } catch(e) {}
-            localStorage.setItem('gn_hero_slides', JSON.stringify(defaultHeroSlides));
-            return defaultHeroSlides;
-        },
-
-        _getMockOrders() {
-            try {
-                let deletedSet = new Set();
-                try {
-                    const rawDel = localStorage.getItem('gn_deleted_orders');
-                    if (rawDel) JSON.parse(rawDel).forEach(id => deletedSet.add(String(id)));
-                } catch(e) {}
-
-                const raw = localStorage.getItem('gn_orders');
-                if (raw) {
-                    const parsed = JSON.parse(raw);
-                    if (Array.isArray(parsed)) {
-                        const isMock = (o) => {
-                            if (!o) return true;
-                            if (o.is_deleted || o.deleted_at || o.customer_name === '__TEST_DELETED__') return true;
-                            if (deletedSet.has(String(o.id)) || deletedSet.has(String(o.order_number))) return true;
-                            if (o.is_sample || o.is_dummy || o.is_mock) return true;
-                            const name = String(o.customer_name || '').toLowerCase().trim();
-                            if (name === 'taha siddiqui' || name === 'danyal zafar' || name === 'sara bilal' || name === 'ali raza' || name === 'test customer' || name === 'asad ali (test)') return true;
-                            const id = String(o.id || '');
-                            if (id === 'ord_101' || id === 'ord_102' || id === 'ord_103' || id === 'ord_live_test') return true;
-                            return false;
-                        };
-                        const cleaned = parsed.filter(o => !isMock(o));
-                        if (cleaned.length !== parsed.length) {
-                            localStorage.setItem('gn_orders', JSON.stringify(cleaned));
-                        }
-                        return cleaned;
-                    }
-                }
-            } catch(e) {}
-            return [];
-        }
+        // Backward compatibility mock methods
+        _getMockProducts() { return defaultCatalog; },
+        _getMockCategories() { return defaultCategories; },
+        _getMockReviews() { return []; },
+        _getMockHeroSlides() { return defaultHeroSlides; },
+        _getMockOrders() { return []; }
     };
 
     // Auto trigger initial products check & load event
-    window.addEventListener('DOMContentLoaded', async () => {
-        try {
-            await window.SupabaseEngine.getProducts();
-            await window.SupabaseEngine.getCategories();
-            await window.SupabaseEngine.getReviews();
-            await window.SupabaseEngine.getHeroSlides();
-            window.dispatchEvent(new Event('productsLoaded'));
-        } catch (e) {
-            console.error("Initial load error:", e);
-        }
-    });
+    if (typeof window !== 'undefined') {
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                await window.SupabaseEngine.getProducts();
+                await window.SupabaseEngine.getCategories();
+                await window.SupabaseEngine.getReviews();
+                await window.SupabaseEngine.getHeroSlides();
+                window.dispatchEvent(new Event('productsLoaded'));
+            } catch (e) {}
+        });
+    }
 
     // =========================================================================
-    // 7. GOTHIC NOVA ENTERPRISE CUSTOM DIALOG & TOAST MODAL SYSTEM
-    // Completely replaces native alert(), confirm(), prompt() — NO "localhost says" or "domain says"
+    // 10. LUXURY DIALOG SYSTEM
     // =========================================================================
     function getOrCreateLuxuryDialogContainer() {
+        if (typeof document === 'undefined') return null;
         let container = document.getElementById('gn-dialog-overlay');
         if (!container) {
             container = document.createElement('div');
@@ -1457,99 +1298,101 @@
         return container;
     }
 
-    window.showLuxuryAlert = function(msg, title = 'GOTHIC NOVA', onConfirm) {
-        const overlay = getOrCreateLuxuryDialogContainer();
-        const box = document.getElementById('gn-dialog-box');
-        const titleEl = document.getElementById('gn-dialog-title');
-        const msgEl = document.getElementById('gn-dialog-msg');
-        const cancelBtn = document.getElementById('gn-dialog-cancel-btn');
-        const confirmBtn = document.getElementById('gn-dialog-confirm-btn');
+    if (typeof window !== 'undefined') {
+        window.showLuxuryAlert = function(msg, title = 'GOTHIC NOVA', onConfirm) {
+            const overlay = getOrCreateLuxuryDialogContainer();
+            if (!overlay) return;
+            const box = document.getElementById('gn-dialog-box');
+            const titleEl = document.getElementById('gn-dialog-title');
+            const msgEl = document.getElementById('gn-dialog-msg');
+            const cancelBtn = document.getElementById('gn-dialog-cancel-btn');
+            const confirmBtn = document.getElementById('gn-dialog-confirm-btn');
 
-        if (titleEl) titleEl.textContent = title;
-        if (msgEl) msgEl.textContent = String(msg || '');
-        if (cancelBtn) cancelBtn.style.display = 'none';
+            if (titleEl) titleEl.textContent = title;
+            if (msgEl) msgEl.textContent = String(msg || '');
+            if (cancelBtn) cancelBtn.style.display = 'none';
 
-        function closeDialog() {
-            overlay.style.opacity = '0';
-            if (box) box.style.transform = 'scale(0.95)';
-            setTimeout(() => { overlay.style.display = 'none'; }, 220);
-            if (typeof onConfirm === 'function') onConfirm();
-        }
-
-        if (confirmBtn) {
-            confirmBtn.textContent = 'ACKNOWLEDGE';
-            confirmBtn.onclick = closeDialog;
-        }
-
-        overlay.onclick = function(e) {
-            if (e.target === overlay) closeDialog();
-        };
-
-        overlay.style.display = 'flex';
-        requestAnimationFrame(() => {
-            overlay.style.opacity = '1';
-            if (box) box.style.transform = 'scale(1)';
-        });
-
-        // Quick auto-dismiss for copied notifications
-        if (title === 'COPIED' || title === 'NOTIFICATION' || title === 'COPIED TO CLIPBOARD') {
-            setTimeout(() => {
-                if (overlay.style.display === 'flex') closeDialog();
-            }, 1800);
-        }
-    };
-
-    window.showLuxuryConfirm = function({ title = 'GOTHIC NOVA', message, confirmText = 'Confirm', isDanger = true, onConfirm, onCancel }) {
-        const overlay = getOrCreateLuxuryDialogContainer();
-        const box = document.getElementById('gn-dialog-box');
-        const titleEl = document.getElementById('gn-dialog-title');
-        const msgEl = document.getElementById('gn-dialog-msg');
-        const cancelBtn = document.getElementById('gn-dialog-cancel-btn');
-        const confirmBtn = document.getElementById('gn-dialog-confirm-btn');
-
-        function closeDialog() {
-            overlay.style.opacity = '0';
-            if (box) box.style.transform = 'scale(0.95)';
-            setTimeout(() => { overlay.style.display = 'none'; }, 220);
-        }
-
-        if (titleEl) titleEl.textContent = title;
-        if (msgEl) msgEl.textContent = String(message || '');
-        if (cancelBtn) {
-            cancelBtn.style.display = 'inline-block';
-            cancelBtn.onclick = function() {
-                closeDialog();
-                if (typeof onCancel === 'function') onCancel();
-            };
-        }
-        if (confirmBtn) {
-            confirmBtn.textContent = confirmText.toUpperCase();
-            if (isDanger) {
-                confirmBtn.style.background = 'linear-gradient(135deg, #a81e37 0%, #6e0d1f 100%)';
-                confirmBtn.style.borderColor = '#ff3b5c';
-            } else {
-                confirmBtn.style.background = '#ffffff';
-                confirmBtn.style.borderColor = '#ffffff';
-                confirmBtn.style.color = '#000000';
-            }
-            confirmBtn.onclick = function() {
+            function closeDialog() {
                 overlay.style.opacity = '0';
                 if (box) box.style.transform = 'scale(0.95)';
                 setTimeout(() => { overlay.style.display = 'none'; }, 220);
-                if (onConfirm) onConfirm();
+                if (typeof onConfirm === 'function') onConfirm();
+            }
+
+            if (confirmBtn) {
+                confirmBtn.textContent = 'ACKNOWLEDGE';
+                confirmBtn.onclick = closeDialog;
+            }
+
+            overlay.onclick = function(e) {
+                if (e.target === overlay) closeDialog();
             };
-        }
 
-        overlay.style.display = 'flex';
-        requestAnimationFrame(() => {
-            overlay.style.opacity = '1';
-            if (box) box.style.transform = 'scale(1)';
-        });
-    };
+            overlay.style.display = 'flex';
+            requestAnimationFrame(() => {
+                overlay.style.opacity = '1';
+                if (box) box.style.transform = 'scale(1)';
+            });
 
-    // Global override of window.alert to intercept any native alert calls
-    window.alert = function(msg) {
-        window.showLuxuryAlert(msg);
-    };
+            if (title === 'COPIED' || title === 'NOTIFICATION' || title === 'COPIED TO CLIPBOARD') {
+                setTimeout(() => {
+                    if (overlay.style.display === 'flex') closeDialog();
+                }, 1800);
+            }
+        };
 
+        window.showLuxuryConfirm = function({ title = 'GOTHIC NOVA', message, confirmText = 'Confirm', isDanger = true, onConfirm, onCancel }) {
+            const overlay = getOrCreateLuxuryDialogContainer();
+            if (!overlay) return;
+            const box = document.getElementById('gn-dialog-box');
+            const titleEl = document.getElementById('gn-dialog-title');
+            const msgEl = document.getElementById('gn-dialog-msg');
+            const cancelBtn = document.getElementById('gn-dialog-cancel-btn');
+            const confirmBtn = document.getElementById('gn-dialog-confirm-btn');
+
+            function closeDialog() {
+                overlay.style.opacity = '0';
+                if (box) box.style.transform = 'scale(0.95)';
+                setTimeout(() => { overlay.style.display = 'none'; }, 220);
+            }
+
+            if (titleEl) titleEl.textContent = title;
+            if (msgEl) msgEl.textContent = String(message || '');
+            if (cancelBtn) {
+                cancelBtn.style.display = 'inline-block';
+                cancelBtn.onclick = function() {
+                    closeDialog();
+                    if (typeof onCancel === 'function') onCancel();
+                };
+            }
+            if (confirmBtn) {
+                confirmBtn.textContent = confirmText.toUpperCase();
+                if (isDanger) {
+                    confirmBtn.style.background = 'linear-gradient(135deg, #a81e37 0%, #6e0d1f 100%)';
+                    confirmBtn.style.borderColor = '#ff3b5c';
+                    confirmBtn.style.color = '#ffffff';
+                } else {
+                    confirmBtn.style.background = '#ffffff';
+                    confirmBtn.style.borderColor = '#ffffff';
+                    confirmBtn.style.color = '#000000';
+                }
+                confirmBtn.onclick = function() {
+                    overlay.style.opacity = '0';
+                    if (box) box.style.transform = 'scale(0.95)';
+                    setTimeout(() => { overlay.style.display = 'none'; }, 220);
+                    if (onConfirm) onConfirm();
+                };
+            }
+
+            overlay.style.display = 'flex';
+            requestAnimationFrame(() => {
+                overlay.style.opacity = '1';
+                if (box) box.style.transform = 'scale(1)';
+            });
+        };
+
+        window.alert = function(msg) {
+            window.showLuxuryAlert(msg);
+        };
+    }
 })();

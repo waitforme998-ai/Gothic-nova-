@@ -104,14 +104,21 @@
         } catch(e) {}
         window.gn_products = (storedProducts !== null) ? storedProducts : defaultProducts;
 
-        // Async Background Sync (Supabase Dual-Mode)
+        // Async Background Sync (Supabase Dual-Mode & Realtime Broadcaster)
         window.addEventListener('DOMContentLoaded', async function() {
             if (window.SupabaseEngine) {
+                // Initialize Realtime subscription
+                if (typeof window.SupabaseEngine.subscribeRealtime === 'function') {
+                    try {
+                        window.SupabaseEngine.subscribeRealtime();
+                    } catch(e) {}
+                }
+
                 try {
                     let prods = await window.SupabaseEngine.getProducts();
                     if (Array.isArray(prods)) {
                         window.gn_products = prods;
-                        localStorage.setItem('gn_products', JSON.stringify(prods));
+                        try { localStorage.setItem('gn_products', JSON.stringify(prods)); } catch(e) {}
                         if (typeof window.refreshStorefrontCatalog === 'function') {
                             window.refreshStorefrontCatalog();
                         }
@@ -126,7 +133,7 @@
                     try {
                         const ann = await window.SupabaseEngine.getAnnouncements();
                         if (Array.isArray(ann)) {
-                            localStorage.setItem('gn_announcements', JSON.stringify(ann));
+                            try { localStorage.setItem('gn_announcements', JSON.stringify(ann)); } catch(e) {}
                             if (typeof window.renderSaleTicker === 'function') window.renderSaleTicker();
                         }
                     } catch(e) {}
@@ -137,7 +144,7 @@
                     try {
                         const revs = await window.SupabaseEngine.getReviews();
                         if (Array.isArray(revs)) {
-                            localStorage.setItem('gn_reviews', JSON.stringify(revs));
+                            try { localStorage.setItem('gn_reviews', JSON.stringify(revs)); } catch(e) {}
                             if (typeof window.renderCustomerReviews === 'function') window.renderCustomerReviews();
                         }
                     } catch(e) {}
@@ -148,7 +155,7 @@
                     try {
                         const cats = await window.SupabaseEngine.getCategories();
                         if (Array.isArray(cats)) {
-                            localStorage.setItem('gn_categories_meta', JSON.stringify(cats));
+                            try { localStorage.setItem('gn_categories_meta', JSON.stringify(cats)); } catch(e) {}
                             if (typeof renderCategoryTabs === 'function') renderCategoryTabs();
                             if (typeof renderSearchCategoryChips === 'function') renderSearchCategoryChips();
                         }
@@ -287,13 +294,8 @@
     </script>
     
     <!-- SALE TICKER BAND -->
-    <div class="sale-ticker-band" id="saleTickerBand">
-        <div class="sale-ticker-track" id="saleTickerTrack">
-            <span><strong style="color: #e2d7c5;">✦ TAROT RITUAL:</strong> REWARDS PERSIST FOR 48 HOURS ✦</span>
-            <span>⚡ EARLY ACCESS: 15% OFF ALL PENDANTS WITH CODE 'NOVA15'</span>
-            <span>⚡ FREE SHIPPING ON ORDERS OVER RS. 5000</span>
-            <span>⚡ LIMITED EDITION REAPER CHAIN DROPS TONIGHT</span>
-        </div>
+    <div class="sale-ticker-band" id="saleTickerBand" style="display: none;">
+        <div class="sale-ticker-track" id="saleTickerTrack"></div>
     </div>
 
     <!-- FIXED GLASSMORPHIC NAVBAR -->
@@ -841,14 +843,17 @@
                         }
                     });
 
+                    metaMap.delete('general');
+                    metaMap.delete('all');
+
                     const ordered = [];
                     ['chains', 'rings', 'bracelets', 'pendants'].forEach(c => {
-                        if (metaMap.has(c)) {
+                        if (metaMap.has(c) && c !== 'general' && c !== 'all') {
                             ordered.push(c);
                         }
                     });
                     metaMap.forEach((name, slug) => {
-                        if (!ordered.includes(slug)) {
+                        if (slug !== 'general' && slug !== 'all' && !ordered.includes(slug)) {
                             ordered.push(slug);
                         }
                     });
@@ -1180,26 +1185,29 @@
                 };
 
                 // Dynamic Customer Reviews Renderer (Synced with Admin Panel & Supabase Stale-While-Revalidate)
+                // Dynamic Customer Reviews Renderer (Synced with Admin Panel & Supabase Stale-While-Revalidate)
                 function renderReviewsToDOM(revs) {
                     const track = document.getElementById('customer-reviews-track');
+                    const section = document.getElementById('customerReviewsSection');
                     if (!track) return;
-                    if (!Array.isArray(revs) || !revs.length) {
-                        revs = [
-                            { customer_name: "Sarah M.", location: "Pakistan", rating: 5, review_text: "The Venom Spider Ring exceeded all expectations. Incredibly detailed craftsmanship." },
-                            { customer_name: "Arjun K.", location: "Pakistan", rating: 5, review_text: "Reaper Pendant is a showstopper. Everyone asks where I got it." },
-                            { customer_name: "Emily R.", location: "Pakistan", rating: 5, review_text: "Obsidian Helix is the most beautiful chain I own. Dark and elegant." },
-                            { customer_name: "Zain A.", location: "Pakistan", rating: 5, review_text: "Fast shipping, premium packaging. This brand is the real deal." },
-                            { customer_name: "Priya S.", location: "Pakistan", rating: 4, review_text: "Crimson Cross choker — I get compliments every single time." },
-                            { customer_name: "Liam T.", location: "Pakistan", rating: 5, review_text: "Spine Bracelet fits perfectly. Heavy, solid, worth every rupee." }
-                        ];
+
+                    const validRevs = (Array.isArray(revs) ? revs : []).filter(r => r && !r.is_sample && !r.is_mock && !String(r.id || '').startsWith('r_mock'));
+                    
+                    if (validRevs.length === 0) {
+                        if (section) section.style.display = 'none';
+                        track.innerHTML = '';
+                        return;
                     }
-                    const validRatings = revs.map(r => Number(r.rating || r.stars || 5)).filter(n => !isNaN(n) && n > 0);
-                    const avgRating = validRatings.length ? (validRatings.reduce((a, b) => a + b, 0) / validRatings.length) : 4.9;
+
+                    if (section) section.style.display = '';
+
+                    const validRatings = validRevs.map(r => Number(r.rating || r.stars || 5)).filter(n => !isNaN(n) && n > 0);
+                    const avgRating = validRatings.length ? (validRatings.reduce((a, b) => a + b, 0) / validRatings.length) : 5.0;
                     const avgFormatted = (Math.round(avgRating * 10) / 10).toFixed(1);
                     const avgBadgeEl = document.getElementById('reviewsAvgBadge');
                     if (avgBadgeEl) avgBadgeEl.textContent = `${avgFormatted} / 5`;
 
-                    track.innerHTML = revs.map(r => {
+                    track.innerHTML = validRevs.map(r => {
                         const rating = Math.max(1, Math.min(5, Number(r.rating || r.stars || 5)));
                         const starsHtml = '★'.repeat(rating) + '☆'.repeat(5 - rating);
                         const author = r.author || r.customer_name || r.name || 'Verified Customer';
@@ -1221,13 +1229,13 @@
                 }
 
                 window.renderCustomerReviews = async function() {
-                    // 1. Instant 0ms Render from LocalStorage or default
+                    // 1. Instant Render from LocalStorage
                     let cached = [];
                     try {
                         const raw = localStorage.getItem('gn_reviews');
                         if (raw) {
                             const parsed = JSON.parse(raw);
-                            if (Array.isArray(parsed) && parsed.length) cached = parsed;
+                            if (Array.isArray(parsed)) cached = parsed;
                         }
                     } catch(e) {}
                     renderReviewsToDOM(cached);
@@ -1236,7 +1244,7 @@
                     if (window.SupabaseEngine && typeof window.SupabaseEngine.getReviews === 'function') {
                         try {
                             const supaRevs = await window.SupabaseEngine.getReviews();
-                            if (Array.isArray(supaRevs) && supaRevs.length) {
+                            if (Array.isArray(supaRevs)) {
                                 try { localStorage.setItem('gn_reviews', JSON.stringify(supaRevs)); } catch(e) {}
                                 renderReviewsToDOM(supaRevs);
                             }
@@ -1274,11 +1282,7 @@
                     } catch(e) {}
 
                     if (!Array.isArray(offers)) {
-                        offers = [
-                            "EARLY ACCESS: 15% OFF ALL PENDANTS WITH CODE 'NOVA15'",
-                            "FREE SHIPPING ON ORDERS OVER RS. 5000",
-                            "LIMITED EDITION REAPER CHAIN DROPS TONIGHT"
-                        ];
+                        offers = [];
                     }
 
                     offers = offers.filter(o => o && String(o).trim());
@@ -1446,11 +1450,48 @@
                     if (typeof window.renderSaleTicker === 'function') window.renderSaleTicker();
                 });
 
+                window.addEventListener('gn:storeSyncUpdated', (e) => {
+                    if (e && e.detail) {
+                        const s = e.detail;
+                        if (Array.isArray(s.products)) {
+                            window.gn_products = s.products;
+                            try { localStorage.setItem('gn_products', JSON.stringify(s.products)); } catch(err) {}
+                        }
+                        if (Array.isArray(s.announcements)) {
+                            try { localStorage.setItem('gn_announcements', JSON.stringify(s.announcements)); } catch(err) {}
+                        }
+                        if (Array.isArray(s.reviews)) {
+                            try { localStorage.setItem('gn_reviews', JSON.stringify(s.reviews)); } catch(err) {}
+                        }
+                        if (Array.isArray(s.categories)) {
+                            try { localStorage.setItem('gn_categories_meta', JSON.stringify(s.categories)); } catch(err) {}
+                        }
+                        refreshStorefrontCatalog();
+                    }
+                });
+
                 try {
                     if (typeof BroadcastChannel !== 'undefined') {
                         const syncChannel = new BroadcastChannel('gn_store_sync');
                         syncChannel.onmessage = function(ev) {
                             if (ev && ev.data) {
+                                if (ev.data.type === 'STORE_SYNC_UPDATED' && ev.data.state) {
+                                    const s = ev.data.state;
+                                    if (Array.isArray(s.products)) {
+                                        window.gn_products = s.products;
+                                        try { localStorage.setItem('gn_products', JSON.stringify(s.products)); } catch(e) {}
+                                    }
+                                    if (Array.isArray(s.announcements)) {
+                                        try { localStorage.setItem('gn_announcements', JSON.stringify(s.announcements)); } catch(e) {}
+                                    }
+                                    if (Array.isArray(s.reviews)) {
+                                        try { localStorage.setItem('gn_reviews', JSON.stringify(s.reviews)); } catch(e) {}
+                                    }
+                                    if (Array.isArray(s.categories)) {
+                                        try { localStorage.setItem('gn_categories_meta', JSON.stringify(s.categories)); } catch(e) {}
+                                    }
+                                    refreshStorefrontCatalog();
+                                }
                                 if (ev.data.type === 'PRODUCTS_UPDATED' && Array.isArray(ev.data.products)) {
                                     window.gn_products = ev.data.products;
                                     try { localStorage.setItem('gn_products', JSON.stringify(ev.data.products)); } catch(e) {}

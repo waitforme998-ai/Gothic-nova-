@@ -396,14 +396,19 @@
         });
     }
 
-    // Auto-initialize on DOM ready
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initSearchEngine);
-    } else {
-        initSearchEngine();
-    }
-
-    // Expose globally for dynamic initializations
+    // Expose globally for dynamic initializations & live re-indexing
     window.initSearchEngine = initSearchEngine;
+    window.SearchEngine = {
+        init: initSearchEngine,
+        getLiveProducts: getLiveProducts,
+        reindexCatalog: function() {
+            initSearchEngine();
+        }
+    };
+
+    if (typeof window !== 'undefined') {
+        window.addEventListener('productsUpdated', initSearchEngine);
+        window.addEventListener('categoriesUpdated', initSearchEngine);
+    }
 
 })();

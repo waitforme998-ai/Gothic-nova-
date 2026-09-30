@@ -518,6 +518,87 @@
             box-shadow: 0 6px 24px rgba(0,0,0,0.55);
             transform: translateY(-2px);
         }
+        .catalog-card-cross-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.75);
+            border: 1px solid rgba(255, 59, 48, 0.6);
+            color: #ff3b30;
+            font-size: 15px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 8;
+            padding: 0;
+            transition: all 0.15s ease;
+        }
+        .catalog-card-cross-btn:hover {
+            background: #ff3b30;
+            color: #fff;
+            border-color: #ff3b30;
+            transform: scale(1.1);
+        }
+        /* Admin Category Filter Tabs */
+        .admin-cat-filter-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
+            padding: 4px 2px 8px;
+        }
+        .admin-cat-filter-bar::-webkit-scrollbar {
+            display: none;
+        }
+        .admin-cat-tab {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 15px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 232, 190, 0.2);
+            color: #d1c7bd;
+            font-family: var(--font-mono);
+            font-size: 0.74rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .admin-cat-tab:hover {
+            border-color: rgba(255, 232, 190, 0.5);
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .admin-cat-tab.active {
+            background: #ffe8be;
+            color: #0b0507;
+            font-weight: 700;
+            border-color: #ffe8be;
+            box-shadow: 0 0 12px rgba(255, 232, 190, 0.25);
+        }
+        .admin-cat-tab-count {
+            display: inline-block;
+            padding: 1px 6px;
+            border-radius: 10px;
+            font-size: 0.68rem;
+            background: rgba(0, 0, 0, 0.25);
+            color: inherit;
+        }
+        .admin-cat-tab.active .admin-cat-tab-count {
+            background: rgba(11, 5, 7, 0.25);
+            color: #0b0507;
+        }
         .catalog-card-img-wrap {
             position: relative;
             width: 100%;
@@ -2882,6 +2963,37 @@
             </div>
         </section>
 
+        <!-- Product Catalog & Category Filter Section -->
+        <section class="section" style="margin-top: 18px;" id="adminCatalogSection">
+            <div class="categories-section">
+                <div class="categories-header" style="cursor: default;">
+                    <div class="categories-header-left">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffe8be" stroke-width="2" style="margin-right: 4px; flex-shrink: 0;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                        <h3>PRODUCTS CATALOG</h3>
+                        <span id="catalogCountBadge" class="cat-count-badge">0</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <button type="button" class="btn-mono-primary" onclick="openProductModal()" style="padding: 7px 15px; font-size: 0.76rem; gap: 6px;">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                            <span>ADD PRODUCT</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div style="padding: 16px;">
+                    <!-- Category Filter Tabs Bar with Horizontal Scroll -->
+                    <div class="admin-cat-filter-bar" id="adminCatFilterBar">
+                        <!-- Populated dynamically with ALL, CHAINS, RINGS, etc. -->
+                    </div>
+
+                    <!-- Products Grid for Selected Category -->
+                    <div id="adminProductGrid" class="cat-products-list" style="margin-top: 14px;">
+                        <!-- Populated dynamically with catalog-cards -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- Categories Accordion Section -->
         <section class="section" style="margin-top: 18px;">
             <div class="categories-section" id="categoriesSection">
@@ -3789,33 +3901,52 @@
             });
         }
 
-        // --- BUTTON STATE FEEDBACK HELPER ---
+        // --- BUTTON STATE FEEDBACK HELPER (GUARANTEED LIFECYCLE) ---
         function setButtonLoading(btn, loadingText) {
-            if (!btn) return null;
-            const originalHtml = btn.innerHTML;
-            const originalBg = btn.style.background;
-            const originalOpacity = btn.style.opacity;
+            if (!btn) return { success: (txt, cb) => { if (typeof cb === 'function') cb(); }, reset: () => {} };
+            const originalHtml = btn.dataset.originalHtml || btn.innerHTML;
+            const originalBg = btn.dataset.originalBg || btn.style.background || '';
+            const originalOpacity = btn.dataset.originalOpacity || btn.style.opacity || '1';
+            btn.dataset.originalHtml = originalHtml;
+            btn.dataset.originalBg = originalBg;
+            btn.dataset.originalOpacity = originalOpacity;
+
             btn.disabled = true;
-            btn.style.opacity = '0.85';
+            btn.style.opacity = '0.9';
             btn.innerHTML = `<span style="display:inline-flex;align-items:center;gap:6px;"><svg style="animation:adminSpin 0.75s linear infinite;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> ${loadingText || 'SAVING...'}</span>`;
+
+            let isFinished = false;
+            const resetBtn = () => {
+                if (isFinished) return;
+                isFinished = true;
+                btn.disabled = false;
+                btn.innerHTML = btn.dataset.originalHtml || originalHtml;
+                btn.style.background = btn.dataset.originalBg !== undefined ? btn.dataset.originalBg : originalBg;
+                btn.style.opacity = btn.dataset.originalOpacity !== undefined ? btn.dataset.originalOpacity : originalOpacity;
+            };
+
+            // Hard safety timeout: ALWAYS force-reset button within 800ms to guarantee zero lockups
+            const safetyTimer = setTimeout(resetBtn, 800);
+
             return {
                 success(successText = 'SAVED ✓', cb) {
+                    if (isFinished) return;
+                    isFinished = true;
+                    clearTimeout(safetyTimer);
+                    btn.disabled = false;
                     btn.style.opacity = '1';
                     btn.style.background = '#28a745';
                     btn.innerHTML = successText;
                     setTimeout(() => {
-                        btn.disabled = false;
-                        btn.innerHTML = originalHtml;
-                        btn.style.background = originalBg;
-                        btn.style.opacity = originalOpacity;
+                        btn.innerHTML = btn.dataset.originalHtml || originalHtml;
+                        btn.style.background = btn.dataset.originalBg !== undefined ? btn.dataset.originalBg : originalBg;
+                        btn.style.opacity = btn.dataset.originalOpacity !== undefined ? btn.dataset.originalOpacity : originalOpacity;
                         if (typeof cb === 'function') cb();
-                    }, 500);
+                    }, 350);
                 },
                 reset() {
-                    btn.disabled = false;
-                    btn.innerHTML = originalHtml;
-                    btn.style.background = originalBg;
-                    btn.style.opacity = originalOpacity;
+                    clearTimeout(safetyTimer);
+                    resetBtn();
                 }
             };
         }
@@ -4037,16 +4168,19 @@
             const slug = rawName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
             if (!slug) { showToast("Invalid category name", true); return; }
             const catList = getCategoryList();
-            if (catList.some(c => c.id.toLowerCase() === slug)) { showToast("Category already exists", true); return; }
+            if (catList.some(c => c.id.toLowerCase() === slug)) { 
+                showToast("Category already exists", true); 
+                return; 
+            }
             
             isCategoryCreating = true;
             input.value = '';
 
-            const addBtn = document.querySelector('.add-cat-form button');
+            const addBtn = document.querySelector('.add-cat-inline-form button') || document.querySelector('.add-cat-form button');
             const btnState = setButtonLoading(addBtn, 'ADDING...');
 
             try {
-                const newCat = { id: slug, name: rawName };
+                const newCat = { id: slug, name: rawName, display_order: catList.length + 1 };
                 catList.push(newCat);
                 saveCategoryList(catList);
                 if (window.SupabaseEngine && typeof window.SupabaseEngine.saveCategory === 'function') {
@@ -4056,7 +4190,10 @@
                 populateCategoryDropdowns();
                 if (btnState) btnState.success('ADDED ✓');
                 showToast(`Category "${rawName}" created!`);
-                try { window.dispatchEvent(new Event('storage')); } catch(e) {}
+                try { 
+                    window.dispatchEvent(new Event('storage')); 
+                    window.dispatchEvent(new Event('categoriesUpdated')); 
+                } catch(e) {}
             } catch(err) {
                 if (btnState) btnState.reset();
                 showToast("Failed to create category", true);
@@ -4234,21 +4371,35 @@
             showToast(`Restocked +${amount}!`);
         };
 
-        window.confirmDeleteProduct = function(pid, name) {
-            showCustomConfirm({
-                title: 'Delete Product?',
-                message: `Are you sure you want to permanently delete "${name || 'this item'}"?`,
-                confirmText: 'Delete',
-                isDanger: true,
-                onConfirm: async () => {
-                    await deleteProduct(pid);
-                }
+        window.quickDeleteProductCard = function(e, pid) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            // Disappear immediately on clicking cross (no fade out, no slow animation)
+            const cards = document.querySelectorAll(`.catalog-card[data-pid="${pid}"]`);
+            cards.forEach(c => {
+                c.style.display = 'none';
+                c.remove();
             });
+            deleteProduct(pid);
+        };
+
+        window.confirmDeleteProduct = function(pid, name) {
+            // Direct instant deletion as requested by user
+            window.quickDeleteProductCard(null, pid);
         };
 
         window.deleteProduct = async function(pid) {
             const product = products.find(p => String(p.id) === String(pid));
             if (!product) return;
+
+            // Remove all matching cards from DOM instantly
+            document.querySelectorAll(`.catalog-card[data-pid="${pid}"]`).forEach(c => {
+                c.style.display = 'none';
+                c.remove();
+            });
+
             try {
                 let deletedList = JSON.parse(localStorage.getItem('gn_deleted_products') || '[]');
                 if (!Array.isArray(deletedList)) deletedList = [];
@@ -4258,7 +4409,11 @@
 
             products = products.filter(p => String(p.id) !== String(pid));
             localStorage.setItem('gn_products', JSON.stringify(products));
-            renderDashboard();
+            
+            // Update stats badge immediately
+            const totalCountEl = document.getElementById('statTotalProducts');
+            if (totalCountEl) totalCountEl.textContent = String(products.length);
+
             showToast(`"${product.name}" deleted.`);
             try {
                 if (window.SupabaseEngine) await window.SupabaseEngine.deleteProduct(pid);
@@ -4267,6 +4422,65 @@
                 broadcastProductsUpdate(products);
             } catch(e) {}
         };
+
+        // --- CATEGORY FILTER STATE & CARD RENDERER ---
+        let activeAdminCategoryFilter = 'all';
+        window.setAdminCategoryFilter = function(slug) {
+            activeAdminCategoryFilter = (slug || 'all').toLowerCase();
+            renderDashboard();
+        };
+
+        function renderAdminCatalogCard(p, catList) {
+            const isSale = p.salePrice !== null && p.salePrice !== undefined && p.salePrice !== '';
+            const safePrice = Number(p.price || 0).toLocaleString('en-PK');
+            const safeSale = Number(p.salePrice || 0).toLocaleString('en-PK');
+            const priceHtml = isSale ? `<span class="original">Rs. ${safePrice}</span><span>Rs. ${safeSale}</span>` : `<span>Rs. ${safePrice}</span>`;
+            const isSoldOut = Number(p.stock) === 0;
+            const isLowStock = !isSoldOut && Number(p.stock) <= Number(p.threshold || 3);
+            let stockBadgeHtml = '';
+            if (isSoldOut) stockBadgeHtml = `<span class="stock-badge out-stock">Sold Out</span>`;
+            else if (isLowStock) stockBadgeHtml = `<span class="stock-badge low-stock">Low (${p.stock} left)</span>`;
+            let qtyClass = isSoldOut ? ' sold-out' : (isLowStock ? ' low-stock' : '');
+            const safeId = escapeHtml(p.id);
+            const safeName = escapeHtml(p.name || 'Untitled');
+            const rawImg = p.img || '';
+            const resolvedImg = resolveProductImg(rawImg);
+            const catObj = (catList || []).find(c => c.id.toLowerCase() === (p.category || '').toLowerCase());
+            const catName = catObj ? catObj.name : (p.category || 'General');
+
+            return `<div class="catalog-card" data-pid="${safeId}">
+                <button type="button" class="catalog-card-cross-btn" onclick="quickDeleteProductCard(event, '${safeId}')" title="Delete Product">×</button>
+                <div class="catalog-card-img-wrap">
+                    <img src="${resolvedImg}" alt="${safeName}" onerror="handleThumbError(this, '${escapeHtml(rawImg)}')">
+                    ${stockBadgeHtml}
+                </div>
+                <div class="catalog-card-body">
+                    <div class="catalog-title" title="${safeName}">${safeName}</div>
+                    <div class="catalog-meta-sub">
+                        <span class="catalog-tag">${escapeHtml(catName)}</span>
+                    </div>
+                    <div class="catalog-price font-mono${isSale ? ' sale' : ''}">${priceHtml}</div>
+                </div>
+                <div class="catalog-actions-group">
+                    <div class="catalog-actions-top-row">
+                        <div class="catalog-qty-stepper">
+                            <button type="button" class="catalog-qty-btn" onclick="adjustCatalogStock('${safeId}', -1)" title="Decrease Stock">−</button>
+                            <span class="catalog-qty-val${qtyClass}">${p.stock}</span>
+                            <button type="button" class="catalog-qty-btn" onclick="adjustCatalogStock('${safeId}', 1)" title="Increase Stock">+</button>
+                        </div>
+                        <button type="button" class="catalog-edit-btn" onclick="openEditProductModal('${safeId}')" title="Edit Product">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        </button>
+                        <button type="button" class="catalog-delete-btn" onclick="quickDeleteProductCard(event, '${safeId}')" title="Delete">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                        </button>
+                    </div>
+                    <button type="button" class="quick-restock-btn" onclick="quickRestockProduct('${safeId}', 5)" title="Quick Restock +5">
+                        +5 QUICK RESTOCK
+                    </button>
+                </div>
+            </div>`;
+        }
 
         // --- DASHBOARD RENDERER (2-TIER RESPONSIVE ARCHITECTURE) ---
         function renderDashboard() {
@@ -4281,6 +4495,10 @@
             if (valEl) valEl.textContent = `Rs. ${totalValuation.toLocaleString('en-PK')}`;
             const sizeEl = document.getElementById('stat-catalog-size');
             if (sizeEl) sizeEl.textContent = totalCount;
+            const catalogBadge = document.getElementById('catalogCountBadge');
+            if (catalogBadge) catalogBadge.textContent = totalCount;
+            const totalProductsStat = document.getElementById('statTotalProducts');
+            if (totalProductsStat) totalProductsStat.textContent = totalCount;
             const catCountEl = document.getElementById('stat-categories-count');
             if (catCountEl) catCountEl.textContent = `${catList.length} Categories`;
             const alertEl = document.getElementById('stat-alerts-count');
@@ -4288,6 +4506,38 @@
             const badge = document.getElementById('catCountBadge');
             if (badge) badge.textContent = catList.length;
 
+            // 1. RENDER CATEGORY FILTER TABS
+            const catFilterBar = document.getElementById('adminCatFilterBar');
+            if (catFilterBar) {
+                let barHtml = `<button type="button" class="admin-cat-tab${activeAdminCategoryFilter === 'all' ? ' active' : ''}" onclick="setAdminCategoryFilter('all')">
+                    All <span class="admin-cat-tab-count">${totalCount}</span>
+                </button>`;
+                catList.forEach(cat => {
+                    const catCount = products.filter(p => (p.category || '').trim().toLowerCase() === cat.id.toLowerCase()).length;
+                    barHtml += `<button type="button" class="admin-cat-tab${activeAdminCategoryFilter === cat.id.toLowerCase() ? ' active' : ''}" onclick="setAdminCategoryFilter('${escapeHtml(cat.id)}')">
+                        ${escapeHtml(cat.name)} <span class="admin-cat-tab-count">${catCount}</span>
+                    </button>`;
+                });
+                catFilterBar.innerHTML = barHtml;
+            }
+
+            // 2. RENDER MAIN PRODUCTS CATALOG GRID
+            const adminProductGrid = document.getElementById('adminProductGrid');
+            if (adminProductGrid) {
+                const filteredProducts = (activeAdminCategoryFilter === 'all')
+                    ? products
+                    : products.filter(p => (p.category || '').trim().toLowerCase() === activeAdminCategoryFilter);
+
+                if (filteredProducts.length === 0) {
+                    adminProductGrid.innerHTML = `<div class="cat-products-empty" style="grid-column: 1 / -1; padding: 28px 16px; text-align: center; color: var(--text-secondary);">
+                        No products found in this category. Click <strong>ADD PRODUCT</strong> above to create one.
+                    </div>`;
+                } else {
+                    adminProductGrid.innerHTML = filteredProducts.map(p => renderAdminCatalogCard(p, catList)).join('');
+                }
+            }
+
+            // 3. RENDER ALERTS LIST (LOW STOCK / SOLD OUT)
             const alertsBadge = document.getElementById('alertsCountBadge');
             if (alertsBadge) {
                 alertsBadge.textContent = lowStockCount;
@@ -4303,51 +4553,7 @@
                         <div style="font-size: 0.75rem; color: var(--text-secondary);">No low-stock or sold-out items detected.</div>
                     </div>`;
                 } else {
-                    alertsList.innerHTML = lowStockProds.map(p => {
-                        const isSale = p.salePrice !== null && p.salePrice !== undefined && p.salePrice !== '';
-                        const safePrice = Number(p.price || 0).toLocaleString('en-PK');
-                        const safeSale = Number(p.salePrice || 0).toLocaleString('en-PK');
-                        const priceHtml = isSale ? `<span class="original">Rs. ${safePrice}</span><span>Rs. ${safeSale}</span>` : `<span>Rs. ${safePrice}</span>`;
-                        const isSoldOut = Number(p.stock) === 0;
-                        const isLowStock = !isSoldOut && Number(p.stock) <= Number(p.threshold || 3);
-                        let stockBadgeHtml = isSoldOut ? `<span class="stock-badge out-stock">Sold Out</span>` : `<span class="stock-badge low-stock">Low (${p.stock} left)</span>`;
-                        let qtyClass = isSoldOut ? ' sold-out' : ' low-stock';
-                        const safeId = escapeHtml(p.id);
-                        const safeName = escapeHtml(p.name || 'Untitled');
-                        const rawImg = p.img || '';
-                        const resolvedImg = resolveProductImg(rawImg);
-                        const catObj = catList.find(c => c.id.toLowerCase() === (p.category || '').toLowerCase());
-                        const catName = catObj ? catObj.name : (p.category || 'General');
-
-                        return `<div class="catalog-card" data-pid="${safeId}">
-                            <div class="catalog-card-img-wrap">
-                                <img src="${resolvedImg}" alt="${safeName}" onerror="handleThumbError(this, '${escapeHtml(rawImg)}')">
-                                ${stockBadgeHtml}
-                            </div>
-                            <div class="catalog-card-body">
-                                <div class="catalog-title" title="${safeName}">${safeName}</div>
-                                <div class="catalog-meta-sub">
-                                    <span class="catalog-tag">${escapeHtml(catName)}</span>
-                                </div>
-                                <div class="catalog-price font-mono${isSale ? ' sale' : ''}">${priceHtml}</div>
-                            </div>
-                            <div class="catalog-actions-group">
-                                <div class="catalog-actions-top-row">
-                                    <div class="catalog-qty-stepper">
-                                        <button type="button" class="catalog-qty-btn" onclick="adjustCatalogStock('${safeId}', -1)" title="Decrease Stock">−</button>
-                                        <span class="catalog-qty-val${qtyClass}">${p.stock}</span>
-                                        <button type="button" class="catalog-qty-btn" onclick="adjustCatalogStock('${safeId}', 1)" title="Increase Stock">+</button>
-                                    </div>
-                                    <button type="button" class="catalog-edit-btn" onclick="openEditProductModal('${safeId}')" title="Edit Product">
-                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                                    </button>
-                                </div>
-                                <button type="button" class="quick-restock-btn" onclick="quickRestockProduct('${safeId}', 5)" title="Quick Restock +5">
-                                    +5 QUICK RESTOCK
-                                </button>
-                            </div>
-                        </div>`;
-                    }).join('');
+                    alertsList.innerHTML = lowStockProds.map(p => renderAdminCatalogCard(p, catList)).join('');
                 }
             }
 
@@ -4382,6 +4588,7 @@
                             const resolvedImg = resolveProductImg(rawImg);
 
                             return `<div class="catalog-card" data-pid="${safeId}">
+                                <button type="button" class="catalog-card-cross-btn" onclick="quickDeleteProductCard(event, '${safeId}')" title="Delete Product">×</button>
                                 <div class="catalog-card-img-wrap">
                                     <img src="${resolvedImg}" alt="${safeName}" onerror="handleThumbError(this, '${escapeHtml(rawImg)}')">
                                     ${stockBadgeHtml}
@@ -4400,7 +4607,7 @@
                                         <button type="button" class="catalog-edit-btn" onclick="openEditProductModal('${safeId}')" title="Edit">
                                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                                         </button>
-                                        <button type="button" class="catalog-delete-btn" onclick="confirmDeleteProduct('${safeId}', '${escapeQuote(safeName)}')" title="Delete">
+                                        <button type="button" class="catalog-delete-btn" onclick="quickDeleteProductCard(event, '${safeId}')" title="Delete">
                                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                                         </button>
                                     </div>
@@ -4644,10 +4851,8 @@
                 if (o.customer_name && (o.customer_name === '__GN_STORE_SYNC__' || String(o.customer_name).startsWith('__GN_'))) return true;
                 if (deletedSet.has(String(o.id)) || deletedSet.has(String(o.order_number))) return true;
                 if (o.is_sample || o.is_dummy || o.is_mock) return true;
-                const name = String(o.customer_name || '').toLowerCase().trim();
-                if (name === 'taha siddiqui' || name === 'danyal zafar' || name === 'sara bilal' || name === 'ali raza' || name === 'test customer' || name === 'asad ali (test)') return true;
                 const id = String(o.id || '');
-                if (id === 'ord_101' || id === 'ord_102' || id === 'ord_103' || id === 'ord_live_test') return true;
+                if (id === 'ord_mock_seed_1' || id === 'ord_mock_seed_2') return true;
                 return false;
             };
             adminOrders = (Array.isArray(loaded) ? loaded : []).filter(o => !isMockOrder(o));
@@ -5322,32 +5527,23 @@
 
         async function loadReviewsAdmin() {
             let loaded = null;
-            if (window.SupabaseEngine) {
+            if (window.SupabaseEngine && typeof window.SupabaseEngine.getReviews === 'function') {
                 try {
                     const raw = await window.SupabaseEngine.getReviews();
-                    if (raw && Array.isArray(raw) && raw.length > 0) loaded = raw;
+                    if (Array.isArray(raw)) loaded = raw;
                 } catch(e) {}
             }
-            if (!loaded || !loaded.length) {
+            if (loaded === null) {
                 try {
                     const raw = localStorage.getItem('gn_reviews');
-                    if (raw) {
+                    if (raw !== null) {
                         const parsed = JSON.parse(raw);
-                        if (Array.isArray(parsed) && parsed.length > 0) loaded = parsed;
+                        if (Array.isArray(parsed)) loaded = parsed;
                     }
                 } catch(e) {}
             }
-            if (!loaded || !loaded.length) {
-                loaded = [
-                    { id: "r1", author: "Sarah M.", customer_name: "Sarah M.", location: "Pakistan", rating: 5, comment: "The Venom Spider Ring exceeded all expectations. Incredibly detailed craftsmanship.", review_text: "The Venom Spider Ring exceeded all expectations. Incredibly detailed craftsmanship.", product_name: "Venom Spider Ring", is_verified: true },
-                    { id: "r2", author: "Arjun K.", customer_name: "Arjun K.", location: "Pakistan", rating: 5, comment: "Reaper Pendant is a showstopper. Everyone asks where I got it.", review_text: "Reaper Pendant is a showstopper. Everyone asks where I got it.", product_name: "Reaper Pendant", is_verified: true },
-                    { id: "r3", author: "Emily R.", customer_name: "Emily R.", location: "Pakistan", rating: 5, comment: "Obsidian Helix is the most beautiful chain I own. Dark and elegant.", review_text: "Obsidian Helix is the most beautiful chain I own. Dark and elegant.", product_name: "Obsidian Helix", is_verified: true },
-                    { id: "r4", author: "Zain A.", customer_name: "Zain A.", location: "Pakistan", rating: 5, comment: "Fast shipping, premium packaging. This brand is the real deal.", review_text: "Fast shipping, premium packaging. This brand is the real deal.", product_name: "General Store", is_verified: true },
-                    { id: "r5", author: "Priya S.", customer_name: "Priya S.", location: "Pakistan", rating: 4, comment: "Crimson Cross choker — I get compliments every single time.", review_text: "Crimson Cross choker — I get compliments every single time.", product_name: "Crimson Cross", is_verified: true },
-                    { id: "r6", author: "Liam T.", customer_name: "Liam T.", location: "Pakistan", rating: 5, comment: "Spine Bracelet fits perfectly. Heavy, solid, worth every rupee.", review_text: "Spine Bracelet fits perfectly. Heavy, solid, worth every rupee.", product_name: "Spine Bracelet", is_verified: true },
-                    { id: "r7", author: "Noor F.", customer_name: "Noor F.", location: "Pakistan", rating: 5, comment: "Ordered two pieces. Both arrived flawless. Gothic Nova is unmatched.", review_text: "Ordered two pieces. Both arrived flawless. Gothic Nova is unmatched.", product_name: "General Store", is_verified: true },
-                    { id: "r8", author: "James W.", customer_name: "James W.", location: "Pakistan", rating: 5, comment: "The gothic aesthetic is exactly what I was looking for. Masterpiece.", review_text: "The gothic aesthetic is exactly what I was looking for. Masterpiece.", product_name: "General Store", is_verified: true }
-                ];
+            if (loaded === null) {
+                loaded = [];
             }
             let deletedRevs = new Set();
             try {
@@ -5745,6 +5941,12 @@
             document.querySelectorAll('.bottom-sheet').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.modal-backdrop').forEach(b => b.classList.remove('active'));
             document.body.style.overflow = '';
+            document.querySelectorAll('[data-original-html]').forEach(btn => {
+                btn.disabled = false;
+                if (btn.dataset.originalHtml) btn.innerHTML = btn.dataset.originalHtml;
+                if (btn.dataset.originalBg) btn.style.background = btn.dataset.originalBg;
+                if (btn.dataset.originalOpacity) btn.style.opacity = btn.dataset.originalOpacity;
+            });
         }
         window.closeAllModals = closeAllModals;
 
@@ -7060,6 +7262,49 @@
             }, 120);
         }
         window.jumpToAdminOrder = jumpToAdminOrder;
+        window.viewOrderDetailsSheet = jumpToAdminOrder;
+
+        window.openAddReviewInlineForm = function() {
+            toggleAddReviewForm(true);
+        };
+
+        function resumeBulkDraft() {
+            try {
+                const savedDraft = localStorage.getItem('gn_bulk_draft_queue');
+                if (savedDraft) {
+                    const parsed = JSON.parse(savedDraft);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        bulkQueue = parsed;
+                        window.bulkQueue = bulkQueue;
+                        renderBulkWizardCards();
+                        const banner = document.getElementById('draftBanner');
+                        if (banner) banner.style.display = 'none';
+                        showToast(`Resumed draft with ${bulkQueue.length} items`);
+                        return;
+                    }
+                }
+                showToast("No saved draft queue found", true);
+                const banner = document.getElementById('draftBanner');
+                if (banner) banner.style.display = 'none';
+            } catch(e) {
+                console.error("Failed to resume bulk draft:", e);
+                const banner = document.getElementById('draftBanner');
+                if (banner) banner.style.display = 'none';
+            }
+        }
+        window.resumeBulkDraft = resumeBulkDraft;
+
+        function confirmDiscardBulkDraft() {
+            try {
+                localStorage.removeItem('gn_bulk_draft_queue');
+                const banner = document.getElementById('draftBanner');
+                if (banner) banner.style.display = 'none';
+                showToast("Draft batch discarded");
+            } catch(e) {
+                console.error("Failed to discard draft:", e);
+            }
+        }
+        window.confirmDiscardBulkDraft = confirmDiscardBulkDraft;
 
         // --- TOP ANNOUNCEMENT SLIDER ENGINE ---
         let announcementsSectionOpen = false;
