@@ -173,7 +173,7 @@
             if (!this.isLive || !supabase) {
                 return _cachedSyncState;
             }
-            if (!forceFresh && _cachedSyncState) {
+            if (!forceFresh && _cachedSyncState && Array.isArray(_cachedSyncState.products) && _cachedSyncState.products.length > 0) {
                 return _cachedSyncState;
             }
 
@@ -189,11 +189,11 @@
                     const rawItems = data[0].items;
                     _cachedSyncState = {
                         syncRecordId: data[0].id,
-                        products: Array.isArray(rawItems.products) ? rawItems.products : undefined,
-                        categories: Array.isArray(rawItems.categories) ? rawItems.categories : undefined,
-                        reviews: Array.isArray(rawItems.reviews) ? rawItems.reviews : undefined,
-                        announcements: Array.isArray(rawItems.announcements) ? rawItems.announcements : undefined,
-                        hero_slides: Array.isArray(rawItems.hero_slides) ? rawItems.hero_slides : undefined,
+                        products: Array.isArray(rawItems.products) ? rawItems.products : (_cachedSyncState?.products || []),
+                        categories: Array.isArray(rawItems.categories) ? rawItems.categories : (_cachedSyncState?.categories || defaultCategories),
+                        reviews: Array.isArray(rawItems.reviews) ? rawItems.reviews : (_cachedSyncState?.reviews || []),
+                        announcements: Array.isArray(rawItems.announcements) ? rawItems.announcements : (_cachedSyncState?.announcements || []),
+                        hero_slides: Array.isArray(rawItems.hero_slides) ? rawItems.hero_slides : (_cachedSyncState?.hero_slides || []),
                         updated_at: data[0].updated_at || rawItems.updated_at || Date.now(),
                         version: 2
                     };
@@ -206,16 +206,48 @@
         },
 
         async _saveCloudSyncState(partial) {
-            // Merge into in-memory cached state immediately
-            if (!_cachedSyncState) {
-                _cachedSyncState = { products: [], categories: [], reviews: [], announcements: [], hero_slides: [] };
+            if (!partial || typeof partial !== 'object') partial = {};
+
+            // 1. Fetch fresh cloud state if memory is empty
+            let current = _cachedSyncState;
+            if (!current || (!current.products && !current.categories && !current.reviews)) {
+                try {
+                    current = await this._getCloudSyncState(true);
+                } catch(e) {}
             }
-            if (partial.products !== undefined) _cachedSyncState.products = partial.products;
-            if (partial.categories !== undefined) _cachedSyncState.categories = partial.categories;
-            if (partial.reviews !== undefined) _cachedSyncState.reviews = partial.reviews;
-            if (partial.announcements !== undefined) _cachedSyncState.announcements = partial.announcements;
-            if (partial.hero_slides !== undefined) _cachedSyncState.hero_slides = partial.hero_slides;
-            _cachedSyncState.updated_at = Date.now();
+
+            // 2. Safe field extraction that prioritizes partial update, then fresh cloud state, then memory, then localStorage
+            const getSafeDataset = (key, storageKey, fallback = []) => {
+                if (partial[key] !== undefined) return partial[key];
+                if (current && Array.isArray(current[key]) && current[key].length > 0) return current[key];
+                if (_cachedSyncState && Array.isArray(_cachedSyncState[key]) && _cachedSyncState[key].length > 0) return _cachedSyncState[key];
+                try {
+                    const raw = localStorage.getItem(storageKey);
+                    if (raw !== null) {
+                        const parsed = JSON.parse(raw);
+                        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+                    }
+                } catch(e) {}
+                if (current && Array.isArray(current[key])) return current[key];
+                return fallback;
+            };
+
+            const safeProducts = getSafeDataset('products', 'gn_products', []);
+            const safeCategories = getSafeDataset('categories', 'gn_categories_meta', defaultCategories);
+            const safeReviews = getSafeDataset('reviews', 'gn_reviews', []);
+            const safeAnnouncements = getSafeDataset('announcements', 'gn_announcements', []);
+            const safeHeroSlides = getSafeDataset('hero_slides', 'gn_hero_slides', []);
+
+            _cachedSyncState = {
+                syncRecordId: current?.syncRecordId || _cachedSyncState?.syncRecordId,
+                products: safeProducts,
+                categories: safeCategories,
+                reviews: safeReviews,
+                announcements: safeAnnouncements,
+                hero_slides: safeHeroSlides,
+                updated_at: Date.now(),
+                version: 2
+            };
 
             _pendingSavePayload = {
                 ..._pendingSavePayload,
@@ -233,20 +265,45 @@
                         const payloadToSave = { ..._pendingSavePayload };
                         _pendingSavePayload = {};
                         try {
-                            const current = await this._getCloudSyncState();
+                            const freshCloud = await this._getCloudSyncState(true);
                             const merged = {
-                                products: payloadToSave.products !== undefined ? payloadToSave.products : (current?.products ?? []),
-                                categories: payloadToSave.categories !== undefined ? payloadToSave.categories : (current?.categories ?? []),
-                                reviews: payloadToSave.reviews !== undefined ? payloadToSave.reviews : (current?.reviews ?? []),
-                                announcements: payloadToSave.announcements !== undefined ? payloadToSave.announcements : (current?.announcements ?? []),
-                                hero_slides: payloadToSave.hero_slides !== undefined ? payloadToSave.hero_slides : (current?.hero_slides ?? []),
+                                products: payloadToSave.products !== undefined 
+                                    ? payloadToSave.products 
+                                    : (freshCloud && Array.isArray(freshCloud.products) && freshCloud.products.length > 0 ? freshCloud.products : safeProducts),
+                                categories: payloadToSave.categories !== undefined 
+                                    ? payloadToSave.categories 
+                                    : (freshCloud && Array.isArray(freshCloud.categories) && freshCloud.categories.length > 0 ? freshCloud.categories : safeCategories),
+                                reviews: payloadToSave.reviews !== undefined 
+                                    ? payloadToSave.reviews 
+                                    : (freshCloud && Array.isArray(freshCloud.reviews) && freshCloud.reviews.length > 0 ? freshCloud.reviews : safeReviews),
+                                announcements: payloadToSave.announcements !== undefined 
+                                    ? payloadToSave.announcements 
+                                    : (freshCloud && Array.isArray(freshCloud.announcements) && freshCloud.announcements.length > 0 ? freshCloud.announcements : safeAnnouncements),
+                                hero_slides: payloadToSave.hero_slides !== undefined 
+                                    ? payloadToSave.hero_slides 
+                                    : (freshCloud && Array.isArray(freshCloud.hero_slides) && freshCloud.hero_slides.length > 0 ? freshCloud.hero_slides : safeHeroSlides),
                                 updated_at: new Date().toISOString(),
                                 version: 2
                             };
 
+                            // Ultimate Anti-Clobber Safeguard:
+                            // If a partial save did NOT pass products, but merged.products ended up empty while freshCloud had products, restore them!
+                            if (payloadToSave.products === undefined && (!merged.products || merged.products.length === 0) && freshCloud && Array.isArray(freshCloud.products) && freshCloud.products.length > 0) {
+                                merged.products = freshCloud.products;
+                            }
+                            if (payloadToSave.categories === undefined && (!merged.categories || merged.categories.length === 0) && freshCloud && Array.isArray(freshCloud.categories) && freshCloud.categories.length > 0) {
+                                merged.categories = freshCloud.categories;
+                            }
+                            if (payloadToSave.reviews === undefined && (!merged.reviews || merged.reviews.length === 0) && freshCloud && Array.isArray(freshCloud.reviews) && freshCloud.reviews.length > 0) {
+                                merged.reviews = freshCloud.reviews;
+                            }
+                            if (payloadToSave.announcements === undefined && (!merged.announcements || merged.announcements.length === 0) && freshCloud && Array.isArray(freshCloud.announcements) && freshCloud.announcements.length > 0) {
+                                merged.announcements = freshCloud.announcements;
+                            }
+
                             if (this.isLive && supabase) {
                                 let savedSuccessfully = false;
-                                const syncRecordId = current?.syncRecordId;
+                                const syncRecordId = freshCloud?.syncRecordId || _cachedSyncState?.syncRecordId;
                                 if (syncRecordId) {
                                     try {
                                         const { error: updateErr } = await supabase
@@ -294,47 +351,35 @@
 
         async pushAllToCloud(state = {}) {
             if (!state) state = {};
-            let currentProducts = state.products;
-            if (!currentProducts) {
-                try {
-                    const raw = localStorage.getItem('gn_products');
-                    if (raw) currentProducts = JSON.parse(raw);
-                } catch(e) {}
-            }
-            if (!Array.isArray(currentProducts)) currentProducts = [];
+            const freshCloud = await this._getCloudSyncState(true);
 
-            let currentCats = state.categories;
-            if (!currentCats) {
+            const resolveDataset = (provided, storageKey, cloudKey, fallback = []) => {
+                if (Array.isArray(provided) && provided.length > 0) return provided;
                 try {
-                    const raw = localStorage.getItem('gn_categories_meta');
-                    if (raw) currentCats = JSON.parse(raw);
+                    const raw = localStorage.getItem(storageKey);
+                    if (raw !== null) {
+                        const parsed = JSON.parse(raw);
+                        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+                    }
                 } catch(e) {}
-            }
-            if (!Array.isArray(currentCats)) currentCats = [];
+                if (freshCloud && Array.isArray(freshCloud[cloudKey]) && freshCloud[cloudKey].length > 0) {
+                    return freshCloud[cloudKey];
+                }
+                return Array.isArray(provided) ? provided : fallback;
+            };
 
-            let currentRevs = state.reviews;
-            if (!currentRevs) {
-                try {
-                    const raw = localStorage.getItem('gn_reviews');
-                    if (raw) currentRevs = JSON.parse(raw);
-                } catch(e) {}
-            }
-            if (!Array.isArray(currentRevs)) currentRevs = [];
-
-            let currentAnn = state.announcements;
-            if (!currentAnn) {
-                try {
-                    const raw = localStorage.getItem('gn_announcements');
-                    if (raw) currentAnn = JSON.parse(raw);
-                } catch(e) {}
-            }
-            if (!Array.isArray(currentAnn)) currentAnn = [];
+            const currentProducts = resolveDataset(state.products, 'gn_products', 'products', []);
+            const currentCats = resolveDataset(state.categories, 'gn_categories_meta', 'categories', defaultCategories);
+            const currentRevs = resolveDataset(state.reviews, 'gn_reviews', 'reviews', []);
+            const currentAnn = resolveDataset(state.announcements, 'gn_announcements', 'announcements', []);
+            const currentHero = resolveDataset(state.hero_slides, 'gn_hero_slides', 'hero_slides', []);
 
             const masterPayload = {
                 products: currentProducts,
                 categories: currentCats,
                 reviews: currentRevs,
                 announcements: currentAnn,
+                hero_slides: currentHero,
                 updated_at: new Date().toISOString(),
                 version: 2
             };
