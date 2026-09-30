@@ -6304,7 +6304,7 @@ select option {
    GOTHIC NOVA: OCCULT DAILY TAROT OVERLAY & GAMIFICATION ENGINE
    ========================================================================== */
 
-/* Full-Screen Dynamic Occult Overlay (Deep Obsidian Luxury & Occult Ambience) */
+/* Full-Screen Occult Overlay with Subtle Storefront Backdrop (Conserving Store Readability) */
 .daily-tarot-overlay {
     position: fixed;
     top: 0;
@@ -6313,11 +6313,9 @@ select option {
     height: 100vh;
     height: 100dvh;
     z-index: 999999;
-    background: radial-gradient(ellipse at 50% 25%, rgba(32, 10, 20, 0.98) 0%, rgba(12, 4, 8, 0.99) 55%, #030103 100%);
-    background-size: 180% 180%;
-    animation: tarotDynamicBg 16s ease-in-out infinite alternate;
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
+    background: rgba(0, 0, 0, 0.75) !important;
+    backdrop-filter: blur(3.5px) !important;
+    -webkit-backdrop-filter: blur(3.5px) !important;
     display: none;
     align-items: center;
     justify-content: center;
@@ -6325,42 +6323,36 @@ select option {
     pointer-events: none;
     overflow-y: auto;
     overflow-x: hidden;
-    padding: 36px 20px 48px 20px;
+    padding: 16px;
     box-sizing: border-box;
-    transition: backdrop-filter 0.5s ease;
-}
-
-@keyframes tarotDynamicBg {
-    0% { background-position: 50% 30%; }
-    50% { background-position: 60% 50%; }
-    100% { background-position: 40% 40%; }
+    transition: opacity 0.3s ease;
 }
 
 .daily-tarot-overlay.card-focused {
-    backdrop-filter: blur(32px);
-    -webkit-backdrop-filter: blur(32px);
+    backdrop-filter: blur(3.5px) !important;
+    -webkit-backdrop-filter: blur(3.5px) !important;
 }
 
 .daily-tarot-overlay.active {
     display: flex;
     opacity: 1;
     pointer-events: auto;
-    animation: tarotOverlayFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: tarotOverlayFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .daily-tarot-overlay.closing {
-    animation: tarotOverlayFadeOut 0.4s cubic-bezier(0.4, 0, 1, 1) forwards;
+    animation: tarotOverlayFadeOut 0.25s cubic-bezier(0.4, 0, 1, 1) forwards;
     pointer-events: none;
 }
 
 @keyframes tarotOverlayFadeIn {
-    from { opacity: 0; transform: scale(1.02); }
+    from { opacity: 0; transform: scale(0.98); }
     to { opacity: 1; transform: scale(1); }
 }
 
 @keyframes tarotOverlayFadeOut {
     from { opacity: 1; transform: scale(1); }
-    to { opacity: 0; transform: scale(0.97); }
+    to { opacity: 0; transform: scale(0.98); }
 }
 
 /* Background Particle Canvas */
@@ -6374,20 +6366,27 @@ select option {
     z-index: 1;
 }
 
-/* Stage Inner Container: Perfectly Balanced Vertical Rhythm & Generous Breathing Space */
+/* Enclosed Luxury Modal Box: Distinct E-Commerce Shopping Benefit Container */
 .tarot-stage-container {
     position: relative;
     z-index: 5;
-    max-width: 1040px;
-    width: 100%;
+    width: min(840px, 94vw);
+    max-height: calc(100vh - 36px);
+    max-height: calc(100dvh - 36px);
+    background: radial-gradient(ellipse at 50% 10%, rgba(26, 10, 18, 0.98) 0%, rgba(10, 4, 8, 0.99) 70%, #030103 100%);
+    border: 1px solid rgba(212, 175, 55, 0.38);
+    border-radius: 12px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.95), 0 0 40px rgba(139, 0, 0, 0.3), inset 0 0 1px 1px rgba(212, 175, 55, 0.15);
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
-    gap: 20px;
+    gap: 16px;
     margin: auto;
-    padding: 12px;
+    padding: 24px 20px;
     box-sizing: border-box;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 /* Header Section: Occult Gothic Hierarchy & Typography */
@@ -6401,28 +6400,28 @@ select option {
 
 .tarot-eyebrow {
     font-family: var(--font-mono);
-    font-size: 0.92rem;
+    font-size: 0.82rem;
     font-weight: 800;
     color: #e5c158;
-    letter-spacing: 0.32em;
+    letter-spacing: 0.24em;
     text-transform: uppercase;
-    text-shadow: 0 0 16px rgba(229, 193, 88, 0.35);
+    text-shadow: 0 0 12px rgba(229, 193, 88, 0.35);
 }
 
 .tarot-title {
     font-family: var(--font-heading, 'Antonio', sans-serif);
-    font-size: clamp(3.8rem, 11vw, 5.5rem);
+    font-size: clamp(2.2rem, 5.2vw, 3.4rem);
     font-weight: 900;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.10em;
     text-transform: uppercase;
     margin: 0;
     color: #fdfbf7;
     background: linear-gradient(180deg, #ffffff 0%, #f1ede6 40%, #c5a059 85%, #8b0000 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 4px 18px rgba(0, 0, 0, 0.95)) drop-shadow(0 0 24px rgba(139, 0, 0, 0.4));
+    filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.95)) drop-shadow(0 0 18px rgba(139, 0, 0, 0.4));
     transition: all 0.25s ease;
-    line-height: 1.05;
+    line-height: 1.1;
 }
 
 .tarot-title.shuffling-text {
@@ -6430,32 +6429,32 @@ select option {
     -webkit-background-clip: text !important;
     -webkit-text-fill-color: transparent !important;
     animation: mysticShufflePulse 0.35s ease-in-out infinite alternate !important;
-    letter-spacing: 0.20em !important;
+    letter-spacing: 0.16em !important;
 }
 
 @keyframes mysticShufflePulse {
     from {
-        filter: drop-shadow(0 0 14px rgba(245, 158, 11, 0.65)) drop-shadow(0 4px 18px rgba(0, 0, 0, 0.95));
-        transform: scale(0.98);
+        filter: drop-shadow(0 0 12px rgba(245, 158, 11, 0.65)) drop-shadow(0 4px 14px rgba(0, 0, 0, 0.95));
+        transform: scale(0.99);
     }
     to {
-        filter: drop-shadow(0 0 28px rgba(220, 38, 38, 0.95)) drop-shadow(0 4px 24px rgba(0, 0, 0, 0.98));
-        transform: scale(1.02);
+        filter: drop-shadow(0 0 22px rgba(220, 38, 38, 0.95)) drop-shadow(0 4px 18px rgba(0, 0, 0, 0.98));
+        transform: scale(1.01);
     }
 }
 
 .tarot-subtext {
     font-family: var(--font-mono);
-    font-size: clamp(0.92rem, 3vw, 1.15rem);
+    font-size: clamp(0.82rem, 2.2vw, 0.96rem);
     color: #ded6c9;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-    opacity: 0.95;
+    opacity: 0.92;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 8px;
     font-weight: 600;
     text-shadow: 0 1px 6px rgba(0, 0, 0, 0.9);
 }
@@ -6464,7 +6463,7 @@ select option {
 .tarot-subtext::after {
     content: "✦";
     color: #c53030;
-    font-size: 0.70rem;
+    font-size: 0.65rem;
     opacity: 0.9;
 }
 
@@ -6521,34 +6520,37 @@ select option {
 }
 
 /* --------------------------------------------------------------------------
-   4-CARD STAGE (3D Cards) - Refined Golden/Crimson Bevels, Clean Solid Surfaces
+   4-CARD STAGE (3D Cards) - Zero Overflow, Refined Proportions
    -------------------------------------------------------------------------- */
 .tarot-cards-stage {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 20px;
+    gap: 14px;
     width: 100%;
-    max-width: 960px;
-    perspective: 1400px;
-    margin: 8px 0 12px 0;
+    max-width: 780px;
+    perspective: 1200px;
+    margin: 4px 0 8px 0;
     position: relative;
-    min-height: 320px;
+    min-height: 270px;
     align-items: center;
     justify-items: center;
     box-sizing: border-box;
+    overflow: hidden !important; /* Strict Zero-Overflow Constraint */
+    border-radius: 8px;
+    padding: 6px 4px;
 }
 
-/* Card Wrapper: Perfectly Proportioned 1:1.5 Occult Tarot Aspect Ratio */
+/* Card Wrapper: Proportioned Occult Tarot Aspect Ratio fitting inside box */
 .tarot-card-wrapper {
     position: relative;
     width: 100%;
-    max-width: 212px;
-    height: 315px;
+    max-width: 175px;
+    height: 260px;
     cursor: default;
-    perspective: 1200px;
+    perspective: 1000px;
     transform-style: preserve-3d;
-    transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.35s ease, filter 0.35s ease;
-    border-radius: 14px;
+    transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s ease, filter 0.3s ease;
+    border-radius: 10px;
 }
 
 /* 3D Flip Container */
@@ -6558,7 +6560,7 @@ select option {
     height: 100%;
     transform-style: preserve-3d;
     transition: transform 0.45s cubic-bezier(0.4, 0.0, 0.2, 1);
-    border-radius: 14px;
+    border-radius: 10px;
 }
 
 /* State: Face-Up (Reward Revealed) */
@@ -6572,10 +6574,10 @@ select option {
 }
 
 /* Natural slight organic rotation */
-.tarot-card-wrapper:nth-child(1) { transform: translateY(-3px) rotateZ(-1.5deg); }
-.tarot-card-wrapper:nth-child(2) { transform: translateY(4px) rotateZ(1deg); }
-.tarot-card-wrapper:nth-child(3) { transform: translateY(-4px) rotateZ(-1deg); }
-.tarot-card-wrapper:nth-child(4) { transform: translateY(3px) rotateZ(1.5deg); }
+.tarot-card-wrapper:nth-child(1) { transform: translateY(-2px) rotateZ(-1deg); }
+.tarot-card-wrapper:nth-child(2) { transform: translateY(2px) rotateZ(0.8deg); }
+.tarot-card-wrapper:nth-child(3) { transform: translateY(-2px) rotateZ(-0.8deg); }
+.tarot-card-wrapper:nth-child(4) { transform: translateY(2px) rotateZ(1deg); }
 
 /* Ready to pick state: Interactive Gothic Golden Aura on Hover */
 .tarot-card-wrapper.ready-to-pick {
@@ -6584,8 +6586,8 @@ select option {
 }
 
 .tarot-card-wrapper.ready-to-pick:hover {
-    transform: translateY(-8px) scale(1.03) !important;
-    filter: drop-shadow(0 20px 45px rgba(0, 0, 0, 0.98)) drop-shadow(0 0 24px rgba(212, 175, 55, 0.45)) !important;
+    transform: translateY(-5px) scale(1.02) !important;
+    filter: drop-shadow(0 14px 32px rgba(0, 0, 0, 0.98)) drop-shadow(0 0 18px rgba(212, 175, 55, 0.45)) !important;
 }
 
 /* Common Face Styling: Rounded corners, crisp masking, no border artifacts */
@@ -6597,7 +6599,7 @@ select option {
     height: 100%;
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
-    border-radius: 14px;
+    border-radius: 10px;
     overflow: hidden;
     box-sizing: border-box;
 }
@@ -6610,12 +6612,12 @@ select option {
     background-size: cover;
     background-position: center;
     border: 1.5px solid rgba(212, 175, 55, 0.55);
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.98), inset 0 0 0 1px rgba(212, 175, 55, 0.3), inset 0 0 30px rgba(0, 0, 0, 0.96);
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.98), inset 0 0 0 1px rgba(212, 175, 55, 0.3), inset 0 0 24px rgba(0, 0, 0, 0.96);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 16px;
+    padding: 12px;
 }
 
 /* Card Front: Revealed Gothic Reward (Pure Obsidian Noir Glass, No Grey, Gilded Bevels) */
@@ -6623,8 +6625,8 @@ select option {
     transform: rotateY(0deg);
     background: radial-gradient(ellipse at 50% 15%, rgba(30, 10, 20, 0.99) 0%, #080306 65%, #020102 100%) !important;
     border: 1.5px solid rgba(212, 175, 55, 0.45);
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.98), inset 0 0 0 1.5px rgba(212, 175, 55, 0.4), inset 0 0 32px rgba(139, 0, 0, 0.5) !important;
-    padding: 18px 14px 14px 14px;
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.98), inset 0 0 0 1.5px rgba(212, 175, 55, 0.4), inset 0 0 24px rgba(139, 0, 0, 0.5) !important;
+    padding: 14px 10px 10px 10px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -6635,33 +6637,33 @@ select option {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    padding: 4px 10px;
+    gap: 4px;
+    padding: 3px 8px;
     background: rgba(0, 0, 0, 0.85);
     border: 1px solid rgba(212, 175, 55, 0.5);
     border-radius: 999px;
     font-family: var(--font-mono);
-    font-size: 0.76rem;
+    font-size: 0.68rem;
     font-weight: 800;
     color: #f5e6c8;
-    letter-spacing: 0.16em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
 }
 
 .tarot-roman-numeral-front {
     font-family: 'Playfair Display', Georgia, serif;
-    font-size: 3.8rem;
+    font-size: 3.0rem;
     font-weight: 900;
     line-height: 1;
     letter-spacing: 0.02em;
-    margin: 2px 0 4px 0;
+    margin: 1px 0 3px 0;
     user-select: none;
-    filter: drop-shadow(0 3px 12px rgba(0, 0, 0, 0.98));
+    filter: drop-shadow(0 3px 10px rgba(0, 0, 0, 0.98));
 }
 
 .tarot-front .font-serif,
 .tarot-card-offer-title {
-    font-size: 1.55rem;
+    font-size: 1.28rem;
     font-weight: 900;
     color: #ffffff;
     letter-spacing: 0.04em;
@@ -6671,15 +6673,15 @@ select option {
 
 .tarot-front .font-mono,
 .tarot-card-subtext {
-    font-size: 0.84rem;
+    font-size: 0.74rem;
     color: #ded6c9;
     opacity: 0.95;
-    line-height: 1.35;
+    line-height: 1.3;
     text-align: center;
-    max-width: 92%;
+    max-width: 94%;
 }
 
-/* Flash effect: High-energy occult burst that quickly vanishes leaving pure obsidian noir face */
+/* Flash effect: High-energy burst */
 .tarot-flash {
     position: absolute;
     top: 0;
@@ -6690,7 +6692,7 @@ select option {
     opacity: 0;
     pointer-events: none;
     z-index: 10;
-    border-radius: 14px;
+    border-radius: 10px;
 }
 
 .tarot-card-wrapper.flash-active .tarot-flash {
@@ -6711,7 +6713,7 @@ select option {
     transition: opacity 0.35s ease, transform 0.35s ease;
 }
 
-/* Chosen Card: Animates smoothly to center with dominant majestic aura (Viewport Constrained) */
+/* Chosen Card: Animates smoothly to center with dominant majestic aura */
 .tarot-cards-stage.has-picked {
     display: flex !important;
     justify-content: center !important;
@@ -6725,22 +6727,22 @@ select option {
 }
 
 .tarot-cards-stage.has-picked .tarot-card-wrapper.chosen-one {
-    width: 220px !important;
-    height: 320px !important;
+    width: 195px !important;
+    height: 280px !important;
     margin: 0 auto !important;
     transform: none !important;
     z-index: 50 !important;
-    animation: tarotCenterPop 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) forwards !important;
+    animation: tarotCenterPop 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) forwards !important;
 }
 
 @keyframes tarotCenterPop {
     0% {
-        transform: scale(0.92) translateY(10px);
+        transform: scale(0.92) translateY(8px);
         filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.8));
     }
     100% {
-        transform: scale(1.02) translateY(0);
-        filter: drop-shadow(0 20px 50px rgba(0, 0, 0, 0.98)) drop-shadow(0 0 35px rgba(212, 175, 55, 0.55));
+        transform: scale(1.0) translateY(0);
+        filter: drop-shadow(0 16px 40px rgba(0, 0, 0, 0.98)) drop-shadow(0 0 28px rgba(212, 175, 55, 0.55));
     }
 }
 
@@ -6758,7 +6760,7 @@ select option {
     pointer-events: none !important;
 }
 
-/* PATTERN 1: HIGH-VELOCITY ARCHCROSS */
+/* PATTERN 1: HIGH-VELOCITY ARCHCROSS (STRICTLY BOUNDED) */
 .tarot-cards-stage.shuffle-pattern-1 .tarot-card-wrapper:nth-child(1),
 .tarot-cards-stage.shuffling-active:not([class*="shuffle-pattern-"]) .tarot-card-wrapper:nth-child(1) {
     animation: desktopLoopShuffle1 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
@@ -6777,35 +6779,35 @@ select option {
 }
 
 @keyframes desktopLoopShuffle1 {
-    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-1.5deg); z-index: 10; }
-    25%  { transform: translate3d(464px, -55px, 50px) rotateZ(9deg) scale(1.09); z-index: 40; }
-    50%  { transform: translate3d(696px, 0px, -20px) rotateZ(-6deg) scale(0.93); z-index: 10; }
-    75%  { transform: translate3d(232px, 45px, 30px) rotateZ(5deg) scale(1.03); z-index: 30; }
-    100% { transform: translate3d(0px, 0px, 0px) rotateZ(-1.5deg); z-index: 10; }
+    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 10; }
+    25%  { transform: translate3d(28px, -10px, 20px) rotateZ(2.5deg) scale(1.02); z-index: 30; }
+    50%  { transform: translate3d(24px, 4px, -10px) rotateZ(-2deg) scale(0.98); z-index: 10; }
+    75%  { transform: translate3d(12px, 8px, 15px) rotateZ(1.5deg) scale(1.01); z-index: 25; }
+    100% { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 10; }
 }
 @keyframes desktopLoopShuffle2 {
-    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 12; }
-    25%  { transform: translate3d(-232px, 45px, -25px) rotateZ(-8deg) scale(0.92); z-index: 8; }
-    50%  { transform: translate3d(464px, -45px, 40px) rotateZ(8deg) scale(1.07); z-index: 35; }
-    75%  { transform: translate3d(232px, -20px, 15px) rotateZ(-4deg) scale(1.02); z-index: 22; }
-    100% { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 12; }
+    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 12; }
+    25%  { transform: translate3d(-24px, 10px, -15px) rotateZ(-2.5deg) scale(0.98); z-index: 8; }
+    50%  { transform: translate3d(26px, -8px, 20px) rotateZ(2deg) scale(1.02); z-index: 28; }
+    75%  { transform: translate3d(14px, -6px, 10px) rotateZ(-1deg) scale(1.01); z-index: 20; }
+    100% { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 12; }
 }
 @keyframes desktopLoopShuffle3 {
-    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 14; }
-    25%  { transform: translate3d(232px, -45px, 40px) rotateZ(8deg) scale(1.07); z-index: 36; }
-    50%  { transform: translate3d(-464px, 45px, -25px) rotateZ(-8deg) scale(0.92); z-index: 8; }
-    75%  { transform: translate3d(-232px, 20px, 15px) rotateZ(4deg) scale(1.02); z-index: 24; }
-    100% { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 14; }
+    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 14; }
+    25%  { transform: translate3d(24px, -8px, 20px) rotateZ(2deg) scale(1.02); z-index: 28; }
+    50%  { transform: translate3d(-26px, 8px, -15px) rotateZ(-2deg) scale(0.98); z-index: 8; }
+    75%  { transform: translate3d(-14px, 6px, 10px) rotateZ(1deg) scale(1.01); z-index: 22; }
+    100% { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 14; }
 }
 @keyframes desktopLoopShuffle4 {
-    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(1.5deg); z-index: 16; }
-    25%  { transform: translate3d(-464px, 55px, -30px) rotateZ(-9deg) scale(0.91); z-index: 6; }
-    50%  { transform: translate3d(-696px, 0px, 50px) rotateZ(6deg) scale(1.09); z-index: 42; }
-    75%  { transform: translate3d(-232px, -45px, 30px) rotateZ(-5deg) scale(1.03); z-index: 32; }
-    100% { transform: translate3d(0px, 0px, 0px) rotateZ(1.5deg); z-index: 16; }
+    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 16; }
+    25%  { transform: translate3d(-28px, 10px, -15px) rotateZ(-2.5deg) scale(0.98); z-index: 6; }
+    50%  { transform: translate3d(-24px, -4px, 20px) rotateZ(2deg) scale(1.02); z-index: 30; }
+    75%  { transform: translate3d(-12px, -8px, 15px) rotateZ(-1.5deg) scale(1.01); z-index: 24; }
+    100% { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 16; }
 }
 
-/* PATTERN 2: 3D CYCLONE VORTEX */
+/* PATTERN 2: 3D CYCLONE VORTEX (STRICTLY BOUNDED) */
 .tarot-cards-stage.shuffle-pattern-2 .tarot-card-wrapper:nth-child(1) {
     animation: desktopSpiral1 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
 }
@@ -6821,34 +6823,34 @@ select option {
 
 @keyframes desktopSpiral1 {
     0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 10; }
-    25%  { transform: translate3d(350px, -60px, 45px) rotateZ(10deg) scale(1.08); z-index: 38; }
-    50%  { transform: translate3d(696px, 45px, -20px) rotateZ(-7deg) scale(0.93); z-index: 12; }
-    75%  { transform: translate3d(350px, 25px, 20px) rotateZ(4deg) scale(1.02); z-index: 26; }
+    25%  { transform: translate3d(24px, -10px, 20px) rotateZ(2.5deg) scale(1.02); z-index: 28; }
+    50%  { transform: translate3d(28px, 8px, -10px) rotateZ(-2deg) scale(0.98); z-index: 12; }
+    75%  { transform: translate3d(14px, 4px, 10px) rotateZ(1deg) scale(1.01); z-index: 22; }
     100% { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 10; }
 }
 @keyframes desktopSpiral2 {
-    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 12; }
-    25%  { transform: translate3d(464px, 50px, -25px) rotateZ(-8deg) scale(0.92); z-index: 10; }
-    50%  { transform: translate3d(232px, -55px, 40px) rotateZ(9deg) scale(1.07); z-index: 36; }
-    75%  { transform: translate3d(-200px, -20px, 15px) rotateZ(3deg) scale(1.02); z-index: 22; }
-    100% { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 12; }
+    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 12; }
+    25%  { transform: translate3d(26px, 10px, -15px) rotateZ(-2deg) scale(0.98); z-index: 10; }
+    50%  { transform: translate3d(14px, -10px, 20px) rotateZ(2.5deg) scale(1.02); z-index: 28; }
+    75%  { transform: translate3d(-12px, -4px, 10px) rotateZ(1deg) scale(1.01); z-index: 20; }
+    100% { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 12; }
 }
 @keyframes desktopSpiral3 {
-    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 14; }
-    25%  { transform: translate3d(-464px, -50px, 40px) rotateZ(8deg) scale(1.07); z-index: 37; }
-    50%  { transform: translate3d(-232px, 55px, -25px) rotateZ(-9deg) scale(0.92); z-index: 11; }
-    75%  { transform: translate3d(200px, 20px, 15px) rotateZ(-3deg) scale(1.02); z-index: 24; }
-    100% { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 14; }
+    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 14; }
+    25%  { transform: translate3d(-26px, -10px, 20px) rotateZ(2deg) scale(1.02); z-index: 28; }
+    50%  { transform: translate3d(-14px, 10px, -15px) rotateZ(-2.5deg) scale(0.98); z-index: 11; }
+    75%  { transform: translate3d(12px, 4px, 10px) rotateZ(-1deg) scale(1.01); z-index: 22; }
+    100% { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 14; }
 }
 @keyframes desktopSpiral4 {
     0%   { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 16; }
-    25%  { transform: translate3d(-350px, 60px, -30px) rotateZ(-10deg) scale(0.91); z-index: 8; }
-    50%  { transform: translate3d(-696px, -45px, 45px) rotateZ(7deg) scale(1.08); z-index: 40; }
-    75%  { transform: translate3d(-350px, -25px, 20px) rotateZ(-4deg) scale(1.02); z-index: 28; }
+    25%  { transform: translate3d(-24px, 10px, -15px) rotateZ(-2.5deg) scale(0.98); z-index: 8; }
+    50%  { transform: translate3d(-28px, -8px, 20px) rotateZ(2deg) scale(1.02); z-index: 30; }
+    75%  { transform: translate3d(-14px, -4px, 10px) rotateZ(-1deg) scale(1.01); z-index: 24; }
     100% { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 16; }
 }
 
-/* PATTERN 3: RAPID CASCADING RICOCHET */
+/* PATTERN 3: RAPID CASCADING RICOCHET (STRICTLY BOUNDED) */
 .tarot-cards-stage.shuffle-pattern-3 .tarot-card-wrapper:nth-child(1) {
     animation: desktopRicochet1 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
 }
@@ -6863,35 +6865,35 @@ select option {
 }
 
 @keyframes desktopRicochet1 {
-    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-1.5deg); z-index: 10; }
-    25%  { transform: translate3d(696px, -45px, 40px) rotateZ(11deg) scale(1.08); z-index: 40; }
-    50%  { transform: translate3d(464px, 45px, -25px) rotateZ(-6deg) scale(0.93); z-index: 10; }
-    75%  { transform: translate3d(232px, -20px, 20px) rotateZ(4deg) scale(1.02); z-index: 28; }
-    100% { transform: translate3d(0px, 0px, 0px) rotateZ(-1.5deg); z-index: 10; }
+    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 10; }
+    25%  { transform: translate3d(28px, -8px, 20px) rotateZ(2.5deg) scale(1.02); z-index: 30; }
+    50%  { transform: translate3d(20px, 8px, -10px) rotateZ(-1.5deg) scale(0.98); z-index: 10; }
+    75%  { transform: translate3d(10px, -4px, 10px) rotateZ(1deg) scale(1.01); z-index: 22; }
+    100% { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 10; }
 }
 @keyframes desktopRicochet2 {
-    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 12; }
-    25%  { transform: translate3d(-232px, 50px, -25px) rotateZ(-9deg) scale(0.91); z-index: 8; }
-    50%  { transform: translate3d(464px, -45px, 35px) rotateZ(8deg) scale(1.07); z-index: 34; }
-    75%  { transform: translate3d(380px, 20px, 15px) rotateZ(-3deg) scale(1.02); z-index: 22; }
-    100% { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 12; }
+    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 12; }
+    25%  { transform: translate3d(-18px, 8px, -15px) rotateZ(-2deg) scale(0.98); z-index: 8; }
+    50%  { transform: translate3d(24px, -8px, 20px) rotateZ(2deg) scale(1.02); z-index: 26; }
+    75%  { transform: translate3d(16px, 4px, 10px) rotateZ(-1deg) scale(1.01); z-index: 18; }
+    100% { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 12; }
 }
 @keyframes desktopRicochet3 {
-    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 14; }
-    25%  { transform: translate3d(232px, -50px, 35px) rotateZ(9deg) scale(1.07); z-index: 36; }
-    50%  { transform: translate3d(-464px, 45px, -25px) rotateZ(-8deg) scale(0.91); z-index: 9; }
-    75%  { transform: translate3d(-380px, -20px, 15px) rotateZ(3deg) scale(1.02); z-index: 24; }
-    100% { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 14; }
+    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 14; }
+    25%  { transform: translate3d(18px, -8px, 20px) rotateZ(2deg) scale(1.02); z-index: 28; }
+    50%  { transform: translate3d(-24px, 8px, -15px) rotateZ(-2deg) scale(0.98); z-index: 9; }
+    75%  { transform: translate3d(-16px, -4px, 10px) rotateZ(1deg) scale(1.01); z-index: 20; }
+    100% { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 14; }
 }
 @keyframes desktopRicochet4 {
-    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(1.5deg); z-index: 16; }
-    25%  { transform: translate3d(-696px, 45px, -25px) rotateZ(-11deg) scale(0.92); z-index: 7; }
-    50%  { transform: translate3d(-464px, -45px, 40px) rotateZ(6deg) scale(1.08); z-index: 38; }
-    75%  { transform: translate3d(-232px, 20px, 20px) rotateZ(-4deg) scale(1.02); z-index: 26; }
-    100% { transform: translate3d(0px, 0px, 0px) rotateZ(1.5deg); z-index: 16; }
+    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 16; }
+    25%  { transform: translate3d(-28px, 8px, -15px) rotateZ(-2.5deg) scale(0.98); z-index: 7; }
+    50%  { transform: translate3d(-20px, -8px, 20px) rotateZ(1.5deg) scale(1.02); z-index: 28; }
+    75%  { transform: translate3d(-10px, 4px, 10px) rotateZ(-1deg) scale(1.01); z-index: 22; }
+    100% { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 16; }
 }
 
-/* PATTERN 4: FUSION SINGULARITY & EXPLOSIVE SCATTER */
+/* PATTERN 4: FUSION SINGULARITY & EXPLOSIVE SCATTER (STRICTLY BOUNDED) */
 .tarot-cards-stage.shuffle-pattern-4 .tarot-card-wrapper:nth-child(1) {
     animation: desktopScatter1 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
 }
@@ -6907,34 +6909,34 @@ select option {
 
 @keyframes desktopScatter1 {
     0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 10; }
-    30%  { transform: translate3d(348px, -25px, -30px) rotateZ(-7deg) scale(0.90); z-index: 15; }
-    60%  { transform: translate3d(348px, 30px, 45px) rotateZ(10deg) scale(1.10); z-index: 44; }
-    82%  { transform: translate3d(580px, -15px, 15px) rotateZ(-4deg) scale(1.02); z-index: 28; }
+    30%  { transform: translate3d(20px, -6px, -15px) rotateZ(-1.5deg) scale(0.98); z-index: 15; }
+    60%  { transform: translate3d(24px, 6px, 20px) rotateZ(2deg) scale(1.02); z-index: 30; }
+    82%  { transform: translate3d(28px, -4px, 10px) rotateZ(-1deg) scale(1.01); z-index: 22; }
     100% { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 10; }
 }
 @keyframes desktopScatter2 {
-    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 12; }
-    30%  { transform: translate3d(116px, 25px, 35px) rotateZ(7deg) scale(1.08); z-index: 38; }
-    60%  { transform: translate3d(116px, -25px, -20px) rotateZ(-8deg) scale(0.92); z-index: 12; }
-    82%  { transform: translate3d(-180px, 15px, 15px) rotateZ(3deg) scale(1.02); z-index: 22; }
-    100% { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 12; }
+    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 12; }
+    30%  { transform: translate3d(10px, 6px, 15px) rotateZ(1.5deg) scale(1.02); z-index: 26; }
+    60%  { transform: translate3d(10px, -6px, -10px) rotateZ(-1.5deg) scale(0.98); z-index: 12; }
+    82%  { transform: translate3d(-14px, 4px, 10px) rotateZ(1deg) scale(1.01); z-index: 18; }
+    100% { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 12; }
 }
 @keyframes desktopScatter3 {
-    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 14; }
-    30%  { transform: translate3d(-116px, -25px, -20px) rotateZ(-7deg) scale(0.92); z-index: 14; }
-    60%  { transform: translate3d(-116px, 25px, 35px) rotateZ(8deg) scale(1.08); z-index: 39; }
-    82%  { transform: translate3d(180px, -15px, 15px) rotateZ(-3deg) scale(1.02); z-index: 24; }
-    100% { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 14; }
+    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 14; }
+    30%  { transform: translate3d(-10px, -6px, -10px) rotateZ(-1.5deg) scale(0.98); z-index: 14; }
+    60%  { transform: translate3d(-10px, 6px, 15px) rotateZ(1.5deg) scale(1.02); z-index: 26; }
+    82%  { transform: translate3d(14px, -4px, 10px) rotateZ(-1deg) scale(1.01); z-index: 20; }
+    100% { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 14; }
 }
 @keyframes desktopScatter4 {
     0%   { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 16; }
-    30%  { transform: translate3d(-348px, 25px, 45px) rotateZ(7deg) scale(1.10); z-index: 45; }
-    60%  { transform: translate3d(-348px, -30px, -30px) rotateZ(-10deg) scale(0.90); z-index: 16; }
-    82%  { transform: translate3d(-580px, 15px, 15px) rotateZ(4deg) scale(1.02); z-index: 26; }
+    30%  { transform: translate3d(-20px, 6px, 20px) rotateZ(1.5deg) scale(1.02); z-index: 30; }
+    60%  { transform: translate3d(-20px, -6px, -15px) rotateZ(-2deg) scale(0.98); z-index: 16; }
+    82%  { transform: translate3d(-28px, 4px, 10px) rotateZ(1deg) scale(1.01); z-index: 22; }
     100% { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 16; }
 }
 
-/* PATTERN 5: TRIPLE INTERSECT WEAVE */
+/* PATTERN 5: TRIPLE INTERSECT WEAVE (STRICTLY BOUNDED) */
 .tarot-cards-stage.shuffle-pattern-5 .tarot-card-wrapper:nth-child(1) {
     animation: desktopWeave1 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
 }
@@ -6949,32 +6951,32 @@ select option {
 }
 
 @keyframes desktopWeave1 {
-    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-1.5deg); z-index: 10; }
-    25%  { transform: translate3d(232px, 45px, 35px) rotateZ(8deg) scale(1.07); z-index: 36; }
-    50%  { transform: translate3d(464px, -45px, -20px) rotateZ(-8deg) scale(0.93); z-index: 10; }
-    75%  { transform: translate3d(232px, 20px, 15px) rotateZ(4deg) scale(1.02); z-index: 26; }
-    100% { transform: translate3d(0px, 0px, 0px) rotateZ(-1.5deg); z-index: 10; }
+    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 10; }
+    25%  { transform: translate3d(20px, 8px, 20px) rotateZ(2deg) scale(1.02); z-index: 28; }
+    50%  { transform: translate3d(28px, -8px, -10px) rotateZ(-2deg) scale(0.98); z-index: 10; }
+    75%  { transform: translate3d(14px, 4px, 10px) rotateZ(1deg) scale(1.01); z-index: 22; }
+    100% { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 10; }
 }
 @keyframes desktopWeave2 {
-    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 12; }
-    25%  { transform: translate3d(-232px, -45px, -20px) rotateZ(-8deg) scale(0.93); z-index: 8; }
-    50%  { transform: translate3d(232px, 45px, 35px) rotateZ(8deg) scale(1.07); z-index: 38; }
-    75%  { transform: translate3d(180px, -20px, 15px) rotateZ(-3deg) scale(1.02); z-index: 22; }
-    100% { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 12; }
+    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 12; }
+    25%  { transform: translate3d(-18px, -8px, -15px) rotateZ(-2deg) scale(0.98); z-index: 8; }
+    50%  { transform: translate3d(20px, 8px, 20px) rotateZ(2deg) scale(1.02); z-index: 28; }
+    75%  { transform: translate3d(12px, -4px, 10px) rotateZ(-1deg) scale(1.01); z-index: 18; }
+    100% { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 12; }
 }
 @keyframes desktopWeave3 {
-    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 14; }
-    25%  { transform: translate3d(232px, 45px, 35px) rotateZ(8deg) scale(1.07); z-index: 39; }
-    50%  { transform: translate3d(-232px, -45px, -20px) rotateZ(-8deg) scale(0.93); z-index: 9; }
-    75%  { transform: translate3d(-180px, 20px, 15px) rotateZ(3deg) scale(1.02); z-index: 24; }
-    100% { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 14; }
+    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 14; }
+    25%  { transform: translate3d(18px, 8px, 20px) rotateZ(2deg) scale(1.02); z-index: 28; }
+    50%  { transform: translate3d(-20px, -8px, -15px) rotateZ(-2deg) scale(0.98); z-index: 9; }
+    75%  { transform: translate3d(-12px, 4px, 10px) rotateZ(1deg) scale(1.01); z-index: 20; }
+    100% { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 14; }
 }
 @keyframes desktopWeave4 {
-    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(1.5deg); z-index: 16; }
-    25%  { transform: translate3d(-232px, -45px, -25px) rotateZ(-8deg) scale(0.92); z-index: 7; }
-    50%  { transform: translate3d(-464px, 45px, 35px) rotateZ(8deg) scale(1.07); z-index: 40; }
-    75%  { transform: translate3d(-232px, -20px, 15px) rotateZ(-4deg) scale(1.02); z-index: 25; }
-    100% { transform: translate3d(0px, 0px, 0px) rotateZ(1.5deg); z-index: 16; }
+    0%   { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 16; }
+    25%  { transform: translate3d(-20px, -8px, -15px) rotateZ(-2deg) scale(0.98); z-index: 7; }
+    50%  { transform: translate3d(-28px, 8px, 20px) rotateZ(2deg) scale(1.02); z-index: 30; }
+    75%  { transform: translate3d(-14px, -4px, 10px) rotateZ(-1deg) scale(1.01); z-index: 22; }
+    100% { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 16; }
 }
 
 /* --------------------------------------------------------------------------
@@ -7362,9 +7364,9 @@ html.tarot-pending body {
         font-size: 0.74rem !important;
     }
 
-    /* MOBILE 5 ADVANCED ULTRA-SMOOTH SHUFFLE PATTERNS (HIGH-VELOCITY 5-SECOND MYSTIC FLOW) */
+    /* MOBILE 5 ADVANCED ULTRA-SMOOTH SHUFFLE PATTERNS (HIGH-VELOCITY 5-SECOND MYSTIC FLOW - BOUNDED) */
     
-    /* Pattern 1: Quad-Corner Cyclone */
+    /* Pattern 1: Quad-Corner Cyclone (Bounded) */
     .tarot-cards-stage.shuffle-pattern-1 .tarot-card-wrapper:nth-child(1),
     .tarot-cards-stage.shuffling-active:not([class*="shuffle-pattern-"]) .tarot-card-wrapper:nth-child(1) {
         animation: mobileLoopShuffle1 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
@@ -7383,35 +7385,35 @@ html.tarot-pending body {
     }
 
     @keyframes mobileLoopShuffle1 {
-        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-1.5deg); z-index: 10; }
-        25%  { transform: translate3d(140px, 0px, 40px) rotateZ(8deg) scale(1.08); z-index: 36; }
-        50%  { transform: translate3d(140px, 190px, -20px) rotateZ(-7deg) scale(0.93); z-index: 10; }
-        75%  { transform: translate3d(0px, 190px, 20px) rotateZ(4deg) scale(1.02); z-index: 24; }
-        100% { transform: translate3d(0px, 0px, 0px) rotateZ(-1.5deg); z-index: 10; }
+        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 10; }
+        25%  { transform: translate3d(18px, -8px, 20px) rotateZ(2deg) scale(1.02); z-index: 30; }
+        50%  { transform: translate3d(14px, 8px, -10px) rotateZ(-2deg) scale(0.98); z-index: 10; }
+        75%  { transform: translate3d(6px, 4px, 10px) rotateZ(1deg) scale(1.01); z-index: 24; }
+        100% { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 10; }
     }
     @keyframes mobileLoopShuffle2 {
-        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 12; }
-        25%  { transform: translate3d(0px, 190px, -25px) rotateZ(-8deg) scale(0.92); z-index: 8; }
-        50%  { transform: translate3d(-140px, 190px, 35px) rotateZ(7deg) scale(1.07); z-index: 34; }
-        75%  { transform: translate3d(-140px, 0px, 15px) rotateZ(-3deg) scale(1.02); z-index: 22; }
-        100% { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 12; }
+        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 12; }
+        25%  { transform: translate3d(-14px, 8px, -15px) rotateZ(-2deg) scale(0.98); z-index: 8; }
+        50%  { transform: translate3d(-18px, -6px, 20px) rotateZ(2deg) scale(1.02); z-index: 28; }
+        75%  { transform: translate3d(-8px, -2px, 10px) rotateZ(-1deg) scale(1.01); z-index: 20; }
+        100% { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 12; }
     }
     @keyframes mobileLoopShuffle3 {
-        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 14; }
-        25%  { transform: translate3d(0px, -190px, 35px) rotateZ(8deg) scale(1.07); z-index: 35; }
-        50%  { transform: translate3d(140px, -190px, -20px) rotateZ(-8deg) scale(0.92); z-index: 9; }
-        75%  { transform: translate3d(140px, 0px, 20px) rotateZ(3deg) scale(1.02); z-index: 24; }
-        100% { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 14; }
+        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 14; }
+        25%  { transform: translate3d(14px, -8px, 20px) rotateZ(2deg) scale(1.02); z-index: 28; }
+        50%  { transform: translate3d(18px, 6px, -15px) rotateZ(-2deg) scale(0.98); z-index: 9; }
+        75%  { transform: translate3d(8px, 2px, 10px) rotateZ(1deg) scale(1.01); z-index: 22; }
+        100% { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 14; }
     }
     @keyframes mobileLoopShuffle4 {
-        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(1.5deg); z-index: 16; }
-        25%  { transform: translate3d(-140px, 0px, -30px) rotateZ(-8deg) scale(0.91); z-index: 6; }
-        50%  { transform: translate3d(-140px, -190px, 45px) rotateZ(8deg) scale(1.09); z-index: 38; }
-        75%  { transform: translate3d(0px, -190px, 25px) rotateZ(-4deg) scale(1.03); z-index: 26; }
-        100% { transform: translate3d(0px, 0px, 0px) rotateZ(1.5deg); z-index: 16; }
+        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 16; }
+        25%  { transform: translate3d(-18px, 8px, -15px) rotateZ(-2deg) scale(0.98); z-index: 6; }
+        50%  { transform: translate3d(-14px, -8px, 20px) rotateZ(2deg) scale(1.02); z-index: 30; }
+        75%  { transform: translate3d(-6px, -4px, 10px) rotateZ(-1deg) scale(1.01); z-index: 24; }
+        100% { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 16; }
     }
 
-    /* Pattern 2: Diagonal Cross & Flip */
+    /* Pattern 2: Diagonal Cross & Flip (Bounded) */
     .tarot-cards-stage.shuffle-pattern-2 .tarot-card-wrapper:nth-child(1) {
         animation: mobileSpiral1 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
     }
@@ -7426,35 +7428,35 @@ html.tarot-pending body {
     }
 
     @keyframes mobileSpiral1 {
-        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-1.5deg); z-index: 10; }
-        25%  { transform: translate3d(140px, 95px, 40px) rotateZ(9deg) scale(1.08); z-index: 38; }
-        50%  { transform: translate3d(140px, 190px, -20px) rotateZ(-8deg) scale(0.93); z-index: 10; }
-        75%  { transform: translate3d(70px, 95px, 20px) rotateZ(4deg) scale(1.02); z-index: 26; }
-        100% { transform: translate3d(0px, 0px, 0px) rotateZ(-1.5deg); z-index: 10; }
+        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 10; }
+        25%  { transform: translate3d(16px, 8px, 20px) rotateZ(2deg) scale(1.02); z-index: 28; }
+        50%  { transform: translate3d(18px, 12px, -10px) rotateZ(-2deg) scale(0.98); z-index: 10; }
+        75%  { transform: translate3d(8px, 6px, 10px) rotateZ(1deg) scale(1.01); z-index: 22; }
+        100% { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 10; }
     }
     @keyframes mobileSpiral2 {
-        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 12; }
-        25%  { transform: translate3d(-70px, 95px, -25px) rotateZ(-8deg) scale(0.92); z-index: 8; }
-        50%  { transform: translate3d(-140px, 190px, 35px) rotateZ(8deg) scale(1.07); z-index: 36; }
-        75%  { transform: translate3d(-70px, 95px, 15px) rotateZ(-3deg) scale(1.02); z-index: 22; }
-        100% { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 12; }
+        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 12; }
+        25%  { transform: translate3d(-8px, 8px, -15px) rotateZ(-2deg) scale(0.98); z-index: 8; }
+        50%  { transform: translate3d(-18px, 12px, 20px) rotateZ(2deg) scale(1.02); z-index: 28; }
+        75%  { transform: translate3d(-8px, 6px, 10px) rotateZ(-1deg) scale(1.01); z-index: 20; }
+        100% { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 12; }
     }
     @keyframes mobileSpiral3 {
-        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 14; }
-        25%  { transform: translate3d(70px, -95px, 35px) rotateZ(8deg) scale(1.07); z-index: 36; }
-        50%  { transform: translate3d(140px, -190px, -25px) rotateZ(-8deg) scale(0.92); z-index: 8; }
-        75%  { transform: translate3d(70px, -95px, 15px) rotateZ(3deg) scale(1.02); z-index: 24; }
-        100% { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 14; }
+        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 14; }
+        25%  { transform: translate3d(8px, -8px, 20px) rotateZ(2deg) scale(1.02); z-index: 28; }
+        50%  { transform: translate3d(18px, -12px, -15px) rotateZ(-2deg) scale(0.98); z-index: 8; }
+        75%  { transform: translate3d(8px, -6px, 10px) rotateZ(1deg) scale(1.01); z-index: 22; }
+        100% { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 14; }
     }
     @keyframes mobileSpiral4 {
-        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(1.5deg); z-index: 16; }
-        25%  { transform: translate3d(-140px, -95px, -30px) rotateZ(-9deg) scale(0.91); z-index: 6; }
-        50%  { transform: translate3d(-140px, -190px, 40px) rotateZ(8deg) scale(1.08); z-index: 38; }
-        75%  { transform: translate3d(-70px, -95px, 20px) rotateZ(-4deg) scale(1.02); z-index: 26; }
-        100% { transform: translate3d(0px, 0px, 0px) rotateZ(1.5deg); z-index: 16; }
+        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 16; }
+        25%  { transform: translate3d(-16px, -8px, -15px) rotateZ(-2deg) scale(0.98); z-index: 6; }
+        50%  { transform: translate3d(-18px, -12px, 20px) rotateZ(2deg) scale(1.02); z-index: 30; }
+        75%  { transform: translate3d(-8px, -6px, 10px) rotateZ(-1deg) scale(1.01); z-index: 24; }
+        100% { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 16; }
     }
 
-    /* Pattern 3: Center Matrix Pulse & Fan */
+    /* Pattern 3: Center Matrix Pulse & Fan (Bounded) */
     .tarot-cards-stage.shuffle-pattern-3 .tarot-card-wrapper:nth-child(1) {
         animation: mobileRicochet1 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
     }
@@ -7469,35 +7471,35 @@ html.tarot-pending body {
     }
 
     @keyframes mobileRicochet1 {
-        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-1.5deg); z-index: 10; }
-        25%  { transform: translate3d(70px, 95px, -25px) rotateZ(-7deg) scale(0.90); z-index: 12; }
-        50%  { transform: translate3d(70px, 95px, 40px) rotateZ(9deg) scale(1.09); z-index: 38; }
-        75%  { transform: translate3d(140px, 40px, 20px) rotateZ(-3deg) scale(1.02); z-index: 24; }
-        100% { transform: translate3d(0px, 0px, 0px) rotateZ(-1.5deg); z-index: 10; }
+        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 10; }
+        25%  { transform: translate3d(10px, 8px, -15px) rotateZ(-2deg) scale(0.98); z-index: 12; }
+        50%  { transform: translate3d(14px, 8px, 20px) rotateZ(2deg) scale(1.02); z-index: 28; }
+        75%  { transform: translate3d(16px, 4px, 10px) rotateZ(-1deg) scale(1.01); z-index: 20; }
+        100% { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 10; }
     }
     @keyframes mobileRicochet2 {
-        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 12; }
-        25%  { transform: translate3d(-70px, 95px, 35px) rotateZ(7deg) scale(1.08); z-index: 36; }
-        50%  { transform: translate3d(-70px, 95px, -20px) rotateZ(-8deg) scale(0.92); z-index: 10; }
-        75%  { transform: translate3d(-140px, 40px, 15px) rotateZ(3deg) scale(1.02); z-index: 22; }
-        100% { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 12; }
+        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 12; }
+        25%  { transform: translate3d(-10px, 8px, 20px) rotateZ(2deg) scale(1.02); z-index: 28; }
+        50%  { transform: translate3d(-10px, 8px, -15px) rotateZ(-2deg) scale(0.98); z-index: 10; }
+        75%  { transform: translate3d(-16px, 4px, 10px) rotateZ(1deg) scale(1.01); z-index: 18; }
+        100% { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 12; }
     }
     @keyframes mobileRicochet3 {
-        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 14; }
-        25%  { transform: translate3d(70px, -95px, -20px) rotateZ(-7deg) scale(0.92); z-index: 10; }
-        50%  { transform: translate3d(70px, -95px, 35px) rotateZ(8deg) scale(1.08); z-index: 36; }
-        75%  { transform: translate3d(140px, -40px, 15px) rotateZ(-3deg) scale(1.02); z-index: 22; }
-        100% { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 14; }
+        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 14; }
+        25%  { transform: translate3d(10px, -8px, -15px) rotateZ(-2deg) scale(0.98); z-index: 10; }
+        50%  { transform: translate3d(10px, -8px, 20px) rotateZ(2deg) scale(1.02); z-index: 28; }
+        75%  { transform: translate3d(16px, -4px, 10px) rotateZ(-1deg) scale(1.01); z-index: 18; }
+        100% { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 14; }
     }
     @keyframes mobileRicochet4 {
-        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(1.5deg); z-index: 16; }
-        25%  { transform: translate3d(-70px, -95px, 40px) rotateZ(8deg) scale(1.09); z-index: 38; }
-        50%  { transform: translate3d(-70px, -95px, -25px) rotateZ(-8deg) scale(0.90); z-index: 12; }
-        75%  { transform: translate3d(-140px, -40px, 20px) rotateZ(3deg) scale(1.02); z-index: 24; }
-        100% { transform: translate3d(0px, 0px, 0px) rotateZ(1.5deg); z-index: 16; }
+        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 16; }
+        25%  { transform: translate3d(-10px, -8px, 20px) rotateZ(2deg) scale(1.02); z-index: 28; }
+        50%  { transform: translate3d(-10px, -8px, -15px) rotateZ(-2deg) scale(0.98); z-index: 12; }
+        75%  { transform: translate3d(-16px, -4px, 10px) rotateZ(1deg) scale(1.01); z-index: 20; }
+        100% { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 16; }
     }
 
-    /* Pattern 4: Vertical Double-Arc Swap */
+    /* Pattern 4: Vertical Double-Arc Swap (Bounded) */
     .tarot-cards-stage.shuffle-pattern-4 .tarot-card-wrapper:nth-child(1) {
         animation: mobileScatter1 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
     }
@@ -7512,35 +7514,35 @@ html.tarot-pending body {
     }
 
     @keyframes mobileScatter1 {
-        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-1.5deg); z-index: 10; }
-        25%  { transform: translate3d(0px, 190px, 40px) rotateZ(8deg) scale(1.08); z-index: 36; }
-        50%  { transform: translate3d(140px, 190px, -20px) rotateZ(-8deg) scale(0.92); z-index: 10; }
-        75%  { transform: translate3d(140px, 0px, 20px) rotateZ(4deg) scale(1.02); z-index: 24; }
-        100% { transform: translate3d(0px, 0px, 0px) rotateZ(-1.5deg); z-index: 10; }
+        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 10; }
+        25%  { transform: translate3d(0px, 16px, 20px) rotateZ(2deg) scale(1.02); z-index: 28; }
+        50%  { transform: translate3d(14px, 16px, -10px) rotateZ(-2deg) scale(0.98); z-index: 10; }
+        75%  { transform: translate3d(14px, 0px, 10px) rotateZ(1deg) scale(1.01); z-index: 20; }
+        100% { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 10; }
     }
     @keyframes mobileScatter2 {
-        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 12; }
-        25%  { transform: translate3d(0px, 190px, -25px) rotateZ(-8deg) scale(0.92); z-index: 8; }
-        50%  { transform: translate3d(-140px, 190px, 35px) rotateZ(8deg) scale(1.07); z-index: 34; }
-        75%  { transform: translate3d(-140px, 0px, 15px) rotateZ(-3deg) scale(1.02); z-index: 22; }
-        100% { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 12; }
+        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 12; }
+        25%  { transform: translate3d(0px, 16px, -15px) rotateZ(-2deg) scale(0.98); z-index: 8; }
+        50%  { transform: translate3d(-14px, 16px, 20px) rotateZ(2deg) scale(1.02); z-index: 28; }
+        75%  { transform: translate3d(-14px, 0px, 10px) rotateZ(-1deg) scale(1.01); z-index: 18; }
+        100% { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 12; }
     }
     @keyframes mobileScatter3 {
-        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 14; }
-        25%  { transform: translate3d(0px, -190px, 35px) rotateZ(8deg) scale(1.07); z-index: 35; }
-        50%  { transform: translate3d(-140px, -190px, -20px) rotateZ(-8deg) scale(0.92); z-index: 9; }
-        75%  { transform: translate3d(-140px, 0px, 20px) rotateZ(3deg) scale(1.02); z-index: 24; }
-        100% { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 14; }
+        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 14; }
+        25%  { transform: translate3d(0px, -16px, 20px) rotateZ(2deg) scale(1.02); z-index: 28; }
+        50%  { transform: translate3d(-14px, -16px, -15px) rotateZ(-2deg) scale(0.98); z-index: 9; }
+        75%  { transform: translate3d(-14px, 0px, 10px) rotateZ(1deg) scale(1.01); z-index: 20; }
+        100% { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 14; }
     }
     @keyframes mobileScatter4 {
-        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(1.5deg); z-index: 16; }
-        25%  { transform: translate3d(0px, -190px, -30px) rotateZ(-8deg) scale(0.91); z-index: 6; }
-        50%  { transform: translate3d(140px, -190px, 45px) rotateZ(8deg) scale(1.09); z-index: 38; }
-        75%  { transform: translate3d(140px, 0px, 25px) rotateZ(-4deg) scale(1.03); z-index: 26; }
-        100% { transform: translate3d(0px, 0px, 0px) rotateZ(1.5deg); z-index: 16; }
+        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 16; }
+        25%  { transform: translate3d(0px, -16px, -15px) rotateZ(-2deg) scale(0.98); z-index: 6; }
+        50%  { transform: translate3d(14px, -16px, 20px) rotateZ(2deg) scale(1.02); z-index: 30; }
+        75%  { transform: translate3d(14px, 0px, 10px) rotateZ(-1deg) scale(1.01); z-index: 22; }
+        100% { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 16; }
     }
 
-    /* Pattern 5: Horizontal Counter-Helix */
+    /* Pattern 5: Horizontal Counter-Helix (Bounded) */
     .tarot-cards-stage.shuffle-pattern-5 .tarot-card-wrapper:nth-child(1) {
         animation: mobileWeave1 var(--shuffle-dur, 0.46s) cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
     }
@@ -7555,32 +7557,32 @@ html.tarot-pending body {
     }
 
     @keyframes mobileWeave1 {
-        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-1.5deg); z-index: 10; }
-        25%  { transform: translate3d(140px, 0px, 35px) rotateZ(8deg) scale(1.07); z-index: 36; }
-        50%  { transform: translate3d(140px, 95px, -20px) rotateZ(-8deg) scale(0.93); z-index: 10; }
-        75%  { transform: translate3d(0px, 95px, 20px) rotateZ(4deg) scale(1.02); z-index: 24; }
-        100% { transform: translate3d(0px, 0px, 0px) rotateZ(-1.5deg); z-index: 10; }
+        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 10; }
+        25%  { transform: translate3d(14px, 0px, 20px) rotateZ(2deg) scale(1.02); z-index: 28; }
+        50%  { transform: translate3d(14px, 8px, -10px) rotateZ(-2deg) scale(0.98); z-index: 10; }
+        75%  { transform: translate3d(0px, 8px, 10px) rotateZ(1deg) scale(1.01); z-index: 20; }
+        100% { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 10; }
     }
     @keyframes mobileWeave2 {
-        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 12; }
-        25%  { transform: translate3d(-140px, 0px, -25px) rotateZ(-8deg) scale(0.92); z-index: 8; }
-        50%  { transform: translate3d(-140px, 95px, 35px) rotateZ(8deg) scale(1.07); z-index: 34; }
-        75%  { transform: translate3d(0px, 95px, 15px) rotateZ(-3deg) scale(1.02); z-index: 22; }
-        100% { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 12; }
+        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 12; }
+        25%  { transform: translate3d(-14px, 0px, -15px) rotateZ(-2deg) scale(0.98); z-index: 8; }
+        50%  { transform: translate3d(-14px, 8px, 20px) rotateZ(2deg) scale(1.02); z-index: 28; }
+        75%  { transform: translate3d(0px, 8px, 10px) rotateZ(-1deg) scale(1.01); z-index: 18; }
+        100% { transform: translate3d(0px, 0px, 0px) rotateZ(0.8deg); z-index: 12; }
     }
     @keyframes mobileWeave3 {
-        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 14; }
-        25%  { transform: translate3d(140px, 0px, 35px) rotateZ(8deg) scale(1.07); z-index: 35; }
-        50%  { transform: translate3d(140px, -95px, -20px) rotateZ(-8deg) scale(0.92); z-index: 9; }
-        75%  { transform: translate3d(0px, -95px, 20px) rotateZ(3deg) scale(1.02); z-index: 24; }
-        100% { transform: translate3d(0px, 0px, 0px) rotateZ(-1deg); z-index: 14; }
+        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 14; }
+        25%  { transform: translate3d(14px, 0px, 20px) rotateZ(2deg) scale(1.02); z-index: 28; }
+        50%  { transform: translate3d(14px, -8px, -15px) rotateZ(-2deg) scale(0.98); z-index: 9; }
+        75%  { transform: translate3d(0px, -8px, 10px) rotateZ(1deg) scale(1.01); z-index: 20; }
+        100% { transform: translate3d(0px, 0px, 0px) rotateZ(-0.8deg); z-index: 14; }
     }
     @keyframes mobileWeave4 {
-        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(1.5deg); z-index: 16; }
-        25%  { transform: translate3d(-140px, 0px, -30px) rotateZ(-8deg) scale(0.91); z-index: 6; }
-        50%  { transform: translate3d(-140px, -95px, 45px) rotateZ(8deg) scale(1.09); z-index: 38; }
-        75%  { transform: translate3d(0px, -95px, 25px) rotateZ(-4deg) scale(1.03); z-index: 26; }
-        100% { transform: translate3d(0px, 0px, 0px) rotateZ(1.5deg); z-index: 16; }
+        0%   { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 16; }
+        25%  { transform: translate3d(-14px, 0px, -15px) rotateZ(-2deg) scale(0.98); z-index: 6; }
+        50%  { transform: translate3d(-14px, -8px, 20px) rotateZ(2deg) scale(1.02); z-index: 30; }
+        75%  { transform: translate3d(0px, -8px, 10px) rotateZ(-1deg) scale(1.01); z-index: 22; }
+        100% { transform: translate3d(0px, 0px, 0px) rotateZ(1deg); z-index: 16; }
     }
 
     /* Mobile Text Overflow & Bank Grid Fixes */

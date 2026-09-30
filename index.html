@@ -4201,9 +4201,9 @@
         <div class="tarot-stage-container">
             <!-- Header (Occult Eyebrow, Large Authority Title, No Reset Button) -->
             <div class="tarot-header" style="text-align: center;">
-                <div class="tarot-eyebrow font-mono" style="color: #e5c158; text-transform: uppercase; font-weight: 800;">✦ GOTHIC OCCULT ORACLE ✦</div>
-                <h2 class="tarot-title" id="tarotStageTitle">PICK YOUR CARD</h2>
-                <div class="tarot-subtext font-mono" id="tarotStageSubtext">— ✦ Offer active for 24 hours • Shuffle cooldown 48 hours ✦ —</div>
+                <div class="tarot-eyebrow font-mono" style="color: #e5c158; text-transform: uppercase; font-weight: 800; letter-spacing: 0.22em;">✦ DAILY SHOPPING REWARD ✦</div>
+                <h2 class="tarot-title" id="tarotStageTitle">UNLOCK YOUR SHOPPING BENEFIT</h2>
+                <div class="tarot-subtext font-mono" id="tarotStageSubtext">— ✦ Preview rewards below • Click shuffle to draw today's offer ✦ —</div>
             </div>
 
             <!-- Dramatic CHOOSE ! Impact Banner -->
@@ -4342,7 +4342,7 @@
                         <line x1="15" y1="15" x2="21" y2="21"></line>
                         <line x1="4" y1="4" x2="9" y2="9"></line>
                     </svg>
-                    <span>SHUFFLE CARDS</span>
+                    <span>✦ SHUFFLE CARDS (5s)</span>
                 </button>
             </div>
 
@@ -5077,7 +5077,7 @@
                 if (stage) stage.className = 'tarot-cards-stage has-picked';
 
                 if (stageTitle) {
-                    stageTitle.textContent = 'HERE IS YOUR REWARD!';
+                    stageTitle.textContent = 'YOUR REWARD IS READY';
                     stageTitle.classList.remove('shuffling-text');
                 }
                 if (stageSubtext) {
@@ -5133,11 +5133,11 @@
                 if (stage) stage.className = 'tarot-cards-stage';
 
                 if (stageTitle) {
-                    stageTitle.textContent = 'PICK YOUR CARD';
+                    stageTitle.textContent = 'CHOOSE YOUR CARD';
                     stageTitle.classList.remove('shuffling-text');
                 }
                 if (stageSubtext) {
-                    stageSubtext.textContent = '— ✦ Offer active for 24 hours • Shuffle cooldown 48 hours ✦ —';
+                    stageSubtext.textContent = '— ✦ Pick 1 card to reveal your shopping benefit for the next 24 hours ✦ —';
                 }
 
                 if (shuffleBox) {
@@ -5185,11 +5185,11 @@
             });
 
             if (stageTitle) {
-                stageTitle.textContent = 'PICK YOUR CARD';
+                stageTitle.textContent = 'UNLOCK YOUR SHOPPING BENEFIT';
                 stageTitle.classList.remove('shuffling-text');
             }
             if (stageSubtext) {
-                stageSubtext.textContent = '— ✦ Offer active for 24 hours • Shuffle cooldown 48 hours ✦ —';
+                stageSubtext.textContent = '— ✦ Preview rewards below • Click shuffle to draw today\'s offer ✦ —';
             }
 
             attachCardTiltListeners();
@@ -5239,6 +5239,7 @@
             const wrappers = Array.from(document.querySelectorAll('.tarot-card-wrapper'));
             const impactWrap = document.getElementById('tarotChooseImpactWrap');
             const stageTitle = document.getElementById('tarotStageTitle');
+            const stageSubtext = document.getElementById('tarotStageSubtext');
 
             if (shuffleBox) {
                 shuffleBox.classList.add('hidden');
@@ -5252,10 +5253,13 @@
                 w.style.transform = '';
             });
 
-            // Update title to "SHUFFLING" with pulsing mystical glow
+            // Update title to "SHUFFLING REWARDS..." with pulsing mystical glow
             if (stageTitle) {
-                stageTitle.textContent = 'SHUFFLING';
+                stageTitle.textContent = 'SHUFFLING REWARDS...';
                 stageTitle.classList.add('shuffling-text');
+            }
+            if (stageSubtext) {
+                stageSubtext.textContent = '— ✦ Mixing destiny in progress ✦ —';
             }
 
             // Dedicated initial flip completion delay (200ms)
@@ -5324,10 +5328,13 @@
 
             attachCardTiltListeners();
 
-            // Restore title to "PICK YOUR CARD"
+            // Restore title to "CHOOSE YOUR CARD"
             if (stageTitle) {
-                stageTitle.textContent = 'PICK YOUR CARD';
+                stageTitle.textContent = 'CHOOSE YOUR CARD';
                 stageTitle.classList.remove('shuffling-text');
+            }
+            if (stageSubtext) {
+                stageSubtext.textContent = '— ✦ Pick 1 card to reveal your shopping benefit for the next 24 hours ✦ —';
             }
 
             if (impactWrap) {
@@ -5360,11 +5367,11 @@
                 stage.className = 'tarot-cards-stage has-picked';
             }
 
-            // Update title to "HERE IS YOUR REWARD!"
+            // Update title to "YOUR REWARD IS READY"
             const stageTitle = document.getElementById('tarotStageTitle');
             const stageSubtext = document.getElementById('tarotStageSubtext');
             if (stageTitle) {
-                stageTitle.textContent = 'HERE IS YOUR REWARD!';
+                stageTitle.textContent = 'YOUR REWARD IS READY';
                 stageTitle.classList.remove('shuffling-text');
             }
             if (stageSubtext) {
