@@ -4091,17 +4091,6 @@
         function saveCategoryList(list) {
             try {
                 const cleanList = (list || []).filter(c => c && c.id && String(c.id).toLowerCase() !== 'general' && String(c.id).toLowerCase() !== 'all');
-                
-                // Clear active categories from tombstone
-                try {
-                    let deletedList = JSON.parse(localStorage.getItem('gn_deleted_categories') || '[]');
-                    if (Array.isArray(deletedList)) {
-                        const activeSlugs = new Set(cleanList.map(c => String(c.id).toLowerCase()));
-                        deletedList = deletedList.filter(id => !activeSlugs.has(String(id).toLowerCase()));
-                        localStorage.setItem('gn_deleted_categories', JSON.stringify(deletedList));
-                    }
-                } catch(e) {}
-
                 localStorage.setItem('gn_categories_meta', JSON.stringify(cleanList));
                 localStorage.setItem('gn_categories', JSON.stringify(cleanList.map(c => c.id)));
                 window.customCategories = cleanList.map(c => c.id);
@@ -4230,6 +4219,15 @@
             const btnState = setButtonLoading(addBtn, 'ADDING...');
 
             try {
+                // Clear from tombstone if previously deleted
+                try {
+                    let deletedList = JSON.parse(localStorage.getItem('gn_deleted_categories') || '[]');
+                    if (Array.isArray(deletedList)) {
+                        deletedList = deletedList.filter(id => String(id).toLowerCase() !== slug);
+                        localStorage.setItem('gn_deleted_categories', JSON.stringify(deletedList));
+                    }
+                } catch(e) {}
+
                 const newCat = { id: slug, name: rawName, display_order: catList.length + 1 };
                 catList.push(newCat);
                 saveCategoryList(catList);
@@ -4353,9 +4351,6 @@
                     if (window.SupabaseEngine) {
                         try {
                             await window.SupabaseEngine.deleteCategory(cleanSlug);
-                            if (productsModified) {
-                                await window.SupabaseEngine.saveProducts(products);
-                            }
                         } catch(err) {
                             console.warn("Category delete background sync notice:", err);
                         }

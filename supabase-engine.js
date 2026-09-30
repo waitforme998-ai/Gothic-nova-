@@ -346,20 +346,6 @@
                             let mergedAnnouncements = resolveFinalField('announcements', 'gn_announcements', safeAnnouncements, []);
                             let mergedHeroSlides = resolveFinalField('hero_slides', 'gn_hero_slides', safeHeroSlides, []);
 
-                            // Ultimate Anti-Clobber Safeguard: only apply if the field was NOT explicitly part of payloadToSave
-                            if (payloadToSave.products === undefined && (!mergedProducts || mergedProducts.length === 0) && freshCloud && Array.isArray(freshCloud.products) && freshCloud.products.length > 0) {
-                                mergedProducts = freshCloud.products.filter(p => p && !deletedProductSet.has(String(p.id)));
-                            }
-                            if (payloadToSave.categories === undefined && (!mergedCategories || mergedCategories.length === 0) && freshCloud && Array.isArray(freshCloud.categories) && freshCloud.categories.length > 0) {
-                                mergedCategories = freshCloud.categories.filter(c => c && c.id && !deletedCategorySet.has(String(c.id).toLowerCase()));
-                            }
-                            if (payloadToSave.reviews === undefined && (!mergedReviews || mergedReviews.length === 0) && freshCloud && Array.isArray(freshCloud.reviews) && freshCloud.reviews.length > 0) {
-                                mergedReviews = freshCloud.reviews.filter(r => r && !deletedReviewSet.has(String(r.id)));
-                            }
-                            if (payloadToSave.announcements === undefined && (!mergedAnnouncements || mergedAnnouncements.length === 0) && freshCloud && Array.isArray(freshCloud.announcements) && freshCloud.announcements.length > 0) {
-                                mergedAnnouncements = freshCloud.announcements;
-                            }
-
                             const merged = {
                                 products: mergedProducts,
                                 categories: mergedCategories,

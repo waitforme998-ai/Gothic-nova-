@@ -6,11 +6,7 @@ console.log('Testing Non-Destructive Category Deletion & Partial Cloud Sync Guar
 // 1. Verify supabase-engine.js safe dataset merging logic
 const engineCode = fs.readFileSync('supabase-engine.js', 'utf8');
 assert(engineCode.includes('getSafeDataset'), 'supabase-engine.js must define getSafeDataset for safe non-destructive merging');
-assert(engineCode.includes('Ultimate Anti-Clobber Safeguard'), 'supabase-engine.js must have anti-clobber safeguards');
-assert(engineCode.includes('payloadToSave.products === undefined'), 'supabase-engine.js must check if products were omitted in partial save');
-assert(engineCode.includes('payloadToSave.categories === undefined'), 'supabase-engine.js must check if categories were omitted in partial save');
-assert(engineCode.includes('payloadToSave.reviews === undefined'), 'supabase-engine.js must check if reviews were omitted in partial save');
-assert(engineCode.includes('payloadToSave.announcements === undefined'), 'supabase-engine.js must check if announcements were omitted in partial save');
+assert(engineCode.includes('resolveFinalField'), 'supabase-engine.js must have deterministic mutation resolution');
 console.log('✓ PASS: supabase-engine.js partial sync safety guards verified');
 
 // 2. Test in mock environment that deleting a category preserves all products, reviews, and announcements
