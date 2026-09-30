@@ -3630,6 +3630,7 @@
                         <button type="button" class="admin-chip" onclick="applyAdminSearchQuery('low stock')">Low Stock Alerts</button>
                         <button type="button" class="admin-chip" onclick="applyAdminSearchQuery('in stock')">Active / In Stock</button>
                         <button type="button" class="admin-chip" onclick="applyAdminSearchQuery('5 star')">5-Star Reviews</button>
+                        <button type="button" class="admin-chip" onclick="applyAdminSearchQuery('announcement')">Announcements</button>
                     </div>
 
                     <div class="admin-search-section-label" style="margin-top: 22px;">CATEGORIES</div>
@@ -6765,15 +6766,7 @@
             if (input) {
                 input.value = '';
                 input.focus();
-            }
-            const clearBtn = document.getElementById('adminSearchClearBtn');
-            const emptyState = document.getElementById('adminSearchEmptyState');
-            const results = document.getElementById('adminSearchResults');
-            if (clearBtn) clearBtn.style.display = 'none';
-            if (emptyState) emptyState.style.display = 'block';
-            if (results) {
-                results.style.display = 'none';
-                results.innerHTML = '';
+                handleAdminSearchInput('');
             }
         }
         window.clearAdminSearch = clearAdminSearch;
@@ -6793,7 +6786,7 @@
             if (!container) return;
             const catList = getCategoryList();
             container.innerHTML = catList.map(c => `
-                <button type="button" class="admin-chip" onclick="applyAdminSearchQuery('${escapeQuote(c.name)}')">
+                <button type="button" class="admin-chip-btn" onclick="applyAdminSearchQuery('${escapeQuote(c.name)}')">
                     ${escapeHtml(c.name)}
                 </button>
             `).join('');
@@ -6802,11 +6795,15 @@
         function highlightMatch(text, query) {
             if (!text) return '';
             if (!query) return escapeHtml(text);
-            const safeText = escapeHtml(text);
-            const cleanQuery = query.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            if (!cleanQuery) return safeText;
-            const regex = new RegExp(`(${cleanQuery})`, 'gi');
-            return safeText.replace(regex, '<span class="admin-search-highlight">$1</span>');
+            const str = String(text);
+            const lowerStr = str.toLowerCase();
+            const lowerQ = query.toLowerCase();
+            const idx = lowerStr.indexOf(lowerQ);
+            if (idx === -1) return escapeHtml(str);
+            const before = str.substring(0, idx);
+            const match = str.substring(idx, idx + query.length);
+            const after = str.substring(idx + query.length);
+            return `${escapeHtml(before)}<span class="admin-search-highlight">${escapeHtml(match)}</span>${escapeHtml(after)}`;
         }
 
         function handleAdminSearchInput(val) {
@@ -6884,6 +6881,23 @@
                        isStarQuery;
             });
 
+            // Filter Announcements / Top Bar Offers
+            const storedAnnouncements = (typeof getStoredAnnouncements === 'function') ? getStoredAnnouncements() : [];
+            const announcementSlots = [];
+            for (let i = 1; i <= 5; i++) {
+                const inputEl = document.getElementById(`announcementInput${i}`);
+                const liveText = inputEl ? inputEl.value.trim() : (storedAnnouncements[i - 1] || '');
+                announcementSlots.push({ slot: i, text: liveText });
+            }
+            const isAnnQuery = query === 'announcement' || query === 'announcements' || query === 'banner' || query === 'offer' || query === 'offers' || query === 'top' || query === 'promo' || query === 'marquee' || query === 'shipping' || query === 'discount' || query === 'code';
+            const matchedAnnouncements = announcementSlots.filter(a => {
+                if (isAnnQuery) return true;
+                const slotTerm = `offer ${a.slot}`.toLowerCase();
+                const slotHash = `#${a.slot}`;
+                const textLower = (a.text || '').toLowerCase();
+                return (a.text && textLower.includes(query)) || slotTerm.includes(query) || slotHash === query;
+            });
+
             // Filter Orders
             const listOrders = Array.isArray(adminOrders) ? adminOrders : [];
             const matchedOrders = listOrders.filter(o => {
@@ -6918,7 +6932,7 @@
                        itemsMatch;
             });
 
-            const totalMatches = matchedProducts.length + matchedReviews.length + matchedCategories.length + matchedOrders.length;
+            const totalMatches = matchedProducts.length + matchedReviews.length + matchedAnnouncements.length + matchedCategories.length + matchedOrders.length;
 
             if (totalMatches === 0) {
                 resultsContainer.innerHTML = `
@@ -6928,7 +6942,7 @@
                             <path d="m21 21-4.3-4.3"></path>
                         </svg>
                         <div class="admin-no-results-title">No records matching "${escapeHtml(val)}"</div>
-                        <div class="admin-no-results-sub">Try searching by product title, order #, customer name, price, category slug, or review</div>
+                        <div class="admin-no-results-sub">Try searching by product title, order #, customer name, price, announcement, or review</div>
                     </div>
                 `;
                 return;
@@ -7013,7 +7027,7 @@
                                         <div class="admin-search-result-info">
                                             <div class="admin-search-result-title">${highlightMatch(p.name, query)}</div>
                                             <div class="admin-search-result-meta">
-                                                <span class="admin-meta-tag">${highlightMatch(p.category || 'General', query)}</span>
+                                                <span class="admin-meta-tag">${highlightMatch(p.category || 'All', query)}</span>
                                                 <span class="admin-search-price">Rs. ${Number(p.salePrice || p.price).toLocaleString()}</span>
                                                 ${p.salePrice ? `<span style="text-decoration: line-through; opacity: 0.45; font-size: 0.72rem;">Rs. ${Number(p.price).toLocaleString()}</span>` : ''}
                                                 <span class="${stockBadgeClass}">${stockBadgeText}</span>
@@ -7060,7 +7074,41 @@
                 `;
             }
 
-            // 3. CATEGORIES SECTION
+            // 3. TOP ANNOUNCEMENTS SECTION
+            if (matchedAnnouncements.length > 0) {
+                html += `
+                    <div class="admin-search-group">
+                        <div class="admin-search-group-header">
+                            <span style="color: #ffe8be;">TOP ANNOUNCEMENT BAR</span>
+                            <span class="admin-search-group-count" style="background: rgba(255,232,190,0.2); color: #ffe8be;">${matchedAnnouncements.length}</span>
+                        </div>
+                        <div class="admin-search-item-list">
+                            ${matchedAnnouncements.map(a => `
+                                <div class="admin-search-result-row" onclick="jumpToAdminAnnouncement(${a.slot})">
+                                    <div class="admin-search-thumb-box" style="display:flex; align-items:center; justify-content:center; background:rgba(255,232,190,0.1); color:#ffe8be; font-family:var(--font-mono); font-weight:700; font-size:0.85rem;">
+                                        ⚡ #${a.slot}
+                                    </div>
+                                    <div class="admin-search-result-info">
+                                        <div class="admin-search-result-title">
+                                            <span>Offer Slot #${a.slot}</span>
+                                            ${a.text ? `<span style="font-weight:400; font-size:0.78rem; color:#fff; margin-left:6px;">: "${highlightMatch(a.text, query)}"</span>` : `<span style="font-weight:400; font-size:0.75rem; color:var(--text-secondary); margin-left:6px;">(Empty slot - Click to configure)</span>`}
+                                        </div>
+                                        <div class="admin-search-result-meta" style="margin-top:4px;">
+                                            <span class="admin-meta-tag">Announcement Slider</span>
+                                            <span style="font-size:0.72rem; color:var(--text-secondary);">Storefront Top Marquee</span>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="admin-search-action-btn" onclick="event.stopPropagation(); jumpToAdminAnnouncement(${a.slot});" title="Jump to Offer">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                    </button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // 4. CATEGORIES SECTION
             if (matchedCategories.length > 0) {
                 html += `
                     <div class="admin-search-group">
@@ -7070,7 +7118,7 @@
                         </div>
                         <div class="admin-search-item-list">
                             ${matchedCategories.map(c => {
-                                const count = products.filter(p => p.category === c.id).length;
+                                const count = products.filter(p => (p.category || '').toLowerCase() === c.id.toLowerCase()).length;
                                 return `
                                     <div class="admin-search-result-row" onclick="jumpToAdminCategory('${escapeQuote(c.id)}')">
                                         <div class="admin-search-thumb-box" style="display:flex; align-items:center; justify-content:center; background:#181818; color:#fff; font-size:0.9rem;">
@@ -7094,36 +7142,74 @@
             resultsContainer.innerHTML = html;
         }
 
+        function scrollToTargetWithGlow(targetResolver, onFocus) {
+            const executeJump = () => {
+                let targetEl = null;
+                if (typeof targetResolver === 'function') {
+                    targetEl = targetResolver();
+                } else if (typeof targetResolver === 'string') {
+                    targetEl = document.querySelector(targetResolver);
+                } else {
+                    targetEl = targetResolver;
+                }
+
+                if (!targetEl) return false;
+
+                // Center scroll into view
+                targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                // Visual Pulse Highlight
+                targetEl.classList.remove('admin-glow-highlight');
+                void targetEl.offsetWidth; // Force reflow
+                targetEl.classList.add('admin-glow-highlight');
+
+                if (typeof onFocus === 'function') {
+                    try { onFocus(targetEl); } catch(e) {}
+                }
+
+                setTimeout(() => {
+                    if (targetEl) targetEl.classList.remove('admin-glow-highlight');
+                }, 3200);
+
+                return true;
+            };
+
+            // Immediate fast scroll
+            setTimeout(executeJump, 40);
+
+            // Secondary precision scroll once 350ms CSS height expansion finishes
+            setTimeout(executeJump, 370);
+        }
+        window.scrollToTargetWithGlow = scrollToTargetWithGlow;
+
         function jumpToAdminProduct(pid) {
             closeAdminExpandingSearch();
             const product = products.find(p => String(p.id) === String(pid));
             
-            // 1. Ensure Categories Section is opened
+            // 1. Ensure Categories/Products Section is opened
             if (!categoriesSectionOpen) {
-                toggleCategoriesSection();
+                toggleCategoriesSection(true);
             }
 
             // 2. Ensure the category accordion is expanded
             if (product && product.category) {
                 const catSlug = String(product.category).trim().toLowerCase();
                 openCategoryAccordions.add(catSlug);
-                renderDashboard();
+                openCategoryAccordions.add('all');
+            } else {
+                openCategoryAccordions.add('all');
             }
+            renderDashboard();
 
             // 3. Smooth scroll to target card and trigger glow pulse
-            setTimeout(() => {
-                const targetCard = document.querySelector(`.catalog-card[data-pid="${pid}"]`) ||
-                                   document.querySelector(`.cat-product-item[data-pid="${pid}"]`);
-                if (targetCard) {
-                    targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    targetCard.classList.remove('admin-glow-highlight');
-                    void targetCard.offsetWidth; // Force reflow
-                    targetCard.classList.add('admin-glow-highlight');
-                    setTimeout(() => targetCard.classList.remove('admin-glow-highlight'), 3000);
-                } else if (product) {
+            scrollToTargetWithGlow(() => {
+                return document.querySelector(`.catalog-card[data-pid="${pid}"]`) ||
+                       document.querySelector(`.cat-product-item[data-pid="${pid}"]`);
+            }, (card) => {
+                if (!card && product) {
                     showToast(`Product: ${product.name}`);
                 }
-            }, 120);
+            });
         }
         window.jumpToAdminProduct = jumpToAdminProduct;
 
@@ -7132,7 +7218,7 @@
             
             // 1. Ensure Categories Section is opened
             if (!categoriesSectionOpen) {
-                toggleCategoriesSection();
+                toggleCategoriesSection(true);
             }
 
             // 2. Ensure Category Accordion is expanded
@@ -7141,17 +7227,10 @@
             renderDashboard();
 
             // 3. Smooth scroll to category accordion and trigger glow pulse
-            setTimeout(() => {
-                const catAccordion = document.getElementById(`cat-accordion-${catId}`) ||
-                                     document.querySelector(`.cat-accordion[data-slug="${catId}"]`);
-                if (catAccordion) {
-                    catAccordion.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    catAccordion.classList.remove('admin-glow-highlight');
-                    void catAccordion.offsetWidth;
-                    catAccordion.classList.add('admin-glow-highlight');
-                    setTimeout(() => catAccordion.classList.remove('admin-glow-highlight'), 3000);
-                }
-            }, 120);
+            scrollToTargetWithGlow(() => {
+                return document.getElementById(`cat-accordion-${catId}`) ||
+                       document.querySelector(`.cat-accordion[data-slug="${catId}"]`);
+            });
         }
         window.jumpToAdminCategory = jumpToAdminCategory;
 
@@ -7166,17 +7245,10 @@
             renderReviewsAdmin();
 
             // 3. Smooth scroll to review item and trigger glow pulse
-            setTimeout(() => {
-                const reviewItem = document.getElementById(`review-accordion-${reviewId}`) ||
-                                   document.querySelector(`.cat-accordion[data-review-id="${reviewId}"]`);
-                if (reviewItem) {
-                    reviewItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    reviewItem.classList.remove('admin-glow-highlight');
-                    void reviewItem.offsetWidth;
-                    reviewItem.classList.add('admin-glow-highlight');
-                    setTimeout(() => reviewItem.classList.remove('admin-glow-highlight'), 3000);
-                }
-            }, 120);
+            scrollToTargetWithGlow(() => {
+                return document.getElementById(`review-accordion-${reviewId}`) ||
+                       document.querySelector(`.cat-accordion[data-review-id="${reviewId}"]`);
+            });
         }
         window.jumpToAdminReview = jumpToAdminReview;
 
@@ -7203,23 +7275,38 @@
             renderOrdersAdmin();
 
             // 4. Smooth scroll to order card and trigger glow pulse
-            setTimeout(() => {
-                const targetCard = document.getElementById(`order-card-${orderId}`) ||
-                                   document.querySelector(`.order-accordion-card[data-order-id="${orderId}"]`) ||
-                                   document.querySelector(`.order-card[data-order-id="${orderId}"]`);
-                if (targetCard) {
-                    targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    targetCard.classList.remove('admin-glow-highlight');
-                    void targetCard.offsetWidth;
-                    targetCard.classList.add('admin-glow-highlight');
-                    setTimeout(() => targetCard.classList.remove('admin-glow-highlight'), 3000);
-                } else if (order) {
+            scrollToTargetWithGlow(() => {
+                return document.getElementById(`order-card-${orderId}`) ||
+                       document.querySelector(`.order-accordion-card[data-order-id="${orderId}"]`) ||
+                       document.querySelector(`.order-card[data-order-id="${orderId}"]`);
+            }, (card) => {
+                if (!card && order) {
                     showToast(`Order #${order.order_number || order.id}`);
                 }
-            }, 120);
+            });
         }
         window.jumpToAdminOrder = jumpToAdminOrder;
         window.viewOrderDetailsSheet = jumpToAdminOrder;
+
+        function jumpToAdminAnnouncement(slotNum) {
+            closeAdminExpandingSearch();
+            
+            // 1. Ensure Announcements Section is opened
+            toggleAnnouncementsSection(true);
+
+            // 2. Smooth scroll to specific input slot, focus it, and trigger glow pulse
+            scrollToTargetWithGlow(() => {
+                const input = document.getElementById(`announcementInput${slotNum}`);
+                return input ? (input.closest('.input-group') || input) : document.getElementById('announcementsSection');
+            }, () => {
+                const input = document.getElementById(`announcementInput${slotNum}`);
+                if (input) {
+                    input.focus();
+                    input.select();
+                }
+            });
+        }
+        window.jumpToAdminAnnouncement = jumpToAdminAnnouncement;
 
         window.openAddReviewInlineForm = function() {
             toggleAddReviewForm(true);
