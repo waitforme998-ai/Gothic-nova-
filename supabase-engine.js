@@ -138,6 +138,7 @@
             }
             if (updatedState.categories !== undefined) {
                 window.dispatchEvent(new Event('categoriesUpdated'));
+                window.dispatchEvent(new CustomEvent('gn:categoriesUpdated', { detail: { categories: updatedState.categories } }));
             }
             if (updatedState.reviews !== undefined) {
                 window.dispatchEvent(new Event('reviewsUpdated'));
@@ -634,15 +635,29 @@
                 const stored = localStorage.getItem('gn_categories_meta');
                 if (stored !== null) localCats = JSON.parse(stored);
             } catch(e) {}
-            if (!Array.isArray(localCats)) localCats = defaultCategories;
+            if (!Array.isArray(localCats)) localCats = [...defaultCategories];
 
             const idx = localCats.findIndex(c => String(c.id).toLowerCase() === cleanSlug);
             if (idx >= 0) localCats[idx] = { ...localCats[idx], ...payload };
             else localCats.push(payload);
 
-            try { localStorage.setItem('gn_categories_meta', JSON.stringify(localCats)); } catch(e) {}
+            try { 
+                localStorage.setItem('gn_categories_meta', JSON.stringify(localCats)); 
+                localStorage.setItem('gn_categories', JSON.stringify(localCats.map(c => c.id)));
+            } catch(e) {}
             await this._saveCloudSyncState({ categories: localCats });
             return payload;
+        },
+
+        async saveCategoryList(categories) {
+            if (!Array.isArray(categories)) return false;
+            const cleanList = categories.filter(c => c && c.id && String(c.id).toLowerCase() !== 'general' && String(c.id).toLowerCase() !== 'all');
+            try {
+                localStorage.setItem('gn_categories_meta', JSON.stringify(cleanList));
+                localStorage.setItem('gn_categories', JSON.stringify(cleanList.map(c => c.id)));
+            } catch(e) {}
+            await this._saveCloudSyncState({ categories: cleanList });
+            return true;
         },
 
         async deleteCategory(id) {

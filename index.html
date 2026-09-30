@@ -3083,6 +3083,19 @@
                 window.addEventListener('announcementsUpdated', () => {
                     if (typeof window.renderSaleTicker === 'function') window.renderSaleTicker();
                 });
+                window.addEventListener('categoriesUpdated', () => {
+                    if (typeof renderCategoryTabs === 'function') renderCategoryTabs();
+                    if (typeof renderSearchCategoryChips === 'function') renderSearchCategoryChips();
+                    if (typeof window.renderFooterCollections === 'function') window.renderFooterCollections();
+                });
+                window.addEventListener('gn:categoriesUpdated', (e) => {
+                    if (e && e.detail && Array.isArray(e.detail.categories)) {
+                        try { localStorage.setItem('gn_categories_meta', JSON.stringify(e.detail.categories)); } catch(err) {}
+                    }
+                    if (typeof renderCategoryTabs === 'function') renderCategoryTabs();
+                    if (typeof renderSearchCategoryChips === 'function') renderSearchCategoryChips();
+                    if (typeof window.renderFooterCollections === 'function') window.renderFooterCollections();
+                });
 
                 window.addEventListener('gn:storeSyncUpdated', (e) => {
                     if (e && e.detail) {

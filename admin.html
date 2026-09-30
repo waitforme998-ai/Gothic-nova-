@@ -3963,6 +3963,15 @@
             } catch(e) {}
         }
 
+        function broadcastCategoriesUpdate(cats) {
+            try {
+                const bc = getGnAdminBroadcastChannel();
+                if (bc) {
+                    bc.postMessage({ type: 'CATEGORIES_UPDATED', categories: cats });
+                }
+            } catch(e) {}
+        }
+
         function normalizeProductCategoryForAdmin(p, catList) {
             let cat = (p && p.category ? String(p.category) : '').trim().toLowerCase();
             if (!cat || cat === 'general' || cat === 'all') {
@@ -4206,17 +4215,28 @@
                 const newCat = { id: slug, name: rawName, display_order: catList.length + 1 };
                 catList.push(newCat);
                 saveCategoryList(catList);
-                if (window.SupabaseEngine && typeof window.SupabaseEngine.saveCategory === 'function') {
-                    try { await window.SupabaseEngine.saveCategory(newCat); } catch(e) {}
-                }
+
+                // 1. INSTANT 0ms OPTIMISTIC UI REFRESH
                 renderDashboard();
                 populateCategoryDropdowns();
                 if (btnState) btnState.success('ADDED ✓');
                 showToast(`Category "${rawName}" created!`);
+
+                // 2. INSTANT UNIVERSAL BROADCAST
                 try { 
                     window.dispatchEvent(new Event('storage')); 
                     window.dispatchEvent(new Event('categoriesUpdated')); 
+                    broadcastCategoriesUpdate(catList);
                 } catch(e) {}
+
+                // 3. NON-BLOCKING BACKGROUND CLOUD PERSISTENCE
+                if (window.SupabaseEngine) {
+                    if (typeof window.SupabaseEngine.saveCategoryList === 'function') {
+                        window.SupabaseEngine.saveCategoryList(catList).catch(e => console.warn("Notice: Cloud category sync:", e));
+                    } else if (typeof window.SupabaseEngine.saveCategory === 'function') {
+                        window.SupabaseEngine.saveCategory(newCat).catch(e => console.warn("Notice: Cloud category sync:", e));
+                    }
+                }
             } catch(err) {
                 if (btnState) btnState.reset();
                 showToast("Failed to create category", true);
@@ -4235,13 +4255,21 @@
             if (target) {
                 target.name = newName;
                 saveCategoryList(catList);
-                if (window.SupabaseEngine) {
-                    try { await window.SupabaseEngine.saveCategory(target); } catch(e) {}
-                }
                 renderDashboard();
                 populateCategoryDropdowns();
                 showToast(`Renamed to "${newName}"`);
-                try { window.dispatchEvent(new Event('storage')); } catch(e) {}
+                try { 
+                    window.dispatchEvent(new Event('storage')); 
+                    window.dispatchEvent(new Event('categoriesUpdated')); 
+                    broadcastCategoriesUpdate(catList);
+                } catch(e) {}
+                if (window.SupabaseEngine) {
+                    if (typeof window.SupabaseEngine.saveCategoryList === 'function') {
+                        window.SupabaseEngine.saveCategoryList(catList).catch(e => console.warn("Notice: Cloud category rename sync:", e));
+                    } else if (typeof window.SupabaseEngine.saveCategory === 'function') {
+                        window.SupabaseEngine.saveCategory(target).catch(e => console.warn("Notice: Cloud category rename sync:", e));
+                    }
+                }
             }
         };
 
@@ -7528,6 +7556,7 @@
                     if (Array.isArray(cloudCats) && cloudCats.length > 0) {
                         saveCategoryList(cloudCats);
                         populateCategoryDropdowns();
+                        renderDashboard();
                     }
                 } catch(e) {}
             }
