@@ -7168,16 +7168,18 @@ select option {
     border: 1px solid rgba(212, 175, 55, 0.5);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
-    border-radius: 999px;
-    padding: 8px 16px;
+    border-radius: 12px;
+    padding: 10px 14px;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     box-shadow: 0 8px 28px rgba(0, 0, 0, 0.9), 0 0 16px rgba(212, 175, 55, 0.25);
-    cursor: default !important;
+    cursor: pointer;
     user-select: none;
     transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
     animation: pillFloat 4s ease-in-out infinite;
+    max-width: 340px;
+    box-sizing: border-box;
 }
 
 @keyframes pillFloat {
@@ -7186,16 +7188,16 @@ select option {
 }
 
 .floating-reward-pill:hover {
-    border-color: rgba(212, 175, 55, 0.7) !important;
-    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.9), 0 0 18px rgba(212, 175, 55, 0.35) !important;
+    border-color: rgba(212, 175, 55, 0.8) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.95), 0 0 22px rgba(212, 175, 55, 0.45) !important;
 }
 
 .floating-reward-icon {
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
-    background: rgba(139, 0, 0, 0.25);
-    border: 1px solid rgba(212, 175, 55, 0.5);
+    background: radial-gradient(circle at 30% 30%, rgba(139, 0, 0, 0.5), rgba(40, 5, 10, 0.8));
+    border: 1px solid rgba(212, 175, 55, 0.6);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -7338,11 +7340,11 @@ html.tarot-pending body {
         left: 50% !important;
         right: auto !important;
         transform: translateX(-50%) !important;
-        max-width: 290px !important;
+        max-width: calc(100vw - 24px) !important;
         width: max-content !important;
-        padding: 6px 12px !important;
-        gap: 8px !important;
-        border-radius: 999px !important;
+        padding: 8px 12px !important;
+        gap: 10px !important;
+        border-radius: 12px !important;
     }
 
     /* Chosen card on mobile - Compact Viewport Fit */

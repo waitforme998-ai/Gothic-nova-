@@ -4361,19 +4361,23 @@
         </div>
     </div>
 
-    <!-- Persistent Floating Reward Pill (Active on Storefront with Live 24h Countdown - Silent Ambient Badge) -->
+    <!-- Persistent Floating Reward Pill (Active on Storefront with Live 24h Reward Validity & 48h Shuffle Countdowns) -->
     <div id="floatingRewardPill" class="floating-reward-pill" style="display: none;">
         <div class="floating-reward-icon">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
         </div>
-        <div style="display: flex; flex-direction: column; gap: 1px; min-width: 0;">
-            <div style="display: flex; align-items: center; gap: 6px;">
-                <span class="font-mono" style="font-size: 0.55rem; color: #ff9999; font-weight: 700; letter-spacing: 0.10em; text-transform: uppercase;">✦ REWARD</span>
-                <span id="floatingPillTimer" class="font-mono" style="font-size: 0.60rem; color: #ffe8be; font-weight: 700; opacity: 0.95; font-variant-numeric: tabular-nums; letter-spacing: 0.04em;">24h 00m</span>
+        <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                <span id="floatingPillText" class="font-mono" style="font-size: 0.82rem; font-weight: 800; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: 0.03em;">FREE GOTHIC GIFT</span>
+                <span id="floatingPillBadge" class="font-mono" style="font-size: 0.58rem; color: #ffe8be; background: rgba(139, 0, 0, 0.25); padding: 1px 6px; border-radius: 4px; border: 1px solid rgba(139, 20, 30, 0.6); flex-shrink: 0; font-weight: 700;">ACTIVE</span>
             </div>
-            <span id="floatingPillText" class="font-mono" style="font-size: 0.86rem; font-weight: 800; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">FREE GOTHIC GIFT</span>
+            <div id="floatingPillValidityRow" style="display: flex; align-items: center; gap: 4px;">
+                <span id="floatingPillValidityText" class="font-mono" style="font-size: 0.64rem; color: #ffcccc; letter-spacing: 0.02em;">✦ Reward valid: <strong id="floatingPillTimer" style="color: #ffe8be; font-variant-numeric: tabular-nums;">24h 00m 00s</strong></span>
+            </div>
+            <div id="floatingPillShuffleRow" style="display: flex; align-items: center; gap: 4px; border-top: 1px solid rgba(212, 175, 55, 0.18); padding-top: 3px; margin-top: 1px;">
+                <span id="floatingPillShuffleText" class="font-mono" style="font-size: 0.62rem; color: #d4af37; opacity: 0.95; letter-spacing: 0.02em;">✦ Shuffle again in: <strong id="floatingPillShuffleTimer" style="color: #e5c158; font-variant-numeric: tabular-nums;">48h 00m 00s</strong></span>
+            </div>
         </div>
-        <span class="font-mono" style="font-size: 0.62rem; color: #ffe8be; background: rgba(139, 0, 0, 0.25); padding: 2px 7px; border-radius: 4px; border: 1px solid rgba(139, 20, 30, 0.6); flex-shrink: 0;">ACTIVE</span>
     </div>
 
     <!-- Script Controller for Tarot Overlay, True Card Swapping & Contextual Badges -->
@@ -4566,8 +4570,8 @@
                     window.activeDailyReward = null;
                 }
 
-                if (dataToSave.step === 'claimed' && dataToSave.offerExpiresAt > now) {
-                    startDailyRewardTimer(dataToSave.offerExpiresAt);
+                if (dataToSave.step === 'claimed' && dataToSave.shuffleUnlockAt > now) {
+                    startDailyRewardTimer(dataToSave.offerExpiresAt, dataToSave.shuffleUnlockAt);
                 }
             }
 
@@ -4936,32 +4940,43 @@
             });
         }
 
-        // Live Immutable 24-Hour Countdown Timer for Floating Reward Pill
-        function startDailyRewardTimer(targetTimestamp) {
+        // Live Immutable 24-Hour Reward Validity & 48-Hour Shuffle Cooldown Countdown Timers
+        function startDailyRewardTimer(targetOfferExpiresAt, targetShuffleUnlockAt) {
             if (countdownTimerInterval) {
                 clearInterval(countdownTimerInterval);
                 countdownTimerInterval = null;
             }
 
-            // Target timestamp is the immutable epoch expiration time for the 24h offer
-            const expiresAt = (Number(targetTimestamp) > Date.now() + 1000) 
-                ? Number(targetTimestamp) 
-                : (Date.now() + TWENTY_FOUR_HOURS);
+            const now = Date.now();
+            const offerExpiresAt = (Number(targetOfferExpiresAt) > now)
+                ? Number(targetOfferExpiresAt)
+                : (now + TWENTY_FOUR_HOURS);
+            const shuffleUnlockAt = (Number(targetShuffleUnlockAt) > now)
+                ? Number(targetShuffleUnlockAt)
+                : (offerExpiresAt + TWENTY_FOUR_HOURS);
 
             function updateTimer() {
-                const now = Date.now();
-                const remaining = expiresAt - now;
-                const timerEl = document.getElementById('floatingPillTimer');
+                const currentNow = Date.now();
+                const remainingOffer = offerExpiresAt - currentNow;
+                const remainingShuffle = shuffleUnlockAt - currentNow;
 
-                if (remaining <= 0) {
+                const pill = document.getElementById('floatingRewardPill');
+                const badgeEl = document.getElementById('floatingPillBadge');
+                const validityTextEl = document.getElementById('floatingPillValidityText');
+                const shuffleTimerEl = document.getElementById('floatingPillShuffleTimer');
+                const shuffleTextEl = document.getElementById('floatingPillShuffleText');
+
+                // 1. When the full 48-hour shuffle cooldown elapses: purge and allow new shuffle
+                if (remainingShuffle <= 0) {
                     if (countdownTimerInterval) {
                         clearInterval(countdownTimerInterval);
                         countdownTimerInterval = null;
                     }
-                    // Offer declines after 24h, but 48h shuffle cooldown remains active
+                    try {
+                        localStorage.removeItem(TAROT_STORAGE_KEY);
+                    } catch(e) {}
                     window.activeDailyReward = null;
 
-                    const pill = document.getElementById('floatingRewardPill');
                     if (pill) {
                         pill.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
                         pill.style.opacity = '0';
@@ -4978,13 +4993,55 @@
                     return;
                 }
 
-                const hrs = Math.floor(remaining / (1000 * 60 * 60));
-                const mins = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
-                const secs = Math.floor((remaining % (1000 * 60)) / 1000);
-                const formattedStr = `${hrs}h ${mins < 10 ? '0' : ''}${mins}m ${secs < 10 ? '0' : ''}${secs}s`;
+                // 2. Format 48-Hour Shuffle Cooldown (always ticks down continuously)
+                const sHrs = Math.floor(remainingShuffle / (1000 * 60 * 60));
+                const sMins = Math.floor((remainingShuffle % (1000 * 60 * 60)) / (1000 * 60));
+                const sSecs = Math.floor((remainingShuffle % (1000 * 60)) / 1000);
+                const formattedShuffleStr = `${sHrs}h ${sMins < 10 ? '0' : ''}${sMins}m ${sSecs < 10 ? '0' : ''}${sSecs}s`;
 
-                if (timerEl) {
-                    timerEl.textContent = formattedStr;
+                if (shuffleTextEl) {
+                    shuffleTextEl.innerHTML = `✦ Shuffle again in: <strong id="floatingPillShuffleTimer" style="color: #e5c158; font-variant-numeric: tabular-nums;">${formattedShuffleStr}</strong>`;
+                } else if (shuffleTimerEl) {
+                    shuffleTimerEl.textContent = formattedShuffleStr;
+                }
+
+                // 3. Format 24-Hour Reward Validity
+                if (remainingOffer <= 0) {
+                    // Reward duration ended -> de-activate cart benefit, show "your reward duration ended"
+                    if (window.activeDailyReward) {
+                        window.activeDailyReward = null;
+                        if (typeof updateInPageContextualPolicy === 'function') updateInPageContextualPolicy(null);
+                        if (typeof updateCheckoutTotals === 'function') updateCheckoutTotals();
+                    }
+                    if (badgeEl) {
+                        badgeEl.textContent = 'EXPIRED';
+                        badgeEl.style.color = '#ff9999';
+                        badgeEl.style.background = 'rgba(120, 20, 20, 0.35)';
+                        badgeEl.style.borderColor = 'rgba(200, 50, 50, 0.5)';
+                    }
+                    if (validityTextEl) {
+                        validityTextEl.innerHTML = `<span style="color: #f87171; font-weight: 700; letter-spacing: 0.02em;">✦ your reward duration ended</span>`;
+                    }
+                } else {
+                    // Reward is active -> show remaining time
+                    const rHrs = Math.floor(remainingOffer / (1000 * 60 * 60));
+                    const rMins = Math.floor((remainingOffer % (1000 * 60 * 60)) / (1000 * 60));
+                    const rSecs = Math.floor((remainingOffer % (1000 * 60)) / 1000);
+                    const formattedOfferStr = `${rHrs}h ${rMins < 10 ? '0' : ''}${rMins}m ${rSecs < 10 ? '0' : ''}${rSecs}s`;
+
+                    if (badgeEl) {
+                        badgeEl.textContent = 'ACTIVE';
+                        badgeEl.style.color = '#ffe8be';
+                        badgeEl.style.background = 'rgba(139, 0, 0, 0.25)';
+                        badgeEl.style.borderColor = 'rgba(139, 20, 30, 0.6)';
+                    }
+                    if (validityTextEl) {
+                        validityTextEl.innerHTML = `✦ Reward valid: <strong id="floatingPillTimer" style="color: #ffe8be; font-variant-numeric: tabular-nums;">${formattedOfferStr}</strong>`;
+                    }
+                }
+
+                if (pill && pill.style.display === 'none') {
+                    pill.style.display = 'flex';
                 }
             }
 
@@ -4996,8 +5053,8 @@
                 window._tarotTimerSyncAttached = true;
                 const syncOnWake = () => {
                     const stored = getStoredDailyReward();
-                    if (stored && stored.isOfferActive && stored.offerExpiresAt) {
-                        startDailyRewardTimer(stored.offerExpiresAt);
+                    if (stored && stored.isCooldownActive && stored.shuffleUnlockAt) {
+                        startDailyRewardTimer(stored.offerExpiresAt, stored.shuffleUnlockAt);
                     }
                 };
                 window.addEventListener('focus', syncOnWake);
@@ -5027,11 +5084,11 @@
                     overlay.classList.remove('active', 'closing', 'card-focused');
                 }
                 document.body.style.overflow = '';
-                if (stored.isOfferActive && stored.reward) {
-                    window.activeDailyReward = stored.reward;
-                    updateFloatingPill(stored.reward);
-                    updateInPageContextualPolicy(stored.reward);
-                    startDailyRewardTimer(stored.offerExpiresAt);
+                if (stored.reward) {
+                    window.activeDailyReward = stored.isOfferActive ? stored.reward : null;
+                    updateFloatingPill(stored.reward, stored.isOfferActive);
+                    updateInPageContextualPolicy(window.activeDailyReward);
+                    startDailyRewardTimer(stored.offerExpiresAt, stored.shuffleUnlockAt);
                 } else {
                     window.activeDailyReward = null;
                     const pill = document.getElementById('floatingRewardPill');
@@ -5461,24 +5518,39 @@
             }
 
             if (reward) {
-                updateFloatingPill(reward);
-                updateInPageContextualPolicy(reward);
                 const updatedStored = getStoredDailyReward();
-                if (updatedStored && updatedStored.offerExpiresAt) {
-                    startDailyRewardTimer(updatedStored.offerExpiresAt);
+                const isOfferActive = updatedStored ? updatedStored.isOfferActive : true;
+                updateFloatingPill(reward, isOfferActive);
+                updateInPageContextualPolicy(isOfferActive ? reward : null);
+                if (updatedStored && updatedStored.shuffleUnlockAt) {
+                    startDailyRewardTimer(updatedStored.offerExpiresAt, updatedStored.shuffleUnlockAt);
                 }
                 if (typeof updateCheckoutTotals === 'function') updateCheckoutTotals();
             }
         }
 
-        // Update Floating Pill on Storefront (Clean, Simple Offer Name)
-        function updateFloatingPill(reward) {
+        // Update Floating Pill on Storefront (Clean, Simple Offer Name & Dual Countdowns)
+        function updateFloatingPill(reward, isOfferActive = true) {
             const pill = document.getElementById('floatingRewardPill');
             const textEl = document.getElementById('floatingPillText');
+            const badgeEl = document.getElementById('floatingPillBadge');
             if (!pill || !reward) return;
 
             if (textEl) {
                 textEl.textContent = reward.offer || reward.title;
+            }
+            if (badgeEl) {
+                if (isOfferActive) {
+                    badgeEl.textContent = 'ACTIVE';
+                    badgeEl.style.color = '#ffe8be';
+                    badgeEl.style.background = 'rgba(139, 0, 0, 0.25)';
+                    badgeEl.style.borderColor = 'rgba(139, 20, 30, 0.6)';
+                } else {
+                    badgeEl.textContent = 'EXPIRED';
+                    badgeEl.style.color = '#ff9999';
+                    badgeEl.style.background = 'rgba(120, 20, 20, 0.35)';
+                    badgeEl.style.borderColor = 'rgba(200, 50, 50, 0.5)';
+                }
             }
             pill.style.display = 'flex';
         }
