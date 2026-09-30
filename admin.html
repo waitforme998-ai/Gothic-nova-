@@ -2972,9 +2972,9 @@
                         <h3>Products</h3>
                         <span id="catCountBadge" class="cat-count-badge">0</span>
                     </div>
-                    <svg id="categoriesChevron" class="chevron-icon open" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+                    <svg id="categoriesChevron" class="chevron-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
                 </div>
-                <div class="categories-body open" id="categoriesBody">
+                <div class="categories-body" id="categoriesBody">
                     <div class="categories-body-inner">
                         <div class="add-cat-inline-form">
                             <input type="text" id="newCategoryNameInput" placeholder="New category name..." class="add-cat-input" onkeydown="if(event.key==='Enter'){event.preventDefault(); createCategoryFromManagement();}">
@@ -4050,7 +4050,7 @@
         }
 
         // --- SECTION TOGGLES ---
-        let categoriesSectionOpen = true;
+        let categoriesSectionOpen = false;
         window.toggleCategoriesSection = function(forceOpen) {
             if (forceOpen === true) categoriesSectionOpen = true;
             else if (forceOpen === false) categoriesSectionOpen = false;
