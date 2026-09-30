@@ -80,8 +80,1529 @@
             } catch(e) {}
         })();
     </script>
+    <style>
+        /* Critical Instant Tarot Ritual 0ms Anti-FOUC Rules */
+        html.tarot-pending body {
+            overflow: hidden !important;
+        }
+        .daily-tarot-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            z-index: 999999;
+            background: rgba(0, 0, 0, 0.50);
+            backdrop-filter: blur(1.5px);
+            -webkit-backdrop-filter: blur(1.5px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 16px;
+            box-sizing: border-box;
+        }
+        html.tarot-pending .daily-tarot-overlay {
+            display: flex !important;
+            opacity: 1 !important;
+            pointer-events: auto !important;
+            visibility: visible !important;
+        }
+        .daily-tarot-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        .tarot-stage-container {
+            position: relative;
+            z-index: 5;
+            width: min(390px, 92vw);
+            max-height: calc(100vh - 40px);
+            max-height: calc(100dvh - 40px);
+            background: radial-gradient(ellipse at 50% 10%, rgba(26, 10, 18, 0.97) 0%, rgba(12, 4, 9, 0.98) 75%, #050204 100%);
+            border: 1px solid rgba(212, 175, 55, 0.40);
+            border-radius: 14px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.95), 0 0 1px 1px rgba(212, 175, 55, 0.20);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 8px;
+            margin: auto;
+            padding: 16px 18px 14px 18px;
+            box-sizing: border-box;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+        .tarot-cards-stage {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px 14px;
+            width: 100%;
+            max-width: 250px;
+            min-height: 290px;
+            perspective: 1200px;
+            margin: 2px auto 4px auto;
+            position: relative;
+            align-items: center;
+            justify-items: center;
+            box-sizing: border-box;
+            overflow: hidden !important;
+            border-radius: 8px;
+            padding: 2px;
+        }
+        .tarot-card-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 115px;
+            height: 140px;
+            perspective: 1000px;
+            transform-style: preserve-3d;
+            border-radius: 8px;
+        }
+        .tarot-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            border-radius: 8px;
+        }
+        .tarot-face {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            border-radius: 8px;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+        .tarot-back {
+            transform: rotateY(180deg);
+            background-color: #060204;
+            background-image: url('assets/gothic_card_back.jpg');
+            background-size: cover;
+            background-position: center;
+            border: 1.2px solid rgba(212, 175, 55, 0.55);
+        }
+        .tarot-front {
+            transform: rotateY(0deg);
+            background: radial-gradient(ellipse at 50% 15%, rgba(30, 10, 20, 0.99) 0%, #080306 65%, #020102 100%);
+            border: 1.2px solid rgba(212, 175, 55, 0.45);
+        }
+        .tarot-card-wrapper.flipped .tarot-card-inner {
+            transform: rotateY(0deg);
+        }
+        .tarot-card-wrapper.face-down .tarot-card-inner {
+            transform: rotateY(180deg);
+        }
+        @media (max-width: 640px) {
+            .tarot-stage-container {
+                width: min(340px, 94vw) !important;
+                padding: 14px 12px 12px 12px !important;
+                gap: 6px !important;
+                border-radius: 12px !important;
+            }
+            .tarot-cards-stage {
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 10px 10px !important;
+                min-height: 250px !important;
+                max-width: 220px !important;
+            }
+            .tarot-card-wrapper {
+                max-width: 100px !important;
+                height: 120px !important;
+            }
+        }
+    </style>
 </head>
 <body>
+    
+    <!-- ==========================================================================
+         GOTHIC NOVA: OCCULT DAILY TAROT OVERLAY & GAMIFICATION ENGINE (INSTANT TOP PARSE)
+         ========================================================================== -->
+    <div class="daily-tarot-overlay" id="dailyFortuneOverlay">
+        <!-- Ambient Mystical Particle Canvas -->
+        <canvas class="daily-tarot-canvas" id="dailyTarotCanvas"></canvas>
+
+        <div class="tarot-stage-container">
+            <!-- Header (Occult Eyebrow, Large Authority Title, No Reset Button) -->
+            <div class="tarot-header" style="text-align: center;">
+                <div class="tarot-eyebrow font-mono" style="color: #e5c158; text-transform: uppercase; font-weight: 800; letter-spacing: 0.22em;">✦ DAILY SHOPPING REWARD ✦</div>
+                <h2 class="tarot-title" id="tarotStageTitle">UNLOCK YOUR SHOPPING BENEFIT</h2>
+                <div class="tarot-subtext font-mono" id="tarotStageSubtext">— ✦ Preview rewards below • Click shuffle to draw today's offer ✦ —</div>
+            </div>
+
+            <!-- Dramatic CHOOSE ! Impact Banner -->
+            <div id="tarotChooseImpactWrap" class="tarot-choose-impact-wrap">
+                <span class="tarot-choose-impact">CHOOSE !</span>
+            </div>
+
+            <!-- 4-Card Shuffling Stage: 2x2 Quadrant Grid -->
+            <div class="tarot-cards-stage" id="tarotCardsStage">
+                
+                <!-- CARD 1: ORDER UPGRADE (I • PRIMUS) -->
+                <div class="tarot-card-wrapper flipped" data-card-index="0" onclick="handleTarotCardSelect(0)">
+                    <div class="tarot-flash"></div>
+                    <div class="tarot-card-inner">
+                        <!-- Front -->
+                        <div class="tarot-face tarot-front" style="background: radial-gradient(ellipse at 50% 15%, rgba(30, 10, 20, 0.99) 0%, #080306 65%, #020102 100%); border-color: rgba(197, 48, 48, 0.85); box-shadow: 0 10px 24px rgba(0, 0, 0, 0.95), inset 0 0 0 1px rgba(212, 175, 55, 0.35);">
+                            <div style="display: flex; align-items: center; justify-content: center; width: 100%;">
+                                <div class="tarot-card-top-pill" style="border-color: rgba(197, 48, 48, 0.55);">
+                                    <span style="color: #f5e6c8; white-space: nowrap;">✦ I &bull; PRIMUS</span>
+                                </div>
+                            </div>
+                            <div style="display: flex; flex-direction: column; align-items: center; gap: 3px; margin: auto 0; text-align: center; width: 100%;">
+                                <div class="tarot-roman-numeral-front" style="color: #c53030; font-family: 'Playfair Display', Georgia, serif; line-height: 1; text-shadow: 0 3px 12px rgba(0,0,0,0.98);">I</div>
+                                <span class="tarot-card-offer-title font-serif" style="font-weight: 900; color: #ffffff; letter-spacing: 0.04em; text-shadow: 0 2px 8px rgba(0,0,0,0.95);">ORDER UPGRADE</span>
+                                <span class="tarot-card-subtext font-mono" style="color: #ded6c9; opacity: 0.95; line-height: 1.25; max-width: 92%;">your order upgraded</span>
+                            </div>
+                            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 75%; margin-top: auto; opacity: 0.6;">
+                                <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #c53030, transparent);"></span>
+                                <span style="color: #c53030; font-size: 0.6rem;">✦</span>
+                                <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #c53030, transparent);"></span>
+                            </div>
+                        </div>
+                        <!-- Back -->
+                        <div class="tarot-face tarot-back">
+                            <!-- Pure identical majestic crowned skull artwork -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CARD 2: FREE DELIVERY (II • SECUNDUS) -->
+                <div class="tarot-card-wrapper flipped" data-card-index="1" onclick="handleTarotCardSelect(1)">
+                    <div class="tarot-flash"></div>
+                    <div class="tarot-card-inner">
+                        <!-- Front -->
+                        <div class="tarot-face tarot-front" style="background: radial-gradient(ellipse at 50% 15%, rgba(30, 10, 20, 0.99) 0%, #080306 65%, #020102 100%); border-color: rgba(212, 175, 55, 0.85); box-shadow: 0 10px 24px rgba(0, 0, 0, 0.95), inset 0 0 0 1px rgba(212, 175, 55, 0.35);">
+                            <div style="display: flex; align-items: center; justify-content: center; width: 100%;">
+                                <div class="tarot-card-top-pill" style="border-color: rgba(212, 175, 55, 0.55);">
+                                    <span style="color: #f5e6c8; white-space: nowrap;">✦ II &bull; SECUNDUS</span>
+                                </div>
+                            </div>
+                            <div style="display: flex; flex-direction: column; align-items: center; gap: 3px; margin: auto 0; text-align: center; width: 100%;">
+                                <div class="tarot-roman-numeral-front" style="color: #d4af37; font-family: 'Playfair Display', Georgia, serif; line-height: 1; text-shadow: 0 3px 12px rgba(0,0,0,0.98);">II</div>
+                                <span class="tarot-card-offer-title font-serif" style="font-weight: 900; color: #ffffff; letter-spacing: 0.04em; text-shadow: 0 2px 8px rgba(0,0,0,0.95);">FREE DELIVERY</span>
+                                <span class="tarot-card-subtext font-mono" style="color: #ded6c9; opacity: 0.95; line-height: 1.25; max-width: 92%;">Free Shipping Nationwide</span>
+                            </div>
+                            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 75%; margin-top: auto; opacity: 0.6;">
+                                <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #d4af37, transparent);"></span>
+                                <span style="color: #d4af37; font-size: 0.6rem;">✦</span>
+                                <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #d4af37, transparent);"></span>
+                            </div>
+                        </div>
+                        <!-- Back -->
+                        <div class="tarot-face tarot-back">
+                            <!-- Pure identical majestic crowned skull artwork -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CARD 3: FREE GOTHIC GIFT (III • TERTIUS) -->
+                <div class="tarot-card-wrapper flipped" data-card-index="2" onclick="handleTarotCardSelect(2)">
+                    <div class="tarot-flash"></div>
+                    <div class="tarot-card-inner">
+                        <!-- Front -->
+                        <div class="tarot-face tarot-front" style="background: radial-gradient(ellipse at 50% 15%, rgba(30, 10, 20, 0.99) 0%, #080306 65%, #020102 100%); border-color: rgba(225, 29, 72, 0.85); box-shadow: 0 10px 24px rgba(0, 0, 0, 0.95), inset 0 0 0 1px rgba(212, 175, 55, 0.35);">
+                            <div style="display: flex; align-items: center; justify-content: center; width: 100%;">
+                                <div class="tarot-card-top-pill" style="border-color: rgba(225, 29, 72, 0.55);">
+                                    <span style="color: #f5e6c8; white-space: nowrap;">✦ III &bull; TERTIUS</span>
+                                </div>
+                            </div>
+                            <div style="display: flex; flex-direction: column; align-items: center; gap: 3px; margin: auto 0; text-align: center; width: 100%;">
+                                <div class="tarot-roman-numeral-front" style="color: #e11d48; font-family: 'Playfair Display', Georgia, serif; line-height: 1; text-shadow: 0 3px 12px rgba(0,0,0,0.98);">III</div>
+                                <span class="tarot-card-offer-title font-serif" style="font-weight: 900; color: #ffffff; letter-spacing: 0.04em; text-shadow: 0 2px 8px rgba(0,0,0,0.95);">FREE GOTHIC GIFT</span>
+                                <span class="tarot-card-subtext font-mono" style="color: #ded6c9; opacity: 0.95; line-height: 1.25; max-width: 92%;">Artifact Enclosed in Parcel</span>
+                            </div>
+                            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 75%; margin-top: auto; opacity: 0.6;">
+                                <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #e11d48, transparent);"></span>
+                                <span style="color: #e11d48; font-size: 0.6rem;">✦</span>
+                                <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #e11d48, transparent);"></span>
+                            </div>
+                        </div>
+                        <!-- Back -->
+                        <div class="tarot-face tarot-back">
+                            <!-- Pure identical majestic crowned skull artwork -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CARD 4: 10% OFF (IV • QUARTUS) -->
+                <div class="tarot-card-wrapper flipped" data-card-index="3" onclick="handleTarotCardSelect(3)">
+                    <div class="tarot-flash"></div>
+                    <div class="tarot-card-inner">
+                        <!-- Front -->
+                        <div class="tarot-face tarot-front" style="background: radial-gradient(ellipse at 50% 15%, rgba(30, 10, 20, 0.99) 0%, #080306 65%, #020102 100%); border-color: rgba(234, 179, 8, 0.85); box-shadow: 0 10px 24px rgba(0, 0, 0, 0.95), inset 0 0 0 1px rgba(212, 175, 55, 0.35);">
+                            <div style="display: flex; align-items: center; justify-content: center; width: 100%;">
+                                <div class="tarot-card-top-pill" style="border-color: rgba(234, 179, 8, 0.55);">
+                                    <span style="color: #f5e6c8; white-space: nowrap;">✦ IV &bull; QUARTUS</span>
+                                </div>
+                            </div>
+                            <div style="display: flex; flex-direction: column; align-items: center; gap: 3px; margin: auto 0; text-align: center; width: 100%;">
+                                <div class="tarot-roman-numeral-front" style="color: #eab308; font-family: 'Playfair Display', Georgia, serif; line-height: 1; text-shadow: 0 3px 12px rgba(0,0,0,0.98);">IV</div>
+                                <span class="tarot-card-offer-title font-serif" style="font-weight: 900; color: #ffffff; letter-spacing: 0.04em; text-shadow: 0 2px 8px rgba(0,0,0,0.95);">10% OFF</span>
+                                <span class="tarot-card-subtext font-mono" style="color: #ded6c9; opacity: 0.95; line-height: 1.25; max-width: 92%;">Instant Cart Deduction</span>
+                            </div>
+                            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 75%; margin-top: auto; opacity: 0.6;">
+                                <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #eab308, transparent);"></span>
+                                <span style="color: #eab308; font-size: 0.6rem;">✦</span>
+                                <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #eab308, transparent);"></span>
+                            </div>
+                        </div>
+                        <!-- Back -->
+                        <div class="tarot-face tarot-back">
+                            <!-- Pure identical majestic crowned skull artwork -->
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Enterprise Level Shuffle Button -->
+            <div id="tarotShuffleActionBox" class="tarot-shuffle-action-box">
+                <button type="button" id="tarotShuffleBtn" class="tarot-shuffle-btn" onclick="triggerMajesticShuffle()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="16 3 21 3 21 8"></polyline>
+                        <line x1="4" y1="20" x2="21" y2="3"></line>
+                        <polyline points="21 16 21 21 16 21"></polyline>
+                        <line x1="15" y1="15" x2="21" y2="21"></line>
+                        <line x1="4" y1="4" x2="9" y2="9"></line>
+                    </svg>
+                    <span>✦ SHUFFLE CARDS (5s)</span>
+                </button>
+            </div>
+
+            <!-- Fortune Claim Container (Revealed after pick - CLEAN & CRISP, NO BACKGROUND GLOW) -->
+            <div id="tarotClaimBox" class="tarot-claim-box" style="display: none;">
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%;">
+                    <span class="tarot-claim-subtitle font-mono" style="color: #dcd3c5; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;">✦ DESTINY BOUND FOR 24 HOURS ✦</span>
+                    <span id="tarotClaimTitle" class="tarot-claim-title font-serif" style="font-weight: 900; color: #ffffff; text-align: center; letter-spacing: 0.04em;">FREE GOTHIC GIFT</span>
+                    <span id="tarotClaimDesc" class="tarot-claim-desc font-mono" style="color: #ded6c9; opacity: 0.95; text-align: center; line-height: 1.30;">Complimentary handcrafted gothic jewelry artifact enclosed in parcel.</span>
+                </div>
+                <button type="button" id="tarotClaimBtn" class="tarot-claim-btn" onclick="closeTarotOverlay(false)">
+                    <span>CLAIM &amp; ENTER STORE</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Persistent Floating Reward Pill (Active on Storefront with Live 24h Reward Validity & 48h Shuffle Countdowns) -->
+    <div id="floatingRewardPill" class="floating-reward-pill" style="display: none;">
+        <div class="floating-reward-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                <span id="floatingPillText" class="font-mono" style="font-size: 0.82rem; font-weight: 800; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: 0.03em;">FREE GOTHIC GIFT</span>
+                <span id="floatingPillBadge" class="font-mono" style="font-size: 0.58rem; color: #ffe8be; background: rgba(139, 0, 0, 0.25); padding: 1px 6px; border-radius: 4px; border: 1px solid rgba(139, 20, 30, 0.6); flex-shrink: 0; font-weight: 700;">ACTIVE</span>
+            </div>
+            <div id="floatingPillValidityRow" style="display: flex; align-items: center; gap: 4px;">
+                <span id="floatingPillValidityText" class="font-mono" style="font-size: 0.64rem; color: #ffcccc; letter-spacing: 0.02em;">✦ Reward valid: <strong id="floatingPillTimer" style="color: #ffe8be; font-variant-numeric: tabular-nums;">24h 00m 00s</strong></span>
+            </div>
+            <div id="floatingPillShuffleRow" style="display: flex; align-items: center; gap: 4px; border-top: 1px solid rgba(212, 175, 55, 0.18); padding-top: 3px; margin-top: 1px;">
+                <span id="floatingPillShuffleText" class="font-mono" style="font-size: 0.62rem; color: #d4af37; opacity: 0.95; letter-spacing: 0.02em;">✦ Shuffle again in: <strong id="floatingPillShuffleTimer" style="color: #e5c158; font-variant-numeric: tabular-nums;">48h 00m 00s</strong></span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Script Controller for Tarot Overlay, True Card Swapping & Contextual Badges (Instant Top Parse) -->
+    <script>
+        const INITIAL_REWARDS_CONFIG = [
+            {
+                id: "reward_upgrade",
+                roman: "I",
+                name: "PRIMUS",
+                title: "ORDER UPGRADE",
+                desc: "your order upgraded",
+                offer: "ORDER UPGRADE",
+                subtext: "your order upgraded",
+                type: "order_upgrade",
+                value: 0,
+                accent: "#c53030"
+            },
+            {
+                id: "reward_freeship",
+                roman: "II",
+                name: "SECUNDUS",
+                title: "FREE DELIVERY",
+                desc: "Free standard delivery included with your order.",
+                offer: "FREE DELIVERY",
+                subtext: "Free Shipping Nationwide",
+                type: "free_shipping",
+                value: 0,
+                accent: "#d4af37"
+            },
+            {
+                id: "reward_gift",
+                roman: "III",
+                name: "TERTIUS",
+                title: "FREE GIFT",
+                desc: "A complimentary free gift will be included with your order.",
+                offer: "FREE GIFT",
+                subtext: "Free Gift Enclosed in Parcel",
+                type: "free_gift",
+                value: 0,
+                accent: "#e11d48"
+            },
+            {
+                id: "reward_discount",
+                roman: "IV",
+                name: "QUARTUS",
+                title: "10% OFF CART",
+                desc: "10% Instant deduction applied directly to your artifact subtotal.",
+                offer: "10% OFF",
+                subtext: "Instant Cart Deduction",
+                type: "percentage_discount",
+                value: 10,
+                accent: "#eab308"
+            }
+        ];
+
+        let activeCardRewards = [...INITIAL_REWARDS_CONFIG];
+
+        let tarotState = {
+            isShuffling: false,
+            isReadyToPick: false,
+            hasShuffled: false,
+            selectedReward: null
+        };
+        window.tarotState = tarotState;
+
+        const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+        const FORTY_EIGHT_HOURS = 48 * 60 * 60 * 1000;
+        const TAROT_STORAGE_KEY = 'gn_tarot_ritual_v14';
+        let countdownTimerInterval = null;
+
+        // Clean up any legacy storage keys from previous builds
+        (function cleanupLegacyStorage() {
+            const legacyKeys = ['gn_tarot_ritual_v13', 'gn_tarot_ritual_v12', 'gn_daily_card_v11', 'gn_daily_card_v10', 'gn_daily_card_v9', 'gn_daily_card_v8', 'gn_daily_card_v7', 'gn_daily_card_v6', 'gn_daily_card_v5', 'gn_daily_card_v4', 'gn_daily_card_state'];
+            legacyKeys.forEach(k => {
+                try { localStorage.removeItem(k); } catch(e) {}
+            });
+        })();
+
+        // Global Testing Helper to reset Tarot Ritual on demand
+        window.resetTarotRitual = function() {
+            try {
+                localStorage.removeItem(TAROT_STORAGE_KEY);
+                ['gn_tarot_ritual_v14', 'gn_tarot_ritual_v13', 'gn_tarot_ritual_v12', 'gn_daily_card_v11', 'gn_daily_card_v10'].forEach(k => {
+                    try { localStorage.removeItem(k); } catch(e) {}
+                });
+            } catch(e) {}
+            window.activeDailyReward = null;
+            if (countdownTimerInterval) {
+                clearInterval(countdownTimerInterval);
+                countdownTimerInterval = null;
+            }
+            const pill = document.getElementById('floatingRewardPill');
+            if (pill) pill.style.display = 'none';
+            if (typeof updateInPageContextualPolicy === 'function') updateInPageContextualPolicy(null);
+            if (typeof updateCheckoutTotals === 'function') updateCheckoutTotals();
+            if (typeof initTarotRitual === 'function') initTarotRitual(false);
+            console.log('✦ Tarot Ritual state successfully reset for testing.');
+        };
+
+        function getStoredDailyReward() {
+            try {
+                const raw = localStorage.getItem(TAROT_STORAGE_KEY);
+                if (!raw) return null;
+                const parsed = JSON.parse(raw);
+                if (!parsed) return null;
+
+                const claimedAt = Number(parsed.claimedAt || parsed.timestamp || 0);
+                const offerExpiresAt = Number(parsed.offerExpiresAt) || (claimedAt > 0 ? claimedAt + TWENTY_FOUR_HOURS : (Number(parsed.expiresAt) || 0));
+                const shuffleUnlockAt = Number(parsed.shuffleUnlockAt) || (claimedAt > 0 ? claimedAt + FORTY_EIGHT_HOURS : (Number(parsed.expiresAt) || 0));
+                const now = Date.now();
+
+                // If 48 hours passed: purge completely and allow fresh shuffle
+                if ((parsed.step === 'claimed' || parsed.step === 'revealed' || parsed.reward || parsed.selectedReward) && shuffleUnlockAt > 0 && now >= shuffleUnlockAt) {
+                    localStorage.removeItem(TAROT_STORAGE_KEY);
+                    window.activeDailyReward = null;
+                    return null;
+                }
+
+                const step = parsed.step || (parsed.reward ? 'claimed' : 'initial');
+                const reward = parsed.reward || parsed.selectedReward || parsed.claimedReward || null;
+                const isOfferActive = offerExpiresAt > now;
+                const isCooldownActive = shuffleUnlockAt > now;
+
+                return {
+                    ...parsed,
+                    step: step,
+                    reward: reward,
+                    selectedReward: reward || parsed.selectedReward,
+                    claimedReward: reward || parsed.claimedReward,
+                    shuffledRewards: Array.isArray(parsed.shuffledRewards) ? parsed.shuffledRewards : null,
+                    cardIndex: (parsed.cardIndex !== undefined && parsed.cardIndex !== null) ? Number(parsed.cardIndex) : null,
+                    claimedAt: claimedAt,
+                    offerExpiresAt: offerExpiresAt,
+                    shuffleUnlockAt: shuffleUnlockAt,
+                    isOfferActive: isOfferActive,
+                    isCooldownActive: isCooldownActive,
+                    expiresAt: offerExpiresAt
+                };
+            } catch(e) {}
+            return null;
+        }
+
+        function saveDailyRewardState(stepOrReward, extraData = {}) {
+            let step = 'claimed';
+            let dataToSave = {};
+            const now = Date.now();
+            const offerExpiresAt = now + TWENTY_FOUR_HOURS;
+            const shuffleUnlockAt = now + FORTY_EIGHT_HOURS;
+
+            let existing = {};
+            try {
+                const raw = localStorage.getItem(TAROT_STORAGE_KEY);
+                if (raw) existing = JSON.parse(raw) || {};
+            } catch(e) {}
+
+            if (typeof stepOrReward === 'string') {
+                step = stepOrReward;
+                dataToSave = {
+                    ...existing,
+                    ...extraData,
+                    step: step
+                };
+            } else if (typeof stepOrReward === 'object' && stepOrReward !== null) {
+                const cardIdx = (typeof extraData === 'number') ? extraData : (extraData.cardIndex !== undefined ? extraData.cardIndex : existing.cardIndex);
+                step = extraData.step || (existing.step === 'claimed' ? 'claimed' : 'revealed');
+                dataToSave = {
+                    ...existing,
+                    step: step,
+                    selectedReward: stepOrReward,
+                    reward: stepOrReward,
+                    claimedReward: stepOrReward,
+                    cardIndex: cardIdx
+                };
+            }
+
+            if (dataToSave.step === 'revealed' || dataToSave.step === 'claimed') {
+                if (!dataToSave.claimedAt) dataToSave.claimedAt = now;
+                if (!dataToSave.timestamp) dataToSave.timestamp = now;
+                if (!dataToSave.offerExpiresAt) dataToSave.offerExpiresAt = offerExpiresAt;
+                if (!dataToSave.shuffleUnlockAt) dataToSave.shuffleUnlockAt = shuffleUnlockAt;
+                dataToSave.expiresAt = dataToSave.offerExpiresAt;
+                if (dataToSave.redeemed === undefined) dataToSave.redeemed = false;
+                if (dataToSave.selectedReward && !dataToSave.reward) dataToSave.reward = dataToSave.selectedReward;
+                if (dataToSave.reward && !dataToSave.selectedReward) dataToSave.selectedReward = dataToSave.reward;
+                if (dataToSave.reward && !dataToSave.claimedReward) dataToSave.claimedReward = dataToSave.reward;
+
+                if (dataToSave.offerExpiresAt > now) {
+                    window.activeDailyReward = dataToSave.reward || dataToSave.selectedReward;
+                } else {
+                    window.activeDailyReward = null;
+                }
+
+                if (dataToSave.step === 'claimed' && dataToSave.shuffleUnlockAt > now) {
+                    startDailyRewardTimer(dataToSave.offerExpiresAt, dataToSave.shuffleUnlockAt);
+                }
+            }
+
+            try {
+                localStorage.setItem(TAROT_STORAGE_KEY, JSON.stringify(dataToSave));
+            } catch(e) {}
+        }
+
+        // Crypto-grade Fisher-Yates array shuffle (Guarantees non-identical permutation)
+        function cryptoShuffleArray(array) {
+            const originalIds = array.map(a => a.id).join(',');
+            let arr = [...array];
+            let attempts = 0;
+
+            do {
+                for (let i = arr.length - 1; i > 0; i--) {
+                    const randomBuffer = new Uint32Array(1);
+                    if (window.crypto && window.crypto.getRandomValues) {
+                        window.crypto.getRandomValues(randomBuffer);
+                        const j = randomBuffer[0] % (i + 1);
+                        [arr[i], arr[j]] = [arr[j], arr[i]];
+                    } else {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [arr[i], arr[j]] = [arr[j], arr[i]];
+                    }
+                }
+                attempts++;
+            } while (arr.map(a => a.id).join(',') === originalIds && attempts < 10);
+
+            return arr;
+        }
+
+        function renderCardFront(cardWrapper, reward, index) {
+            const front = cardWrapper.querySelector('.tarot-front');
+            if (!front) return;
+            front.style.background = 'radial-gradient(ellipse at 50% 15%, rgba(30, 10, 20, 0.99) 0%, #080306 65%, #020102 100%)';
+            front.style.borderColor = `${reward.accent || '#d4af37'}`;
+            front.style.boxShadow = '0 10px 24px rgba(0, 0, 0, 0.95), inset 0 0 0 1px rgba(212, 175, 55, 0.35)';
+            front.innerHTML = `
+                <div style="display: flex; align-items: center; justify-content: center; width: 100%;">
+                    <div class="tarot-card-top-pill" style="border-color: ${reward.accent || '#d4af37'}88;">
+                        <span style="color: #f5e6c8; white-space: nowrap;">✦ ${reward.roman} &bull; ${reward.name}</span>
+                    </div>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 3px; margin: auto 0; text-align: center; width: 100%;">
+                    <div class="tarot-roman-numeral-front" style="color: ${reward.accent || '#e5c158'}; font-family: 'Playfair Display', Georgia, serif; line-height: 1; text-shadow: 0 3px 12px rgba(0,0,0,0.98);">${reward.roman}</div>
+                    <span class="tarot-card-offer-title font-serif" style="font-weight: 900; color: #ffffff; letter-spacing: 0.04em; text-shadow: 0 2px 8px rgba(0,0,0,0.95);">${reward.offer}</span>
+                    <span class="tarot-card-subtext font-mono" style="color: #ded6c9; opacity: 0.95; line-height: 1.25; max-width: 92%;">${reward.subtext}</span>
+                </div>
+                <div style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 75%; margin-top: auto; opacity: 0.6;">
+                    <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, ${reward.accent || '#d4af37'}, transparent);"></span>
+                    <span style="color: ${reward.accent || '#d4af37'}; font-size: 0.6rem;">✦</span>
+                    <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, ${reward.accent || '#d4af37'}, transparent);"></span>
+                </div>
+            `;
+        }
+
+        // =========================================================================
+        // GOTHIC OCCULT LUXURY UTILITIES
+        // =========================================================================
+        function showLuxuryToast(message, icon = '✦') {
+            let container = document.getElementById('luxuryToastContainer');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'luxuryToastContainer';
+                container.className = 'luxury-toast-container';
+                document.body.appendChild(container);
+            }
+            const toast = document.createElement('div');
+            toast.className = 'luxury-toast-item';
+            toast.innerHTML = `<span style="color: #ff9999; font-size: 0.9rem;">${icon}</span> <span>${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                if (toast && toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, 4000);
+        }
+
+        function executeUniversalCopy(text) {
+            if (!text) return;
+            try {
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                textArea.setAttribute('readonly', '');
+                textArea.style.position = 'fixed';
+                textArea.style.top = '-9999px';
+                textArea.style.left = '-9999px';
+                textArea.style.opacity = '0';
+                document.body.appendChild(textArea);
+
+                if (navigator.userAgent.match(/ipad|ipod|iphone/i)) {
+                    const range = document.createRange();
+                    range.selectNodeContents(textArea);
+                    const sel = window.getSelection();
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+                    textArea.setSelectionRange(0, 999999);
+                } else {
+                    textArea.select();
+                }
+
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+            } catch(e) {}
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).catch(() => {});
+            }
+        }
+        window.executeUniversalCopy = executeUniversalCopy;
+
+        function copyOrderReference() {
+            const badge = document.getElementById('confirmedOrderNumBadge');
+            const btn = document.getElementById('copyOrderIdBtn');
+            const order = window.currentConfirmedOrder;
+            const ordNum = order ? (order.order_number || order.id || '1') : (badge ? badge.textContent.replace(/\D/g, '') : '1');
+            const text = `Order #${ordNum}`;
+
+            executeUniversalCopy(text);
+
+            if (btn) {
+                const origHtml = btn.innerHTML;
+                btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#25d366" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> <span style="color:#25d366;font-weight:700;">COPIED (for WhatsApp) ✓</span>`;
+                btn.style.borderColor = 'rgba(37, 211, 102, 0.6)';
+                btn.style.background = 'rgba(37, 211, 102, 0.14)';
+                setTimeout(() => {
+                    btn.innerHTML = origHtml;
+                    btn.style.borderColor = '';
+                    btn.style.background = '';
+                }, 2400);
+            }
+
+            if (typeof showLuxuryToast === 'function') {
+                showLuxuryToast(`Order #${ordNum} copied (for WhatsApp chat)!`);
+            }
+        }
+        window.copyOrderReference = copyOrderReference;
+
+        function copyOrderProductIdsForWhatsApp(btnId) {
+            const order = window.currentConfirmedOrder;
+            const btn = document.getElementById(btnId || 'copyProductIdBtn');
+            let textToCopy = '';
+            let toastMsg = 'Product ID copied for WhatsApp chat!';
+
+            if (order && Array.isArray(order.items) && order.items.length > 0) {
+                const idList = order.items.map(it => {
+                    const itId = it.id || it.productId || it.product_id || (typeof it.name === 'string' ? it.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') : 'prod');
+                    const itName = it.name || 'Artifact';
+                    const itQty = it.quantity || it.qty || 1;
+                    return `Product ID: #${itId} - ${itName} (Qty: ${itQty})`;
+                });
+                const ordNum = order.order_number || order.id || '';
+                textToCopy = (ordNum ? `[Gothic Nova Order #${ordNum}]\n` : '') + idList.join('\n');
+                toastMsg = order.items.length > 1
+                    ? `${order.items.length} Product IDs copied (for WhatsApp chat)!`
+                    : `Product ID copied (for WhatsApp chat)!`;
+            } else {
+                const curPid = window.currentViewingProductId || 'prod_101';
+                textToCopy = `Product ID: #${curPid}`;
+                toastMsg = `Product ID (#${curPid}) copied (for WhatsApp chat)!`;
+            }
+
+            executeUniversalCopy(textToCopy);
+
+            if (btn) {
+                const origHtml = btn.innerHTML;
+                btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#25d366" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> <span style="color:#25d366;font-weight:700;">COPIED (for WhatsApp) ✓</span>`;
+                btn.style.borderColor = 'rgba(37, 211, 102, 0.6)';
+                btn.style.background = 'rgba(37, 211, 102, 0.14)';
+                setTimeout(() => {
+                    btn.innerHTML = origHtml;
+                    btn.style.borderColor = '';
+                    btn.style.background = '';
+                }, 2400);
+            }
+
+            if (typeof showLuxuryToast === 'function') {
+                showLuxuryToast(toastMsg);
+            }
+        }
+        window.copyOrderProductIdsForWhatsApp = copyOrderProductIdsForWhatsApp;
+
+        function copySingleProductIdForWhatsApp(pid, pName, btnEl) {
+            const text = `Product ID: #${pid} - ${pName || 'Artifact'}`;
+            executeUniversalCopy(text);
+            if (btnEl) {
+                const origHtml = btnEl.innerHTML;
+                btnEl.innerHTML = `<span style="color:#25d366;font-weight:700;">✓ Copied</span>`;
+                btnEl.style.borderColor = 'rgba(37, 211, 102, 0.6)';
+                btnEl.style.background = 'rgba(37, 211, 102, 0.14)';
+                setTimeout(() => {
+                    btnEl.innerHTML = origHtml;
+                    btnEl.style.borderColor = '';
+                    btnEl.style.background = '';
+                }, 2000);
+            }
+            if (typeof showLuxuryToast === 'function') {
+                showLuxuryToast(`Product ID (#${pid}) copied for WhatsApp chat!`);
+            }
+        }
+        window.copySingleProductIdForWhatsApp = copySingleProductIdForWhatsApp;
+
+        function printRoyalReceipt() {
+            window.print();
+        }
+        window.printRoyalReceipt = printRoyalReceipt;
+
+        // Global Keyboard Handler for Modals & Accessibility
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                if (typeof closeCheckout === 'function') closeCheckout();
+                if (typeof closePdpModal === 'function') closePdpModal();
+            }
+        });
+
+        // =========================================================================
+        // MYSTICAL CANVAS PARTICLE & RUNIC VFX ENGINE (OCCULT BLOOD & ASH THEME)
+        // =========================================================================
+        let tarotCanvasAnimId = null;
+        let tarotParticles = [];
+        let tarotShockwaves = [];
+
+        function initTarotCanvas() {
+            const canvas = document.getElementById('dailyTarotCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return;
+
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            resize();
+            window.addEventListener('resize', resize);
+
+            tarotParticles = [];
+            const particleCount = window.innerWidth < 600 ? 25 : 50;
+            for (let i = 0; i < particleCount; i++) {
+                tarotParticles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    size: Math.random() * 2.0 + 0.5,
+                    speedY: -(Math.random() * 0.5 + 0.15),
+                    speedX: (Math.random() - 0.5) * 0.3,
+                    alpha: Math.random() * 0.5 + 0.15,
+                    blood: Math.random() > 0.45,
+                    phase: Math.random() * Math.PI * 2
+                });
+            }
+
+            if (tarotCanvasAnimId) cancelAnimationFrame(tarotCanvasAnimId);
+
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                tarotParticles.forEach(p => {
+                    p.y += p.speedY;
+                    p.x += Math.sin(p.phase) * 0.25 + p.speedX;
+                    p.phase += 0.015;
+
+                    if (p.y < -10) {
+                        p.y = canvas.height + 10;
+                        p.x = Math.random() * canvas.width;
+                    }
+
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fillStyle = p.blood 
+                        ? `rgba(139, 0, 0, ${p.alpha * 0.7})` 
+                        : `rgba(224, 214, 200, ${p.alpha * 0.35})`;
+                    ctx.shadowColor = p.blood ? 'rgba(139, 0, 0, 0.7)' : 'rgba(0, 0, 0, 0.5)';
+                    ctx.shadowBlur = p.blood ? 6 : 2;
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                });
+
+                for (let i = tarotShockwaves.length - 1; i >= 0; i--) {
+                    const sw = tarotShockwaves[i];
+                    sw.radius += sw.speed;
+                    sw.alpha -= 0.03;
+                    sw.speed *= 0.95;
+
+                    if (sw.alpha <= 0) {
+                        tarotShockwaves.splice(i, 1);
+                        continue;
+                    }
+
+                    ctx.beginPath();
+                    ctx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2);
+                    ctx.strokeStyle = `rgba(139, 20, 30, ${sw.alpha * 0.8})`;
+                    ctx.lineWidth = 2;
+                    ctx.shadowColor = 'rgba(139, 0, 0, 0.8)';
+                    ctx.shadowBlur = 10;
+                    ctx.stroke();
+                    ctx.shadowBlur = 0;
+                }
+
+                tarotCanvasAnimId = requestAnimationFrame(draw);
+            }
+            draw();
+        }
+
+        function triggerTarotShockwave() {
+            const canvas = document.getElementById('dailyTarotCanvas');
+            if (!canvas) return;
+            tarotShockwaves.push({
+                x: canvas.width / 2,
+                y: canvas.height / 2,
+                radius: 10,
+                speed: 14,
+                alpha: 0.9
+            });
+        }
+
+        function triggerTarotCardBurst(cardEl) {
+            const canvas = document.getElementById('dailyTarotCanvas');
+            if (!canvas || !cardEl) return;
+            const rect = cardEl.getBoundingClientRect();
+            const cx = rect.left + rect.width / 2;
+            const cy = rect.top + rect.height / 2;
+
+            tarotShockwaves.push({
+                x: cx,
+                y: cy,
+                radius: 5,
+                speed: 10,
+                alpha: 0.85
+            });
+
+            for (let i = 0; i < 30; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const spd = Math.random() * 4 + 1.5;
+                tarotParticles.push({
+                    x: cx,
+                    y: cy,
+                    size: Math.random() * 2.5 + 1.0,
+                    speedX: Math.cos(angle) * spd,
+                    speedY: Math.sin(angle) * spd,
+                    alpha: 0.9,
+                    blood: true,
+                    phase: 0
+                });
+            }
+        }
+
+        function attachCardTiltListeners() {
+            const wrappers = document.querySelectorAll('.tarot-card-wrapper');
+            wrappers.forEach((w) => {
+                w.onmouseenter = null;
+                w.onmousemove = (e) => {
+                    if (!tarotState.isReadyToPick) return;
+                    const rect = w.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    const rotX = ((y / rect.height) - 0.5) * -16;
+                    const rotY = ((x / rect.width) - 0.5) * 16;
+                    w.style.transform = `perspective(900px) rotateX(${rotX.toFixed(1)}deg) rotateY(${rotY.toFixed(1)}deg) scale3d(1.04, 1.04, 1.04)`;
+                };
+                w.onmouseleave = () => {
+                    if (tarotState.isReadyToPick) {
+                        w.style.transform = '';
+                    }
+                };
+            });
+        }
+
+        // Live Immutable 24-Hour Reward Validity & 48-Hour Shuffle Cooldown Countdown Timers
+        function startDailyRewardTimer(targetOfferExpiresAt, targetShuffleUnlockAt) {
+            if (countdownTimerInterval) {
+                clearInterval(countdownTimerInterval);
+                countdownTimerInterval = null;
+            }
+
+            const now = Date.now();
+            const offerExpiresAt = (Number(targetOfferExpiresAt) > now)
+                ? Number(targetOfferExpiresAt)
+                : (now + TWENTY_FOUR_HOURS);
+            const shuffleUnlockAt = (Number(targetShuffleUnlockAt) > now)
+                ? Number(targetShuffleUnlockAt)
+                : (offerExpiresAt + TWENTY_FOUR_HOURS);
+
+            function updateTimer() {
+                const currentNow = Date.now();
+                const remainingOffer = offerExpiresAt - currentNow;
+                const remainingShuffle = shuffleUnlockAt - currentNow;
+
+                const pill = document.getElementById('floatingRewardPill');
+                const badgeEl = document.getElementById('floatingPillBadge');
+                const validityTextEl = document.getElementById('floatingPillValidityText');
+                const shuffleTimerEl = document.getElementById('floatingPillShuffleTimer');
+                const shuffleTextEl = document.getElementById('floatingPillShuffleText');
+
+                // 1. When the full 48-hour shuffle cooldown elapses: purge and allow new shuffle
+                if (remainingShuffle <= 0) {
+                    if (countdownTimerInterval) {
+                        clearInterval(countdownTimerInterval);
+                        countdownTimerInterval = null;
+                    }
+                    try {
+                        localStorage.removeItem(TAROT_STORAGE_KEY);
+                    } catch(e) {}
+                    window.activeDailyReward = null;
+
+                    if (pill) {
+                        pill.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                        pill.style.opacity = '0';
+                        pill.style.transform = 'translateY(10px)';
+                        setTimeout(() => {
+                            pill.style.display = 'none';
+                            pill.style.opacity = '1';
+                            pill.style.transform = '';
+                        }, 600);
+                    }
+
+                    if (typeof updateInPageContextualPolicy === 'function') updateInPageContextualPolicy(null);
+                    if (typeof updateCheckoutTotals === 'function') updateCheckoutTotals();
+                    return;
+                }
+
+                // 2. Format 48-Hour Shuffle Cooldown (always ticks down continuously)
+                const sHrs = Math.floor(remainingShuffle / (1000 * 60 * 60));
+                const sMins = Math.floor((remainingShuffle % (1000 * 60 * 60)) / (1000 * 60));
+                const sSecs = Math.floor((remainingShuffle % (1000 * 60)) / 1000);
+                const formattedShuffleStr = `${sHrs}h ${sMins < 10 ? '0' : ''}${sMins}m ${sSecs < 10 ? '0' : ''}${sSecs}s`;
+
+                if (shuffleTextEl) {
+                    shuffleTextEl.innerHTML = `✦ Shuffle again in: <strong id="floatingPillShuffleTimer" style="color: #e5c158; font-variant-numeric: tabular-nums;">${formattedShuffleStr}</strong>`;
+                } else if (shuffleTimerEl) {
+                    shuffleTimerEl.textContent = formattedShuffleStr;
+                }
+
+                // 3. Format 24-Hour Reward Validity
+                if (remainingOffer <= 0) {
+                    if (window.activeDailyReward) {
+                        window.activeDailyReward = null;
+                        if (typeof updateInPageContextualPolicy === 'function') updateInPageContextualPolicy(null);
+                        if (typeof updateCheckoutTotals === 'function') updateCheckoutTotals();
+                    }
+                    if (badgeEl) {
+                        badgeEl.textContent = 'EXPIRED';
+                        badgeEl.style.color = '#ff9999';
+                        badgeEl.style.background = 'rgba(120, 20, 20, 0.35)';
+                        badgeEl.style.borderColor = 'rgba(200, 50, 50, 0.5)';
+                    }
+                    if (validityTextEl) {
+                        validityTextEl.innerHTML = `<span style="color: #f87171; font-weight: 700; letter-spacing: 0.02em;">✦ your reward duration ended</span>`;
+                    }
+                } else {
+                    const rHrs = Math.floor(remainingOffer / (1000 * 60 * 60));
+                    const rMins = Math.floor((remainingOffer % (1000 * 60 * 60)) / (1000 * 60));
+                    const rSecs = Math.floor((remainingOffer % (1000 * 60)) / 1000);
+                    const formattedOfferStr = `${rHrs}h ${rMins < 10 ? '0' : ''}${rMins}m ${rSecs < 10 ? '0' : ''}${rSecs}s`;
+
+                    if (badgeEl) {
+                        badgeEl.textContent = 'ACTIVE';
+                        badgeEl.style.color = '#ffe8be';
+                        badgeEl.style.background = 'rgba(139, 0, 0, 0.25)';
+                        badgeEl.style.borderColor = 'rgba(139, 20, 30, 0.6)';
+                    }
+                    if (validityTextEl) {
+                        validityTextEl.innerHTML = `✦ Reward valid: <strong id="floatingPillTimer" style="color: #ffe8be; font-variant-numeric: tabular-nums;">${formattedOfferStr}</strong>`;
+                    }
+                }
+
+                if (pill && pill.style.display === 'none') {
+                    pill.style.display = 'flex';
+                }
+            }
+
+            updateTimer();
+            countdownTimerInterval = setInterval(updateTimer, 1000);
+
+            if (!window._tarotTimerSyncAttached) {
+                window._tarotTimerSyncAttached = true;
+                const syncOnWake = () => {
+                    const stored = getStoredDailyReward();
+                    if (stored && stored.isCooldownActive && stored.shuffleUnlockAt) {
+                        startDailyRewardTimer(stored.offerExpiresAt, stored.shuffleUnlockAt);
+                    }
+                };
+                window.addEventListener('focus', syncOnWake);
+                document.addEventListener('visibilitychange', () => {
+                    if (!document.hidden) syncOnWake();
+                });
+                window.addEventListener('pageshow', syncOnWake);
+            }
+        }
+
+        function initTarotRitual(force = false) {
+            const stored = getStoredDailyReward();
+            const overlay = document.getElementById('dailyFortuneOverlay');
+            const stage = document.getElementById('tarotCardsStage');
+            const wrappers = document.querySelectorAll('.tarot-card-wrapper');
+            const shuffleBox = document.getElementById('tarotShuffleActionBox');
+            const claimBox = document.getElementById('tarotClaimBox');
+            const impactWrap = document.getElementById('tarotChooseImpactWrap');
+            const stageTitle = document.getElementById('tarotStageTitle');
+            const stageSubtext = document.getElementById('tarotStageSubtext');
+
+            // 1. If stored reward is already CLAIMED and within 48-hour cooldown: overlay stays closed
+            if (stored && stored.step === 'claimed' && stored.isCooldownActive && !force) {
+                document.documentElement.classList.remove('tarot-pending');
+                if (overlay) {
+                    overlay.style.display = 'none';
+                    overlay.classList.remove('active', 'closing', 'card-focused');
+                }
+                document.body.style.overflow = '';
+                if (stored.reward) {
+                    window.activeDailyReward = stored.isOfferActive ? stored.reward : null;
+                    updateFloatingPill(stored.reward, stored.isOfferActive);
+                    updateInPageContextualPolicy(window.activeDailyReward);
+                    startDailyRewardTimer(stored.offerExpiresAt, stored.shuffleUnlockAt);
+                } else {
+                    window.activeDailyReward = null;
+                    const pill = document.getElementById('floatingRewardPill');
+                    if (pill) pill.style.display = 'none';
+                    updateInPageContextualPolicy(null);
+                }
+                return;
+            }
+
+            // Otherwise, Tarot Ritual Overlay must be OPEN
+            document.documentElement.classList.add('tarot-pending');
+            if (overlay) {
+                overlay.style.display = 'flex';
+                overlay.classList.remove('closing');
+                overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+                initTarotCanvas();
+            }
+            if (impactWrap) {
+                impactWrap.classList.remove('active');
+                impactWrap.style.display = 'none';
+            }
+
+            // 2. If stored state is REVEALED: restore card revealed, claim box open, title "YOUR REWARD IS READY"
+            if (stored && stored.step === 'revealed' && (stored.selectedReward || stored.reward)) {
+                const reward = stored.selectedReward || stored.reward;
+                const chosenIdx = (stored.cardIndex !== null && stored.cardIndex !== undefined) ? stored.cardIndex : 0;
+
+                if (Array.isArray(stored.shuffledRewards) && stored.shuffledRewards.length === 4) {
+                    activeCardRewards = [...stored.shuffledRewards];
+                } else {
+                    activeCardRewards = [...INITIAL_REWARDS_CONFIG];
+                    activeCardRewards[chosenIdx] = reward;
+                }
+
+                tarotState.isShuffling = false;
+                tarotState.isReadyToPick = false;
+                tarotState.hasShuffled = true;
+                tarotState.selectedReward = reward;
+                window.activeDailyReward = reward;
+
+                if (overlay) overlay.classList.add('card-focused');
+                if (stage) stage.className = 'tarot-cards-stage has-picked';
+
+                if (stageTitle) {
+                    stageTitle.textContent = 'YOUR REWARD IS READY';
+                    stageTitle.classList.remove('shuffling-text');
+                }
+                if (stageSubtext) {
+                    stageSubtext.textContent = '— ✦ Offer active for 24 hours • Shuffle cooldown 48 hours ✦ —';
+                }
+
+                if (shuffleBox) {
+                    shuffleBox.classList.add('hidden');
+                    shuffleBox.style.display = 'none';
+                }
+
+                wrappers.forEach((w, idx) => {
+                    w.setAttribute('data-card-index', idx);
+                    w.onclick = null;
+                    w.style.transform = '';
+                    renderCardFront(w, activeCardRewards[idx], idx);
+
+                    if (idx === chosenIdx) {
+                        w.classList.add('chosen-one', 'flipped', 'flash-active');
+                        w.classList.remove('face-down', 'ready-to-pick', 'dimmed');
+                    } else {
+                        w.classList.add('dimmed');
+                        w.classList.remove('chosen-one', 'ready-to-pick', 'flash-active', 'flipped', 'face-down');
+                    }
+                });
+
+                if (claimBox) {
+                    const titleEl = document.getElementById('tarotClaimTitle');
+                    const descEl = document.getElementById('tarotClaimDesc');
+                    if (titleEl) titleEl.textContent = reward.title;
+                    if (descEl) descEl.textContent = reward.desc;
+                    claimBox.style.display = 'flex';
+                }
+
+                return;
+            }
+
+            // 3. If stored state is READY_TO_PICK: restore cards face-down in shuffled state, ready to pick
+            if (stored && stored.step === 'ready_to_pick') {
+                if (Array.isArray(stored.shuffledRewards) && stored.shuffledRewards.length === 4) {
+                    activeCardRewards = [...stored.shuffledRewards];
+                } else {
+                    activeCardRewards = cryptoShuffleArray(INITIAL_REWARDS_CONFIG);
+                }
+
+                tarotState.isShuffling = false;
+                tarotState.isReadyToPick = true;
+                tarotState.hasShuffled = true;
+                tarotState.selectedReward = null;
+                window.activeDailyReward = null;
+
+                if (overlay) overlay.classList.remove('card-focused');
+                if (stage) stage.className = 'tarot-cards-stage';
+
+                if (stageTitle) {
+                    stageTitle.textContent = 'CHOOSE YOUR CARD';
+                    stageTitle.classList.remove('shuffling-text');
+                }
+                if (stageSubtext) {
+                    stageSubtext.textContent = '— ✦ Pick 1 card to reveal your shopping benefit for the next 24 hours ✦ —';
+                }
+
+                if (shuffleBox) {
+                    shuffleBox.classList.add('hidden');
+                    shuffleBox.style.display = 'none';
+                }
+                if (claimBox) claimBox.style.display = 'none';
+
+                wrappers.forEach((w, idx) => {
+                    w.setAttribute('data-card-index', idx);
+                    w.onclick = () => handleTarotCardSelect(idx);
+                    w.classList.remove('flipped', 'chosen-one', 'flash-active', 'dimmed');
+                    w.classList.add('face-down', 'ready-to-pick');
+                    w.style.transform = '';
+                    renderCardFront(w, activeCardRewards[idx], idx);
+                });
+
+                attachCardTiltListeners();
+                return;
+            }
+
+            // 4. Default: INITIAL step - fresh visit, cards face-up, shuffle button visible
+            tarotState.isShuffling = false;
+            tarotState.isReadyToPick = false;
+            tarotState.hasShuffled = false;
+            tarotState.selectedReward = null;
+            window.activeDailyReward = null;
+
+            if (overlay) overlay.classList.remove('card-focused');
+            if (stage) stage.className = 'tarot-cards-stage';
+
+            if (claimBox) claimBox.style.display = 'none';
+            if (shuffleBox) {
+                shuffleBox.classList.remove('hidden');
+                shuffleBox.style.display = 'flex';
+            }
+
+            activeCardRewards = [...INITIAL_REWARDS_CONFIG];
+            wrappers.forEach((w, idx) => {
+                renderCardFront(w, INITIAL_REWARDS_CONFIG[idx], idx);
+                w.classList.remove('face-down', 'chosen-one', 'flash-active', 'dimmed', 'ready-to-pick');
+                w.classList.add('flipped');
+                w.style.transform = '';
+                w.onclick = null;
+            });
+
+            if (stageTitle) {
+                stageTitle.textContent = 'UNLOCK YOUR SHOPPING BENEFIT';
+                stageTitle.classList.remove('shuffling-text');
+            }
+            if (stageSubtext) {
+                stageSubtext.textContent = '— ✦ Preview rewards below • Click shuffle to draw today\'s offer ✦ —';
+            }
+
+            attachCardTiltListeners();
+        }
+
+        window.openTarotRitual = function(force = false) {
+            const stored = getStoredDailyReward();
+            if (stored && stored.step === 'claimed' && stored.isCooldownActive && !force) {
+                if (typeof showLuxuryToast === 'function') {
+                    if (stored.isOfferActive && stored.reward) {
+                        const rem = stored.offerExpiresAt - Date.now();
+                        const hrs = Math.max(0, Math.floor(rem / (1000 * 60 * 60)));
+                        const mins = Math.max(0, Math.floor((rem % (1000 * 60 * 60)) / (1000 * 60)));
+                        showLuxuryToast(`✦ ACTIVE DESTINY: ${stored.reward.title} (${hrs}h ${mins}m left)`);
+                    } else {
+                        const rem = stored.shuffleUnlockAt - Date.now();
+                        const hrs = Math.max(0, Math.floor(rem / (1000 * 60 * 60)));
+                        const mins = Math.max(0, Math.floor((rem % (1000 * 60 * 60)) / (1000 * 60)));
+                        showLuxuryToast(`✦ OFFER EXPIRED • NEXT SHUFFLE UNLOCKS IN ${hrs}h ${mins}m`);
+                    }
+                }
+                return;
+            }
+            initTarotRitual(force);
+        };
+
+        // USER CLICKS THE "SHUFFLE CARDS" BUTTON - EXACT 5.0 SECOND ULTRA-SMOOTH HIGH-VELOCITY SHUFFLE
+        async function triggerMajesticShuffle() {
+            if (tarotState.isShuffling) return;
+
+            const stored = getStoredDailyReward();
+            if (stored && stored.step === 'claimed' && stored.isCooldownActive) {
+                const rem = stored.shuffleUnlockAt - Date.now();
+                const hrs = Math.max(0, Math.floor(rem / (1000 * 60 * 60)));
+                const mins = Math.max(0, Math.floor((rem % (1000 * 60 * 60)) / (1000 * 60)));
+                if (typeof showLuxuryToast === 'function') {
+                    showLuxuryToast(`✦ SHUFFLE LOCKED • NEXT SHUFFLE UNLOCKS IN ${hrs}h ${mins}m`);
+                }
+                return;
+            }
+
+            tarotState.isShuffling = true;
+            tarotState.isReadyToPick = false;
+
+            const shuffleBox = document.getElementById('tarotShuffleActionBox');
+            const stage = document.getElementById('tarotCardsStage');
+            const wrappers = Array.from(document.querySelectorAll('.tarot-card-wrapper'));
+            const impactWrap = document.getElementById('tarotChooseImpactWrap');
+            const stageTitle = document.getElementById('tarotStageTitle');
+            const stageSubtext = document.getElementById('tarotStageSubtext');
+
+            if (shuffleBox) {
+                shuffleBox.classList.add('hidden');
+                setTimeout(() => { shuffleBox.style.display = 'none'; }, 200);
+            }
+
+            // Step 1: Immediately flip all cards to face-down (turn their side, hiding offers beneath them)
+            wrappers.forEach(w => {
+                w.classList.remove('flipped', 'ready-to-pick', 'chosen-one', 'flash-active', 'dimmed');
+                w.classList.add('face-down');
+                w.style.transform = '';
+            });
+
+            // Update title to "SHUFFLING REWARDS..." with pulsing mystical glow
+            if (stageTitle) {
+                stageTitle.textContent = 'SHUFFLING REWARDS...';
+                stageTitle.classList.add('shuffling-text');
+            }
+            if (stageSubtext) {
+                stageSubtext.textContent = '— ✦ Mixing destiny in progress ✦ —';
+            }
+
+            // Dedicated initial flip completion delay (200ms)
+            await new Promise(resolve => setTimeout(resolve, 200));
+
+            // EXACT 5.0 SECOND TOTAL SHUFFLE (5000ms from button click to ready-to-pick)
+            const TARGET_TOTAL_MS = 5000;
+            const startTime = Date.now();
+            const PASS_DURATION_MS = 460;
+            let passCount = 0;
+            let lastPattern = 0;
+
+            while ((Date.now() - startTime + PASS_DURATION_MS) <= (TARGET_TOTAL_MS - 100) && passCount < 10) {
+                passCount++;
+
+                let patternIdx;
+                do {
+                    patternIdx = Math.floor(Math.random() * 5) + 1;
+                } while (patternIdx === lastPattern);
+                lastPattern = patternIdx;
+
+                const passDurSec = (PASS_DURATION_MS / 1000).toFixed(2);
+
+                if (stage) {
+                    stage.style.setProperty('--shuffle-dur', `${passDurSec}s`);
+                    stage.className = `tarot-cards-stage shuffling-active shuffle-pattern-${patternIdx}`;
+                }
+
+                if ((passCount === 3 || passCount === 6 || passCount === 9) && typeof triggerTarotShockwave === 'function') {
+                    triggerTarotShockwave();
+                }
+
+                await new Promise(resolve => setTimeout(resolve, PASS_DURATION_MS));
+            }
+
+            // Conclude shuffle animation
+            if (stage) {
+                stage.className = 'tarot-cards-stage';
+            }
+
+            if (typeof triggerTarotShockwave === 'function') {
+                triggerTarotShockwave();
+            }
+
+            activeCardRewards = cryptoShuffleArray(INITIAL_REWARDS_CONFIG);
+
+            saveDailyRewardState('ready_to_pick', {
+                shuffledRewards: activeCardRewards
+            });
+
+            const finalWrappers = Array.from(stage.querySelectorAll('.tarot-card-wrapper'));
+            finalWrappers.forEach((w, newSlotIdx) => {
+                w.setAttribute('data-card-index', newSlotIdx);
+                w.onclick = () => handleTarotCardSelect(newSlotIdx);
+                w.classList.remove('flipped', 'chosen-one', 'dimmed');
+                w.classList.add('face-down', 'ready-to-pick');
+                w.style.transform = '';
+                renderCardFront(w, activeCardRewards[newSlotIdx], newSlotIdx);
+            });
+
+            attachCardTiltListeners();
+
+            if (stageTitle) {
+                stageTitle.textContent = 'CHOOSE YOUR CARD';
+                stageTitle.classList.remove('shuffling-text');
+            }
+            if (stageSubtext) {
+                stageSubtext.textContent = '— ✦ Pick 1 card to reveal your shopping benefit for the next 24 hours ✦ —';
+            }
+
+            if (impactWrap) {
+                impactWrap.style.display = 'block';
+                impactWrap.classList.add('active');
+            }
+
+            tarotState.isShuffling = false;
+            tarotState.hasShuffled = true;
+            tarotState.isReadyToPick = true;
+
+            setTimeout(() => {
+                if (impactWrap) {
+                    impactWrap.classList.remove('active');
+                    impactWrap.style.display = 'none';
+                }
+            }, 1200);
+        }
+
+        // When user selects a card: Reveal only the selected card by flipping it face-up
+        function handleTarotCardSelect(cardIndex) {
+            if (!tarotState.isReadyToPick || tarotState.isShuffling) return;
+            tarotState.isReadyToPick = false;
+
+            const overlay = document.getElementById('dailyFortuneOverlay');
+            if (overlay) overlay.classList.add('card-focused');
+
+            const stage = document.getElementById('tarotCardsStage');
+            if (stage) {
+                stage.className = 'tarot-cards-stage has-picked';
+            }
+
+            const stageTitle = document.getElementById('tarotStageTitle');
+            const stageSubtext = document.getElementById('tarotStageSubtext');
+            if (stageTitle) {
+                stageTitle.textContent = 'YOUR REWARD IS READY';
+                stageTitle.classList.remove('shuffling-text');
+            }
+            if (stageSubtext) {
+                stageSubtext.textContent = '— ✦ Offer active for 24 hours • Shuffle cooldown 48 hours ✦ —';
+            }
+
+            const reward = activeCardRewards[cardIndex] || activeCardRewards[0];
+            tarotState.selectedReward = reward;
+
+            const wrappers = document.querySelectorAll('.tarot-card-wrapper');
+            const chosenWrapper = wrappers[cardIndex];
+
+            if (chosenWrapper) {
+                chosenWrapper.classList.add('flash-active', 'chosen-one', 'flipped');
+                chosenWrapper.classList.remove('face-down', 'ready-to-pick');
+                chosenWrapper.style.transform = '';
+                triggerTarotCardBurst(chosenWrapper);
+            }
+
+            wrappers.forEach((w, idx) => {
+                w.classList.remove('ready-to-pick');
+                w.style.transform = '';
+                if (idx !== cardIndex) {
+                    w.classList.add('dimmed');
+                }
+            });
+
+            saveDailyRewardState('revealed', {
+                selectedReward: reward,
+                reward: reward,
+                claimedReward: reward,
+                cardIndex: cardIndex,
+                shuffledRewards: activeCardRewards
+            });
+
+            setTimeout(() => {
+                const claimBox = document.getElementById('tarotClaimBox');
+                const titleEl = document.getElementById('tarotClaimTitle');
+                const descEl = document.getElementById('tarotClaimDesc');
+
+                if (titleEl) titleEl.textContent = reward.title;
+                if (descEl) descEl.textContent = reward.desc;
+                if (claimBox) {
+                    claimBox.style.display = 'flex';
+                    try {
+                        claimBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    } catch(e) {}
+                }
+            }, 300);
+        }
+
+        // Close Overlay & Enter Storefront
+        function closeTarotOverlay(isDirectSkip = false) {
+            const stored = getStoredDailyReward();
+            const reward = tarotState.selectedReward || stored?.selectedReward || stored?.reward || window.activeDailyReward;
+
+            if (!reward && !isDirectSkip) {
+                if (typeof showLuxuryAlert === 'function') {
+                    showLuxuryAlert("Thou must choose thy card of destiny to enter the realm.", "RITUAL REQUIRED", "warning");
+                }
+                return;
+            }
+
+            if (reward) {
+                const chosenIdx = (stored && stored.cardIndex !== undefined && stored.cardIndex !== null)
+                    ? stored.cardIndex
+                    : (tarotState.selectedReward ? activeCardRewards.findIndex(r => r.id === tarotState.selectedReward.id) : 0);
+
+                saveDailyRewardState('claimed', {
+                    selectedReward: reward,
+                    reward: reward,
+                    claimedReward: reward,
+                    cardIndex: chosenIdx >= 0 ? chosenIdx : 0,
+                    shuffledRewards: activeCardRewards
+                });
+            }
+
+            document.documentElement.classList.remove('tarot-pending');
+            const overlay = document.getElementById('dailyFortuneOverlay');
+            if (overlay) {
+                overlay.classList.add('closing');
+                setTimeout(() => {
+                    overlay.classList.remove('active', 'closing', 'card-focused');
+                    overlay.style.display = 'none';
+                    document.body.style.overflow = '';
+                }, 450);
+            }
+
+            if (reward) {
+                const updatedStored = getStoredDailyReward();
+                const isOfferActive = updatedStored ? updatedStored.isOfferActive : true;
+                updateFloatingPill(reward, isOfferActive);
+                updateInPageContextualPolicy(isOfferActive ? reward : null);
+                if (updatedStored && updatedStored.shuffleUnlockAt) {
+                    startDailyRewardTimer(updatedStored.offerExpiresAt, updatedStored.shuffleUnlockAt);
+                }
+                if (typeof updateCheckoutTotals === 'function') updateCheckoutTotals();
+            }
+        }
+
+        // Update Floating Pill on Storefront (Clean, Simple Offer Name & Dual Countdowns)
+        function updateFloatingPill(reward, isOfferActive = true) {
+            const pill = document.getElementById('floatingRewardPill');
+            const textEl = document.getElementById('floatingPillText');
+            const badgeEl = document.getElementById('floatingPillBadge');
+            if (!pill || !reward) return;
+
+            if (textEl) {
+                textEl.textContent = reward.offer || reward.title;
+            }
+            if (badgeEl) {
+                if (isOfferActive) {
+                    badgeEl.textContent = 'ACTIVE';
+                    badgeEl.style.color = '#ffe8be';
+                    badgeEl.style.background = 'rgba(139, 0, 0, 0.25)';
+                    badgeEl.style.borderColor = 'rgba(139, 20, 30, 0.6)';
+                } else {
+                    badgeEl.textContent = 'EXPIRED';
+                    badgeEl.style.color = '#ff9999';
+                    badgeEl.style.background = 'rgba(120, 20, 20, 0.35)';
+                    badgeEl.style.borderColor = 'rgba(200, 50, 50, 0.5)';
+                }
+            }
+            pill.style.display = 'flex';
+        }
+
+        function updateInPageContextualPolicy(reward) {
+            const depositDoms = document.querySelectorAll('.checkout-advance-badge, .deposit-policy-badge, #checkoutStep1Deposit, [data-deposit-notice]');
+            const payMethod = (typeof selectedPaymentMethod !== 'undefined') ? selectedPaymentMethod : (window.selectedPaymentMethod || 'cod');
+            depositDoms.forEach(el => {
+                if (el.id === 'checkoutStep1Deposit' && payMethod === 'cod') {
+                    el.innerHTML = 'Rs. 700';
+                }
+            });
+            const depSub = document.getElementById('checkoutDepositSub');
+            if (depSub && payMethod === 'cod') {
+                const isFreeShipping = reward && reward.type === 'free_shipping';
+                depSub.textContent = isFreeShipping 
+                    ? '(Packaging Fee Rs. 400 + Order Dispatch Fee Rs. 300)' 
+                    : '(Packaging & Processing Fee Rs. 400 + Delivery Fee Rs. 300)';
+            }
+        }
+
+        // Immediate synchronous invocation on DOM mount
+        initTarotRitual(false);
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => initTarotRitual(false));
+        }
+    </script>
     
     <script>
         // Synchronous Instant Initialization for 0ms Load
@@ -4187,1397 +5708,6 @@
     }
     </style>
 
-
-    <!-- ==========================================================================
-         GOTHIC NOVA: OCCULT DAILY TAROT OVERLAY & GAMIFICATION ENGINE
-         ========================================================================== -->
-    <!-- ==========================================================================
-         GOTHIC NOVA: OCCULT TAROT RITUAL & DESTINY ENGINE (24-HOUR OFFER / 48-HOUR COOLDOWN)
-         ========================================================================== -->
-    <div class="daily-tarot-overlay" id="dailyFortuneOverlay">
-        <!-- Ambient Mystical Particle Canvas -->
-        <canvas class="daily-tarot-canvas" id="dailyTarotCanvas"></canvas>
-
-        <div class="tarot-stage-container">
-            <!-- Header (Occult Eyebrow, Large Authority Title, No Reset Button) -->
-            <div class="tarot-header" style="text-align: center;">
-                <div class="tarot-eyebrow font-mono" style="color: #e5c158; text-transform: uppercase; font-weight: 800; letter-spacing: 0.22em;">✦ DAILY SHOPPING REWARD ✦</div>
-                <h2 class="tarot-title" id="tarotStageTitle">UNLOCK YOUR SHOPPING BENEFIT</h2>
-                <div class="tarot-subtext font-mono" id="tarotStageSubtext">— ✦ Preview rewards below • Click shuffle to draw today's offer ✦ —</div>
-            </div>
-
-            <!-- Dramatic CHOOSE ! Impact Banner -->
-            <div id="tarotChooseImpactWrap" class="tarot-choose-impact-wrap">
-                <span class="tarot-choose-impact">CHOOSE !</span>
-            </div>
-
-            <!-- 4-Card Shuffling Stage (Initial Rewards Face-Up Preview) -->
-            <div class="tarot-cards-stage" id="tarotCardsStage">
-                
-                <!-- CARD 1: ORDER UPGRADE (I • PRIMUS) -->
-                <div class="tarot-card-wrapper flipped" data-card-index="0" onclick="handleTarotCardSelect(0)">
-                    <div class="tarot-flash"></div>
-                    <div class="tarot-card-inner">
-                        <!-- Front -->
-                        <div class="tarot-face tarot-front" style="background: radial-gradient(ellipse at 50% 15%, rgba(30, 10, 20, 0.99) 0%, #080306 65%, #020102 100%); border-color: rgba(197, 48, 48, 0.85); box-shadow: 0 16px 40px rgba(0, 0, 0, 0.98), inset 0 0 0 1.5px rgba(212, 175, 55, 0.4), inset 0 0 32px rgba(139, 0, 0, 0.5);">
-                            <div style="display: flex; align-items: center; justify-content: center; width: 100%;">
-                                <div class="tarot-card-top-pill" style="border-color: rgba(197, 48, 48, 0.55);">
-                                    <span style="color: #f5e6c8; white-space: nowrap;">✦ I &bull; PRIMUS</span>
-                                </div>
-                            </div>
-                            <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; margin: auto 0; text-align: center; width: 100%;">
-                                <div class="tarot-roman-numeral-front" style="color: #c53030; font-family: 'Playfair Display', Georgia, serif; line-height: 1; text-shadow: 0 3px 12px rgba(0,0,0,0.98);">I</div>
-                                <span class="tarot-card-offer-title font-serif" style="font-weight: 900; color: #ffffff; letter-spacing: 0.04em; text-shadow: 0 2px 8px rgba(0,0,0,0.95);">ORDER UPGRADE</span>
-                                <span class="tarot-card-subtext font-mono" style="color: #ded6c9; opacity: 0.95; line-height: 1.35; max-width: 92%;">your order upgraded</span>
-                            </div>
-                            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 75%; margin-top: auto; opacity: 0.6;">
-                                <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #c53030, transparent);"></span>
-                                <span style="color: #c53030; font-size: 0.6rem;">✦</span>
-                                <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #c53030, transparent);"></span>
-                            </div>
-                        </div>
-                        <!-- Back -->
-                        <div class="tarot-face tarot-back">
-                            <!-- Pure identical majestic crowned skull artwork -->
-                        </div>
-                    </div>
-                </div>
-
-                <!-- CARD 2: FREE DELIVERY (II • SECUNDUS) -->
-                <div class="tarot-card-wrapper flipped" data-card-index="1" onclick="handleTarotCardSelect(1)">
-                    <div class="tarot-flash"></div>
-                    <div class="tarot-card-inner">
-                        <!-- Front -->
-                        <div class="tarot-face tarot-front" style="background: radial-gradient(ellipse at 50% 15%, rgba(30, 10, 20, 0.99) 0%, #080306 65%, #020102 100%); border-color: rgba(212, 175, 55, 0.85); box-shadow: 0 16px 40px rgba(0, 0, 0, 0.98), inset 0 0 0 1.5px rgba(212, 175, 55, 0.4), inset 0 0 32px rgba(139, 0, 0, 0.5);">
-                            <div style="display: flex; align-items: center; justify-content: center; width: 100%;">
-                                <div class="tarot-card-top-pill" style="border-color: rgba(212, 175, 55, 0.55);">
-                                    <span style="color: #f5e6c8; white-space: nowrap;">✦ II &bull; SECUNDUS</span>
-                                </div>
-                            </div>
-                            <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; margin: auto 0; text-align: center; width: 100%;">
-                                <div class="tarot-roman-numeral-front" style="color: #d4af37; font-family: 'Playfair Display', Georgia, serif; line-height: 1; text-shadow: 0 3px 12px rgba(0,0,0,0.98);">II</div>
-                                <span class="tarot-card-offer-title font-serif" style="font-weight: 900; color: #ffffff; letter-spacing: 0.04em; text-shadow: 0 2px 8px rgba(0,0,0,0.95);">FREE DELIVERY</span>
-                                <span class="tarot-card-subtext font-mono" style="color: #ded6c9; opacity: 0.95; line-height: 1.35; max-width: 92%;">Free Shipping Nationwide</span>
-                            </div>
-                            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 75%; margin-top: auto; opacity: 0.6;">
-                                <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #d4af37, transparent);"></span>
-                                <span style="color: #d4af37; font-size: 0.6rem;">✦</span>
-                                <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #d4af37, transparent);"></span>
-                            </div>
-                        </div>
-                        <!-- Back -->
-                        <div class="tarot-face tarot-back">
-                            <!-- Pure identical majestic crowned skull artwork -->
-                        </div>
-                    </div>
-                </div>
-
-                <!-- CARD 3: FREE GOTHIC GIFT (III • TERTIUS) -->
-                <div class="tarot-card-wrapper flipped" data-card-index="2" onclick="handleTarotCardSelect(2)">
-                    <div class="tarot-flash"></div>
-                    <div class="tarot-card-inner">
-                        <!-- Front -->
-                        <div class="tarot-face tarot-front" style="background: radial-gradient(ellipse at 50% 15%, rgba(30, 10, 20, 0.99) 0%, #080306 65%, #020102 100%); border-color: rgba(225, 29, 72, 0.85); box-shadow: 0 16px 40px rgba(0, 0, 0, 0.98), inset 0 0 0 1.5px rgba(212, 175, 55, 0.4), inset 0 0 32px rgba(139, 0, 0, 0.5);">
-                            <div style="display: flex; align-items: center; justify-content: center; width: 100%;">
-                                <div class="tarot-card-top-pill" style="border-color: rgba(225, 29, 72, 0.55);">
-                                    <span style="color: #f5e6c8; white-space: nowrap;">✦ III &bull; TERTIUS</span>
-                                </div>
-                            </div>
-                            <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; margin: auto 0; text-align: center; width: 100%;">
-                                <div class="tarot-roman-numeral-front" style="color: #e11d48; font-family: 'Playfair Display', Georgia, serif; line-height: 1; text-shadow: 0 3px 12px rgba(0,0,0,0.98);">III</div>
-                                <span class="tarot-card-offer-title font-serif" style="font-weight: 900; color: #ffffff; letter-spacing: 0.04em; text-shadow: 0 2px 8px rgba(0,0,0,0.95);">FREE GOTHIC GIFT</span>
-                                <span class="tarot-card-subtext font-mono" style="color: #ded6c9; opacity: 0.95; line-height: 1.35; max-width: 92%;">Artifact Enclosed in Parcel</span>
-                            </div>
-                            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 75%; margin-top: auto; opacity: 0.6;">
-                                <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #e11d48, transparent);"></span>
-                                <span style="color: #e11d48; font-size: 0.6rem;">✦</span>
-                                <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #e11d48, transparent);"></span>
-                            </div>
-                        </div>
-                        <!-- Back -->
-                        <div class="tarot-face tarot-back">
-                            <!-- Pure identical majestic crowned skull artwork -->
-                        </div>
-                    </div>
-                </div>
-
-                <!-- CARD 4: 10% OFF (IV • QUARTUS) -->
-                <div class="tarot-card-wrapper flipped" data-card-index="3" onclick="handleTarotCardSelect(3)">
-                    <div class="tarot-flash"></div>
-                    <div class="tarot-card-inner">
-                        <!-- Front -->
-                        <div class="tarot-face tarot-front" style="background: radial-gradient(ellipse at 50% 15%, rgba(30, 10, 20, 0.99) 0%, #080306 65%, #020102 100%); border-color: rgba(234, 179, 8, 0.85); box-shadow: 0 16px 40px rgba(0, 0, 0, 0.98), inset 0 0 0 1.5px rgba(212, 175, 55, 0.4), inset 0 0 32px rgba(139, 0, 0, 0.5);">
-                            <div style="display: flex; align-items: center; justify-content: center; width: 100%;">
-                                <div class="tarot-card-top-pill" style="border-color: rgba(234, 179, 8, 0.55);">
-                                    <span style="color: #f5e6c8; white-space: nowrap;">✦ IV &bull; QUARTUS</span>
-                                </div>
-                            </div>
-                            <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; margin: auto 0; text-align: center; width: 100%;">
-                                <div class="tarot-roman-numeral-front" style="color: #eab308; font-family: 'Playfair Display', Georgia, serif; line-height: 1; text-shadow: 0 3px 12px rgba(0,0,0,0.98);">IV</div>
-                                <span class="tarot-card-offer-title font-serif" style="font-weight: 900; color: #ffffff; letter-spacing: 0.04em; text-shadow: 0 2px 8px rgba(0,0,0,0.95);">10% OFF</span>
-                                <span class="tarot-card-subtext font-mono" style="color: #ded6c9; opacity: 0.95; line-height: 1.35; max-width: 92%;">Instant Cart Deduction</span>
-                            </div>
-                            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 75%; margin-top: auto; opacity: 0.6;">
-                                <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #eab308, transparent);"></span>
-                                <span style="color: #eab308; font-size: 0.6rem;">✦</span>
-                                <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #eab308, transparent);"></span>
-                            </div>
-                        </div>
-                        <!-- Back -->
-                        <div class="tarot-face tarot-back">
-                            <!-- Pure identical majestic crowned skull artwork -->
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- Enterprise Level Shuffle Button -->
-            <div id="tarotShuffleActionBox" class="tarot-shuffle-action-box">
-                <button type="button" id="tarotShuffleBtn" class="tarot-shuffle-btn" onclick="triggerMajesticShuffle()">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="16 3 21 3 21 8"></polyline>
-                        <line x1="4" y1="20" x2="21" y2="3"></line>
-                        <polyline points="21 16 21 21 16 21"></polyline>
-                        <line x1="15" y1="15" x2="21" y2="21"></line>
-                        <line x1="4" y1="4" x2="9" y2="9"></line>
-                    </svg>
-                    <span>✦ SHUFFLE CARDS (5s)</span>
-                </button>
-            </div>
-
-            <!-- Fortune Claim Container (Revealed after pick) -->
-            <div id="tarotClaimBox" class="tarot-claim-box" style="display: none;">
-                <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%;">
-                    <span class="tarot-claim-subtitle font-mono" style="color: #dcd3c5; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;">✦ DESTINY BOUND FOR 24 HOURS ✦</span>
-                    <span id="tarotClaimTitle" class="tarot-claim-title font-serif" style="font-weight: 900; color: #ffffff; text-align: center; letter-spacing: 0.04em;">FREE GOTHIC GIFT</span>
-                    <span id="tarotClaimDesc" class="tarot-claim-desc font-mono" style="color: #e2d7c5; opacity: 0.95; text-align: center; line-height: 1.4;">Complimentary handcrafted gothic jewelry artifact enclosed in parcel.</span>
-                </div>
-                <button type="button" id="tarotClaimBtn" class="tarot-claim-btn" onclick="closeTarotOverlay(false)">
-                    <span>CLAIM &amp; ENTER STORE</span>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Persistent Floating Reward Pill (Active on Storefront with Live 24h Reward Validity & 48h Shuffle Countdowns) -->
-    <div id="floatingRewardPill" class="floating-reward-pill" style="display: none;">
-        <div class="floating-reward-icon">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-        </div>
-        <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1;">
-            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-                <span id="floatingPillText" class="font-mono" style="font-size: 0.82rem; font-weight: 800; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: 0.03em;">FREE GOTHIC GIFT</span>
-                <span id="floatingPillBadge" class="font-mono" style="font-size: 0.58rem; color: #ffe8be; background: rgba(139, 0, 0, 0.25); padding: 1px 6px; border-radius: 4px; border: 1px solid rgba(139, 20, 30, 0.6); flex-shrink: 0; font-weight: 700;">ACTIVE</span>
-            </div>
-            <div id="floatingPillValidityRow" style="display: flex; align-items: center; gap: 4px;">
-                <span id="floatingPillValidityText" class="font-mono" style="font-size: 0.64rem; color: #ffcccc; letter-spacing: 0.02em;">✦ Reward valid: <strong id="floatingPillTimer" style="color: #ffe8be; font-variant-numeric: tabular-nums;">24h 00m 00s</strong></span>
-            </div>
-            <div id="floatingPillShuffleRow" style="display: flex; align-items: center; gap: 4px; border-top: 1px solid rgba(212, 175, 55, 0.18); padding-top: 3px; margin-top: 1px;">
-                <span id="floatingPillShuffleText" class="font-mono" style="font-size: 0.62rem; color: #d4af37; opacity: 0.95; letter-spacing: 0.02em;">✦ Shuffle again in: <strong id="floatingPillShuffleTimer" style="color: #e5c158; font-variant-numeric: tabular-nums;">48h 00m 00s</strong></span>
-            </div>
-        </div>
-    </div>
-
-    <!-- Script Controller for Tarot Overlay, True Card Swapping & Contextual Badges -->
-    <script>
-        const INITIAL_REWARDS_CONFIG = [
-            {
-                id: "reward_upgrade",
-                roman: "I",
-                name: "PRIMUS",
-                title: "ORDER UPGRADE",
-                desc: "your order upgraded",
-                offer: "ORDER UPGRADE",
-                subtext: "your order upgraded",
-                type: "order_upgrade",
-                value: 0,
-                accent: "#c53030"
-            },
-            {
-                id: "reward_freeship",
-                roman: "II",
-                name: "SECUNDUS",
-                title: "FREE DELIVERY",
-                desc: "Free standard delivery included with your order.",
-                offer: "FREE DELIVERY",
-                subtext: "Free Shipping Nationwide",
-                type: "free_shipping",
-                value: 0,
-                accent: "#d4af37"
-            },
-            {
-                id: "reward_gift",
-                roman: "III",
-                name: "TERTIUS",
-                title: "FREE GIFT",
-                desc: "A complimentary free gift will be included with your order.",
-                offer: "FREE GIFT",
-                subtext: "Free Gift Enclosed in Parcel",
-                type: "free_gift",
-                value: 0,
-                accent: "#e11d48"
-            },
-            {
-                id: "reward_discount",
-                roman: "IV",
-                name: "QUARTUS",
-                title: "10% OFF CART",
-                desc: "10% Instant deduction applied directly to your artifact subtotal.",
-                offer: "10% OFF",
-                subtext: "Instant Cart Deduction",
-                type: "percentage_discount",
-                value: 10,
-                accent: "#eab308"
-            }
-        ];
-
-        let activeCardRewards = [...INITIAL_REWARDS_CONFIG];
-
-        let tarotState = {
-            isShuffling: false,
-            isReadyToPick: false,
-            hasShuffled: false,
-            selectedReward: null
-        };
-        window.tarotState = tarotState;
-
-        const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
-        const FORTY_EIGHT_HOURS = 48 * 60 * 60 * 1000;
-        const TAROT_STORAGE_KEY = 'gn_tarot_ritual_v14';
-        let countdownTimerInterval = null;
-
-        // Clean up any legacy storage keys from previous builds
-        (function cleanupLegacyStorage() {
-            const legacyKeys = ['gn_tarot_ritual_v13', 'gn_tarot_ritual_v12', 'gn_daily_card_v11', 'gn_daily_card_v10', 'gn_daily_card_v9', 'gn_daily_card_v8', 'gn_daily_card_v7', 'gn_daily_card_v6', 'gn_daily_card_v5', 'gn_daily_card_v4', 'gn_daily_card_state'];
-            legacyKeys.forEach(k => {
-                try { localStorage.removeItem(k); } catch(e) {}
-            });
-        })();
-
-        // Global Testing Helper to reset Tarot Ritual on demand
-        window.resetTarotRitual = function() {
-            try {
-                localStorage.removeItem(TAROT_STORAGE_KEY);
-                ['gn_tarot_ritual_v14', 'gn_tarot_ritual_v13', 'gn_tarot_ritual_v12', 'gn_daily_card_v11', 'gn_daily_card_v10'].forEach(k => {
-                    try { localStorage.removeItem(k); } catch(e) {}
-                });
-            } catch(e) {}
-            window.activeDailyReward = null;
-            if (countdownTimerInterval) {
-                clearInterval(countdownTimerInterval);
-                countdownTimerInterval = null;
-            }
-            const pill = document.getElementById('floatingRewardPill');
-            if (pill) pill.style.display = 'none';
-            if (typeof updateInPageContextualPolicy === 'function') updateInPageContextualPolicy(null);
-            if (typeof updateCheckoutTotals === 'function') updateCheckoutTotals();
-            if (typeof initTarotRitual === 'function') initTarotRitual(false);
-            console.log('✦ Tarot Ritual state successfully reset for testing.');
-        };
-
-        function getStoredDailyReward() {
-            try {
-                const raw = localStorage.getItem(TAROT_STORAGE_KEY);
-                if (!raw) return null;
-                const parsed = JSON.parse(raw);
-                if (!parsed) return null;
-
-                const claimedAt = Number(parsed.claimedAt || parsed.timestamp || 0);
-                const offerExpiresAt = Number(parsed.offerExpiresAt) || (claimedAt > 0 ? claimedAt + TWENTY_FOUR_HOURS : (Number(parsed.expiresAt) || 0));
-                const shuffleUnlockAt = Number(parsed.shuffleUnlockAt) || (claimedAt > 0 ? claimedAt + FORTY_EIGHT_HOURS : (Number(parsed.expiresAt) || 0));
-                const now = Date.now();
-
-                // If 48 hours passed: purge completely and allow fresh shuffle
-                if ((parsed.step === 'claimed' || parsed.step === 'revealed' || parsed.reward || parsed.selectedReward) && shuffleUnlockAt > 0 && now >= shuffleUnlockAt) {
-                    localStorage.removeItem(TAROT_STORAGE_KEY);
-                    window.activeDailyReward = null;
-                    return null;
-                }
-
-                const step = parsed.step || (parsed.reward ? 'claimed' : 'initial');
-                const reward = parsed.reward || parsed.selectedReward || parsed.claimedReward || null;
-                const isOfferActive = offerExpiresAt > now;
-                const isCooldownActive = shuffleUnlockAt > now;
-
-                return {
-                    ...parsed,
-                    step: step,
-                    reward: reward,
-                    selectedReward: reward || parsed.selectedReward,
-                    claimedReward: reward || parsed.claimedReward,
-                    shuffledRewards: Array.isArray(parsed.shuffledRewards) ? parsed.shuffledRewards : null,
-                    cardIndex: (parsed.cardIndex !== undefined && parsed.cardIndex !== null) ? Number(parsed.cardIndex) : null,
-                    claimedAt: claimedAt,
-                    offerExpiresAt: offerExpiresAt,
-                    shuffleUnlockAt: shuffleUnlockAt,
-                    isOfferActive: isOfferActive,
-                    isCooldownActive: isCooldownActive,
-                    expiresAt: offerExpiresAt
-                };
-            } catch(e) {}
-            return null;
-        }
-
-        function saveDailyRewardState(stepOrReward, extraData = {}) {
-            let step = 'claimed';
-            let dataToSave = {};
-            const now = Date.now();
-            const offerExpiresAt = now + TWENTY_FOUR_HOURS;
-            const shuffleUnlockAt = now + FORTY_EIGHT_HOURS;
-
-            let existing = {};
-            try {
-                const raw = localStorage.getItem(TAROT_STORAGE_KEY);
-                if (raw) existing = JSON.parse(raw) || {};
-            } catch(e) {}
-
-            if (typeof stepOrReward === 'string') {
-                step = stepOrReward;
-                dataToSave = {
-                    ...existing,
-                    ...extraData,
-                    step: step
-                };
-            } else if (typeof stepOrReward === 'object' && stepOrReward !== null) {
-                const cardIdx = (typeof extraData === 'number') ? extraData : (extraData.cardIndex !== undefined ? extraData.cardIndex : existing.cardIndex);
-                step = extraData.step || (existing.step === 'claimed' ? 'claimed' : 'revealed');
-                dataToSave = {
-                    ...existing,
-                    step: step,
-                    selectedReward: stepOrReward,
-                    reward: stepOrReward,
-                    claimedReward: stepOrReward,
-                    cardIndex: cardIdx
-                };
-            }
-
-            if (dataToSave.step === 'revealed' || dataToSave.step === 'claimed') {
-                if (!dataToSave.claimedAt) dataToSave.claimedAt = now;
-                if (!dataToSave.timestamp) dataToSave.timestamp = now;
-                if (!dataToSave.offerExpiresAt) dataToSave.offerExpiresAt = offerExpiresAt;
-                if (!dataToSave.shuffleUnlockAt) dataToSave.shuffleUnlockAt = shuffleUnlockAt;
-                dataToSave.expiresAt = dataToSave.offerExpiresAt;
-                if (dataToSave.redeemed === undefined) dataToSave.redeemed = false;
-                if (dataToSave.selectedReward && !dataToSave.reward) dataToSave.reward = dataToSave.selectedReward;
-                if (dataToSave.reward && !dataToSave.selectedReward) dataToSave.selectedReward = dataToSave.reward;
-                if (dataToSave.reward && !dataToSave.claimedReward) dataToSave.claimedReward = dataToSave.reward;
-
-                if (dataToSave.offerExpiresAt > now) {
-                    window.activeDailyReward = dataToSave.reward || dataToSave.selectedReward;
-                } else {
-                    window.activeDailyReward = null;
-                }
-
-                if (dataToSave.step === 'claimed' && dataToSave.shuffleUnlockAt > now) {
-                    startDailyRewardTimer(dataToSave.offerExpiresAt, dataToSave.shuffleUnlockAt);
-                }
-            }
-
-            try {
-                localStorage.setItem(TAROT_STORAGE_KEY, JSON.stringify(dataToSave));
-            } catch(e) {}
-        }
-
-        // Crypto-grade Fisher-Yates array shuffle (Guarantees non-identical permutation)
-        function cryptoShuffleArray(array) {
-            const originalIds = array.map(a => a.id).join(',');
-            let arr = [...array];
-            let attempts = 0;
-
-            do {
-                for (let i = arr.length - 1; i > 0; i--) {
-                    const randomBuffer = new Uint32Array(1);
-                    if (window.crypto && window.crypto.getRandomValues) {
-                        window.crypto.getRandomValues(randomBuffer);
-                        const j = randomBuffer[0] % (i + 1);
-                        [arr[i], arr[j]] = [arr[j], arr[i]];
-                    } else {
-                        const j = Math.floor(Math.random() * (i + 1));
-                        [arr[i], arr[j]] = [arr[j], arr[i]];
-                    }
-                }
-                attempts++;
-            } while (arr.map(a => a.id).join(',') === originalIds && attempts < 10);
-
-            return arr;
-        }
-
-        function renderCardFront(cardWrapper, reward, index) {
-            const front = cardWrapper.querySelector('.tarot-front');
-            if (!front) return;
-            front.style.background = 'radial-gradient(ellipse at 50% 15%, rgba(30, 10, 20, 0.99) 0%, #080306 65%, #020102 100%)';
-            front.style.borderColor = `${reward.accent || '#d4af37'}`;
-            front.style.boxShadow = `0 16px 40px rgba(0, 0, 0, 0.98), inset 0 0 0 1.5px rgba(212, 175, 55, 0.4), inset 0 0 32px rgba(139, 0, 0, 0.5)`;
-            front.innerHTML = `
-                <div style="display: flex; align-items: center; justify-content: center; width: 100%;">
-                    <div class="tarot-card-top-pill" style="border-color: ${reward.accent || '#d4af37'}88;">
-                        <span style="color: #f5e6c8; white-space: nowrap;">✦ ${reward.roman} &bull; ${reward.name}</span>
-                    </div>
-                </div>
-                <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; margin: auto 0; text-align: center; width: 100%;">
-                    <div class="tarot-roman-numeral-front" style="color: ${reward.accent || '#e5c158'}; font-family: 'Playfair Display', Georgia, serif; line-height: 1; text-shadow: 0 3px 12px rgba(0,0,0,0.98);">${reward.roman}</div>
-                    <span class="tarot-card-offer-title font-serif" style="font-weight: 900; color: #ffffff; letter-spacing: 0.04em; text-shadow: 0 2px 8px rgba(0,0,0,0.95);">${reward.offer}</span>
-                    <span class="tarot-card-subtext font-mono" style="color: #ded6c9; opacity: 0.95; line-height: 1.35; max-width: 92%;">${reward.subtext}</span>
-                </div>
-                <div style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 75%; margin-top: auto; opacity: 0.6;">
-                    <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, ${reward.accent || '#d4af37'}, transparent);"></span>
-                    <span style="color: ${reward.accent || '#d4af37'}; font-size: 0.6rem;">✦</span>
-                    <span style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, ${reward.accent || '#d4af37'}, transparent);"></span>
-                </div>
-            `;
-        }
-
-        // =========================================================================
-        // GOTHIC OCCULT LUXURY UTILITIES
-        // =========================================================================
-        function showLuxuryToast(message, icon = '✦') {
-            let container = document.getElementById('luxuryToastContainer');
-            if (!container) {
-                container = document.createElement('div');
-                container.id = 'luxuryToastContainer';
-                container.className = 'luxury-toast-container';
-                document.body.appendChild(container);
-            }
-            const toast = document.createElement('div');
-            toast.className = 'luxury-toast-item';
-            toast.innerHTML = `<span style="color: #ff9999; font-size: 0.9rem;">${icon}</span> <span>${message}</span>`;
-            container.appendChild(toast);
-            setTimeout(() => {
-                if (toast && toast.parentNode) {
-                    toast.parentNode.removeChild(toast);
-                }
-            }, 4000);
-        }
-
-        function executeUniversalCopy(text) {
-            if (!text) return;
-            try {
-                const textArea = document.createElement('textarea');
-                textArea.value = text;
-                textArea.setAttribute('readonly', '');
-                textArea.style.position = 'fixed';
-                textArea.style.top = '-9999px';
-                textArea.style.left = '-9999px';
-                textArea.style.opacity = '0';
-                document.body.appendChild(textArea);
-
-                if (navigator.userAgent.match(/ipad|ipod|iphone/i)) {
-                    const range = document.createRange();
-                    range.selectNodeContents(textArea);
-                    const sel = window.getSelection();
-                    sel.removeAllRanges();
-                    sel.addRange(range);
-                    textArea.setSelectionRange(0, 999999);
-                } else {
-                    textArea.select();
-                }
-
-                document.execCommand('copy');
-                document.body.removeChild(textArea);
-            } catch(e) {}
-
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(text).catch(() => {});
-            }
-        }
-        window.executeUniversalCopy = executeUniversalCopy;
-
-        function copyOrderReference() {
-            const badge = document.getElementById('confirmedOrderNumBadge');
-            const btn = document.getElementById('copyOrderIdBtn');
-            const order = window.currentConfirmedOrder;
-            const ordNum = order ? (order.order_number || order.id || '1') : (badge ? badge.textContent.replace(/\D/g, '') : '1');
-            const text = `Order #${ordNum}`;
-
-            executeUniversalCopy(text);
-
-            if (btn) {
-                const origHtml = btn.innerHTML;
-                btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#25d366" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> <span style="color:#25d366;font-weight:700;">COPIED (for WhatsApp) ✓</span>`;
-                btn.style.borderColor = 'rgba(37, 211, 102, 0.6)';
-                btn.style.background = 'rgba(37, 211, 102, 0.14)';
-                setTimeout(() => {
-                    btn.innerHTML = origHtml;
-                    btn.style.borderColor = '';
-                    btn.style.background = '';
-                }, 2400);
-            }
-
-            if (typeof showLuxuryToast === 'function') {
-                showLuxuryToast(`Order #${ordNum} copied (for WhatsApp chat)!`);
-            }
-        }
-        window.copyOrderReference = copyOrderReference;
-
-        function copyOrderProductIdsForWhatsApp(btnId) {
-            const order = window.currentConfirmedOrder;
-            const btn = document.getElementById(btnId || 'copyProductIdBtn');
-            let textToCopy = '';
-            let toastMsg = 'Product ID copied for WhatsApp chat!';
-
-            if (order && Array.isArray(order.items) && order.items.length > 0) {
-                const idList = order.items.map(it => {
-                    const itId = it.id || it.productId || it.product_id || (typeof it.name === 'string' ? it.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') : 'prod');
-                    const itName = it.name || 'Artifact';
-                    const itQty = it.quantity || it.qty || 1;
-                    return `Product ID: #${itId} - ${itName} (Qty: ${itQty})`;
-                });
-                const ordNum = order.order_number || order.id || '';
-                textToCopy = (ordNum ? `[Gothic Nova Order #${ordNum}]\n` : '') + idList.join('\n');
-                toastMsg = order.items.length > 1
-                    ? `${order.items.length} Product IDs copied (for WhatsApp chat)!`
-                    : `Product ID copied (for WhatsApp chat)!`;
-            } else {
-                // Fallback to active viewing product or cart items
-                const curPid = window.currentViewingProductId || 'prod_101';
-                textToCopy = `Product ID: #${curPid}`;
-                toastMsg = `Product ID (#${curPid}) copied (for WhatsApp chat)!`;
-            }
-
-            executeUniversalCopy(textToCopy);
-
-            if (btn) {
-                const origHtml = btn.innerHTML;
-                btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#25d366" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> <span style="color:#25d366;font-weight:700;">COPIED (for WhatsApp) ✓</span>`;
-                btn.style.borderColor = 'rgba(37, 211, 102, 0.6)';
-                btn.style.background = 'rgba(37, 211, 102, 0.14)';
-                setTimeout(() => {
-                    btn.innerHTML = origHtml;
-                    btn.style.borderColor = '';
-                    btn.style.background = '';
-                }, 2400);
-            }
-
-            if (typeof showLuxuryToast === 'function') {
-                showLuxuryToast(toastMsg);
-            }
-        }
-        window.copyOrderProductIdsForWhatsApp = copyOrderProductIdsForWhatsApp;
-
-        function copySingleProductIdForWhatsApp(pid, pName, btnEl) {
-            const text = `Product ID: #${pid} - ${pName || 'Artifact'}`;
-            executeUniversalCopy(text);
-            if (btnEl) {
-                const origHtml = btnEl.innerHTML;
-                btnEl.innerHTML = `<span style="color:#25d366;font-weight:700;">✓ Copied</span>`;
-                btnEl.style.borderColor = 'rgba(37, 211, 102, 0.6)';
-                btnEl.style.background = 'rgba(37, 211, 102, 0.14)';
-                setTimeout(() => {
-                    btnEl.innerHTML = origHtml;
-                    btnEl.style.borderColor = '';
-                    btnEl.style.background = '';
-                }, 2000);
-            }
-            if (typeof showLuxuryToast === 'function') {
-                showLuxuryToast(`Product ID (#${pid}) copied for WhatsApp chat!`);
-            }
-        }
-        window.copySingleProductIdForWhatsApp = copySingleProductIdForWhatsApp;
-
-        function printRoyalReceipt() {
-            window.print();
-        }
-        window.printRoyalReceipt = printRoyalReceipt;
-
-        // Global Keyboard Handler for Modals & Accessibility
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                if (typeof closeCheckout === 'function') closeCheckout();
-                if (typeof closePdpModal === 'function') closePdpModal();
-            }
-        });
-
-        // =========================================================================
-        // MYSTICAL CANVAS PARTICLE & RUNIC VFX ENGINE (OCCULT BLOOD & ASH THEME)
-        // =========================================================================
-        let tarotCanvasAnimId = null;
-        let tarotParticles = [];
-        let tarotShockwaves = [];
-
-        function initTarotCanvas() {
-            const canvas = document.getElementById('dailyTarotCanvas');
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-            if (!ctx) return;
-
-            function resize() {
-                canvas.width = window.innerWidth;
-                canvas.height = window.innerHeight;
-            }
-            resize();
-            window.addEventListener('resize', resize);
-
-            tarotParticles = [];
-            const particleCount = window.innerWidth < 600 ? 25 : 50;
-            for (let i = 0; i < particleCount; i++) {
-                tarotParticles.push({
-                    x: Math.random() * canvas.width,
-                    y: Math.random() * canvas.height,
-                    size: Math.random() * 2.0 + 0.5,
-                    speedY: -(Math.random() * 0.5 + 0.15),
-                    speedX: (Math.random() - 0.5) * 0.3,
-                    alpha: Math.random() * 0.5 + 0.15,
-                    blood: Math.random() > 0.45,
-                    phase: Math.random() * Math.PI * 2
-                });
-            }
-
-            if (tarotCanvasAnimId) cancelAnimationFrame(tarotCanvasAnimId);
-
-            function draw() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-                tarotParticles.forEach(p => {
-                    p.y += p.speedY;
-                    p.x += Math.sin(p.phase) * 0.25 + p.speedX;
-                    p.phase += 0.015;
-
-                    if (p.y < -10) {
-                        p.y = canvas.height + 10;
-                        p.x = Math.random() * canvas.width;
-                    }
-
-                    ctx.beginPath();
-                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                    ctx.fillStyle = p.blood 
-                        ? `rgba(139, 0, 0, ${p.alpha * 0.7})` 
-                        : `rgba(224, 214, 200, ${p.alpha * 0.35})`;
-                    ctx.shadowColor = p.blood ? 'rgba(139, 0, 0, 0.7)' : 'rgba(0, 0, 0, 0.5)';
-                    ctx.shadowBlur = p.blood ? 6 : 2;
-                    ctx.fill();
-                    ctx.shadowBlur = 0;
-                });
-
-                for (let i = tarotShockwaves.length - 1; i >= 0; i--) {
-                    const sw = tarotShockwaves[i];
-                    sw.radius += sw.speed;
-                    sw.alpha -= 0.03;
-                    sw.speed *= 0.95;
-
-                    if (sw.alpha <= 0) {
-                        tarotShockwaves.splice(i, 1);
-                        continue;
-                    }
-
-                    ctx.beginPath();
-                    ctx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2);
-                    ctx.strokeStyle = `rgba(139, 20, 30, ${sw.alpha * 0.8})`;
-                    ctx.lineWidth = 2;
-                    ctx.shadowColor = 'rgba(139, 0, 0, 0.8)';
-                    ctx.shadowBlur = 10;
-                    ctx.stroke();
-                    ctx.shadowBlur = 0;
-                }
-
-                tarotCanvasAnimId = requestAnimationFrame(draw);
-            }
-            draw();
-        }
-
-        function triggerTarotShockwave() {
-            const canvas = document.getElementById('dailyTarotCanvas');
-            if (!canvas) return;
-            tarotShockwaves.push({
-                x: canvas.width / 2,
-                y: canvas.height / 2,
-                radius: 10,
-                speed: 14,
-                alpha: 0.9
-            });
-        }
-
-        function triggerTarotCardBurst(cardEl) {
-            const canvas = document.getElementById('dailyTarotCanvas');
-            if (!canvas || !cardEl) return;
-            const rect = cardEl.getBoundingClientRect();
-            const cx = rect.left + rect.width / 2;
-            const cy = rect.top + rect.height / 2;
-
-            tarotShockwaves.push({
-                x: cx,
-                y: cy,
-                radius: 5,
-                speed: 10,
-                alpha: 0.85
-            });
-
-            for (let i = 0; i < 30; i++) {
-                const angle = Math.random() * Math.PI * 2;
-                const spd = Math.random() * 4 + 1.5;
-                tarotParticles.push({
-                    x: cx,
-                    y: cy,
-                    size: Math.random() * 2.5 + 1.0,
-                    speedX: Math.cos(angle) * spd,
-                    speedY: Math.sin(angle) * spd,
-                    alpha: 0.9,
-                    blood: true,
-                    phase: 0
-                });
-            }
-        }
-
-        function attachCardTiltListeners() {
-            const wrappers = document.querySelectorAll('.tarot-card-wrapper');
-            wrappers.forEach((w) => {
-                w.onmouseenter = null;
-                w.onmousemove = (e) => {
-                    if (!tarotState.isReadyToPick) return;
-                    const rect = w.getBoundingClientRect();
-                    const x = e.clientX - rect.left;
-                    const y = e.clientY - rect.top;
-                    const rotX = ((y / rect.height) - 0.5) * -16;
-                    const rotY = ((x / rect.width) - 0.5) * 16;
-                    w.style.transform = `perspective(900px) rotateX(${rotX.toFixed(1)}deg) rotateY(${rotY.toFixed(1)}deg) scale3d(1.04, 1.04, 1.04)`;
-                };
-                w.onmouseleave = () => {
-                    if (tarotState.isReadyToPick) {
-                        w.style.transform = '';
-                    }
-                };
-            });
-        }
-
-        // Live Immutable 24-Hour Reward Validity & 48-Hour Shuffle Cooldown Countdown Timers
-        function startDailyRewardTimer(targetOfferExpiresAt, targetShuffleUnlockAt) {
-            if (countdownTimerInterval) {
-                clearInterval(countdownTimerInterval);
-                countdownTimerInterval = null;
-            }
-
-            const now = Date.now();
-            const offerExpiresAt = (Number(targetOfferExpiresAt) > now)
-                ? Number(targetOfferExpiresAt)
-                : (now + TWENTY_FOUR_HOURS);
-            const shuffleUnlockAt = (Number(targetShuffleUnlockAt) > now)
-                ? Number(targetShuffleUnlockAt)
-                : (offerExpiresAt + TWENTY_FOUR_HOURS);
-
-            function updateTimer() {
-                const currentNow = Date.now();
-                const remainingOffer = offerExpiresAt - currentNow;
-                const remainingShuffle = shuffleUnlockAt - currentNow;
-
-                const pill = document.getElementById('floatingRewardPill');
-                const badgeEl = document.getElementById('floatingPillBadge');
-                const validityTextEl = document.getElementById('floatingPillValidityText');
-                const shuffleTimerEl = document.getElementById('floatingPillShuffleTimer');
-                const shuffleTextEl = document.getElementById('floatingPillShuffleText');
-
-                // 1. When the full 48-hour shuffle cooldown elapses: purge and allow new shuffle
-                if (remainingShuffle <= 0) {
-                    if (countdownTimerInterval) {
-                        clearInterval(countdownTimerInterval);
-                        countdownTimerInterval = null;
-                    }
-                    try {
-                        localStorage.removeItem(TAROT_STORAGE_KEY);
-                    } catch(e) {}
-                    window.activeDailyReward = null;
-
-                    if (pill) {
-                        pill.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-                        pill.style.opacity = '0';
-                        pill.style.transform = 'translateY(10px)';
-                        setTimeout(() => {
-                            pill.style.display = 'none';
-                            pill.style.opacity = '1';
-                            pill.style.transform = '';
-                        }, 600);
-                    }
-
-                    if (typeof updateInPageContextualPolicy === 'function') updateInPageContextualPolicy(null);
-                    if (typeof updateCheckoutTotals === 'function') updateCheckoutTotals();
-                    return;
-                }
-
-                // 2. Format 48-Hour Shuffle Cooldown (always ticks down continuously)
-                const sHrs = Math.floor(remainingShuffle / (1000 * 60 * 60));
-                const sMins = Math.floor((remainingShuffle % (1000 * 60 * 60)) / (1000 * 60));
-                const sSecs = Math.floor((remainingShuffle % (1000 * 60)) / 1000);
-                const formattedShuffleStr = `${sHrs}h ${sMins < 10 ? '0' : ''}${sMins}m ${sSecs < 10 ? '0' : ''}${sSecs}s`;
-
-                if (shuffleTextEl) {
-                    shuffleTextEl.innerHTML = `✦ Shuffle again in: <strong id="floatingPillShuffleTimer" style="color: #e5c158; font-variant-numeric: tabular-nums;">${formattedShuffleStr}</strong>`;
-                } else if (shuffleTimerEl) {
-                    shuffleTimerEl.textContent = formattedShuffleStr;
-                }
-
-                // 3. Format 24-Hour Reward Validity
-                if (remainingOffer <= 0) {
-                    // Reward duration ended -> de-activate cart benefit, show "your reward duration ended"
-                    if (window.activeDailyReward) {
-                        window.activeDailyReward = null;
-                        if (typeof updateInPageContextualPolicy === 'function') updateInPageContextualPolicy(null);
-                        if (typeof updateCheckoutTotals === 'function') updateCheckoutTotals();
-                    }
-                    if (badgeEl) {
-                        badgeEl.textContent = 'EXPIRED';
-                        badgeEl.style.color = '#ff9999';
-                        badgeEl.style.background = 'rgba(120, 20, 20, 0.35)';
-                        badgeEl.style.borderColor = 'rgba(200, 50, 50, 0.5)';
-                    }
-                    if (validityTextEl) {
-                        validityTextEl.innerHTML = `<span style="color: #f87171; font-weight: 700; letter-spacing: 0.02em;">✦ your reward duration ended</span>`;
-                    }
-                } else {
-                    // Reward is active -> show remaining time
-                    const rHrs = Math.floor(remainingOffer / (1000 * 60 * 60));
-                    const rMins = Math.floor((remainingOffer % (1000 * 60 * 60)) / (1000 * 60));
-                    const rSecs = Math.floor((remainingOffer % (1000 * 60)) / 1000);
-                    const formattedOfferStr = `${rHrs}h ${rMins < 10 ? '0' : ''}${rMins}m ${rSecs < 10 ? '0' : ''}${rSecs}s`;
-
-                    if (badgeEl) {
-                        badgeEl.textContent = 'ACTIVE';
-                        badgeEl.style.color = '#ffe8be';
-                        badgeEl.style.background = 'rgba(139, 0, 0, 0.25)';
-                        badgeEl.style.borderColor = 'rgba(139, 20, 30, 0.6)';
-                    }
-                    if (validityTextEl) {
-                        validityTextEl.innerHTML = `✦ Reward valid: <strong id="floatingPillTimer" style="color: #ffe8be; font-variant-numeric: tabular-nums;">${formattedOfferStr}</strong>`;
-                    }
-                }
-
-                if (pill && pill.style.display === 'none') {
-                    pill.style.display = 'flex';
-                }
-            }
-
-            updateTimer();
-            countdownTimerInterval = setInterval(updateTimer, 1000);
-
-            // Wall-clock synchronization hooks (tab focus, visibility change, device wake)
-            if (!window._tarotTimerSyncAttached) {
-                window._tarotTimerSyncAttached = true;
-                const syncOnWake = () => {
-                    const stored = getStoredDailyReward();
-                    if (stored && stored.isCooldownActive && stored.shuffleUnlockAt) {
-                        startDailyRewardTimer(stored.offerExpiresAt, stored.shuffleUnlockAt);
-                    }
-                };
-                window.addEventListener('focus', syncOnWake);
-                document.addEventListener('visibilitychange', () => {
-                    if (!document.hidden) syncOnWake();
-                });
-                window.addEventListener('pageshow', syncOnWake);
-            }
-        }
-
-        function initTarotRitual(force = false) {
-            const stored = getStoredDailyReward();
-            const overlay = document.getElementById('dailyFortuneOverlay');
-            const stage = document.getElementById('tarotCardsStage');
-            const wrappers = document.querySelectorAll('.tarot-card-wrapper');
-            const shuffleBox = document.getElementById('tarotShuffleActionBox');
-            const claimBox = document.getElementById('tarotClaimBox');
-            const impactWrap = document.getElementById('tarotChooseImpactWrap');
-            const stageTitle = document.getElementById('tarotStageTitle');
-            const stageSubtext = document.getElementById('tarotStageSubtext');
-
-            // 1. If stored reward is already CLAIMED and within 48-hour cooldown: overlay stays closed
-            if (stored && stored.step === 'claimed' && stored.isCooldownActive && !force) {
-                document.documentElement.classList.remove('tarot-pending');
-                if (overlay) {
-                    overlay.style.display = 'none';
-                    overlay.classList.remove('active', 'closing', 'card-focused');
-                }
-                document.body.style.overflow = '';
-                if (stored.reward) {
-                    window.activeDailyReward = stored.isOfferActive ? stored.reward : null;
-                    updateFloatingPill(stored.reward, stored.isOfferActive);
-                    updateInPageContextualPolicy(window.activeDailyReward);
-                    startDailyRewardTimer(stored.offerExpiresAt, stored.shuffleUnlockAt);
-                } else {
-                    window.activeDailyReward = null;
-                    const pill = document.getElementById('floatingRewardPill');
-                    if (pill) pill.style.display = 'none';
-                    updateInPageContextualPolicy(null);
-                }
-                return;
-            }
-
-            // Otherwise, Tarot Ritual Overlay must be OPEN
-            document.documentElement.classList.add('tarot-pending');
-            if (overlay) {
-                overlay.style.display = 'flex';
-                overlay.classList.remove('closing');
-                overlay.classList.add('active');
-                document.body.style.overflow = 'hidden';
-                initTarotCanvas();
-            }
-            if (impactWrap) {
-                impactWrap.classList.remove('active');
-                impactWrap.style.display = 'none';
-            }
-
-            // 2. If stored state is REVEALED: restore card revealed, claim box open, title "HERE IS YOUR REWARD!"
-            if (stored && stored.step === 'revealed' && (stored.selectedReward || stored.reward)) {
-                const reward = stored.selectedReward || stored.reward;
-                const chosenIdx = (stored.cardIndex !== null && stored.cardIndex !== undefined) ? stored.cardIndex : 0;
-
-                if (Array.isArray(stored.shuffledRewards) && stored.shuffledRewards.length === 4) {
-                    activeCardRewards = [...stored.shuffledRewards];
-                } else {
-                    activeCardRewards = [...INITIAL_REWARDS_CONFIG];
-                    activeCardRewards[chosenIdx] = reward;
-                }
-
-                tarotState.isShuffling = false;
-                tarotState.isReadyToPick = false;
-                tarotState.hasShuffled = true;
-                tarotState.selectedReward = reward;
-                window.activeDailyReward = reward;
-
-                if (overlay) overlay.classList.add('card-focused');
-                if (stage) stage.className = 'tarot-cards-stage has-picked';
-
-                if (stageTitle) {
-                    stageTitle.textContent = 'YOUR REWARD IS READY';
-                    stageTitle.classList.remove('shuffling-text');
-                }
-                if (stageSubtext) {
-                    stageSubtext.textContent = '— ✦ Offer active for 24 hours • Shuffle cooldown 48 hours ✦ —';
-                }
-
-                if (shuffleBox) {
-                    shuffleBox.classList.add('hidden');
-                    shuffleBox.style.display = 'none';
-                }
-
-                wrappers.forEach((w, idx) => {
-                    w.setAttribute('data-card-index', idx);
-                    w.onclick = null;
-                    w.style.transform = '';
-                    renderCardFront(w, activeCardRewards[idx], idx);
-
-                    if (idx === chosenIdx) {
-                        w.classList.add('chosen-one', 'flipped', 'flash-active');
-                        w.classList.remove('face-down', 'ready-to-pick', 'dimmed');
-                    } else {
-                        w.classList.add('dimmed');
-                        w.classList.remove('chosen-one', 'ready-to-pick', 'flash-active', 'flipped', 'face-down');
-                    }
-                });
-
-                if (claimBox) {
-                    const titleEl = document.getElementById('tarotClaimTitle');
-                    const descEl = document.getElementById('tarotClaimDesc');
-                    if (titleEl) titleEl.textContent = reward.title;
-                    if (descEl) descEl.textContent = reward.desc;
-                    claimBox.style.display = 'flex';
-                }
-
-                return;
-            }
-
-            // 3. If stored state is READY_TO_PICK: restore cards face-down in shuffled state, ready to pick
-            if (stored && stored.step === 'ready_to_pick') {
-                if (Array.isArray(stored.shuffledRewards) && stored.shuffledRewards.length === 4) {
-                    activeCardRewards = [...stored.shuffledRewards];
-                } else {
-                    activeCardRewards = cryptoShuffleArray(INITIAL_REWARDS_CONFIG);
-                }
-
-                tarotState.isShuffling = false;
-                tarotState.isReadyToPick = true;
-                tarotState.hasShuffled = true;
-                tarotState.selectedReward = null;
-                window.activeDailyReward = null;
-
-                if (overlay) overlay.classList.remove('card-focused');
-                if (stage) stage.className = 'tarot-cards-stage';
-
-                if (stageTitle) {
-                    stageTitle.textContent = 'CHOOSE YOUR CARD';
-                    stageTitle.classList.remove('shuffling-text');
-                }
-                if (stageSubtext) {
-                    stageSubtext.textContent = '— ✦ Pick 1 card to reveal your shopping benefit for the next 24 hours ✦ —';
-                }
-
-                if (shuffleBox) {
-                    shuffleBox.classList.add('hidden');
-                    shuffleBox.style.display = 'none';
-                }
-                if (claimBox) claimBox.style.display = 'none';
-
-                wrappers.forEach((w, idx) => {
-                    w.setAttribute('data-card-index', idx);
-                    w.onclick = () => handleTarotCardSelect(idx);
-                    w.classList.remove('flipped', 'chosen-one', 'flash-active', 'dimmed');
-                    w.classList.add('face-down', 'ready-to-pick');
-                    w.style.transform = '';
-                    renderCardFront(w, activeCardRewards[idx], idx);
-                });
-
-                attachCardTiltListeners();
-                return;
-            }
-
-            // 4. Default: INITIAL step - fresh visit, cards face-up, shuffle button visible
-            tarotState.isShuffling = false;
-            tarotState.isReadyToPick = false;
-            tarotState.hasShuffled = false;
-            tarotState.selectedReward = null;
-            window.activeDailyReward = null;
-
-            if (overlay) overlay.classList.remove('card-focused');
-            if (stage) stage.className = 'tarot-cards-stage';
-
-            if (claimBox) claimBox.style.display = 'none';
-            if (shuffleBox) {
-                shuffleBox.classList.remove('hidden');
-                shuffleBox.style.display = 'flex';
-            }
-
-            activeCardRewards = [...INITIAL_REWARDS_CONFIG];
-            wrappers.forEach((w, idx) => {
-                renderCardFront(w, INITIAL_REWARDS_CONFIG[idx], idx);
-                w.classList.remove('face-down', 'chosen-one', 'flash-active', 'dimmed', 'ready-to-pick');
-                w.classList.add('flipped');
-                w.style.transform = '';
-                w.onclick = null;
-            });
-
-            if (stageTitle) {
-                stageTitle.textContent = 'UNLOCK YOUR SHOPPING BENEFIT';
-                stageTitle.classList.remove('shuffling-text');
-            }
-            if (stageSubtext) {
-                stageSubtext.textContent = '— ✦ Preview rewards below • Click shuffle to draw today\'s offer ✦ —';
-            }
-
-            attachCardTiltListeners();
-        }
-
-        window.openTarotRitual = function(force = false) {
-            const stored = getStoredDailyReward();
-            if (stored && stored.step === 'claimed' && stored.isCooldownActive && !force) {
-                if (typeof showLuxuryToast === 'function') {
-                    if (stored.isOfferActive && stored.reward) {
-                        const rem = stored.offerExpiresAt - Date.now();
-                        const hrs = Math.max(0, Math.floor(rem / (1000 * 60 * 60)));
-                        const mins = Math.max(0, Math.floor((rem % (1000 * 60 * 60)) / (1000 * 60)));
-                        showLuxuryToast(`✦ ACTIVE DESTINY: ${stored.reward.title} (${hrs}h ${mins}m left)`);
-                    } else {
-                        const rem = stored.shuffleUnlockAt - Date.now();
-                        const hrs = Math.max(0, Math.floor(rem / (1000 * 60 * 60)));
-                        const mins = Math.max(0, Math.floor((rem % (1000 * 60 * 60)) / (1000 * 60)));
-                        showLuxuryToast(`✦ OFFER EXPIRED • NEXT SHUFFLE UNLOCKS IN ${hrs}h ${mins}m`);
-                    }
-                }
-                return;
-            }
-            initTarotRitual(force);
-        };
-
-        // USER CLICKS THE "SHUFFLE CARDS" BUTTON - EXACT 5.0 SECOND ULTRA-SMOOTH HIGH-VELOCITY SHUFFLE
-        async function triggerMajesticShuffle() {
-            if (tarotState.isShuffling) return;
-
-            const stored = getStoredDailyReward();
-            if (stored && stored.step === 'claimed' && stored.isCooldownActive) {
-                const rem = stored.shuffleUnlockAt - Date.now();
-                const hrs = Math.max(0, Math.floor(rem / (1000 * 60 * 60)));
-                const mins = Math.max(0, Math.floor((rem % (1000 * 60 * 60)) / (1000 * 60)));
-                if (typeof showLuxuryToast === 'function') {
-                    showLuxuryToast(`✦ SHUFFLE LOCKED • NEXT SHUFFLE UNLOCKS IN ${hrs}h ${mins}m`);
-                }
-                return;
-            }
-
-            tarotState.isShuffling = true;
-            tarotState.isReadyToPick = false;
-
-            const shuffleBox = document.getElementById('tarotShuffleActionBox');
-            const stage = document.getElementById('tarotCardsStage');
-            const wrappers = Array.from(document.querySelectorAll('.tarot-card-wrapper'));
-            const impactWrap = document.getElementById('tarotChooseImpactWrap');
-            const stageTitle = document.getElementById('tarotStageTitle');
-            const stageSubtext = document.getElementById('tarotStageSubtext');
-
-            if (shuffleBox) {
-                shuffleBox.classList.add('hidden');
-                setTimeout(() => { shuffleBox.style.display = 'none'; }, 200);
-            }
-
-            // Step 1: Immediately flip all cards to face-down (turn their side, hiding offers beneath them)
-            wrappers.forEach(w => {
-                w.classList.remove('flipped', 'ready-to-pick', 'chosen-one', 'flash-active', 'dimmed');
-                w.classList.add('face-down');
-                w.style.transform = '';
-            });
-
-            // Update title to "SHUFFLING REWARDS..." with pulsing mystical glow
-            if (stageTitle) {
-                stageTitle.textContent = 'SHUFFLING REWARDS...';
-                stageTitle.classList.add('shuffling-text');
-            }
-            if (stageSubtext) {
-                stageSubtext.textContent = '— ✦ Mixing destiny in progress ✦ —';
-            }
-
-            // Dedicated initial flip completion delay (200ms)
-            await new Promise(resolve => setTimeout(resolve, 200));
-
-            // EXACT 5.0 SECOND TOTAL SHUFFLE (5000ms from button click to ready-to-pick)
-            // 200ms initial flip + 10 x 460ms high-velocity seamless passes (4600ms) + 200ms final resolution = 5000ms
-            const TARGET_TOTAL_MS = 5000;
-            const startTime = Date.now();
-            const PASS_DURATION_MS = 460;
-            let passCount = 0;
-            let lastPattern = 0;
-
-            while ((Date.now() - startTime + PASS_DURATION_MS) <= (TARGET_TOTAL_MS - 100) && passCount < 10) {
-                passCount++;
-
-                // Pick a pattern different from previous pass for maximum unpredictable variety
-                let patternIdx;
-                do {
-                    patternIdx = Math.floor(Math.random() * 5) + 1;
-                } while (patternIdx === lastPattern);
-                lastPattern = patternIdx;
-
-                const passDurSec = (PASS_DURATION_MS / 1000).toFixed(2);
-
-                if (stage) {
-                    stage.style.setProperty('--shuffle-dur', `${passDurSec}s`);
-                    stage.className = `tarot-cards-stage shuffling-active shuffle-pattern-${patternIdx}`;
-                }
-
-                // Mystical shockwave pulses during high-speed passes
-                if ((passCount === 3 || passCount === 6 || passCount === 9) && typeof triggerTarotShockwave === 'function') {
-                    triggerTarotShockwave();
-                }
-
-                await new Promise(resolve => setTimeout(resolve, PASS_DURATION_MS));
-            }
-
-            // Conclude shuffle animation
-            if (stage) {
-                stage.className = 'tarot-cards-stage';
-            }
-
-            // Final majestic Tarot shockwave burst
-            if (typeof triggerTarotShockwave === 'function') {
-                triggerTarotShockwave();
-            }
-
-            // Generate cryptographic randomized final rewards mapping
-            activeCardRewards = cryptoShuffleArray(INITIAL_REWARDS_CONFIG);
-
-            // Persist ready_to_pick state in localStorage
-            saveDailyRewardState('ready_to_pick', {
-                shuffledRewards: activeCardRewards
-            });
-
-            const finalWrappers = Array.from(stage.querySelectorAll('.tarot-card-wrapper'));
-            finalWrappers.forEach((w, newSlotIdx) => {
-                w.setAttribute('data-card-index', newSlotIdx);
-                w.onclick = () => handleTarotCardSelect(newSlotIdx);
-                w.classList.remove('flipped', 'chosen-one', 'dimmed');
-                w.classList.add('face-down', 'ready-to-pick');
-                w.style.transform = '';
-                renderCardFront(w, activeCardRewards[newSlotIdx], newSlotIdx);
-            });
-
-            attachCardTiltListeners();
-
-            // Restore title to "CHOOSE YOUR CARD"
-            if (stageTitle) {
-                stageTitle.textContent = 'CHOOSE YOUR CARD';
-                stageTitle.classList.remove('shuffling-text');
-            }
-            if (stageSubtext) {
-                stageSubtext.textContent = '— ✦ Pick 1 card to reveal your shopping benefit for the next 24 hours ✦ —';
-            }
-
-            if (impactWrap) {
-                impactWrap.style.display = 'block';
-                impactWrap.classList.add('active');
-            }
-
-            tarotState.isShuffling = false;
-            tarotState.hasShuffled = true;
-            tarotState.isReadyToPick = true;
-
-            setTimeout(() => {
-                if (impactWrap) {
-                    impactWrap.classList.remove('active');
-                    impactWrap.style.display = 'none';
-                }
-            }, 1200);
-        }
-
-        // When user selects a card: Reveal only the selected card by flipping it face-up
-        function handleTarotCardSelect(cardIndex) {
-            if (!tarotState.isReadyToPick || tarotState.isShuffling) return;
-            tarotState.isReadyToPick = false;
-
-            const overlay = document.getElementById('dailyFortuneOverlay');
-            if (overlay) overlay.classList.add('card-focused');
-
-            const stage = document.getElementById('tarotCardsStage');
-            if (stage) {
-                stage.className = 'tarot-cards-stage has-picked';
-            }
-
-            // Update title to "YOUR REWARD IS READY"
-            const stageTitle = document.getElementById('tarotStageTitle');
-            const stageSubtext = document.getElementById('tarotStageSubtext');
-            if (stageTitle) {
-                stageTitle.textContent = 'YOUR REWARD IS READY';
-                stageTitle.classList.remove('shuffling-text');
-            }
-            if (stageSubtext) {
-                stageSubtext.textContent = '— ✦ Offer active for 24 hours • Shuffle cooldown 48 hours ✦ —';
-            }
-
-            const reward = activeCardRewards[cardIndex] || activeCardRewards[0];
-            tarotState.selectedReward = reward;
-
-            const wrappers = document.querySelectorAll('.tarot-card-wrapper');
-            const chosenWrapper = wrappers[cardIndex];
-
-            if (chosenWrapper) {
-                chosenWrapper.classList.add('flash-active', 'chosen-one', 'flipped');
-                chosenWrapper.classList.remove('face-down', 'ready-to-pick');
-                chosenWrapper.style.transform = '';
-                triggerTarotCardBurst(chosenWrapper);
-            }
-
-            wrappers.forEach((w, idx) => {
-                w.classList.remove('ready-to-pick');
-                w.style.transform = '';
-                if (idx !== cardIndex) {
-                    w.classList.add('dimmed');
-                }
-            });
-
-            saveDailyRewardState('revealed', {
-                selectedReward: reward,
-                reward: reward,
-                claimedReward: reward,
-                cardIndex: cardIndex,
-                shuffledRewards: activeCardRewards
-            });
-
-            setTimeout(() => {
-                const claimBox = document.getElementById('tarotClaimBox');
-                const titleEl = document.getElementById('tarotClaimTitle');
-                const descEl = document.getElementById('tarotClaimDesc');
-
-                if (titleEl) titleEl.textContent = reward.title;
-                if (descEl) descEl.textContent = reward.desc;
-                if (claimBox) {
-                    claimBox.style.display = 'flex';
-                    try {
-                        claimBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                    } catch(e) {}
-                }
-            }, 300);
-        }
-
-        // Close Overlay & Enter Storefront
-        function closeTarotOverlay(isDirectSkip = false) {
-            const stored = getStoredDailyReward();
-            const reward = tarotState.selectedReward || stored?.selectedReward || stored?.reward || window.activeDailyReward;
-
-            if (!reward && !isDirectSkip) {
-                if (typeof showLuxuryAlert === 'function') {
-                    showLuxuryAlert("Thou must choose thy card of destiny to enter the realm.", "RITUAL REQUIRED", "warning");
-                }
-                return;
-            }
-
-            if (reward) {
-                const chosenIdx = (stored && stored.cardIndex !== undefined && stored.cardIndex !== null)
-                    ? stored.cardIndex
-                    : (tarotState.selectedReward ? activeCardRewards.findIndex(r => r.id === tarotState.selectedReward.id) : 0);
-
-                saveDailyRewardState('claimed', {
-                    selectedReward: reward,
-                    reward: reward,
-                    claimedReward: reward,
-                    cardIndex: chosenIdx >= 0 ? chosenIdx : 0,
-                    shuffledRewards: activeCardRewards
-                });
-            }
-
-            document.documentElement.classList.remove('tarot-pending');
-            const overlay = document.getElementById('dailyFortuneOverlay');
-            if (overlay) {
-                overlay.classList.add('closing');
-                setTimeout(() => {
-                    overlay.classList.remove('active', 'closing', 'card-focused');
-                    overlay.style.display = 'none';
-                    document.body.style.overflow = '';
-                }, 450);
-            }
-
-            if (reward) {
-                const updatedStored = getStoredDailyReward();
-                const isOfferActive = updatedStored ? updatedStored.isOfferActive : true;
-                updateFloatingPill(reward, isOfferActive);
-                updateInPageContextualPolicy(isOfferActive ? reward : null);
-                if (updatedStored && updatedStored.shuffleUnlockAt) {
-                    startDailyRewardTimer(updatedStored.offerExpiresAt, updatedStored.shuffleUnlockAt);
-                }
-                if (typeof updateCheckoutTotals === 'function') updateCheckoutTotals();
-            }
-        }
-
-        // Update Floating Pill on Storefront (Clean, Simple Offer Name & Dual Countdowns)
-        function updateFloatingPill(reward, isOfferActive = true) {
-            const pill = document.getElementById('floatingRewardPill');
-            const textEl = document.getElementById('floatingPillText');
-            const badgeEl = document.getElementById('floatingPillBadge');
-            if (!pill || !reward) return;
-
-            if (textEl) {
-                textEl.textContent = reward.offer || reward.title;
-            }
-            if (badgeEl) {
-                if (isOfferActive) {
-                    badgeEl.textContent = 'ACTIVE';
-                    badgeEl.style.color = '#ffe8be';
-                    badgeEl.style.background = 'rgba(139, 0, 0, 0.25)';
-                    badgeEl.style.borderColor = 'rgba(139, 20, 30, 0.6)';
-                } else {
-                    badgeEl.textContent = 'EXPIRED';
-                    badgeEl.style.color = '#ff9999';
-                    badgeEl.style.background = 'rgba(120, 20, 20, 0.35)';
-                    badgeEl.style.borderColor = 'rgba(200, 50, 50, 0.5)';
-                }
-            }
-            pill.style.display = 'flex';
-        }
-
-        function updateInPageContextualPolicy(reward) {
-            const depositDoms = document.querySelectorAll('.checkout-advance-badge, .deposit-policy-badge, #checkoutStep1Deposit, [data-deposit-notice]');
-            const payMethod = (typeof selectedPaymentMethod !== 'undefined') ? selectedPaymentMethod : (window.selectedPaymentMethod || 'cod');
-            depositDoms.forEach(el => {
-                if (el.id === 'checkoutStep1Deposit' && payMethod === 'cod') {
-                    el.innerHTML = 'Rs. 700';
-                }
-            });
-            const depSub = document.getElementById('checkoutDepositSub');
-            if (depSub && payMethod === 'cod') {
-                const isFreeShipping = reward && reward.type === 'free_shipping';
-                depSub.textContent = isFreeShipping 
-                    ? '(Packaging Fee Rs. 400 + Order Dispatch Fee Rs. 300)' 
-                    : '(Packaging & Processing Fee Rs. 400 + Delivery Fee Rs. 300)';
-            }
-        }
-
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => initTarotRitual(false));
-        } else {
-            initTarotRitual(false);
-        }
-    </script>
     <!-- SEO FALLBACK CATALOG (For Search Engine Bots & Non-JS Crawlers) -->
     <noscript>
         <section class="seo-fallback-catalog" style="padding: 24px; max-width: 1200px; margin: 0 auto; color: #ffffff; background: #0a0508; font-family: sans-serif;">
