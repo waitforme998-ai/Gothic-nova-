@@ -2158,22 +2158,29 @@
                     </div>
 
                     <!-- Action Buttons -->
-                    <div class="confirmed-actions-wrap">
-                        <button type="button" class="confirmed-return-btn font-mono" onclick="closeCheckoutAndReset()">
-                            RETURN TO STOREFRONT
-                        </button>
-                        
-                    <div class="confirmed-actions-grid font-mono" style="margin-bottom: 8px;">
-                        <button type="button" class="confirmed-btn-luxury" onclick="printRoyalReceipt()">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-                            <span>PRINT RECEIPT</span>
-                        </button>
-                        <button type="button" class="confirmed-btn-luxury" onclick="copyOrderReference()">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-                            <span>COPY ORDER ID</span>
-                        </button>
-                    </div>
-                    <a id="confirmedWhatsAppBtn" href="#" target="_blank" rel="noopener noreferrer" class="confirmed-wa-btn">
+                    <div class="confirmed-actions-wrap" style="display: flex; flex-direction: column; gap: 8px; margin-top: 14px; width: 100%;">
+                        <div class="confirmed-actions-grid font-mono">
+                            <button type="button" class="confirmed-btn-luxury" id="copyOrderIdBtn" onclick="copyOrderReference()">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                                <span>COPY ORDER ID</span>
+                            </button>
+                            <button type="button" class="confirmed-btn-luxury" id="copyProductIdBtn" onclick="copyOrderProductIdsForWhatsApp()">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+                                <span>COPY PRODUCT ID <span style="font-size: 0.65rem; opacity: 0.85; font-weight: normal; display: inline-block;">(for WhatsApp chat)</span></span>
+                            </button>
+                        </div>
+
+                        <div class="confirmed-actions-grid font-mono">
+                            <button type="button" class="confirmed-btn-luxury" id="printReceiptBtn" onclick="printRoyalReceipt()">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                                <span>PRINT RECEIPT</span>
+                            </button>
+                            <button type="button" class="confirmed-return-btn font-mono" onclick="closeCheckoutAndReset()">
+                                <span>RETURN TO STOREFRONT</span>
+                            </button>
+                        </div>
+
+                        <a id="confirmedWhatsAppBtn" href="#" target="_blank" rel="noopener noreferrer" class="confirmed-wa-btn">
                             <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink:0;"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
                             <span>Need Help? Connect on WhatsApp</span>
                         </a>
@@ -3974,6 +3981,7 @@
         window.submitFinalOrder = submitFinalOrder;
 
         function renderOrderConfirmationScreen(order) {
+            window.currentConfirmedOrder = order;
             const ordNum = order.order_number || order.orderNumber || order.id || '1';
             const total = Number(order.total_amount || order.totalAmount || 0).toLocaleString('en-PK');
             const isAdvance = (order.payment_method || order.paymentMethod || '').toLowerCase() === 'advance';
@@ -3993,7 +4001,10 @@
                 if (items.length > 0) {
                     itemsHtml = `
                         <div class="confirmed-receipt-items-wrap">
-                            <div class="confirmed-receipt-sec-title font-mono">ORDERED ARTIFACTS (${items.length})</div>
+                            <div class="confirmed-receipt-sec-title font-mono" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <span>ORDERED ARTIFACTS (${items.length})</span>
+                                <span style="font-size: 0.65rem; color: #ffe8be; text-transform: none; font-weight: normal;">Product IDs for WhatsApp Support</span>
+                            </div>
                             <div class="confirmed-receipt-items-list">
                                 ${items.map(it => {
                                     const itImg = it.img || it.image_url || 'assets/obsidian_helix_chain.png';
@@ -4001,14 +4012,24 @@
                                     const itPriceNum = Number(it.price || it.priceNum || 0);
                                     const itPrice = itPriceNum.toLocaleString('en-PK');
                                     const itTotal = (itPriceNum * itQty).toLocaleString('en-PK');
+                                    const itId = it.id || it.productId || it.product_id || (typeof it.name === 'string' ? it.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') : 'prod');
                                     return `
-                                        <div class="confirmed-item-entry">
-                                            <img src="${escapeHtml(itImg)}" class="confirmed-item-img" alt="${escapeHtml(it.name || 'Artifact')}">
-                                            <div class="confirmed-item-details">
-                                                <span class="confirmed-item-title">${escapeHtml(it.name || 'Artifact')}</span>
-                                                <span class="confirmed-item-meta font-mono">${itQty} × Rs. ${itPrice}</span>
+                                        <div class="confirmed-item-entry" style="align-items: flex-start; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.06);">
+                                            <img src="${escapeHtml(itImg)}" class="confirmed-item-img" alt="${escapeHtml(it.name || 'Artifact')}" style="width: 44px; height: 44px; object-fit: cover; border-radius: 4px; border: 1px solid rgba(255,232,190,0.2);">
+                                            <div class="confirmed-item-details" style="flex: 1; margin-left: 10px;">
+                                                <span class="confirmed-item-title" style="font-weight: 600; font-size: 0.82rem; color: #ffffff;">${escapeHtml(it.name || 'Artifact')}</span>
+                                                <div style="display: flex; align-items: center; gap: 6px; margin-top: 3px; flex-wrap: wrap;">
+                                                    <span class="confirmed-item-meta font-mono" style="font-size: 0.72rem; color: var(--color-text-muted);">${itQty} × Rs. ${itPrice}</span>
+                                                    <span class="font-mono" style="font-size: 0.65rem; color: #ffe8be; background: rgba(255,232,190,0.1); border: 1px solid rgba(255,232,190,0.25); padding: 1px 6px; border-radius: 3px;">ID: #${escapeHtml(itId)}</span>
+                                                </div>
                                             </div>
-                                            <span class="confirmed-item-price font-mono">Rs. ${itTotal}</span>
+                                            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; margin-left: 8px;">
+                                                <span class="confirmed-item-price font-mono" style="font-weight: 700; color: #ffe8be; font-size: 0.82rem;">Rs. ${itTotal}</span>
+                                                <button type="button" class="confirmed-item-copy-btn font-mono" onclick="copySingleProductIdForWhatsApp('${escapeQuote(itId)}', '${escapeQuote(it.name)}', this)" title="Copy Product ID for WhatsApp chat" style="font-size: 0.62rem; background: rgba(255,232,190,0.08); border: 1px solid rgba(255,232,190,0.28); color: #ffe8be; border-radius: 3px; padding: 3px 7px; cursor: pointer; display: flex; align-items: center; gap: 4px; touch-action: manipulation; transition: all 0.2s;">
+                                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                                                    <span>Copy ID (for WhatsApp)</span>
+                                                </button>
+                                            </div>
                                         </div>
                                     `;
                                 }).join('')}
@@ -4056,10 +4077,15 @@
                 `;
             }
 
-            // WhatsApp Share / Support Link
+            // WhatsApp Share / Support Link with Product IDs
             const waBtn = document.getElementById('confirmedWhatsAppBtn');
             if (waBtn) {
-                const message = `Hi Gothic Nova! I just placed Order #${ordNum} for Rs. ${total} (${isAdvance ? 'Advance Payment' : 'COD'}). Name: ${custName}, City: ${city}. Please let me know the status of my order!`;
+                const productSummary = items.map(it => {
+                    const itId = it.id || it.productId || it.product_id || 'prod';
+                    return `• ${it.name || 'Artifact'} (ID: #${itId}, Qty: ${it.quantity || it.qty || 1})`;
+                }).join('\n');
+
+                const message = `Hi Gothic Nova! I just placed Order #${ordNum} for Rs. ${total} (${isAdvance ? 'Advance Payment' : 'COD'}).\n\nOrdered Products:\n${productSummary}\n\nCustomer: ${custName}\nCity: ${city}\n\nPlease confirm my order!`;
                 waBtn.href = `https://wa.me/923001234567?text=${encodeURIComponent(message)}`;
             }
         }
@@ -4622,23 +4648,135 @@
             }, 4000);
         }
 
-        function copyOrderReference() {
-            const badge = document.getElementById('confirmedOrderNumBadge');
-            const text = badge ? badge.textContent.trim() : 'GOTHIC-ORDER-101';
+        function executeUniversalCopy(text) {
+            if (!text) return;
+            try {
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                textArea.setAttribute('readonly', '');
+                textArea.style.position = 'fixed';
+                textArea.style.top = '-9999px';
+                textArea.style.left = '-9999px';
+                textArea.style.opacity = '0';
+                document.body.appendChild(textArea);
+
+                if (navigator.userAgent.match(/ipad|ipod|iphone/i)) {
+                    const range = document.createRange();
+                    range.selectNodeContents(textArea);
+                    const sel = window.getSelection();
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+                    textArea.setSelectionRange(0, 999999);
+                } else {
+                    textArea.select();
+                }
+
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+            } catch(e) {}
+
             if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(text).then(() => {
-                    showLuxuryToast(`${text} COPIED TO CLIPBOARD`);
-                }).catch(() => {
-                    showLuxuryToast(`ORDER REFERENCE: ${text}`);
-                });
-            } else {
-                showLuxuryToast(`ORDER REFERENCE: ${text}`);
+                navigator.clipboard.writeText(text).catch(() => {});
             }
         }
+        window.executeUniversalCopy = executeUniversalCopy;
+
+        function copyOrderReference() {
+            const badge = document.getElementById('confirmedOrderNumBadge');
+            const btn = document.getElementById('copyOrderIdBtn');
+            const order = window.currentConfirmedOrder;
+            const ordNum = order ? (order.order_number || order.id || '1') : (badge ? badge.textContent.replace(/\D/g, '') : '1');
+            const text = `Order #${ordNum}`;
+
+            executeUniversalCopy(text);
+
+            if (btn) {
+                const origHtml = btn.innerHTML;
+                btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#25d366" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> <span style="color:#25d366;font-weight:700;">COPIED ✓</span>`;
+                btn.style.borderColor = 'rgba(37, 211, 102, 0.6)';
+                btn.style.background = 'rgba(37, 211, 102, 0.14)';
+                setTimeout(() => {
+                    btn.innerHTML = origHtml;
+                    btn.style.borderColor = '';
+                    btn.style.background = '';
+                }, 2400);
+            }
+
+            if (typeof showLuxuryToast === 'function') {
+                showLuxuryToast(`${text} copied to clipboard`);
+            }
+        }
+        window.copyOrderReference = copyOrderReference;
+
+        function copyOrderProductIdsForWhatsApp(btnId) {
+            const order = window.currentConfirmedOrder;
+            const btn = document.getElementById(btnId || 'copyProductIdBtn');
+            let textToCopy = '';
+            let toastMsg = 'Product ID copied for WhatsApp chat!';
+
+            if (order && Array.isArray(order.items) && order.items.length > 0) {
+                const idList = order.items.map(it => {
+                    const itId = it.id || it.productId || it.product_id || (typeof it.name === 'string' ? it.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') : 'prod');
+                    const itName = it.name || 'Artifact';
+                    const itQty = it.quantity || it.qty || 1;
+                    return `Product ID: #${itId} - ${itName} (Qty: ${itQty})`;
+                });
+                const ordNum = order.order_number || order.id || '';
+                textToCopy = (ordNum ? `[Gothic Nova Order #${ordNum}]\n` : '') + idList.join('\n');
+                toastMsg = order.items.length > 1
+                    ? `${order.items.length} Product IDs copied (for WhatsApp chat)!`
+                    : `Product ID copied (for WhatsApp chat)!`;
+            } else {
+                // Fallback to active viewing product or cart items
+                const curPid = window.currentViewingProductId || 'prod_101';
+                textToCopy = `Product ID: #${curPid}`;
+                toastMsg = `Product ID (#${curPid}) copied (for WhatsApp chat)!`;
+            }
+
+            executeUniversalCopy(textToCopy);
+
+            if (btn) {
+                const origHtml = btn.innerHTML;
+                btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#25d366" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> <span style="color:#25d366;font-weight:700;">COPIED (for WhatsApp) ✓</span>`;
+                btn.style.borderColor = 'rgba(37, 211, 102, 0.6)';
+                btn.style.background = 'rgba(37, 211, 102, 0.14)';
+                setTimeout(() => {
+                    btn.innerHTML = origHtml;
+                    btn.style.borderColor = '';
+                    btn.style.background = '';
+                }, 2400);
+            }
+
+            if (typeof showLuxuryToast === 'function') {
+                showLuxuryToast(toastMsg);
+            }
+        }
+        window.copyOrderProductIdsForWhatsApp = copyOrderProductIdsForWhatsApp;
+
+        function copySingleProductIdForWhatsApp(pid, pName, btnEl) {
+            const text = `Product ID: #${pid} - ${pName || 'Artifact'}`;
+            executeUniversalCopy(text);
+            if (btnEl) {
+                const origHtml = btnEl.innerHTML;
+                btnEl.innerHTML = `<span style="color:#25d366;font-weight:700;">✓ Copied</span>`;
+                btnEl.style.borderColor = 'rgba(37, 211, 102, 0.6)';
+                btnEl.style.background = 'rgba(37, 211, 102, 0.14)';
+                setTimeout(() => {
+                    btnEl.innerHTML = origHtml;
+                    btnEl.style.borderColor = '';
+                    btnEl.style.background = '';
+                }, 2000);
+            }
+            if (typeof showLuxuryToast === 'function') {
+                showLuxuryToast(`Product ID (#${pid}) copied for WhatsApp chat!`);
+            }
+        }
+        window.copySingleProductIdForWhatsApp = copySingleProductIdForWhatsApp;
 
         function printRoyalReceipt() {
             window.print();
         }
+        window.printRoyalReceipt = printRoyalReceipt;
 
         // Global Keyboard Handler for Modals & Accessibility
         document.addEventListener('keydown', function(e) {
