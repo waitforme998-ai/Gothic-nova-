@@ -7481,7 +7481,18 @@
             }
             updateAnnouncementsBadge(offers.filter(o => o && String(o).trim()).length);
         }
-        window.loadAnnouncementsIntoAdmin = loadAnnouncementsIntoAdmin;
+        async function loadCategoriesIntoAdmin() {
+            if (window.SupabaseEngine && typeof window.SupabaseEngine.getCategories === 'function') {
+                try {
+                    const cloudCats = await window.SupabaseEngine.getCategories();
+                    if (Array.isArray(cloudCats) && cloudCats.length > 0) {
+                        saveCategoryList(cloudCats);
+                        populateCategoryDropdowns();
+                    }
+                } catch(e) {}
+            }
+        }
+        window.loadCategoriesIntoAdmin = loadCategoriesIntoAdmin;
 
         function updateAnnouncementsBadge(count) {
             const badge = document.getElementById('announcementsCountBadge');
@@ -7629,7 +7640,9 @@
                 await Promise.all([
                     loadProducts(),
                     loadReviewsAdmin(),
-                    loadOrdersAdmin()
+                    loadOrdersAdmin(),
+                    loadCategoriesIntoAdmin(),
+                    loadAnnouncementsIntoAdmin()
                 ]);
                 renderDashboard();
                 renderReviewsAdmin();
