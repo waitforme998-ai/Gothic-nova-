@@ -3287,7 +3287,7 @@
                             <ul style="margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px;">
                                 <li><strong>Bundled Pricing Architecture:</strong> Delivery and fulfillment are incorporated directly into the product catalog pricing with zero extra delivery fee add-ons.</li>
                                 <li><strong>Direct Product Management:</strong> Products only require Price and optional Sale Price without manual delivery fee configuration.</li>
-                                <li><strong>Tarot Rewards Integration:</strong> Free delivery, discounts, mystery gifts, and VIP upgrades won by customers are automatically documented inside each order.</li>
+                                <li><strong>Tarot Rewards Integration:</strong> Free delivery, discounts, mystery gifts, and order upgrades won by customers are automatically documented inside each order.</li>
                             </ul>
                         </div>
 
@@ -3312,7 +3312,7 @@
                             <p style="margin-bottom: 6px;">Automated customer engagement and conversion catalyst:</p>
                             <ul style="margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px;">
                                 <li><strong>48-Hour Strict Lock:</strong> First-time visitors draw 1 sacred card from the Gothic Tarot deck with a strict 48-hour countdown timer stored in localStorage.</li>
-                                <li><strong>Reward Types:</strong> Includes <em>Free Delivery</em> (waives shipping and COD deposit), <em>10% Instant Discount</em> (deducts from cart subtotal), <em>Free Gothic Artifact Gift</em> (enclosed in packaging), and <em>VIP Order Upgrade</em>.</li>
+                                <li><strong>Reward Types:</strong> Includes <em>Free Delivery</em> (waives shipping and COD deposit), <em>10% Instant Discount</em> (deducts from cart subtotal), <em>Free Gift</em>, and <em>Order Upgrade</em>.</li>
                                 <li><strong>Order Sync:</strong> Applied discounts and claimed reward gifts automatically flow into customer orders and display with colored badges in the Admin Orders panel.</li>
                             </ul>
                         </div>
@@ -5191,7 +5191,7 @@
                         pillBg = 'rgba(255, 117, 143, 0.08)';
                         pillBorder = 'rgba(255, 117, 143, 0.32)';
                     } else if (cardReward.type === 'order_upgrade') {
-                        pillText = 'TAROT: VIP UPGRADE';
+                        pillText = 'TAROT: ORDER UPGRADE';
                         pillColor = '#c084fc';
                         pillBg = 'rgba(192, 132, 252, 0.08)';
                         pillBorder = 'rgba(192, 132, 252, 0.32)';
@@ -5386,28 +5386,28 @@
                                         return `
                                             <div style="display: flex; align-items: center; gap: 8px; background: rgba(255, 200, 87, 0.06); border: 1px solid rgba(255, 200, 87, 0.28); border-radius: var(--radius-sm); padding: 7px 12px; margin-bottom: 2px;">
                                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ffc857" stroke-width="2.2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
-                                                <span class="font-mono" style="font-size: 0.72rem; color: #ffc857; font-weight: 700; letter-spacing: 0.03em;">TAROT REWARD: ${escapeHtml(rw.title || '10% Discount')} (${escapeHtml(rw.code || 'TAROT')}) &bull; Discount Deducted: Rs. ${Number(rw.discount_amount || 0).toLocaleString('en-PK')}</span>
+                                                <span class="font-mono" style="font-size: 0.72rem; color: #ffc857; font-weight: 700; letter-spacing: 0.03em;">TAROT REWARD: 10% Off (${escapeHtml(rw.code || 'TAROT')}) &bull; Discount Deducted: Rs. ${Number(rw.discount_amount || 0).toLocaleString('en-PK')}</span>
                                             </div>
                                         `;
                                     } else if (rw.type === 'free_shipping') {
                                         return `
                                             <div style="display: flex; align-items: center; gap: 8px; background: rgba(56, 189, 248, 0.06); border: 1px solid rgba(56, 189, 248, 0.28); border-radius: var(--radius-sm); padding: 7px 12px; margin-bottom: 2px;">
                                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.2"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
-                                                <span class="font-mono" style="font-size: 0.72rem; color: #38bdf8; font-weight: 700; letter-spacing: 0.03em;">TAROT REWARD: Free Delivery (${escapeHtml(rw.code || 'TAROT')}) &bull; Standard Rs. 700 Advance Verified &bull; Free Courier Shipping</span>
+                                                <span class="font-mono" style="font-size: 0.72rem; color: #38bdf8; font-weight: 700; letter-spacing: 0.03em;">TAROT REWARD: Free Delivery (${escapeHtml(rw.code || 'TAROT')})</span>
                                             </div>
                                         `;
                                     } else if (rw.type === 'free_gift') {
                                         return `
                                             <div style="display: flex; align-items: center; gap: 8px; background: rgba(255, 117, 143, 0.06); border: 1px solid rgba(255, 117, 143, 0.28); border-radius: var(--radius-sm); padding: 7px 12px; margin-bottom: 2px;">
                                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ff758f" stroke-width="2.2"><polyline points="20 12 20 22 4 22 4 12"></polyline><rect x="2" y="7" width="20" height="5"></rect><line x1="12" y1="22" x2="12" y2="7"></line><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path></svg>
-                                                <span class="font-mono" style="font-size: 0.72rem; color: #ff758f; font-weight: 700; letter-spacing: 0.03em;">TAROT PERK: Complimentary Gothic Gift Artifact (${escapeHtml(rw.code || 'TAROT')}) &bull; Enclose in Shipment</span>
+                                                <span class="font-mono" style="font-size: 0.72rem; color: #ff758f; font-weight: 700; letter-spacing: 0.03em;">TAROT REWARD: Free Gift (${escapeHtml(rw.code || 'TAROT')})</span>
                                             </div>
                                         `;
                                     } else if (rw.type === 'order_upgrade') {
                                         return `
                                             <div style="display: flex; align-items: center; gap: 8px; background: rgba(192, 132, 252, 0.06); border: 1px solid rgba(192, 132, 252, 0.28); border-radius: var(--radius-sm); padding: 7px 12px; margin-bottom: 2px;">
                                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#c084fc" stroke-width="2.2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                                                <span class="font-mono" style="font-size: 0.72rem; color: #c084fc; font-weight: 700; letter-spacing: 0.03em;">TAROT PERK: VIP Luxury Packaging Upgrade (${escapeHtml(rw.code || 'TAROT')}) &bull; Pack in Deluxe Box</span>
+                                                <span class="font-mono" style="font-size: 0.72rem; color: #c084fc; font-weight: 700; letter-spacing: 0.03em;">TAROT REWARD: Order Upgrade (${escapeHtml(rw.code || 'TAROT')})</span>
                                             </div>
                                         `;
                                     } else {
