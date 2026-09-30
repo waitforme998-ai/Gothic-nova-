@@ -2963,59 +2963,28 @@
             </div>
         </section>
 
-        <!-- Product Catalog & Category Filter Section -->
-        <section class="section" style="margin-top: 18px;" id="adminCatalogSection">
-            <div class="categories-section">
-                <div class="categories-header" style="cursor: default;">
-                    <div class="categories-header-left">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffe8be" stroke-width="2" style="margin-right: 4px; flex-shrink: 0;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-                        <h3>PRODUCTS CATALOG</h3>
-                        <span id="catalogCountBadge" class="cat-count-badge">0</span>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <button type="button" class="btn-mono-primary" onclick="openProductModal()" style="padding: 7px 15px; font-size: 0.76rem; gap: 6px;">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
-                            <span>ADD PRODUCT</span>
-                        </button>
-                    </div>
-                </div>
-
-                <div style="padding: 16px;">
-                    <!-- Category Filter Tabs Bar with Horizontal Scroll -->
-                    <div class="admin-cat-filter-bar" id="adminCatFilterBar">
-                        <!-- Populated dynamically with ALL, CHAINS, RINGS, etc. -->
-                    </div>
-
-                    <!-- Products Grid for Selected Category -->
-                    <div id="adminProductGrid" class="cat-products-list" style="margin-top: 14px;">
-                        <!-- Populated dynamically with catalog-cards -->
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Categories Accordion Section -->
+        <!-- Unified Products Section (Category Dropdowns with nested products) -->
         <section class="section" style="margin-top: 18px;">
             <div class="categories-section" id="categoriesSection">
                 <div class="categories-header" onclick="toggleCategoriesSection()">
                     <div class="categories-header-left">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffe8be" stroke-width="2" style="margin-right: 4px; flex-shrink: 0;"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
-                        <h3>Categories</h3>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffe8be" stroke-width="2" style="margin-right: 4px; flex-shrink: 0;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                        <h3>Products</h3>
                         <span id="catCountBadge" class="cat-count-badge">0</span>
                     </div>
-                    <svg id="categoriesChevron" class="chevron-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+                    <svg id="categoriesChevron" class="chevron-icon open" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
                 </div>
-                <div class="categories-body" id="categoriesBody">
+                <div class="categories-body open" id="categoriesBody">
                     <div class="categories-body-inner">
                         <div class="add-cat-inline-form">
                             <input type="text" id="newCategoryNameInput" placeholder="New category name..." class="add-cat-input" onkeydown="if(event.key==='Enter'){event.preventDefault(); createCategoryFromManagement();}">
                             <button type="button" class="btn-mono-primary" onclick="createCategoryFromManagement()">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
-                                <span>Add</span>
+                                <span>Add Category</span>
                             </button>
                         </div>
                         <div id="categoryAccordionList">
-                            <!-- Dynamically populated category accordions with nested products -->
+                            <!-- Dynamically populated category accordions with nested products (closed by default) -->
                         </div>
                     </div>
                 </div>
@@ -4030,23 +3999,41 @@
                 standard.forEach(c => map.set(c.id.toLowerCase(), c.name));
             } else if (Array.isArray(meta)) {
                 meta.forEach(c => {
-                    if (c && c.id) map.set(c.id.toLowerCase(), c.name || (c.id.charAt(0).toUpperCase() + c.id.slice(1)));
-                    else if (typeof c === 'string' && c.trim()) {
+                    if (c && c.id) {
+                        const slug = String(c.id).trim().toLowerCase();
+                        if (slug !== 'general' && slug !== 'all' && slug !== '') {
+                            map.set(slug, c.name || (slug.charAt(0).toUpperCase() + slug.slice(1)));
+                        }
+                    } else if (typeof c === 'string' && c.trim()) {
                         const slug = c.trim().toLowerCase();
-                        map.set(slug, slug.charAt(0).toUpperCase() + slug.slice(1));
+                        if (slug !== 'general' && slug !== 'all' && slug !== '') {
+                            map.set(slug, slug.charAt(0).toUpperCase() + slug.slice(1));
+                        }
                     }
                 });
             }
 
             (window.customCategories || []).forEach(cat => {
-                if (typeof cat === 'string') { const slug = cat.trim().toLowerCase(); if (!map.has(slug)) map.set(slug, slug.charAt(0).toUpperCase() + slug.slice(1)); }
-                else if (cat && cat.id) map.set(cat.id.toLowerCase(), cat.name || cat.id);
+                if (typeof cat === 'string') { 
+                    const slug = cat.trim().toLowerCase(); 
+                    if (slug !== 'general' && slug !== 'all' && slug !== '' && !map.has(slug)) {
+                        map.set(slug, slug.charAt(0).toUpperCase() + slug.slice(1)); 
+                    }
+                }
+                else if (cat && cat.id) {
+                    const slug = String(cat.id).trim().toLowerCase();
+                    if (slug !== 'general' && slug !== 'all' && slug !== '' && !map.has(slug)) {
+                        map.set(slug, cat.name || slug);
+                    }
+                }
             });
 
             (products || []).forEach(p => { 
                 if (p.category && p.category.trim() && p.active !== false) { 
                     const slug = p.category.trim().toLowerCase(); 
-                    if (!map.has(slug)) map.set(slug, slug.charAt(0).toUpperCase() + slug.slice(1)); 
+                    if (slug !== 'general' && slug !== 'all' && slug !== '' && !map.has(slug)) {
+                        map.set(slug, slug.charAt(0).toUpperCase() + slug.slice(1)); 
+                    }
                 } 
             });
 
@@ -4055,18 +4042,23 @@
 
         function saveCategoryList(list) {
             try {
-                localStorage.setItem('gn_categories_meta', JSON.stringify(list));
-                localStorage.setItem('gn_categories', JSON.stringify(list.map(c => c.id)));
-                window.customCategories = list.map(c => c.id);
+                const cleanList = (list || []).filter(c => c && c.id && String(c.id).toLowerCase() !== 'general' && String(c.id).toLowerCase() !== 'all');
+                localStorage.setItem('gn_categories_meta', JSON.stringify(cleanList));
+                localStorage.setItem('gn_categories', JSON.stringify(cleanList.map(c => c.id)));
+                window.customCategories = cleanList.map(c => c.id);
             } catch(e) {}
         }
 
         // --- SECTION TOGGLES ---
-        let categoriesSectionOpen = false;
-        window.toggleCategoriesSection = function() {
-            categoriesSectionOpen = !categoriesSectionOpen;
-            document.getElementById('categoriesBody').classList.toggle('open', categoriesSectionOpen);
-            document.getElementById('categoriesChevron').classList.toggle('open', categoriesSectionOpen);
+        let categoriesSectionOpen = true;
+        window.toggleCategoriesSection = function(forceOpen) {
+            if (forceOpen === true) categoriesSectionOpen = true;
+            else if (forceOpen === false) categoriesSectionOpen = false;
+            else categoriesSectionOpen = !categoriesSectionOpen;
+            const body = document.getElementById('categoriesBody');
+            const chev = document.getElementById('categoriesChevron');
+            if (body) body.classList.toggle('open', categoriesSectionOpen);
+            if (chev) chev.classList.toggle('open', categoriesSectionOpen);
         };
 
         let reviewsSectionOpen = false;
@@ -4140,9 +4132,8 @@
             const catList = getCategoryList();
             const renderCustomOptions = (listEl, dropdownId) => {
                 if (!listEl) return;
-                const generalOption = `<div class="custom-dropdown-option" data-value="general" onclick="selectCustomDropdownOption('${dropdownId}', 'general', 'GENERAL')">GENERAL</div>`;
-                const filtered = catList.filter(c => c && String(c.id).toLowerCase() !== 'general');
-                listEl.innerHTML = generalOption + filtered.map(c =>
+                const filtered = catList.filter(c => c && String(c.id).toLowerCase() !== 'general' && String(c.id).toLowerCase() !== 'all');
+                listEl.innerHTML = filtered.map(c =>
                     `<div class="custom-dropdown-option" data-value="${c.id}" onclick="selectCustomDropdownOption('${dropdownId}', '${c.id}', '${escapeQuote(c.name.toUpperCase())}')">${c.name.toUpperCase()}</div>`
                 ).join('');
             };
@@ -4166,7 +4157,7 @@
             const rawName = input.value.replace(/[<>]/g, '').trim().slice(0, 40);
             if (!rawName) { showToast("Enter a category name", true); return; }
             const slug = rawName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-            if (!slug) { showToast("Invalid category name", true); return; }
+            if (!slug || slug === 'general' || slug === 'all') { showToast("Invalid category name", true); return; }
             const catList = getCategoryList();
             if (catList.some(c => c.id.toLowerCase() === slug)) { 
                 showToast("Category already exists", true); 
@@ -4371,23 +4362,26 @@
             showToast(`Restocked +${amount}!`);
         };
 
-        window.quickDeleteProductCard = function(e, pid) {
+        window.quickDeleteProductCard = function(e, pid, name) {
             if (e) {
                 e.preventDefault();
                 e.stopPropagation();
             }
-            // Disappear immediately on clicking cross (no fade out, no slow animation)
-            const cards = document.querySelectorAll(`.catalog-card[data-pid="${pid}"]`);
-            cards.forEach(c => {
-                c.style.display = 'none';
-                c.remove();
+            const target = products.find(p => String(p.id) === String(pid));
+            const prodName = name || (target ? target.name : 'this product');
+            showCustomConfirm({
+                title: 'Delete Product?',
+                message: `Are you sure you want to delete "${prodName}"? This action cannot be undone.`,
+                confirmText: 'Delete',
+                isDanger: true,
+                onConfirm: () => {
+                    deleteProduct(pid);
+                }
             });
-            deleteProduct(pid);
         };
 
         window.confirmDeleteProduct = function(pid, name) {
-            // Direct instant deletion as requested by user
-            window.quickDeleteProductCard(null, pid);
+            window.quickDeleteProductCard(null, pid, name);
         };
 
         window.deleteProduct = async function(pid) {
@@ -4446,10 +4440,10 @@
             const rawImg = p.img || '';
             const resolvedImg = resolveProductImg(rawImg);
             const catObj = (catList || []).find(c => c.id.toLowerCase() === (p.category || '').toLowerCase());
-            const catName = catObj ? catObj.name : (p.category || 'General');
+            const catName = catObj ? catObj.name : (p.category && p.category.toLowerCase() !== 'general' ? p.category : 'All');
 
             return `<div class="catalog-card" data-pid="${safeId}">
-                <button type="button" class="catalog-card-cross-btn" onclick="quickDeleteProductCard(event, '${safeId}')" title="Delete Product">×</button>
+                <button type="button" class="catalog-card-cross-btn" onclick="quickDeleteProductCard(event, '${safeId}', '${escapeQuote(safeName)}')" title="Delete Product">×</button>
                 <div class="catalog-card-img-wrap">
                     <img src="${resolvedImg}" alt="${safeName}" onerror="handleThumbError(this, '${escapeHtml(rawImg)}')">
                     ${stockBadgeHtml}
@@ -4471,9 +4465,6 @@
                         <button type="button" class="catalog-edit-btn" onclick="openEditProductModal('${safeId}')" title="Edit Product">
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                         </button>
-                        <button type="button" class="catalog-delete-btn" onclick="quickDeleteProductCard(event, '${safeId}')" title="Delete">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-                        </button>
                     </div>
                     <button type="button" class="quick-restock-btn" onclick="quickRestockProduct('${safeId}', 5)" title="Quick Restock +5">
                         +5 QUICK RESTOCK
@@ -4482,7 +4473,7 @@
             </div>`;
         }
 
-        // --- DASHBOARD RENDERER (2-TIER RESPONSIVE ARCHITECTURE) ---
+        // --- DASHBOARD RENDERER (UNIFIED CATEGORY ACCORDIONS) ---
         function renderDashboard() {
             populateCategoryDropdowns();
             const totalCount = products.length;
@@ -4504,40 +4495,9 @@
             const alertEl = document.getElementById('stat-alerts-count');
             if (alertEl) alertEl.textContent = lowStockCount;
             const badge = document.getElementById('catCountBadge');
-            if (badge) badge.textContent = catList.length;
+            if (badge) badge.textContent = totalCount;
 
-            // 1. RENDER CATEGORY FILTER TABS
-            const catFilterBar = document.getElementById('adminCatFilterBar');
-            if (catFilterBar) {
-                let barHtml = `<button type="button" class="admin-cat-tab${activeAdminCategoryFilter === 'all' ? ' active' : ''}" onclick="setAdminCategoryFilter('all')">
-                    All <span class="admin-cat-tab-count">${totalCount}</span>
-                </button>`;
-                catList.forEach(cat => {
-                    const catCount = products.filter(p => (p.category || '').trim().toLowerCase() === cat.id.toLowerCase()).length;
-                    barHtml += `<button type="button" class="admin-cat-tab${activeAdminCategoryFilter === cat.id.toLowerCase() ? ' active' : ''}" onclick="setAdminCategoryFilter('${escapeHtml(cat.id)}')">
-                        ${escapeHtml(cat.name)} <span class="admin-cat-tab-count">${catCount}</span>
-                    </button>`;
-                });
-                catFilterBar.innerHTML = barHtml;
-            }
-
-            // 2. RENDER MAIN PRODUCTS CATALOG GRID
-            const adminProductGrid = document.getElementById('adminProductGrid');
-            if (adminProductGrid) {
-                const filteredProducts = (activeAdminCategoryFilter === 'all')
-                    ? products
-                    : products.filter(p => (p.category || '').trim().toLowerCase() === activeAdminCategoryFilter);
-
-                if (filteredProducts.length === 0) {
-                    adminProductGrid.innerHTML = `<div class="cat-products-empty" style="grid-column: 1 / -1; padding: 28px 16px; text-align: center; color: var(--text-secondary);">
-                        No products found in this category. Click <strong>ADD PRODUCT</strong> above to create one.
-                    </div>`;
-                } else {
-                    adminProductGrid.innerHTML = filteredProducts.map(p => renderAdminCatalogCard(p, catList)).join('');
-                }
-            }
-
-            // 3. RENDER ALERTS LIST (LOW STOCK / SOLD OUT)
+            // RENDER ALERTS LIST (LOW STOCK / SOLD OUT)
             const alertsBadge = document.getElementById('alertsCountBadge');
             if (alertsBadge) {
                 alertsBadge.textContent = lowStockCount;
@@ -4561,6 +4521,36 @@
             if (!accordionList) return;
             accordionList.innerHTML = '';
 
+            // 1. MASTER "ALL PRODUCTS" ACCORDION (CLOSED BY DEFAULT)
+            const isAllOpen = openCategoryAccordions.has('all');
+            let allProductsHtml = '';
+            if (isAllOpen) {
+                if (products.length === 0) {
+                    allProductsHtml = `<div class="cat-products-empty">No products uploaded yet.</div>`;
+                } else {
+                    allProductsHtml = products.map(p => renderAdminCatalogCard(p, catList)).join('');
+                }
+            }
+
+            const allAccordion = document.createElement('div');
+            allAccordion.className = 'cat-accordion';
+            allAccordion.id = 'cat-accordion-all';
+            allAccordion.dataset.slug = 'all';
+            allAccordion.innerHTML = `
+                <div class="cat-accordion-header" onclick="toggleCategoryAccordion('all')">
+                    <div class="cat-accordion-left">
+                        <svg class="cat-accordion-chevron${isAllOpen ? ' open' : ''}" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+                        <span class="cat-accordion-name">All Products</span>
+                        <span class="cat-accordion-count">${products.length} items</span>
+                    </div>
+                </div>
+                <div class="cat-accordion-body${isAllOpen ? ' open' : ''}">
+                    <div class="cat-products-list">${allProductsHtml}</div>
+                </div>
+            `;
+            accordionList.appendChild(allAccordion);
+
+            // 2. INDIVIDUAL CATEGORY ACCORDIONS (CLOSED BY DEFAULT)
             catList.forEach(cat => {
                 const catProducts = products.filter(p => (p.category || '').trim().toLowerCase() === cat.id.toLowerCase());
                 const count = catProducts.length;
@@ -4571,52 +4561,7 @@
                     if (catProducts.length === 0) {
                         productsHtml = `<div class="cat-products-empty">No products in this category yet.</div>`;
                     } else {
-                        productsHtml = catProducts.map(p => {
-                            const isSale = p.salePrice !== null && p.salePrice !== undefined && p.salePrice !== '';
-                            const safePrice = Number(p.price || 0).toLocaleString('en-PK');
-                            const safeSale = Number(p.salePrice || 0).toLocaleString('en-PK');
-                            const priceHtml = isSale ? `<span class="original">Rs. ${safePrice}</span><span>Rs. ${safeSale}</span>` : `<span>Rs. ${safePrice}</span>`;
-                            const isSoldOut = Number(p.stock) === 0;
-                            const isLowStock = !isSoldOut && Number(p.stock) <= Number(p.threshold || 3);
-                            let stockBadgeHtml = '';
-                            if (isSoldOut) stockBadgeHtml = `<span class="stock-badge out-stock">Sold Out</span>`;
-                            else if (isLowStock) stockBadgeHtml = `<span class="stock-badge low-stock">Low (${p.stock})</span>`;
-                            let qtyClass = isSoldOut ? ' sold-out' : (isLowStock ? ' low-stock' : '');
-                            const safeId = escapeHtml(p.id);
-                            const safeName = escapeHtml(p.name || 'Untitled');
-                            const rawImg = p.img || '';
-                            const resolvedImg = resolveProductImg(rawImg);
-
-                            return `<div class="catalog-card" data-pid="${safeId}">
-                                <button type="button" class="catalog-card-cross-btn" onclick="quickDeleteProductCard(event, '${safeId}')" title="Delete Product">×</button>
-                                <div class="catalog-card-img-wrap">
-                                    <img src="${resolvedImg}" alt="${safeName}" onerror="handleThumbError(this, '${escapeHtml(rawImg)}')">
-                                    ${stockBadgeHtml}
-                                </div>
-                                <div class="catalog-card-body">
-                                    <div class="catalog-title" title="${safeName}">${safeName}</div>
-                                    <div class="catalog-price font-mono${isSale ? ' sale' : ''}">${priceHtml}</div>
-                                </div>
-                                <div class="catalog-actions-group">
-                                    <div class="catalog-actions-top-row">
-                                        <div class="catalog-qty-stepper">
-                                            <button type="button" class="catalog-qty-btn" onclick="adjustCatalogStock('${safeId}', -1)" title="Decrease Stock">−</button>
-                                            <span class="catalog-qty-val${qtyClass}">${p.stock}</span>
-                                            <button type="button" class="catalog-qty-btn" onclick="adjustCatalogStock('${safeId}', 1)" title="Increase Stock">+</button>
-                                        </div>
-                                        <button type="button" class="catalog-edit-btn" onclick="openEditProductModal('${safeId}')" title="Edit">
-                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                                        </button>
-                                        <button type="button" class="catalog-delete-btn" onclick="quickDeleteProductCard(event, '${safeId}')" title="Delete">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-                                        </button>
-                                    </div>
-                                    <button type="button" class="quick-restock-btn" onclick="quickRestockProduct('${safeId}', 5)" title="Quick Restock +5">
-                                        +5 QUICK RESTOCK
-                                    </button>
-                                </div>
-                            </div>`;
-                        }).join('');
+                        productsHtml = catProducts.map(p => renderAdminCatalogCard(p, catList)).join('');
                     }
                 }
 
@@ -6025,10 +5970,12 @@
                 saveBtn.style.opacity = '';
             }
             populateCategoryDropdowns();
+            const catList = getCategoryList();
+            const defaultCat = (catList && catList.length > 0) ? catList[0] : { id: 'rings', name: 'RINGS' };
             const catHidden = document.getElementById('single-product-category');
             const catTrigger = document.getElementById('singleCatTrigger');
-            if (catHidden) catHidden.value = 'general';
-            if (catTrigger) catTrigger.textContent = 'GENERAL';
+            if (catHidden) catHidden.value = defaultCat.id;
+            if (catTrigger) catTrigger.textContent = defaultCat.name.toUpperCase();
             renderSingleStockImages();
             openModal(productSheet);
         };
@@ -6059,9 +6006,11 @@
             populateCategoryDropdowns();
             const catHidden = document.getElementById('single-product-category');
             const catTrigger = document.getElementById('singleCatTrigger');
-            const catVal = (product.category || 'general').toLowerCase();
-            catHidden.value = catVal;
             const catList = getCategoryList();
+            const defaultCatId = catList[0]?.id || 'rings';
+            let catVal = (product.category || defaultCatId).toLowerCase();
+            if (catVal === 'general') catVal = defaultCatId;
+            catHidden.value = catVal;
             const found = catList.find(c => c.id === catVal);
             catTrigger.textContent = found ? found.name.toUpperCase() : catVal.toUpperCase();
 
@@ -6082,8 +6031,10 @@
             const salePriceVal = document.getElementById('single-product-sale-price').value.trim();
             const stock = parseInt(document.getElementById('single-product-stock').value, 10);
             const threshold = parseInt(document.getElementById('single-product-threshold').value, 10);
+            const catList = getCategoryList();
+            const defaultCatId = catList[0]?.id || 'rings';
             let category = (document.getElementById('single-product-category')?.value || '').trim().toLowerCase();
-            if (!category) category = 'general';
+            if (!category || category === 'general') category = defaultCatId;
             const desc = document.getElementById('single-product-desc')?.value.trim() || '';
 
             if (!singleSelectedImg) { showToast("Select a product image", true); return; }
@@ -6151,22 +6102,28 @@
 
         async function commitProductsToStore(items) {
             if (!items || !items.length) return [];
+            const catList = getCategoryList();
+            const defaultCatSlug = (catList && catList.length > 0) ? catList[0].id : 'rings';
             let nextId = Math.max(0, ...products.map(p => parseInt(p.id, 10) || 0)) + 1;
-            const newItems = items.map(item => ({
-                id: (nextId++).toString(),
-                name: (item.name || `Artifact #${nextId - 1}`).trim(),
-                category: (item.category || 'general').trim().toLowerCase(),
-                img: item.img || '',
-                stock_images: Array.isArray(item.stock_images) ? item.stock_images : (Array.isArray(item.stockImages) ? item.stockImages : []),
-                stockImages: Array.isArray(item.stock_images) ? item.stock_images : (Array.isArray(item.stockImages) ? item.stockImages : []),
-                price: parseFloat(item.price) || 0,
-                salePrice: (item.salePrice !== null && item.salePrice !== undefined && item.salePrice !== '') ? parseFloat(item.salePrice) : null,
-                stock: (item.stock !== undefined && item.stock !== '') ? parseInt(item.stock, 10) : 10,
-                threshold: (item.threshold !== undefined && item.threshold !== '') ? parseInt(item.threshold, 10) : 3,
-                desc: (item.description || item.desc || '').trim(),
-                description: (item.description || item.desc || '').trim(),
-                active: true
-            }));
+            const newItems = items.map(item => {
+                let cat = (item.category || '').trim().toLowerCase();
+                if (!cat || cat === 'general') cat = defaultCatSlug;
+                return {
+                    id: (nextId++).toString(),
+                    name: (item.name || `Artifact #${nextId - 1}`).trim(),
+                    category: cat,
+                    img: item.img || '',
+                    stock_images: Array.isArray(item.stock_images) ? item.stock_images : (Array.isArray(item.stockImages) ? item.stockImages : []),
+                    stockImages: Array.isArray(item.stock_images) ? item.stock_images : (Array.isArray(item.stockImages) ? item.stockImages : []),
+                    price: parseFloat(item.price) || 0,
+                    salePrice: (item.salePrice !== null && item.salePrice !== undefined && item.salePrice !== '') ? parseFloat(item.salePrice) : null,
+                    stock: (item.stock !== undefined && item.stock !== '') ? parseInt(item.stock, 10) : 10,
+                    threshold: (item.threshold !== undefined && item.threshold !== '') ? parseInt(item.threshold, 10) : 3,
+                    desc: (item.description || item.desc || '').trim(),
+                    description: (item.description || item.desc || '').trim(),
+                    active: true
+                };
+            });
             products = [...products, ...newItems];
             window.gn_products = products;
             try {
