@@ -1814,10 +1814,52 @@
         });
     </script>
     
-    <!-- SALE TICKER BAND -->
-    <div class="sale-ticker-band" id="saleTickerBand" style="display: none;">
-        <div class="sale-ticker-track" id="saleTickerTrack"></div>
+    <!-- SALE TICKER BAND (0MS INSTANT INITIAL RENDER) -->
+    <div class="sale-ticker-band" id="saleTickerBand">
+        <div class="sale-ticker-track" id="saleTickerTrack">
+            <div class="sale-ticker-group">
+                <span>⚡ MIDNIGHT DROP // FREE SHIPPING OVER RS. 4000</span>
+                <span>⚡ HANDCRAFTED 316L STAINLESS STEEL</span>
+                <span>⚡ CASH ON DELIVERY NATIONWIDE</span>
+            </div>
+            <div class="sale-ticker-group" aria-hidden="true">
+                <span>⚡ MIDNIGHT DROP // FREE SHIPPING OVER RS. 4000</span>
+                <span>⚡ HANDCRAFTED 316L STAINLESS STEEL</span>
+                <span>⚡ CASH ON DELIVERY NATIONWIDE</span>
+            </div>
+        </div>
     </div>
+    <script>
+        (function() {
+            try {
+                var raw = localStorage.getItem('gn_announcements');
+                if (raw) {
+                    var offers = JSON.parse(raw);
+                    if (Array.isArray(offers)) {
+                        offers = offers.filter(function(o) { return o && String(o).trim(); });
+                        var band = document.getElementById('saleTickerBand');
+                        var track = document.getElementById('saleTickerTrack');
+                        if (band && track) {
+                            if (offers.length === 0) {
+                                band.style.display = 'none';
+                                document.body.classList.add('no-ticker');
+                            } else if (offers.length === 1) {
+                                band.style.display = 'flex';
+                                band.classList.add('single-offer');
+                                track.innerHTML = '<span>⚡ ' + offers[0] + '</span>';
+                                track.style.animation = 'none';
+                            } else {
+                                band.style.display = 'flex';
+                                band.classList.remove('single-offer');
+                                var singleSet = offers.map(function(o) { return '<span>⚡ ' + o + '</span>'; }).join('');
+                                track.innerHTML = '<div class="sale-ticker-group">' + singleSet + '</div><div class="sale-ticker-group" aria-hidden="true">' + singleSet + '</div>';
+                            }
+                        }
+                    }
+                }
+            } catch(e) {}
+        })();
+    </script>
 
     <!-- FIXED GLASSMORPHIC NAVBAR -->
     <nav class="navbar reveal-header" id="mainNav">
@@ -2000,22 +2042,10 @@
                                     return;
                                 }
                                 e.stopPropagation();
-                                if (typeof window.navigateToProductCard === 'function') {
+                                if (typeof window.openPdpModal === 'function') {
+                                    window.openPdpModal(p);
+                                } else if (typeof window.navigateToProductCard === 'function') {
                                     window.navigateToProductCard(p.id);
-                                } else if (typeof window.scrollToProduct === 'function') {
-                                    window.scrollToProduct(p.id);
-                                } else {
-                                    const card = document.querySelector(`.product-card[data-product-id="${p.id}"]`);
-                                    if (card) {
-                                        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                        card.classList.remove('product-search-highlight');
-                                        void card.offsetWidth;
-                                        card.classList.add('product-search-highlight');
-                                        setTimeout(() => card.classList.remove('product-search-highlight'), 3600);
-                                    } else {
-                                        const activeDrop = document.getElementById('active-drop') || document.getElementById('main-drop-grid');
-                                        if (activeDrop) activeDrop.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                                    }
                                 }
                             };
                             itemDiv.innerHTML = `
@@ -2429,12 +2459,18 @@
                     document.querySelectorAll('#categoryFilterContainer .filter-tab:not(.cat-more-toggle-btn), #categoryExpandedDrawer .filter-tab').forEach(tab => {
                         tab.addEventListener('click', function(e) {
                             e.preventDefault();
-                            const filterVal = this.getAttribute('data-filter') || 'all';
+                            e.stopPropagation();
+                            const filterVal = (this.getAttribute('data-filter') || 'all').toLowerCase();
+                            window.searchQuery = '';
+                            const searchInputs = document.querySelectorAll('.search-input');
+                            searchInputs.forEach(i => i.value = '');
                             window.currentCategory = filterVal;
                             window.catalogVisibleCount = window.CATALOG_BATCH_SIZE || 12;
                             window.prevCatalogVisibleCount = 0;
                             renderCategoryTabs();
-                            window.renderMainCatalog();
+                            if (typeof window.renderMainCatalog === 'function') {
+                                window.renderMainCatalog();
+                            }
                         });
                     });
 
