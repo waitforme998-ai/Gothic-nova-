@@ -1112,10 +1112,30 @@
 
                     if (window.searchQuery && window.searchQuery.trim() !== '') {
                         const q = window.searchQuery.toLowerCase().trim();
-                        list = list.filter(p => 
-                            (p.name || '').toLowerCase().includes(q) || 
-                            (p.category || '').toLowerCase().includes(q)
-                        );
+                        const queryWords = q.split(/\s+/).filter(Boolean);
+
+                        let catList = [];
+                        try {
+                            const rawCats = localStorage.getItem('gn_categories_meta');
+                            if (rawCats) catList = JSON.parse(rawCats);
+                        } catch(e) {}
+
+                        list = list.filter(p => {
+                            const name = (p.name || '').toLowerCase();
+                            const catSlug = (p.category || '').toLowerCase();
+                            const catObj = Array.isArray(catList) ? catList.find(c => String(c.id).toLowerCase() === catSlug) : null;
+                            const catDisplayName = (catObj ? catObj.name : '').toLowerCase();
+                            const desc = (p.description || p.desc || p.details || '').toLowerCase();
+                            const tags = Array.isArray(p.tags) ? p.tags.join(' ').toLowerCase() : String(p.tags || '').toLowerCase();
+                            const material = (p.material || '').toLowerCase();
+                            const priceStr = String(p.price || '');
+                            const salePriceStr = String(p.salePrice || '');
+
+                            const fullBlob = `${name} ${catSlug} ${catDisplayName} ${desc} ${tags} ${material} ${priceStr} ${salePriceStr}`;
+
+                            if (fullBlob.includes(q)) return true;
+                            return queryWords.every(word => fullBlob.includes(word));
+                        });
                     }
 
                     const totalCount = list.length;
@@ -1371,6 +1391,7 @@
                     window.renderSaleTicker();
                     window.renderFooterCollections();
                     window.renderMainCatalog();
+                    if (typeof window.renderNewArrivals === 'function') window.renderNewArrivals();
                     window.renderCustomerReviews();
                 });
                 function refreshStorefrontCatalog() {

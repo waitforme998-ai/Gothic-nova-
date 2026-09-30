@@ -4215,24 +4215,64 @@
         };
 
         window.handleCategoryDeleteClick = function(slug, name, count) {
-            if (count > 0) {
-                showCustomNotice("Cannot Delete", `"${name}" has ${count} product(s). Reassign them first.`);
-                return;
-            }
+            const cleanSlug = String(slug || '').trim().toLowerCase();
+            const message = count > 0 
+                ? `Are you sure you want to delete "${name}"? Its ${count} product(s) will automatically move to "All Products".`
+                : `Are you sure you want to delete "${name}"?`;
+
             showCustomConfirm({
                 title: 'Delete Category?',
-                message: `Are you sure you want to delete "${name}"?`,
-                confirmText: 'Delete',
+                message: message,
+                confirmText: 'Delete Category',
                 isDanger: true,
                 onConfirm: async () => {
-                    let catList = getCategoryList().filter(c => c.id !== slug);
+                    // 1. Instantly remove category from local list
+                    let catList = getCategoryList().filter(c => String(c.id).toLowerCase() !== cleanSlug);
                     saveCategoryList(catList);
-                    if (window.SupabaseEngine) {
-                        try { await window.SupabaseEngine.deleteCategory(slug); } catch(e) {}
+
+                    // 2. If any products were attached to this category, reassign them to 'all'
+                    let productsModified = false;
+                    products = products.map(p => {
+                        if (p && String(p.category).trim().toLowerCase() === cleanSlug) {
+                            productsModified = true;
+                            return { ...p, category: 'all' };
+                        }
+                        return p;
+                    });
+                    if (productsModified) {
+                        try {
+                            localStorage.setItem('gn_products', JSON.stringify(products));
+                            window.gn_products = products;
+                        } catch(e) {}
                     }
+
+                    // 3. Clear from open accordions
+                    if (openCategoryAccordions.has(cleanSlug)) {
+                        openCategoryAccordions.delete(cleanSlug);
+                    }
+
+                    // 4. INSTANT UI UPDATE (0ms)
                     renderDashboard();
+                    populateCategoryDropdowns();
                     showToast(`"${name}" deleted.`);
-                    try { window.dispatchEvent(new Event('storage')); } catch(e) {}
+
+                    // 5. Broadcast & sync in background without blocking UI
+                    try {
+                        window.dispatchEvent(new Event('storage'));
+                        window.dispatchEvent(new Event('productsLoaded'));
+                        if (productsModified) broadcastProductsUpdate(products);
+                    } catch(e) {}
+
+                    if (window.SupabaseEngine) {
+                        try {
+                            await window.SupabaseEngine.deleteCategory(cleanSlug);
+                            if (productsModified) {
+                                await window.SupabaseEngine.saveProducts(products);
+                            }
+                        } catch(err) {
+                            console.warn("Category delete background sync notice:", err);
+                        }
+                    }
                 }
             });
         };
@@ -4770,21 +4810,6 @@
         window.universalAdminRefresh = universalAdminRefresh;
 
         async function loadOrdersAdmin(showFeedback = false) {
-            let loaded = [];
-            if (window.SupabaseEngine && window.SupabaseEngine.isLive) {
-                try {
-                    const raw = await window.SupabaseEngine.getOrders();
-                    if (raw && Array.isArray(raw)) loaded = raw;
-                } catch(e) {
-                    console.warn("Error loading orders from Supabase:", e);
-                }
-            }
-            if (!loaded || loaded.length === 0) {
-                try {
-                    const rawLocal = localStorage.getItem('gn_orders');
-                    if (rawLocal) loaded = JSON.parse(rawLocal);
-                } catch(e) {}
-            }
             let deletedSet = new Set();
             try {
                 const rawDel = localStorage.getItem('gn_deleted_orders');
@@ -4801,11 +4826,36 @@
                 if (id === 'ord_mock_seed_1' || id === 'ord_mock_seed_2') return true;
                 return false;
             };
-            adminOrders = (Array.isArray(loaded) ? loaded : []).filter(o => !isMockOrder(o));
-            window.adminOrders = adminOrders;
-            localStorage.setItem('gn_orders', JSON.stringify(adminOrders));
-            updateOrdersHeaderMetrics();
-            renderOrdersAdmin();
+
+            // 1. Instant Cache Hydration (0ms)
+            try {
+                const rawLocal = localStorage.getItem('gn_orders');
+                if (rawLocal) {
+                    const parsed = JSON.parse(rawLocal);
+                    if (Array.isArray(parsed)) {
+                        adminOrders = parsed.filter(o => !isMockOrder(o));
+                        window.adminOrders = adminOrders;
+                        updateOrdersHeaderMetrics();
+                        renderOrdersAdmin();
+                    }
+                }
+            } catch(e) {}
+
+            // 2. Background Cloud Revalidation
+            if (window.SupabaseEngine && window.SupabaseEngine.isLive) {
+                try {
+                    const raw = await window.SupabaseEngine.getOrders();
+                    if (raw && Array.isArray(raw)) {
+                        adminOrders = raw.filter(o => !isMockOrder(o));
+                        window.adminOrders = adminOrders;
+                        localStorage.setItem('gn_orders', JSON.stringify(adminOrders));
+                        updateOrdersHeaderMetrics();
+                        renderOrdersAdmin();
+                    }
+                } catch(e) {
+                    console.warn("Error loading orders from Supabase:", e);
+                }
+            }
             if (showFeedback) showToast(`Orders synced (${adminOrders.length} total)`);
         }
         window.loadOrdersAdmin = loadOrdersAdmin;
@@ -5472,44 +5522,55 @@
         window.toggleReviewAccordion = toggleReviewAccordion;
 
         async function loadReviewsAdmin() {
-            let loaded = null;
-            if (window.SupabaseEngine && typeof window.SupabaseEngine.getReviews === 'function') {
-                try {
-                    const raw = await window.SupabaseEngine.getReviews();
-                    if (Array.isArray(raw)) loaded = raw;
-                } catch(e) {}
-            }
-            if (loaded === null) {
-                try {
-                    const raw = localStorage.getItem('gn_reviews');
-                    if (raw !== null) {
-                        const parsed = JSON.parse(raw);
-                        if (Array.isArray(parsed)) loaded = parsed;
-                    }
-                } catch(e) {}
-            }
-            if (loaded === null) {
-                loaded = [];
-            }
             let deletedRevs = new Set();
             try {
                 const rawDel = localStorage.getItem('gn_deleted_reviews');
                 if (rawDel) JSON.parse(rawDel).forEach(id => deletedRevs.add(String(id)));
             } catch(e) {}
 
-            adminReviews = (Array.isArray(loaded) ? loaded : []).filter(r => r && !deletedRevs.has(String(r.id))).map(r => ({
-                id: r.id,
-                author: r.author || r.customer_name || 'Verified Customer',
-                customer_name: r.author || r.customer_name || 'Verified Customer',
-                location: r.location || 'Pakistan',
-                product_name: r.product_name || 'Gothic Artifact',
-                rating: Number(r.rating) || 5,
-                comment: r.comment || r.review_text || '',
-                review_text: r.comment || r.review_text || '',
-                is_verified: true
-            }));
-            localStorage.setItem('gn_reviews', JSON.stringify(adminReviews));
-            renderReviewsAdmin();
+            // 1. Instant Local Cache Hydration (0ms)
+            try {
+                const raw = localStorage.getItem('gn_reviews');
+                if (raw !== null) {
+                    const parsed = JSON.parse(raw);
+                    if (Array.isArray(parsed)) {
+                        adminReviews = parsed.filter(r => r && !deletedRevs.has(String(r.id))).map(r => ({
+                            id: r.id,
+                            author: r.author || r.customer_name || 'Verified Customer',
+                            customer_name: r.author || r.customer_name || 'Verified Customer',
+                            location: r.location || 'Pakistan',
+                            product_name: r.product_name || 'Gothic Artifact',
+                            rating: Number(r.rating) || 5,
+                            comment: r.comment || r.review_text || '',
+                            review_text: r.comment || r.review_text || '',
+                            is_verified: true
+                        }));
+                        renderReviewsAdmin();
+                    }
+                }
+            } catch(e) {}
+
+            // 2. Background Cloud Revalidation
+            if (window.SupabaseEngine && typeof window.SupabaseEngine.getReviews === 'function') {
+                try {
+                    const raw = await window.SupabaseEngine.getReviews();
+                    if (Array.isArray(raw)) {
+                        adminReviews = raw.filter(r => r && !deletedRevs.has(String(r.id))).map(r => ({
+                            id: r.id,
+                            author: r.author || r.customer_name || 'Verified Customer',
+                            customer_name: r.author || r.customer_name || 'Verified Customer',
+                            location: r.location || 'Pakistan',
+                            product_name: r.product_name || 'Gothic Artifact',
+                            rating: Number(r.rating) || 5,
+                            comment: r.comment || r.review_text || '',
+                            review_text: r.comment || r.review_text || '',
+                            is_verified: true
+                        }));
+                        localStorage.setItem('gn_reviews', JSON.stringify(adminReviews));
+                        renderReviewsAdmin();
+                    }
+                } catch(e) {}
+            }
         }
 
         window.toggleAddReviewForm = function(show) {
@@ -7493,18 +7554,65 @@
 
         // Init
         checkAdminAuth();
+
+        // 1. Synchronous Instant Cache Hydration & Paint (0ms)
+        try {
+            const storedProds = localStorage.getItem('gn_products');
+            if (storedProds) {
+                const parsed = JSON.parse(storedProds);
+                if (Array.isArray(parsed)) { products = parsed; window.gn_products = products; }
+            }
+            const storedRevs = localStorage.getItem('gn_reviews');
+            if (storedRevs) {
+                const parsed = JSON.parse(storedRevs);
+                if (Array.isArray(parsed)) {
+                    let deletedRevs = new Set();
+                    try {
+                        const rawDel = localStorage.getItem('gn_deleted_reviews');
+                        if (rawDel) JSON.parse(rawDel).forEach(id => deletedRevs.add(String(id)));
+                    } catch(e) {}
+                    adminReviews = parsed.filter(r => r && !deletedRevs.has(String(r.id))).map(r => ({
+                        id: r.id,
+                        author: r.author || r.customer_name || 'Verified Customer',
+                        customer_name: r.author || r.customer_name || 'Verified Customer',
+                        location: r.location || 'Pakistan',
+                        product_name: r.product_name || 'Gothic Artifact',
+                        rating: Number(r.rating) || 5,
+                        comment: r.comment || r.review_text || '',
+                        review_text: r.comment || r.review_text || '',
+                        is_verified: true
+                    }));
+                }
+            }
+            const storedOrders = localStorage.getItem('gn_orders');
+            if (storedOrders) {
+                const parsed = JSON.parse(storedOrders);
+                if (Array.isArray(parsed)) { adminOrders = parsed; window.adminOrders = adminOrders; }
+            }
+        } catch(e) {}
+
+        // Immediate Initial Render (0ms)
+        loadAnnouncementsIntoAdmin();
+        renderDashboard();
+        renderReviewsAdmin();
+        renderOrdersAdmin();
+        updateOrdersHeaderMetrics();
+
+        // 2. Background Cloud Revalidation (Non-blocking)
         (async () => {
             try {
                 if (window.SupabaseEngine && typeof window.SupabaseEngine.subscribeRealtime === 'function') {
                     window.SupabaseEngine.subscribeRealtime();
                 }
-                loadAnnouncementsIntoAdmin();
                 await Promise.all([
                     loadProducts(),
                     loadReviewsAdmin(),
                     loadOrdersAdmin()
                 ]);
                 renderDashboard();
+                renderReviewsAdmin();
+                renderOrdersAdmin();
+                updateOrdersHeaderMetrics();
             } catch(e) {
                 renderDashboard();
             }

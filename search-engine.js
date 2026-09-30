@@ -142,44 +142,73 @@
 
             const queryWords = query.split(/\s+/).filter(Boolean);
 
-            // Multi-field weighted scoring
+            // Load category metadata for display name mapping
+            let catList = [];
+            try {
+                const rawCats = localStorage.getItem('gn_categories_meta');
+                if (rawCats) catList = JSON.parse(rawCats);
+            } catch(e) {}
+
+            // Multi-field weighted scoring across ALL attributes
             const scored = [];
 
             products.forEach(p => {
                 if (p.status && p.status !== 'active') return;
 
                 const name = (p.name || '').toLowerCase();
-                const category = (p.category || '').toLowerCase();
-                const desc = (p.description || '').toLowerCase();
+                const catSlug = (p.category || '').toLowerCase();
+                const catObj = Array.isArray(catList) ? catList.find(c => String(c.id).toLowerCase() === catSlug) : null;
+                const catDisplayName = (catObj ? catObj.name : '').toLowerCase();
+                const desc = (p.description || p.desc || p.details || '').toLowerCase();
+                const tags = Array.isArray(p.tags) ? p.tags.join(' ').toLowerCase() : String(p.tags || '').toLowerCase();
+                const material = (p.material || '').toLowerCase();
+                const priceStr = String(p.price || '');
+                const salePriceStr = String(p.salePrice || '');
+
+                const combinedBlob = `${name} ${catSlug} ${catDisplayName} ${desc} ${tags} ${material} ${priceStr} ${salePriceStr}`;
 
                 let score = 0;
-                let matchesAll = true;
+                let matchesAllWords = true;
 
+                // Check entire query phrase match
+                if (combinedBlob.includes(query)) {
+                    score += 150;
+                }
+
+                // Check individual words
                 for (const word of queryWords) {
                     let wordMatched = false;
 
                     if (name.includes(word)) {
-                        score += 100;
-                        if (name.startsWith(word)) score += 50;
+                        score += 120;
+                        if (name.startsWith(word)) score += 60;
                         wordMatched = true;
                     }
-                    if (category.includes(word)) {
-                        score += 50;
-                        if (category.startsWith(word)) score += 25;
+                    if (catSlug.includes(word) || catDisplayName.includes(word)) {
+                        score += 70;
+                        if (catSlug.startsWith(word) || catDisplayName.startsWith(word)) score += 35;
                         wordMatched = true;
                     }
                     if (desc.includes(word)) {
-                        score += 10;
+                        score += 40;
+                        wordMatched = true;
+                    }
+                    if (tags.includes(word) || material.includes(word)) {
+                        score += 30;
+                        wordMatched = true;
+                    }
+                    if (priceStr.includes(word) || salePriceStr.includes(word)) {
+                        score += 20;
                         wordMatched = true;
                     }
 
                     if (!wordMatched) {
-                        matchesAll = false;
+                        matchesAllWords = false;
                         break;
                     }
                 }
 
-                if (matchesAll && score > 0) {
+                if (matchesAllWords && score > 0) {
                     scored.push({ product: p, score });
                 }
             });
