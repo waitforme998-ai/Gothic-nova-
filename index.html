@@ -2426,8 +2426,7 @@
                                 }
                             }
                         });
-                    }
-                    if (Array.isArray(rawCats) && rawCats.length > 0) {
+                    } else if (Array.isArray(rawCats) && rawCats.length > 0) {
                         rawCats.forEach(c => {
                             if (typeof c === 'string' && c.trim()) {
                                 const slug = c.trim().toLowerCase();
@@ -2443,18 +2442,18 @@
                                 }
                             }
                         });
-                    }
-
-                    const products = getAllProducts();
-                    products.forEach(p => {
-                        if (p.category && String(p.category).trim() !== '' && p.active !== false) {
-                            const slug = String(p.category).trim().toLowerCase();
-                            if (!metaMap.has(slug) && slug !== 'general' && slug !== 'all') {
-                                metaMap.set(slug, slug.charAt(0).toUpperCase() + slug.slice(1));
-                                if (!ordered.includes(slug)) ordered.push(slug);
+                    } else {
+                        const products = getAllProducts();
+                        products.forEach(p => {
+                            if (p.category && String(p.category).trim() !== '' && p.active !== false) {
+                                const slug = String(p.category).trim().toLowerCase();
+                                if (!metaMap.has(slug) && slug !== 'general' && slug !== 'all') {
+                                    metaMap.set(slug, slug.charAt(0).toUpperCase() + slug.slice(1));
+                                    if (!ordered.includes(slug)) ordered.push(slug);
+                                }
                             }
-                        }
-                    });
+                        });
+                    }
 
                     if (ordered.length === 0) {
                         standardDefaults.forEach(c => {

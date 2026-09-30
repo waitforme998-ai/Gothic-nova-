@@ -302,41 +302,29 @@
                             }
 
                             if (this.isLive && supabase) {
-                                let savedSuccessfully = false;
-                                const syncRecordId = freshCloud?.syncRecordId || _cachedSyncState?.syncRecordId;
-                                if (syncRecordId) {
-                                    try {
-                                        const { error: updateErr } = await supabase
-                                            .from('gn_orders')
-                                            .update({ items: merged, updated_at: new Date().toISOString() })
-                                            .eq('id', syncRecordId);
-                                        if (!updateErr) savedSuccessfully = true;
-                                    } catch (e) {}
-                                }
-
-                                if (!savedSuccessfully) {
-                                    try {
-                                        const { data, error: insertErr } = await supabase
-                                            .from('gn_orders')
-                                            .insert({
-                                                customer_name: '__GN_STORE_SYNC__',
-                                                phone_number: '00000000000',
-                                                house_flat_no: 'SYSTEM',
-                                                street_address: 'SYSTEM',
-                                                city: 'SYSTEM',
-                                                province: 'SYSTEM',
-                                                nearest_landmark: 'SYSTEM',
-                                                payment_method: 'cod',
-                                                items: merged,
-                                                total_amount: 0,
-                                                status: 'Cancelled'
-                                            })
-                                            .select();
-                                        if (!insertErr && data && data[0]) {
-                                            if (_cachedSyncState) _cachedSyncState.syncRecordId = data[0].id;
-                                            savedSuccessfully = true;
-                                        }
-                                    } catch (e) {}
+                                try {
+                                    const { data, error: insertErr } = await supabase
+                                        .from('gn_orders')
+                                        .insert({
+                                            customer_name: '__GN_STORE_SYNC__',
+                                            phone_number: '00000000000',
+                                            house_flat_no: 'SYSTEM',
+                                            street_address: 'SYSTEM',
+                                            city: 'SYSTEM',
+                                            province: 'SYSTEM',
+                                            nearest_landmark: 'SYSTEM',
+                                            payment_method: 'cod',
+                                            items: merged,
+                                            total_amount: 0,
+                                            status: 'Cancelled'
+                                        })
+                                        .select();
+                                    if (!insertErr && data && data[0]) {
+                                        if (_cachedSyncState) _cachedSyncState.syncRecordId = data[0].id;
+                                        console.log("⚡ Gothic Nova Cloud Sync: Master snapshot saved to Supabase Cloud!", data[0].id);
+                                    }
+                                } catch (e) {
+                                    console.warn("Supabase push notice:", e);
                                 }
                             }
                             resolve(merged);
@@ -668,8 +656,32 @@
             
             localCats = localCats.filter(c => String(c.id).toLowerCase() !== cleanId);
             try { localStorage.setItem('gn_categories_meta', JSON.stringify(localCats)); } catch(e) {}
+            try { localStorage.setItem('gn_categories', JSON.stringify(localCats.map(c => c.id))); } catch(e) {}
 
-            await this._saveCloudSyncState({ categories: localCats });
+            // Reassign any local products that were attached to this category
+            let localProds = [];
+            try {
+                const storedP = localStorage.getItem('gn_products');
+                if (storedP) localProds = JSON.parse(storedP);
+            } catch(e) {}
+            let productsModified = false;
+            if (Array.isArray(localProds) && localProds.length > 0) {
+                localProds = localProds.map(p => {
+                    if (p && String(p.category).trim().toLowerCase() === cleanId) {
+                        productsModified = true;
+                        return { ...p, category: (localCats[0] ? localCats[0].id : 'all') };
+                    }
+                    return p;
+                });
+                if (productsModified) {
+                    try { localStorage.setItem('gn_products', JSON.stringify(localProds)); } catch(e) {}
+                }
+            }
+
+            const payload = { categories: localCats };
+            if (productsModified) payload.products = localProds;
+
+            await this._saveCloudSyncState(payload);
             return true;
         },
 
