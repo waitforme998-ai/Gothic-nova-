@@ -2322,62 +2322,69 @@
                     } catch(e) {}
 
                     const metaMap = new Map();
+                    const ordered = [];
                     const standardDefaults = [
                         { id: 'chains', name: 'Chains' },
                         { id: 'rings', name: 'Rings' },
                         { id: 'bracelets', name: 'Bracelets' },
                         { id: 'pendants', name: 'Pendants' }
                     ];
-                    standardDefaults.forEach(c => metaMap.set(c.id.toLowerCase(), c.name));
 
-                    if (Array.isArray(metaList)) {
-                        metaList.forEach(m => {
-                            if (typeof m === 'string' && m.trim()) {
-                                const slug = m.trim().toLowerCase();
-                                metaMap.set(slug, slug.charAt(0).toUpperCase() + slug.slice(1));
-                            } else if (m && m.id) {
-                                const slug = String(m.id).trim().toLowerCase();
-                                metaMap.set(slug, m.name || (slug.charAt(0).toUpperCase() + slug.slice(1)));
-                            }
+                    if (rawMeta === null && rawCats.length === 0) {
+                        standardDefaults.forEach(c => {
+                            metaMap.set(c.id.toLowerCase(), c.name);
+                            ordered.push(c.id.toLowerCase());
                         });
-                    }
-
-                    if (Array.isArray(rawCats)) {
-                        rawCats.forEach(c => {
-                            if (typeof c === 'string' && c.trim()) {
-                                const slug = c.trim().toLowerCase();
-                                if (!metaMap.has(slug)) metaMap.set(slug, slug.charAt(0).toUpperCase() + slug.slice(1));
-                            } else if (c && c.id) {
-                                const slug = String(c.id).trim().toLowerCase();
-                                if (!metaMap.has(slug)) metaMap.set(slug, c.name || slug);
-                            }
-                        });
+                    } else {
+                        if (Array.isArray(metaList) && metaList.length > 0) {
+                            metaList.forEach(m => {
+                                if (typeof m === 'string' && m.trim()) {
+                                    const slug = m.trim().toLowerCase();
+                                    if (slug !== 'general' && slug !== 'all') {
+                                        metaMap.set(slug, slug.charAt(0).toUpperCase() + slug.slice(1));
+                                        if (!ordered.includes(slug)) ordered.push(slug);
+                                    }
+                                } else if (m && m.id) {
+                                    const slug = String(m.id).trim().toLowerCase();
+                                    if (slug !== 'general' && slug !== 'all') {
+                                        metaMap.set(slug, m.name || (slug.charAt(0).toUpperCase() + slug.slice(1)));
+                                        if (!ordered.includes(slug)) ordered.push(slug);
+                                    }
+                                }
+                            });
+                        }
+                        if (Array.isArray(rawCats) && rawCats.length > 0) {
+                            rawCats.forEach(c => {
+                                if (typeof c === 'string' && c.trim()) {
+                                    const slug = c.trim().toLowerCase();
+                                    if (slug !== 'general' && slug !== 'all' && !metaMap.has(slug)) {
+                                        metaMap.set(slug, slug.charAt(0).toUpperCase() + slug.slice(1));
+                                        if (!ordered.includes(slug)) ordered.push(slug);
+                                    }
+                                } else if (c && c.id) {
+                                    const slug = String(c.id).trim().toLowerCase();
+                                    if (slug !== 'general' && slug !== 'all' && !metaMap.has(slug)) {
+                                        metaMap.set(slug, c.name || slug);
+                                        if (!ordered.includes(slug)) ordered.push(slug);
+                                    }
+                                }
+                            });
+                        }
                     }
 
                     const products = getAllProducts();
                     products.forEach(p => {
-                        if (p.category && String(p.category).trim() !== '') {
+                        if (p.category && String(p.category).trim() !== '' && p.active !== false) {
                             const slug = String(p.category).trim().toLowerCase();
-                            if (!metaMap.has(slug)) {
+                            if (!metaMap.has(slug) && slug !== 'general' && slug !== 'all') {
                                 metaMap.set(slug, slug.charAt(0).toUpperCase() + slug.slice(1));
+                                if (!ordered.includes(slug)) ordered.push(slug);
                             }
                         }
                     });
 
                     metaMap.delete('general');
                     metaMap.delete('all');
-
-                    const ordered = [];
-                    ['chains', 'rings', 'bracelets', 'pendants'].forEach(c => {
-                        if (metaMap.has(c) && c !== 'general' && c !== 'all') {
-                            ordered.push(c);
-                        }
-                    });
-                    metaMap.forEach((name, slug) => {
-                        if (slug !== 'general' && slug !== 'all' && !ordered.includes(slug)) {
-                            ordered.push(slug);
-                        }
-                    });
 
                     const primaryLimit = (ordered.length >= 4) ? 2 : 3;
                     const primaryCats = ordered.slice(0, primaryLimit);
