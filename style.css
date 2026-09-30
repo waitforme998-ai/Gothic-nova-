@@ -3013,7 +3013,7 @@ body.no-ticker .hero-section {
     align-items: center !important;
     justify-content: center !important;
     cursor: pointer !important;
-    transition: all 0.2s ease !important;
+    transition: background 0.12s ease, border-color 0.12s ease, transform 0.12s ease !important;
     z-index: 50 !important;
 }
 
@@ -3561,11 +3561,12 @@ body.no-ticker .hero-section {
     z-index: 99990;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: none !important; /* Instant 0ms disappear on close */
 }
 .pdp-modal-overlay.active {
     opacity: 1;
     pointer-events: auto;
+    transition: opacity 0.12s ease !important; /* Fast, crisp fade-in */
 }
 
 .pdp-modal-box {
@@ -3583,7 +3584,7 @@ body.no-ticker .hero-section {
     z-index: 99991;
     opacity: 0;
     pointer-events: none;
-    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
+    transition: none !important; /* Instant 0ms disappear on close */
     display: flex;
     flex-direction: column;
     overflow-y: auto;
@@ -3596,6 +3597,7 @@ body.no-ticker .hero-section {
     transform: translate(-50%, -50%) scale(1);
     opacity: 1;
     pointer-events: auto;
+    transition: transform 0.14s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.12s ease !important; /* Fast snappy entrance */
 }
 
 .pdp-modal-close {
@@ -3612,7 +3614,7 @@ body.no-ticker .hero-section {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: background 0.12s ease, border-color 0.12s ease, transform 0.12s ease !important;
     z-index: 50;
 }
 .pdp-modal-close:hover {
@@ -4342,11 +4344,12 @@ body.no-ticker .hero-section {
     z-index: 25000;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: none !important;
 }
 .search-overlay-backdrop.active {
     opacity: 1;
     pointer-events: auto;
+    transition: opacity 0.12s ease !important;
 }
 
 .expanding-search-overlay {
@@ -4358,7 +4361,7 @@ body.no-ticker .hero-section {
     opacity: 0;
     pointer-events: none;
     transform: translateY(-16px);
-    transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: none !important;
     display: flex;
     justify-content: center;
     padding: 24px 16px;
@@ -4368,6 +4371,7 @@ body.no-ticker .hero-section {
     opacity: 1;
     pointer-events: auto;
     transform: translateY(0);
+    transition: opacity 0.12s ease, transform 0.14s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .search-overlay-container {
@@ -4700,12 +4704,13 @@ body.no-ticker .hero-section {
     z-index: 30000;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.3s ease;
+    transition: none !important;
 }
 
 .policy-modal-overlay.active {
     opacity: 1;
     pointer-events: auto;
+    transition: opacity 0.12s ease !important;
 }
 
 .policy-modal-box {
@@ -4723,7 +4728,7 @@ body.no-ticker .hero-section {
     opacity: 0;
     pointer-events: none;
     visibility: hidden;
-    transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.3s;
+    transition: none !important;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -4734,6 +4739,7 @@ body.no-ticker .hero-section {
     pointer-events: auto;
     visibility: visible;
     transform: translate(-50%, -50%) scale(1);
+    transition: opacity 0.12s ease, transform 0.14s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.12s !important;
 }
 
 .policy-modal-header {
@@ -4884,12 +4890,13 @@ body.no-ticker .hero-section {
     padding: 24px;
     box-sizing: border-box;
     opacity: 0;
-    transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: none !important;
 }
 
 .pdp-lightbox-overlay.active {
     display: flex !important;
     opacity: 1 !important;
+    transition: opacity 0.12s ease !important;
 }
 
 .pdp-lightbox-close {
@@ -4910,7 +4917,7 @@ body.no-ticker .hero-section {
     justify-content: center;
     cursor: pointer;
     z-index: 10000000;
-    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: background 0.12s ease, border-color 0.12s ease, transform 0.12s ease !important;
     box-shadow: 0 6px 25px rgba(0, 0, 0, 0.85);
 }
 
@@ -4934,7 +4941,7 @@ body.no-ticker .hero-section {
     border-radius: 8px;
     overflow: hidden;
     background: #0d0508;
-    animation: pdpLightboxZoom 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: pdpLightboxZoom 0.14s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .pdp-lightbox-img {
