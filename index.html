@@ -4954,88 +4954,52 @@
             }
 
             const rawSubtotal = checkoutTotalPrice();
-            let accentColor = '#e5c158'; // Gold
-            let bgGradient = 'linear-gradient(135deg, rgba(229, 193, 88, 0.12) 0%, rgba(20, 10, 15, 0.96) 100%)';
-            let borderColor = 'rgba(229, 193, 88, 0.40)';
-            let romanNumeral = activeReward.roman || '✦';
-            let titleText = activeReward.offer || activeReward.title || 'TAROT REWARD';
-            let benefitDesc = 'Daily Tarot Ritual perk unlocked for your order.';
-            let badgeText = 'APPLIED ✓';
-            let badgeColor = '#4ade80';
-            let badgeBg = 'rgba(74, 222, 128, 0.12)';
-            let badgeBorder = 'rgba(74, 222, 128, 0.35)';
+            let accentColor = '#e5c158'; // Gold default
+            let badgeBg = 'rgba(229, 193, 88, 0.12)';
+            let borderColor = 'rgba(229, 193, 88, 0.35)';
+            let titleText = 'Tarot Reward: Applied';
             let valueHtml = '';
 
             if (activeReward.type === 'percentage_discount') {
                 const pct = Number(activeReward.value || 10);
                 const discountAmount = Math.round(rawSubtotal * (pct / 100));
                 accentColor = '#e5c158';
-                bgGradient = 'linear-gradient(135deg, rgba(229, 193, 88, 0.14) 0%, rgba(25, 12, 18, 0.98) 100%)';
-                borderColor = 'rgba(229, 193, 88, 0.50)';
-                romanNumeral = activeReward.roman || 'IV';
-                titleText = `${pct}% OFF TOTAL ORDER`;
-                benefitDesc = `Instant ${pct}% discount applied to your cart subtotal.`;
-                badgeText = `${pct}% OFF APPLIED ✓`;
-                valueHtml = `<span class="font-mono" style="font-size: 0.95rem; color: #4ade80; font-weight: 900; letter-spacing: 0.02em;">-Rs. ${discountAmount.toLocaleString('en-PK')}</span>`;
+                badgeBg = 'rgba(229, 193, 88, 0.12)';
+                borderColor = 'rgba(229, 193, 88, 0.35)';
+                titleText = `Tarot Reward: ${pct}% Discount`;
+                valueHtml = `<span class="font-mono" style="font-size: 0.78rem; color: #4ade80; font-weight: 800;">-Rs. ${discountAmount.toLocaleString('en-PK')}</span>`;
             } else if (activeReward.type === 'free_shipping') {
-                accentColor = '#38bdf8'; // Cyan / Sky Blue
-                bgGradient = 'linear-gradient(135deg, rgba(56, 189, 248, 0.14) 0%, rgba(10, 16, 28, 0.98) 100%)';
-                borderColor = 'rgba(56, 189, 248, 0.50)';
-                romanNumeral = activeReward.roman || 'II';
-                titleText = 'FREE NATIONWIDE DELIVERY';
-                benefitDesc = 'Standard courier delivery fee completely waived for this order.';
-                badgeText = 'FREE DELIVERY ✓';
-                badgeColor = '#38bdf8';
+                accentColor = '#38bdf8';
                 badgeBg = 'rgba(56, 189, 248, 0.12)';
-                badgeBorder = 'rgba(56, 189, 248, 0.35)';
-                valueHtml = `<span class="font-mono" style="font-size: 0.82rem; color: #38bdf8; font-weight: 800; letter-spacing: 0.04em;">FREE WAIVED</span>`;
+                borderColor = 'rgba(56, 189, 248, 0.35)';
+                titleText = 'Tarot Reward: Free Delivery';
             } else if (activeReward.type === 'free_gift') {
-                accentColor = '#ff758f'; // Rose / Crimson
-                bgGradient = 'linear-gradient(135deg, rgba(255, 117, 143, 0.14) 0%, rgba(28, 8, 16, 0.98) 100%)';
-                borderColor = 'rgba(255, 117, 143, 0.50)';
-                romanNumeral = activeReward.roman || 'III';
-                titleText = 'FREE MYSTERY GIFT ENCLOSED';
-                benefitDesc = 'Complimentary handcrafted Gothic Nova talisman included in your parcel.';
-                badgeText = 'FREE GIFT INCLUDED ✓';
-                badgeColor = '#ff758f';
+                accentColor = '#ff758f';
                 badgeBg = 'rgba(255, 117, 143, 0.12)';
-                badgeBorder = 'rgba(255, 117, 143, 0.35)';
-                valueHtml = `<span class="font-mono" style="font-size: 0.82rem; color: #ff758f; font-weight: 800; letter-spacing: 0.04em;">COMPLIMENTARY</span>`;
+                borderColor = 'rgba(255, 117, 143, 0.35)';
+                titleText = 'Tarot Reward: Free Gift';
             } else if (activeReward.type === 'order_upgrade') {
-                accentColor = '#c084fc'; // Violet / Purple
-                bgGradient = 'linear-gradient(135deg, rgba(192, 132, 252, 0.14) 0%, rgba(20, 8, 28, 0.98) 100%)';
-                borderColor = 'rgba(192, 132, 252, 0.50)';
-                romanNumeral = activeReward.roman || 'I';
-                titleText = 'VIP ORDER UPGRADE';
-                benefitDesc = 'Upgraded to signature luxury velvet box packaging & express dispatch queue.';
-                badgeText = 'VIP UPGRADE ✓';
-                badgeColor = '#c084fc';
+                accentColor = '#c084fc';
                 badgeBg = 'rgba(192, 132, 252, 0.12)';
-                badgeBorder = 'rgba(192, 132, 252, 0.35)';
-                valueHtml = `<span class="font-mono" style="font-size: 0.82rem; color: #c084fc; font-weight: 800; letter-spacing: 0.04em;">UPGRADED</span>`;
+                borderColor = 'rgba(192, 132, 252, 0.35)';
+                titleText = 'Tarot Reward: Order Upgrade';
+            } else {
+                accentColor = '#e5c158';
+                badgeBg = 'rgba(229, 193, 88, 0.12)';
+                borderColor = 'rgba(229, 193, 88, 0.35)';
+                titleText = `Tarot Reward: ${activeReward.offer || activeReward.title || 'Applied'}`;
             }
 
             bannerEl.style.display = 'block';
             bannerEl.innerHTML = `
-                <div style="display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; background: ${bgGradient}; border: 1px solid ${borderColor}; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.55); box-sizing: border-box; width: 100%;">
-                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
-                        <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
-                            <div style="width: 28px; height: 28px; min-width: 28px; border-radius: 4px; background: rgba(0,0,0,0.65); border: 1px solid ${accentColor}; display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', Georgia, serif; font-size: 0.80rem; font-weight: 900; color: ${accentColor}; flex-shrink: 0; box-shadow: 0 0 10px ${accentColor}33;">
-                                ${romanNumeral}
-                            </div>
-                            <div style="display: flex; flex-direction: column; min-width: 0;">
-                                <span class="font-mono" style="font-size: 0.60rem; color: ${accentColor}; letter-spacing: 0.10em; text-transform: uppercase; font-weight: 700;">TAROT DESTINY REWARD</span>
-                                <span class="font-serif" style="font-size: 0.88rem; font-weight: 800; color: #ffffff; letter-spacing: 0.04em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${titleText}</span>
-                            </div>
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
-                            ${valueHtml}
-                            <span class="font-mono" style="font-size: 0.60rem; color: ${badgeColor}; background: ${badgeBg}; border: 1px solid ${badgeBorder}; padding: 3px 8px; border-radius: 3px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase;">${badgeText}</span>
-                        </div>
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px; background: rgba(0, 0, 0, 0.45); border: 1px solid ${borderColor}; border-radius: 6px; box-sizing: border-box; width: 100%;">
+                    <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
+                        <span style="color: ${accentColor}; font-size: 0.78rem; line-height: 1;">✦</span>
+                        <span style="font-size: 0.78rem; font-weight: 700; color: #ffffff; letter-spacing: 0.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${titleText}</span>
                     </div>
-                    <div style="font-size: 0.70rem; color: rgba(255,255,255,0.82); line-height: 1.35; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: space-between; gap: 6px; flex-wrap: wrap;">
-                        <span>✦ ${benefitDesc}</span>
-                        <span class="font-mono" style="font-size: 0.60rem; color: var(--color-text-muted);">Offer valid 24h</span>
+                    <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+                        ${valueHtml}
+                        <span class="font-mono" style="font-size: 0.58rem; color: ${accentColor}; background: ${badgeBg}; border: 1px solid ${borderColor}; padding: 2px 6px; border-radius: 3px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase;">APPLIED ✓</span>
                     </div>
                 </div>
             `;
