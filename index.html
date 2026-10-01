@@ -2401,12 +2401,6 @@
                         container.parentNode.insertBefore(drawer, container.nextSibling);
                     }
 
-                    let deletedCatSet = new Set();
-                    try {
-                        const rawDel = localStorage.getItem('gn_deleted_categories');
-                        if (rawDel) JSON.parse(rawDel).forEach(d => deletedCatSet.add(String(d).toLowerCase()));
-                    } catch(e) {}
-
                     let metaList = [];
                     try {
                         const rawMeta = localStorage.getItem('gn_categories_meta');
@@ -2432,13 +2426,13 @@
                         metaList.forEach(m => {
                             if (typeof m === 'string' && m.trim()) {
                                 const slug = m.trim().toLowerCase();
-                                if (slug !== 'general' && slug !== 'all' && !deletedCatSet.has(slug)) {
+                                if (slug !== 'general' && slug !== 'all') {
                                     metaMap.set(slug, slug.charAt(0).toUpperCase() + slug.slice(1));
                                     if (!ordered.includes(slug)) ordered.push(slug);
                                 }
                             } else if (m && m.id) {
                                 const slug = String(m.id).trim().toLowerCase();
-                                if (slug !== 'general' && slug !== 'all' && !deletedCatSet.has(slug)) {
+                                if (slug !== 'general' && slug !== 'all') {
                                     metaMap.set(slug, m.name || (slug.charAt(0).toUpperCase() + slug.slice(1)));
                                     if (!ordered.includes(slug)) ordered.push(slug);
                                 }
@@ -2448,13 +2442,13 @@
                         rawCats.forEach(c => {
                             if (typeof c === 'string' && c.trim()) {
                                 const slug = c.trim().toLowerCase();
-                                if (slug !== 'general' && slug !== 'all' && !deletedCatSet.has(slug) && !metaMap.has(slug)) {
+                                if (slug !== 'general' && slug !== 'all' && !metaMap.has(slug)) {
                                     metaMap.set(slug, slug.charAt(0).toUpperCase() + slug.slice(1));
                                     if (!ordered.includes(slug)) ordered.push(slug);
                                 }
                             } else if (c && c.id) {
                                 const slug = String(c.id).trim().toLowerCase();
-                                if (slug !== 'general' && slug !== 'all' && !deletedCatSet.has(slug) && !metaMap.has(slug)) {
+                                if (slug !== 'general' && slug !== 'all' && !metaMap.has(slug)) {
                                     metaMap.set(slug, c.name || slug);
                                     if (!ordered.includes(slug)) ordered.push(slug);
                                 }
@@ -2465,7 +2459,7 @@
                         products.forEach(p => {
                             if (p.category && String(p.category).trim() !== '' && p.active !== false) {
                                 const slug = String(p.category).trim().toLowerCase();
-                                if (!metaMap.has(slug) && slug !== 'general' && slug !== 'all' && !deletedCatSet.has(slug)) {
+                                if (!metaMap.has(slug) && slug !== 'general' && slug !== 'all') {
                                     metaMap.set(slug, slug.charAt(0).toUpperCase() + slug.slice(1));
                                     if (!ordered.includes(slug)) ordered.push(slug);
                                 }
@@ -2475,10 +2469,8 @@
 
                     if (ordered.length === 0) {
                         standardDefaults.forEach(c => {
-                            if (!deletedCatSet.has(c.id.toLowerCase())) {
-                                metaMap.set(c.id.toLowerCase(), c.name);
-                                ordered.push(c.id.toLowerCase());
-                            }
+                            metaMap.set(c.id.toLowerCase(), c.name);
+                            ordered.push(c.id.toLowerCase());
                         });
                     }
 

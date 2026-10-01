@@ -1,7 +1,7 @@
 // supabase-engine.js
 // GOTHIC NOVA - Enterprise Dual-Mode & Live Supabase Data Adapter
 // Seamlessly bridges Supabase PostgreSQL Cloud & LocalStorage fallback
-// Unified Master State Document in gn_orders (__GN_STORE_SYNC__)
+// Per-Section Independent Synchronization Engine
 
 (function() {
     'use strict';
@@ -113,11 +113,28 @@
         }
     ];
 
-    // Concurrency & Debounce Controls
-    let _cachedSyncState = null;
-    let _syncSavePromiseChain = Promise.resolve();
-    let _pendingSavePayload = {};
-    let _saveDebounceTimeout = null;
+    // =========================================================================
+    // PER-SECTION INDEPENDENT SYNC ENGINE
+    // Each section (products, categories, reviews, announcements, hero_slides)
+    // has its own cloud row, its own cache, and its own save queue.
+    // Saving one section NEVER reads or writes another section's data.
+    // =========================================================================
+    const SECTION_CONFIG = {
+        products:       { syncName: '__GN_SYNC_PRODUCTS__',       localKey: 'gn_products',        defaultData: defaultCatalog },
+        categories:     { syncName: '__GN_SYNC_CATEGORIES__',     localKey: 'gn_categories_meta', defaultData: defaultCategories },
+        reviews:        { syncName: '__GN_SYNC_REVIEWS__',        localKey: 'gn_reviews',         defaultData: [] },
+        announcements:  { syncName: '__GN_SYNC_ANNOUNCEMENTS__',  localKey: 'gn_announcements',   defaultData: [] },
+        hero_slides:    { syncName: '__GN_SYNC_HERO_SLIDES__',    localKey: 'gn_hero_slides',     defaultData: defaultHeroSlides }
+    };
+
+    // Per-section in-memory caches and save queues
+    const _sectionCache = {};
+    const _sectionSaveQueue = {};
+    for (const key of Object.keys(SECTION_CONFIG)) {
+        _sectionCache[key] = null;
+        _sectionSaveQueue[key] = Promise.resolve();
+    }
+    let _migrationDone = false;
 
     function getStoreSyncBroadcastChannel() {
         if (typeof BroadcastChannel !== 'undefined') {
@@ -166,295 +183,69 @@
         isLive: !!supabase,
 
         // =========================================================================
-        // CLOUD STORE STATE SYNCHRONIZATION ENGINE
-        // Guarantees real-time cross-device sync for products, reviews, announcements,
-        // categories, and hero slides using Supabase cloud storage with zero RLS barriers.
+        // PER-SECTION CLOUD SYNC — INDEPENDENT READ/WRITE
+        // Each section stored in its own gn_orders row. No cross-contamination.
         // =========================================================================
-        async _getCloudSyncState(forceFresh = false) {
-            if (!this.isLive || !supabase) {
-                return _cachedSyncState;
-            }
-            if (!forceFresh && _cachedSyncState && Array.isArray(_cachedSyncState.products) && _cachedSyncState.products.length > 0) {
-                return _cachedSyncState;
-            }
 
-            const CANONICAL_SYNC_ID = 'a29dc3da-0d01-4ba1-a1cf-d6f0ce82571e';
+        /**
+         * One-time migration: reads the old monolithic __GN_STORE_SYNC__ row,
+         * splits its data into 5 independent rows, then marks migration done.
+         * Safe to call multiple times — only runs once per session.
+         */
+        async _migrateFromMonolith() {
+            if (_migrationDone) return;
+            _migrationDone = true;
+            if (!this.isLive || !supabase) return;
+
             try {
-                let { data, error } = await supabase
+                // Check if new-style rows already exist
+                const { data: checkData } = await supabase
                     .from('gn_orders')
-                    .select('id, items, updated_at')
+                    .select('customer_name')
+                    .in('customer_name', Object.values(SECTION_CONFIG).map(c => c.syncName))
+                    .limit(1);
+
+                if (checkData && checkData.length > 0) {
+                    // New rows already exist, migration already happened
+                    return;
+                }
+
+                // Read the old monolithic row
+                const CANONICAL_SYNC_ID = 'a29dc3da-0d01-4ba1-a1cf-d6f0ce82571e';
+                let oldData = null;
+
+                const { data: oldRow } = await supabase
+                    .from('gn_orders')
+                    .select('id, items')
                     .eq('id', CANONICAL_SYNC_ID)
                     .limit(1);
 
-                if (error || !data || data.length === 0) {
-                    const fallbackRes = await supabase
+                if (oldRow && oldRow.length > 0 && oldRow[0].items) {
+                    oldData = oldRow[0].items;
+                } else {
+                    // Try fallback lookup
+                    const { data: fallbackRow } = await supabase
                         .from('gn_orders')
-                        .select('id, items, updated_at')
+                        .select('id, items')
                         .eq('customer_name', '__GN_STORE_SYNC__')
                         .order('updated_at', { ascending: false })
                         .limit(1);
-                    data = fallbackRes.data;
-                    error = fallbackRes.error;
-                }
-
-                if (!error && Array.isArray(data) && data.length > 0 && data[0] && data[0].items) {
-                    const rawItems = data[0].items;
-
-                    // Apply active tombstones
-                    let deletedProductSet = new Set();
-                    try {
-                        const rawDel = localStorage.getItem('gn_deleted_products');
-                        if (rawDel) JSON.parse(rawDel).forEach(id => deletedProductSet.add(String(id)));
-                    } catch(e) {}
-
-                    let deletedReviewSet = new Set();
-                    try {
-                        const rawDel = localStorage.getItem('gn_deleted_reviews');
-                        if (rawDel) JSON.parse(rawDel).forEach(id => deletedReviewSet.add(String(id)));
-                    } catch(e) {}
-
-                    let deletedCategorySet = new Set();
-                    try {
-                        const rawDel = localStorage.getItem('gn_deleted_categories');
-                        if (rawDel) JSON.parse(rawDel).forEach(id => deletedCategorySet.add(String(id).toLowerCase()));
-                    } catch(e) {}
-
-                    const rawProds = Array.isArray(rawItems.products) ? rawItems.products : (_cachedSyncState?.products || []);
-                    const filteredProds = rawProds.filter(p => p && !deletedProductSet.has(String(p.id)));
-
-                    const rawCats = Array.isArray(rawItems.categories) ? rawItems.categories : (_cachedSyncState?.categories || defaultCategories);
-                    const filteredCats = rawCats.filter(c => c && c.id && !deletedCategorySet.has(String(c.id).toLowerCase()));
-
-                    const rawRevs = Array.isArray(rawItems.reviews) ? rawItems.reviews : (_cachedSyncState?.reviews || []);
-                    const filteredRevs = rawRevs.filter(r => r && !deletedReviewSet.has(String(r.id)));
-
-                    _cachedSyncState = {
-                        syncRecordId: data[0].id,
-                        products: filteredProds,
-                        categories: filteredCats,
-                        reviews: filteredRevs,
-                        announcements: Array.isArray(rawItems.announcements) ? rawItems.announcements : (_cachedSyncState?.announcements || []),
-                        hero_slides: Array.isArray(rawItems.hero_slides) ? rawItems.hero_slides : (_cachedSyncState?.hero_slides || []),
-                        updated_at: data[0].updated_at || rawItems.updated_at || Date.now(),
-                        version: 2
-                    };
-                    return _cachedSyncState;
-                }
-            } catch (e) {
-                console.warn("Notice: Fetching cloud sync state:", e);
-            }
-            return _cachedSyncState;
-        },
-
-        async _saveCloudSyncState(partial) {
-            if (!partial || typeof partial !== 'object') partial = {};
-
-            // 1. Fetch fresh cloud state if memory is empty
-            let current = _cachedSyncState;
-            if (!current || (!current.products && !current.categories && !current.reviews)) {
-                try {
-                    current = await this._getCloudSyncState(true);
-                } catch(e) {}
-            }
-
-            // Tombstone filters
-            let deletedProductSet = new Set();
-            try {
-                const rawDel = localStorage.getItem('gn_deleted_products');
-                if (rawDel) JSON.parse(rawDel).forEach(id => deletedProductSet.add(String(id)));
-            } catch(e) {}
-
-            let deletedReviewSet = new Set();
-            try {
-                const rawDel = localStorage.getItem('gn_deleted_reviews');
-                if (rawDel) JSON.parse(rawDel).forEach(id => deletedReviewSet.add(String(id)));
-            } catch(e) {}
-
-            let deletedCategorySet = new Set();
-            try {
-                const rawDel = localStorage.getItem('gn_deleted_categories');
-                if (rawDel) JSON.parse(rawDel).forEach(id => deletedCategorySet.add(String(id).toLowerCase()));
-            } catch(e) {}
-
-            // 2. Safe field extraction that prioritizes partial update, localStorage (active user edits), memory, then fresh cloud state
-            const getSafeDataset = (key, storageKey, fallback = []) => {
-                if (partial[key] !== undefined) return partial[key];
-                if (_pendingSavePayload && _pendingSavePayload[key] !== undefined) return _pendingSavePayload[key];
-                try {
-                    const raw = localStorage.getItem(storageKey);
-                    if (raw !== null) {
-                        const parsed = JSON.parse(raw);
-                        if (Array.isArray(parsed)) return parsed;
+                    if (fallbackRow && fallbackRow.length > 0 && fallbackRow[0].items) {
+                        oldData = fallbackRow[0].items;
                     }
-                } catch(e) {}
-                if (_cachedSyncState && Array.isArray(_cachedSyncState[key])) return _cachedSyncState[key];
-                if (current && Array.isArray(current[key])) return current[key];
-                return fallback;
-            };
-
-            let safeProducts = getSafeDataset('products', 'gn_products', []).filter(p => p && !deletedProductSet.has(String(p.id)));
-            const safeCategories = getSafeDataset('categories', 'gn_categories_meta', defaultCategories).filter(c => c && c.id && !deletedCategorySet.has(String(c.id).toLowerCase()));
-            let safeReviews = getSafeDataset('reviews', 'gn_reviews', []).filter(r => r && !deletedReviewSet.has(String(r.id)));
-            const safeAnnouncements = getSafeDataset('announcements', 'gn_announcements', []);
-            const safeHeroSlides = getSafeDataset('hero_slides', 'gn_hero_slides', []);
-
-            _cachedSyncState = {
-                syncRecordId: current?.syncRecordId || _cachedSyncState?.syncRecordId || 'a29dc3da-0d01-4ba1-a1cf-d6f0ce82571e',
-                products: safeProducts,
-                categories: safeCategories,
-                reviews: safeReviews,
-                announcements: safeAnnouncements,
-                hero_slides: safeHeroSlides,
-                updated_at: Date.now(),
-                version: 2
-            };
-
-            _pendingSavePayload = {
-                ..._pendingSavePayload,
-                ...partial
-            };
-
-            // Dispatch instant local feedback across all tabs on current device
-            dispatchUniversalSyncEvents(partial);
-
-            // Queue the cloud persist sequentially to eliminate race conditions
-            return new Promise((resolve) => {
-                if (_saveDebounceTimeout) clearTimeout(_saveDebounceTimeout);
-                _saveDebounceTimeout = setTimeout(() => {
-                    _syncSavePromiseChain = _syncSavePromiseChain.then(async () => {
-                        const payloadToSave = { ..._pendingSavePayload };
-                        _pendingSavePayload = {};
-                        try {
-                            const freshCloud = await this._getCloudSyncState(true);
-                            const resolveFinalField = (key, storageKey, safeVal, fallback = []) => {
-                                if (payloadToSave[key] !== undefined) return payloadToSave[key];
-                                try {
-                                    const raw = localStorage.getItem(storageKey);
-                                    if (raw !== null) {
-                                        const parsed = JSON.parse(raw);
-                                        if (Array.isArray(parsed)) return parsed;
-                                    }
-                                } catch(e) {}
-                                if (safeVal !== undefined && Array.isArray(safeVal)) return safeVal;
-                                if (freshCloud && Array.isArray(freshCloud[key])) return freshCloud[key];
-                                return fallback;
-                            };
-
-                            let mergedProducts = resolveFinalField('products', 'gn_products', safeProducts, []).filter(p => p && !deletedProductSet.has(String(p.id)));
-                            let mergedCategories = resolveFinalField('categories', 'gn_categories_meta', safeCategories, defaultCategories).filter(c => c && c.id && !deletedCategorySet.has(String(c.id).toLowerCase()));
-                            let mergedReviews = resolveFinalField('reviews', 'gn_reviews', safeReviews, []).filter(r => r && !deletedReviewSet.has(String(r.id)));
-                            let mergedAnnouncements = resolveFinalField('announcements', 'gn_announcements', safeAnnouncements, []);
-                            let mergedHeroSlides = resolveFinalField('hero_slides', 'gn_hero_slides', safeHeroSlides, []);
-
-                            const merged = {
-                                products: mergedProducts,
-                                categories: mergedCategories,
-                                reviews: mergedReviews,
-                                announcements: mergedAnnouncements,
-                                hero_slides: mergedHeroSlides,
-                                updated_at: new Date().toISOString(),
-                                version: 2
-                            };
-
-                            if (this.isLive && supabase) {
-                                try {
-                                    const targetId = _cachedSyncState?.syncRecordId || 'a29dc3da-0d01-4ba1-a1cf-d6f0ce82571e';
-                                    const { data: updateData, error: updateErr } = await supabase
-                                        .from('gn_orders')
-                                        .update({
-                                            items: merged,
-                                            updated_at: new Date().toISOString()
-                                        })
-                                        .eq('id', targetId)
-                                        .select();
-
-                                    if (!updateErr && updateData && updateData.length > 0) {
-                                        console.log("⚡ Gothic Nova Cloud Sync: Master snapshot updated in-place on Supabase Cloud!", targetId);
-                                    } else {
-                                        const { data: insData } = await supabase
-                                            .from('gn_orders')
-                                            .insert({
-                                                id: targetId,
-                                                customer_name: '__GN_STORE_SYNC__',
-                                                phone_number: '00000000000',
-                                                house_flat_no: 'SYSTEM',
-                                                street_address: 'SYSTEM',
-                                                city: 'SYSTEM',
-                                                province: 'SYSTEM',
-                                                nearest_landmark: 'SYSTEM',
-                                                payment_method: 'cod',
-                                                items: merged,
-                                                total_amount: 0,
-                                                status: 'Cancelled'
-                                            })
-                                            .select();
-                                        if (insData && insData[0] && _cachedSyncState) {
-                                            _cachedSyncState.syncRecordId = insData[0].id;
-                                        }
-                                    }
-                                } catch (e) {
-                                    console.warn("Supabase push notice:", e);
-                                }
-                            }
-                            resolve(merged);
-                        } catch (err) {
-                            console.warn("Notice: Persisting cloud sync state:", err);
-                            resolve(_cachedSyncState);
-                        }
-                    });
-                }, 60);
-            });
-        },
-
-        async pushAllToCloud(state = {}) {
-            if (!state) state = {};
-            const freshCloud = await this._getCloudSyncState(true);
-
-            const resolveDataset = (provided, storageKey, cloudKey, fallback = []) => {
-                if (Array.isArray(provided) && provided.length > 0) return provided;
-                try {
-                    const raw = localStorage.getItem(storageKey);
-                    if (raw !== null) {
-                        const parsed = JSON.parse(raw);
-                        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-                    }
-                } catch(e) {}
-                if (freshCloud && Array.isArray(freshCloud[cloudKey]) && freshCloud[cloudKey].length > 0) {
-                    return freshCloud[cloudKey];
                 }
-                return Array.isArray(provided) ? provided : fallback;
-            };
 
-            const currentProducts = resolveDataset(state.products, 'gn_products', 'products', []);
-            const currentCats = resolveDataset(state.categories, 'gn_categories_meta', 'categories', defaultCategories);
-            const currentRevs = resolveDataset(state.reviews, 'gn_reviews', 'reviews', []);
-            const currentAnn = resolveDataset(state.announcements, 'gn_announcements', 'announcements', []);
-            const currentHero = resolveDataset(state.hero_slides, 'gn_hero_slides', 'hero_slides', []);
+                if (!oldData) return; // No old data to migrate
 
-            const masterPayload = {
-                products: currentProducts,
-                categories: currentCats,
-                reviews: currentRevs,
-                announcements: currentAnn,
-                hero_slides: currentHero,
-                updated_at: new Date().toISOString(),
-                version: 2
-            };
+                // Write each section to its own row
+                for (const [sectionKey, config] of Object.entries(SECTION_CONFIG)) {
+                    const sectionData = Array.isArray(oldData[sectionKey]) ? oldData[sectionKey] : config.defaultData;
+                    if (sectionData.length === 0 && config.defaultData.length === 0) continue;
 
-            try { localStorage.setItem('gn_products', JSON.stringify(currentProducts)); } catch(e) {}
-            try { localStorage.setItem('gn_categories_meta', JSON.stringify(currentCats)); } catch(e) {}
-            try { localStorage.setItem('gn_reviews', JSON.stringify(currentRevs)); } catch(e) {}
-            try { localStorage.setItem('gn_announcements', JSON.stringify(currentAnn)); } catch(e) {}
-
-            _cachedSyncState = { ...masterPayload };
-            dispatchUniversalSyncEvents(masterPayload);
-
-            if (this.isLive && supabase) {
-                try {
-                    const { data, error } = await supabase
+                    await supabase
                         .from('gn_orders')
                         .insert({
-                            customer_name: '__GN_STORE_SYNC__',
+                            customer_name: config.syncName,
                             phone_number: '00000000000',
                             house_flat_no: 'SYSTEM',
                             street_address: 'SYSTEM',
@@ -462,88 +253,231 @@
                             province: 'SYSTEM',
                             nearest_landmark: 'SYSTEM',
                             payment_method: 'cod',
-                            items: masterPayload,
+                            items: { [sectionKey]: sectionData, updated_at: new Date().toISOString() },
                             total_amount: 0,
                             status: 'Cancelled'
-                        })
-                        .select();
-                    if (!error && data && data[0]) {
-                        _cachedSyncState.syncRecordId = data[0].id;
-                        console.log("⚡ Gothic Nova Cloud Sync: Master state successfully published to Supabase Cloud!", data[0].id);
+                        });
+
+                    _sectionCache[sectionKey] = sectionData;
+                    try { localStorage.setItem(config.localKey, JSON.stringify(sectionData)); } catch(e) {}
+                }
+
+                console.log("⚡ Gothic Nova: Migration from monolithic sync to per-section sync complete!");
+            } catch (e) {
+                console.warn("Migration notice:", e);
+                _migrationDone = false; // Allow retry on next call
+            }
+        },
+
+        /**
+         * Read ONE section from its dedicated cloud row. Never touches other sections.
+         * @param {string} sectionKey - 'products' | 'categories' | 'reviews' | 'announcements' | 'hero_slides'
+         * @param {boolean} forceFresh - If true, bypass cache and read from cloud
+         * @returns {Array} The section data array
+         */
+        async _getSection(sectionKey, forceFresh = false) {
+            const config = SECTION_CONFIG[sectionKey];
+            if (!config) return [];
+
+            // Return cache if fresh
+            if (!forceFresh && _sectionCache[sectionKey] !== null) {
+                return _sectionCache[sectionKey];
+            }
+
+            if (!this.isLive || !supabase) {
+                // Offline: read from localStorage
+                try {
+                    const raw = localStorage.getItem(config.localKey);
+                    if (raw !== null) {
+                        const parsed = JSON.parse(raw);
+                        if (Array.isArray(parsed)) {
+                            _sectionCache[sectionKey] = parsed;
+                            return parsed;
+                        }
                     }
-                } catch (cloudErr) {
-                    console.warn("Supabase push notice:", cloudErr);
+                } catch(e) {}
+                return config.defaultData;
+            }
+
+            // Ensure migration has happened
+            await this._migrateFromMonolith();
+
+            try {
+                const { data, error } = await supabase
+                    .from('gn_orders')
+                    .select('id, items, updated_at')
+                    .eq('customer_name', config.syncName)
+                    .order('updated_at', { ascending: false })
+                    .limit(1);
+
+                if (!error && Array.isArray(data) && data.length > 0 && data[0].items) {
+                    const sectionData = Array.isArray(data[0].items[sectionKey])
+                        ? data[0].items[sectionKey]
+                        : [];
+
+                    _sectionCache[sectionKey] = sectionData;
+                    try { localStorage.setItem(config.localKey, JSON.stringify(sectionData)); } catch(e) {}
+                    return sectionData;
+                }
+            } catch (e) {
+                console.warn(`Notice: Fetching ${sectionKey} from cloud:`, e);
+            }
+
+            // Fallback to localStorage
+            try {
+                const raw = localStorage.getItem(config.localKey);
+                if (raw !== null) {
+                    const parsed = JSON.parse(raw);
+                    if (Array.isArray(parsed)) {
+                        _sectionCache[sectionKey] = parsed;
+                        return parsed;
+                    }
+                }
+            } catch(e) {}
+
+            return config.defaultData;
+        },
+
+        /**
+         * Write ONE section to its dedicated cloud row. Never touches other sections.
+         * Uses a per-section sequential queue to prevent race conditions.
+         * @param {string} sectionKey - 'products' | 'categories' | 'reviews' | 'announcements' | 'hero_slides'
+         * @param {Array} data - The complete section data array to save
+         */
+        async _saveSection(sectionKey, data) {
+            const config = SECTION_CONFIG[sectionKey];
+            if (!config) return;
+            if (!Array.isArray(data)) data = [];
+
+            // 1. Update in-memory cache immediately
+            _sectionCache[sectionKey] = data;
+
+            // 2. Update localStorage immediately
+            try { localStorage.setItem(config.localKey, JSON.stringify(data)); } catch(e) {}
+
+            // 3. Dispatch events for this section only
+            const eventPayload = { [sectionKey]: data };
+            dispatchUniversalSyncEvents(eventPayload);
+
+            // 4. Queue cloud write (sequential per-section, no cross-contamination)
+            if (this.isLive && supabase) {
+                _sectionSaveQueue[sectionKey] = _sectionSaveQueue[sectionKey].then(async () => {
+                    try {
+                        const payload = {
+                            [sectionKey]: _sectionCache[sectionKey], // Always use latest cache
+                            updated_at: new Date().toISOString()
+                        };
+
+                        // Try update first
+                        const { data: updateResult, error: updateErr } = await supabase
+                            .from('gn_orders')
+                            .update({
+                                items: payload,
+                                updated_at: new Date().toISOString()
+                            })
+                            .eq('customer_name', config.syncName)
+                            .select();
+
+                        if (updateErr || !updateResult || updateResult.length === 0) {
+                            // Row doesn't exist yet, insert
+                            await supabase
+                                .from('gn_orders')
+                                .insert({
+                                    customer_name: config.syncName,
+                                    phone_number: '00000000000',
+                                    house_flat_no: 'SYSTEM',
+                                    street_address: 'SYSTEM',
+                                    city: 'SYSTEM',
+                                    province: 'SYSTEM',
+                                    nearest_landmark: 'SYSTEM',
+                                    payment_method: 'cod',
+                                    items: payload,
+                                    total_amount: 0,
+                                    status: 'Cancelled'
+                                });
+                        }
+                    } catch (e) {
+                        console.warn(`Notice: Persisting ${sectionKey} to cloud:`, e);
+                    }
+                });
+                await _sectionSaveQueue[sectionKey];
+            }
+        },
+
+        /**
+         * Backward-compatible pushAllToCloud. Saves each section independently.
+         * Called from admin.html "Force Sync" button.
+         */
+        async pushAllToCloud(state = {}) {
+            if (!state) state = {};
+
+            const sections = {
+                products: Array.isArray(state.products) && state.products.length > 0 ? state.products : null,
+                categories: Array.isArray(state.categories) && state.categories.length > 0 ? state.categories : null,
+                reviews: Array.isArray(state.reviews) && state.reviews.length > 0 ? state.reviews : null,
+                announcements: Array.isArray(state.announcements) ? state.announcements : null,
+                hero_slides: Array.isArray(state.hero_slides) && state.hero_slides.length > 0 ? state.hero_slides : null
+            };
+
+            for (const [key, data] of Object.entries(sections)) {
+                if (data !== null) {
+                    await this._saveSection(key, data);
                 }
             }
 
-            return masterPayload;
+            // Return combined state for backward compatibility
+            return {
+                products: _sectionCache.products || [],
+                categories: _sectionCache.categories || [],
+                reviews: _sectionCache.reviews || [],
+                announcements: _sectionCache.announcements || [],
+                hero_slides: _sectionCache.hero_slides || [],
+                updated_at: new Date().toISOString(),
+                version: 3
+            };
+        },
+
+        /**
+         * Backward-compatible _saveCloudSyncState. Routes to per-section saves.
+         * Called from admin.html fallback code.
+         */
+        async _saveCloudSyncState(partial) {
+            if (!partial || typeof partial !== 'object') return;
+            const promises = [];
+            for (const [key, config] of Object.entries(SECTION_CONFIG)) {
+                if (partial[key] !== undefined && Array.isArray(partial[key])) {
+                    promises.push(this._saveSection(key, partial[key]));
+                }
+            }
+            await Promise.all(promises);
+            return {
+                products: _sectionCache.products || [],
+                categories: _sectionCache.categories || [],
+                reviews: _sectionCache.reviews || [],
+                announcements: _sectionCache.announcements || [],
+                hero_slides: _sectionCache.hero_slides || [],
+                updated_at: new Date().toISOString(),
+                version: 3
+            };
+        },
+
+        /**
+         * Backward-compatible _getCloudSyncState. Reads all sections independently.
+         */
+        async _getCloudSyncState(forceFresh = false) {
+            const results = {};
+            for (const key of Object.keys(SECTION_CONFIG)) {
+                results[key] = await this._getSection(key, forceFresh);
+            }
+            return results;
         },
 
         // =========================================================================
         // 1. PRODUCTS API
         // =========================================================================
         async getProducts() {
-            let deletedSet = new Set();
-            try {
-                const rawDel = localStorage.getItem('gn_deleted_products');
-                if (rawDel) JSON.parse(rawDel).forEach(id => deletedSet.add(String(id)));
-            } catch(e) {}
-
-            let localProds = null;
-            try {
-                const rawLocal = localStorage.getItem('gn_products');
-                if (rawLocal !== null) {
-                    const parsed = JSON.parse(rawLocal);
-                    if (Array.isArray(parsed)) localProds = parsed.filter(p => p && !deletedSet.has(String(p.id)));
-                }
-            } catch (e) {}
-
-            if (this.isLive && supabase) {
-                try {
-                    // 1. Primary: Unified Cloud Sync Document
-                    const cloudState = await this._getCloudSyncState();
-                    if (cloudState && Array.isArray(cloudState.products)) {
-                        const cloudProds = cloudState.products.filter(p => p && !deletedSet.has(String(p.id)));
-                        try { localStorage.setItem('gn_products', JSON.stringify(cloudProds)); } catch(e) {}
-                        return cloudProds;
-                    }
-
-                    // 2. Secondary: Check gn_products table directly
-                    const { data, error } = await supabase
-                        .from('gn_products')
-                        .select('*')
-                        .order('display_order', { ascending: true })
-                        .order('created_at', { ascending: true });
-                    
-                    if (!error && Array.isArray(data) && data.length > 0) {
-                        const normalized = data
-                            .filter(p => p && !deletedSet.has(String(p.id)))
-                            .map(p => ({
-                                ...p,
-                                salePrice: p.sale_price !== undefined ? p.sale_price : p.salePrice,
-                                sale_price: p.sale_price !== undefined ? p.sale_price : p.salePrice
-                            }));
-                        try { localStorage.setItem('gn_products', JSON.stringify(normalized)); } catch(e) {}
-                        this._saveCloudSyncState({ products: normalized }).catch(() => {});
-                        return normalized;
-                    }
-                } catch (err) {
-                    console.warn("Supabase fetch products notice:", err);
-                }
-            }
-
-            // If local storage exists (even if [] empty array), respect it (Anti-Ghost)
-            if (Array.isArray(localProds)) {
-                return localProds;
-            }
-
-            // Only seed on initial cold start when nothing exists anywhere
-            const initialSeed = defaultCatalog.filter(p => p && !deletedSet.has(String(p.id)));
-            try { localStorage.setItem('gn_products', JSON.stringify(initialSeed)); } catch(e) {}
-            if (this.isLive && supabase) {
-                this._saveCloudSyncState({ products: initialSeed }).catch(() => {});
-            }
-            return initialSeed;
+            const products = await this._getSection('products');
+            return Array.isArray(products) && products.length > 0 ? products : defaultCatalog;
         },
 
         async saveProduct(product) {
@@ -567,33 +501,16 @@
                 display_order: Number(product.display_order || product.displayOrder || 1)
             };
 
-            // Un-tombstone if re-adding an existing or previously deleted ID
-            try {
-                let deletedList = JSON.parse(localStorage.getItem('gn_deleted_products') || '[]');
-                if (Array.isArray(deletedList) && deletedList.includes(normalized.id)) {
-                    deletedList = deletedList.filter(d => String(d) !== normalized.id);
-                    localStorage.setItem('gn_deleted_products', JSON.stringify(deletedList));
-                }
-            } catch(e) {}
+            let list = await this._getSection('products');
+            if (!Array.isArray(list)) list = [];
 
-            // 1. Update local cache
-            let localList = [];
-            try {
-                const stored = localStorage.getItem('gn_products');
-                if (stored) localList = JSON.parse(stored);
-            } catch(e) {}
-            if (!Array.isArray(localList)) localList = [];
+            const idx = list.findIndex(p => String(p.id) === String(normalized.id));
+            if (idx >= 0) list[idx] = normalized;
+            else list.push(normalized);
 
-            const idx = localList.findIndex(p => String(p.id) === String(normalized.id));
-            if (idx >= 0) localList[idx] = normalized;
-            else localList.push(normalized);
+            await this._saveSection('products', list);
 
-            try { localStorage.setItem('gn_products', JSON.stringify(localList)); } catch(e) {}
-
-            // 2. Persist to Master Cloud State
-            await this._saveCloudSyncState({ products: localList });
-
-            // 3. Best-effort write to gn_products table (if table exists and writable)
+            // Best-effort write to gn_products table
             if (this.isLive && supabase) {
                 try {
                     await supabase.from('gn_products').upsert({
@@ -617,40 +534,15 @@
 
         async deleteProduct(id) {
             const cleanId = String(id);
-            let deletedList = [];
-            try {
-                deletedList = JSON.parse(localStorage.getItem('gn_deleted_products') || '[]');
-                if (!Array.isArray(deletedList)) deletedList = [];
-            } catch(e) {}
-            deletedList.push(cleanId);
-            try {
-                localStorage.setItem('gn_deleted_products', JSON.stringify([...new Set(deletedList)]));
-            } catch(e) {}
+            let list = await this._getSection('products');
+            if (!Array.isArray(list)) list = [];
+            list = list.filter(p => String(p.id) !== cleanId);
+            await this._saveSection('products', list);
 
-            let localList = [];
-            try {
-                const stored = localStorage.getItem('gn_products');
-                if (stored) localList = JSON.parse(stored);
-            } catch(e) {}
-            if (!Array.isArray(localList)) localList = [];
-
-            localList = localList.filter(p => String(p.id) !== cleanId);
-            try { localStorage.setItem('gn_products', JSON.stringify(localList)); } catch(e) {}
-
-            if (_cachedSyncState && Array.isArray(_cachedSyncState.products)) {
-                _cachedSyncState.products = _cachedSyncState.products.filter(p => String(p.id) !== cleanId);
-            }
-
-            // Persist to Master Cloud State
-            await this._saveCloudSyncState({ products: localList });
-
-            // Best-effort delete from gn_products
+            // Best-effort delete from gn_products table
             if (this.isLive && supabase) {
-                try {
-                    await supabase.from('gn_products').delete().eq('id', cleanId);
-                } catch (err) {}
+                try { await supabase.from('gn_products').delete().eq('id', cleanId); } catch(e) {}
             }
-
             return true;
         },
 
@@ -676,9 +568,7 @@
                     display_order: Number(product.display_order || product.displayOrder || (idx + 1))
                 };
             });
-
-            try { localStorage.setItem('gn_products', JSON.stringify(normalizedArray)); } catch(e) {}
-            await this._saveCloudSyncState({ products: normalizedArray });
+            await this._saveSection('products', normalizedArray);
             return normalizedArray;
         },
 
@@ -686,41 +576,8 @@
         // 2. CATEGORIES API
         // =========================================================================
         async getCategories() {
-            let deletedCategorySet = new Set();
-            try {
-                const rawDel = localStorage.getItem('gn_deleted_categories');
-                if (rawDel) JSON.parse(rawDel).forEach(id => deletedCategorySet.add(String(id).toLowerCase()));
-            } catch(e) {}
-
-            let localCats = null;
-            try {
-                const raw = localStorage.getItem('gn_categories_meta');
-                if (raw !== null) {
-                    const parsed = JSON.parse(raw);
-                    if (Array.isArray(parsed)) {
-                        localCats = parsed.filter(c => c && c.id && !deletedCategorySet.has(String(c.id).toLowerCase()));
-                    }
-                }
-            } catch(e) {}
-
-            if (this.isLive && supabase) {
-                try {
-                    const cloudState = await this._getCloudSyncState(true);
-                    if (cloudState && Array.isArray(cloudState.categories)) {
-                        const filtered = cloudState.categories.filter(c => c && c.id && !deletedCategorySet.has(String(c.id).toLowerCase()));
-                        try { localStorage.setItem('gn_categories_meta', JSON.stringify(filtered)); } catch(e) {}
-                        return filtered;
-                    }
-                } catch (err) {
-                    console.warn("Notice: Fetching categories:", err);
-                }
-            }
-
-            if (Array.isArray(localCats)) return localCats;
-
-            const initialCats = defaultCategories.filter(c => c && c.id && !deletedCategorySet.has(String(c.id).toLowerCase()));
-            try { localStorage.setItem('gn_categories_meta', JSON.stringify(initialCats)); } catch(e) {}
-            return initialCats;
+            const cats = await this._getSection('categories');
+            return Array.isArray(cats) && cats.length > 0 ? cats : defaultCategories;
         },
 
         async saveCategory(category) {
@@ -728,163 +585,67 @@
             const cleanName = (category.name || cleanSlug).trim();
             if (!cleanSlug) return null;
 
-            // Remove from tombstone if re-adding
-            try {
-                let deletedList = JSON.parse(localStorage.getItem('gn_deleted_categories') || '[]');
-                if (Array.isArray(deletedList)) {
-                    deletedList = deletedList.filter(id => String(id).toLowerCase() !== cleanSlug);
-                    localStorage.setItem('gn_deleted_categories', JSON.stringify(deletedList));
-                }
-            } catch(e) {}
-
             const payload = {
                 id: cleanSlug,
                 name: cleanName,
                 display_order: Number(category.display_order || 0)
             };
 
-            let localCats = [];
-            try {
-                const stored = localStorage.getItem('gn_categories_meta');
-                if (stored !== null) localCats = JSON.parse(stored);
-            } catch(e) {}
-            if (!Array.isArray(localCats)) localCats = [...defaultCategories];
+            let list = await this._getSection('categories');
+            if (!Array.isArray(list)) list = [...defaultCategories];
 
-            const idx = localCats.findIndex(c => String(c.id).toLowerCase() === cleanSlug);
-            if (idx >= 0) localCats[idx] = { ...localCats[idx], ...payload };
-            else localCats.push(payload);
+            const idx = list.findIndex(c => String(c.id).toLowerCase() === cleanSlug);
+            if (idx >= 0) list[idx] = { ...list[idx], ...payload };
+            else list.push(payload);
 
-            try { 
-                localStorage.setItem('gn_categories_meta', JSON.stringify(localCats)); 
-                localStorage.setItem('gn_categories', JSON.stringify(localCats.map(c => c.id)));
-            } catch(e) {}
-            await this._saveCloudSyncState({ categories: localCats });
+            try { localStorage.setItem('gn_categories', JSON.stringify(list.map(c => c.id))); } catch(e) {}
+            await this._saveSection('categories', list);
             return payload;
         },
 
         async saveCategoryList(categories) {
             if (!Array.isArray(categories)) return false;
             const cleanList = categories.filter(c => c && c.id && String(c.id).toLowerCase() !== 'general' && String(c.id).toLowerCase() !== 'all');
-            
-            // Clear from tombstones
-            try {
-                let deletedList = JSON.parse(localStorage.getItem('gn_deleted_categories') || '[]');
-                if (Array.isArray(deletedList)) {
-                    const activeSlugs = new Set(cleanList.map(c => String(c.id).toLowerCase()));
-                    deletedList = deletedList.filter(id => !activeSlugs.has(String(id).toLowerCase()));
-                    localStorage.setItem('gn_deleted_categories', JSON.stringify(deletedList));
-                }
-            } catch(e) {}
-
-            try {
-                localStorage.setItem('gn_categories_meta', JSON.stringify(cleanList));
-                localStorage.setItem('gn_categories', JSON.stringify(cleanList.map(c => c.id)));
-            } catch(e) {}
-            await this._saveCloudSyncState({ categories: cleanList });
+            try { localStorage.setItem('gn_categories', JSON.stringify(cleanList.map(c => c.id))); } catch(e) {}
+            await this._saveSection('categories', cleanList);
             return true;
         },
 
         async deleteCategory(id) {
             const cleanId = String(id).trim().toLowerCase();
-            
-            // 1. Record in persistent tombstone
-            let deletedList = [];
-            try {
-                const rawDel = localStorage.getItem('gn_deleted_categories');
-                if (rawDel) deletedList = JSON.parse(rawDel);
-            } catch(e) {}
-            if (!Array.isArray(deletedList)) deletedList = [];
-            deletedList.push(cleanId);
-            try { localStorage.setItem('gn_deleted_categories', JSON.stringify([...new Set(deletedList)])); } catch(e) {}
 
-            let localCats = [];
-            try {
-                const stored = localStorage.getItem('gn_categories_meta');
-                if (stored !== null) localCats = JSON.parse(stored);
-            } catch(e) {}
-            if (!Array.isArray(localCats)) localCats = [...defaultCategories];
-            
-            localCats = localCats.filter(c => c && String(c.id).toLowerCase() !== cleanId);
-            try { 
-                localStorage.setItem('gn_categories_meta', JSON.stringify(localCats)); 
-                localStorage.setItem('gn_categories', JSON.stringify(localCats.map(c => c.id)));
-            } catch(e) {}
+            // 1. Remove category from list
+            let list = await this._getSection('categories');
+            if (!Array.isArray(list)) list = [...defaultCategories];
+            list = list.filter(c => c && String(c.id).toLowerCase() !== cleanId);
 
-            // 2. Reassign any products attached to this deleted category to 'all' (NEVER hardcode to rings)
-            let localProds = [];
-            try {
-                const storedP = localStorage.getItem('gn_products');
-                if (storedP) localProds = JSON.parse(storedP);
-            } catch(e) {}
-            let productsModified = false;
-            if (Array.isArray(localProds) && localProds.length > 0) {
-                localProds = localProds.map(p => {
+            try { localStorage.setItem('gn_categories', JSON.stringify(list.map(c => c.id))); } catch(e) {}
+            await this._saveSection('categories', list);
+
+            // 2. Reassign products with this category to 'all'
+            let products = await this._getSection('products');
+            if (Array.isArray(products) && products.length > 0) {
+                let modified = false;
+                products = products.map(p => {
                     if (p && String(p.category).trim().toLowerCase() === cleanId) {
-                        productsModified = true;
+                        modified = true;
                         return { ...p, category: 'all' };
                     }
                     return p;
                 });
-                if (productsModified) {
-                    try { 
-                        localStorage.setItem('gn_products', JSON.stringify(localProds)); 
-                        window.gn_products = localProds;
-                    } catch(e) {}
+                if (modified) {
+                    await this._saveSection('products', products);
                 }
             }
-
-            if (_cachedSyncState) {
-                _cachedSyncState.categories = localCats;
-                if (productsModified) _cachedSyncState.products = localProds;
-            }
-
-            const payload = { 
-                categories: localCats,
-                ...(productsModified ? { products: localProds } : {})
-            };
-            await this._saveCloudSyncState(payload);
             return true;
         },
 
         // =========================================================================
-        // 3. CUSTOMER REVIEWS API (Strict Anti-Ghost)
+        // 3. CUSTOMER REVIEWS API
         // =========================================================================
         async getReviews() {
-            let deletedSet = new Set();
-            try {
-                const rawDel = localStorage.getItem('gn_deleted_reviews');
-                if (rawDel) JSON.parse(rawDel).forEach(id => deletedSet.add(String(id)));
-            } catch(e) {}
-
-            let localRevs = null;
-            try {
-                const raw = localStorage.getItem('gn_reviews');
-                if (raw !== null) {
-                    const parsed = JSON.parse(raw);
-                    if (Array.isArray(parsed)) localRevs = parsed.filter(r => r && !deletedSet.has(String(r.id)));
-                }
-            } catch(e) {}
-
-            if (this.isLive && supabase) {
-                try {
-                    const cloudState = await this._getCloudSyncState();
-                    if (cloudState && Array.isArray(cloudState.reviews)) {
-                        const filtered = cloudState.reviews.filter(r => r && !deletedSet.has(String(r.id)));
-                        try { localStorage.setItem('gn_reviews', JSON.stringify(filtered)); } catch(e) {}
-                        return filtered;
-                    }
-                } catch(e) {
-                    console.warn("Notice: Fetching reviews from cloud:", e);
-                }
-            }
-
-            // Anti-Ghost: If local storage has [] (empty array), return it! NEVER inject 8 sample reviews!
-            if (Array.isArray(localRevs)) {
-                return localRevs;
-            }
-
-            // Cold start default (first install only)
-            return [];
+            const reviews = await this._getSection('reviews');
+            return Array.isArray(reviews) ? reviews : [];
         },
 
         async saveReview(review) {
@@ -900,62 +661,23 @@
                 is_sample: Boolean(review.is_sample || review.isSample || false)
             };
 
-            // Un-tombstone if re-adding
-            try {
-                let deletedList = JSON.parse(localStorage.getItem('gn_deleted_reviews') || '[]');
-                if (Array.isArray(deletedList) && deletedList.includes(payload.id)) {
-                    deletedList = deletedList.filter(d => String(d) !== payload.id);
-                    localStorage.setItem('gn_deleted_reviews', JSON.stringify(deletedList));
-                }
-            } catch(e) {}
+            let list = await this._getSection('reviews');
+            if (!Array.isArray(list)) list = [];
 
-            let local = [];
-            try {
-                const raw = localStorage.getItem('gn_reviews');
-                if (raw !== null) {
-                    const parsed = JSON.parse(raw);
-                    if (Array.isArray(parsed)) local = parsed;
-                }
-            } catch(e) {}
+            const idx = list.findIndex(r => String(r.id) === String(payload.id));
+            if (idx >= 0) list[idx] = { ...list[idx], ...payload };
+            else list.unshift(payload);
 
-            const idx = local.findIndex(r => String(r.id) === String(payload.id));
-            if (idx >= 0) local[idx] = { ...local[idx], ...payload };
-            else local.unshift(payload);
-
-            try { localStorage.setItem('gn_reviews', JSON.stringify(local)); } catch(e) {}
-            await this._saveCloudSyncState({ reviews: local });
+            await this._saveSection('reviews', list);
             return payload;
         },
 
         async deleteReview(id) {
             const cleanId = String(id);
-            let deletedList = [];
-            try {
-                deletedList = JSON.parse(localStorage.getItem('gn_deleted_reviews') || '[]');
-                if (!Array.isArray(deletedList)) deletedList = [];
-            } catch(e) {}
-            deletedList.push(cleanId);
-            try {
-                localStorage.setItem('gn_deleted_reviews', JSON.stringify([...new Set(deletedList)]));
-            } catch(e) {}
-
-            let local = [];
-            try {
-                const raw = localStorage.getItem('gn_reviews');
-                if (raw !== null) {
-                    const parsed = JSON.parse(raw);
-                    if (Array.isArray(parsed)) local = parsed;
-                }
-            } catch(e) {}
-
-            local = local.filter(r => String(r.id) !== cleanId);
-            try { localStorage.setItem('gn_reviews', JSON.stringify(local)); } catch(e) {}
-
-            if (_cachedSyncState && Array.isArray(_cachedSyncState.reviews)) {
-                _cachedSyncState.reviews = _cachedSyncState.reviews.filter(r => String(r.id) !== cleanId);
-            }
-
-            await this._saveCloudSyncState({ reviews: local });
+            let list = await this._getSection('reviews');
+            if (!Array.isArray(list)) list = [];
+            list = list.filter(r => String(r.id) !== cleanId);
+            await this._saveSection('reviews', list);
             return true;
         },
 
@@ -963,34 +685,13 @@
         // 4. ANNOUNCEMENTS API
         // =========================================================================
         async getAnnouncements() {
-            let localAnn = null;
-            try {
-                const raw = localStorage.getItem('gn_announcements');
-                if (raw !== null) {
-                    const parsed = JSON.parse(raw);
-                    if (Array.isArray(parsed)) localAnn = parsed;
-                }
-            } catch(e) {}
-
-            if (this.isLive && supabase) {
-                try {
-                    const cloudState = await this._getCloudSyncState(true);
-                    if (cloudState && Array.isArray(cloudState.announcements)) {
-                        try { localStorage.setItem('gn_announcements', JSON.stringify(cloudState.announcements)); } catch(e) {}
-                        return cloudState.announcements;
-                    }
-                } catch(e) {}
-            }
-
-            if (Array.isArray(localAnn)) return localAnn;
-            return [];
+            const ann = await this._getSection('announcements');
+            return Array.isArray(ann) ? ann : [];
         },
 
         async saveAnnouncements(offers) {
             const cleanOffers = Array.isArray(offers) ? offers.map(o => String(o).trim()).filter(Boolean) : [];
-            try { localStorage.setItem('gn_announcements', JSON.stringify(cleanOffers)); } catch(e) {}
-            if (_cachedSyncState) _cachedSyncState.announcements = cleanOffers;
-            await this._saveCloudSyncState({ announcements: cleanOffers });
+            await this._saveSection('announcements', cleanOffers);
             return cleanOffers;
         },
 
@@ -998,20 +699,14 @@
             if (key === 'announcements') {
                 return await this.saveAnnouncements(val);
             }
-            try {
-                localStorage.setItem('gn_' + key, JSON.stringify(val));
-            } catch(e) {}
-            await this._saveCloudSyncState({ [key]: val });
+            // For non-section settings, use localStorage only
+            try { localStorage.setItem('gn_' + key, JSON.stringify(val)); } catch(e) {}
             return val;
         },
 
         async getStoreSetting(key) {
             if (key === 'announcements') {
                 return await this.getAnnouncements();
-            }
-            const cloudState = await this._getCloudSyncState();
-            if (cloudState && cloudState[key] !== undefined) {
-                return cloudState[key];
             }
             try {
                 const raw = localStorage.getItem('gn_' + key);
@@ -1024,28 +719,8 @@
         // 5. HERO SLIDER DROPS API
         // =========================================================================
         async getHeroSlides() {
-            let localSlides = null;
-            try {
-                const raw = localStorage.getItem('gn_hero_slides');
-                if (raw !== null) {
-                    const parsed = JSON.parse(raw);
-                    if (Array.isArray(parsed)) localSlides = parsed;
-                }
-            } catch(e) {}
-
-            if (this.isLive && supabase) {
-                try {
-                    const cloudState = await this._getCloudSyncState();
-                    if (cloudState && Array.isArray(cloudState.hero_slides)) {
-                        try { localStorage.setItem('gn_hero_slides', JSON.stringify(cloudState.hero_slides)); } catch(e) {}
-                        return cloudState.hero_slides;
-                    }
-                } catch(e) {}
-            }
-
-            if (Array.isArray(localSlides)) return localSlides;
-            try { localStorage.setItem('gn_hero_slides', JSON.stringify(defaultHeroSlides)); } catch(e) {}
-            return defaultHeroSlides;
+            const slides = await this._getSection('hero_slides');
+            return Array.isArray(slides) && slides.length > 0 ? slides : defaultHeroSlides;
         },
 
         async saveHeroSlide(slide) {
@@ -1058,49 +733,31 @@
 
             const payload = {
                 id: slide.id || ('s_' + Date.now()),
-                headline: headline,
-                title: headline,
-                subtext: subtext,
-                subtitle: subtext,
-                button_label: ctaText,
-                cta_text: ctaText,
-                button_link: ctaLink,
-                cta_link: ctaLink,
-                img: rawImg,
-                image_url: rawImg,
-                image: rawImg,
+                headline: headline, title: headline,
+                subtext: subtext, subtitle: subtext,
+                button_label: ctaText, cta_text: ctaText,
+                button_link: ctaLink, cta_link: ctaLink,
+                img: rawImg, image_url: rawImg, image: rawImg,
                 display_order: Number(slide.display_order || slide.displayOrder || 1),
-                active: isActive,
-                is_active: isActive
+                active: isActive, is_active: isActive
             };
 
-            let local = [];
-            try {
-                const raw = localStorage.getItem('gn_hero_slides');
-                if (raw) local = JSON.parse(raw);
-            } catch(e) {}
-            if (!Array.isArray(local)) local = defaultHeroSlides;
+            let list = await this._getSection('hero_slides');
+            if (!Array.isArray(list)) list = [...defaultHeroSlides];
 
-            const idx = local.findIndex(s => String(s.id) === String(payload.id));
-            if (idx >= 0) local[idx] = payload;
-            else local.push(payload);
+            const idx = list.findIndex(s => String(s.id) === String(payload.id));
+            if (idx >= 0) list[idx] = payload;
+            else list.push(payload);
 
-            try { localStorage.setItem('gn_hero_slides', JSON.stringify(local)); } catch(e) {}
-            await this._saveCloudSyncState({ hero_slides: local });
+            await this._saveSection('hero_slides', list);
             return payload;
         },
 
         async deleteHeroSlide(id) {
-            let local = [];
-            try {
-                const raw = localStorage.getItem('gn_hero_slides');
-                if (raw) local = JSON.parse(raw);
-            } catch(e) {}
-            if (!Array.isArray(local)) local = defaultHeroSlides;
-
-            local = local.filter(s => String(s.id) !== String(id));
-            try { localStorage.setItem('gn_hero_slides', JSON.stringify(local)); } catch(e) {}
-            await this._saveCloudSyncState({ hero_slides: local });
+            let list = await this._getSection('hero_slides');
+            if (!Array.isArray(list)) list = [...defaultHeroSlides];
+            list = list.filter(s => String(s.id) !== String(id));
+            await this._saveSection('hero_slides', list);
             return true;
         },
 
@@ -1541,16 +1198,29 @@
             if (!this.isLive || !supabase) return null;
 
             try {
+                const self = this;
                 const channel = supabase
                     .channel('gn-universal-realtime')
                     .on('postgres_changes', { event: '*', schema: 'public', table: 'gn_orders' }, payload => {
                         const rec = payload.new || payload.old;
-                        if (rec && rec.customer_name === '__GN_STORE_SYNC__') {
-                            // Re-fetch master sync state and dispatch universal events
-                            this._getCloudSyncState(true).then(freshState => {
-                                if (freshState) dispatchUniversalSyncEvents(freshState);
-                            });
-                        } else {
+                        if (rec && rec.customer_name) {
+                            const name = rec.customer_name;
+                            // Check if it's one of our sync rows
+                            for (const [sectionKey, config] of Object.entries(SECTION_CONFIG)) {
+                                if (name === config.syncName) {
+                                    // Re-fetch just this section
+                                    self._getSection(sectionKey, true).then(freshData => {
+                                        dispatchUniversalSyncEvents({ [sectionKey]: freshData });
+                                    });
+                                    if (callback) callback({ type: sectionKey, payload });
+                                    return;
+                                }
+                            }
+                            // Legacy monolithic sync row
+                            if (name === '__GN_STORE_SYNC__' || name.startsWith('__GN_')) {
+                                return; // Ignore legacy rows
+                            }
+                            // Regular order
                             window.dispatchEvent(new Event('ordersUpdated'));
                         }
                         if (callback) callback({ type: 'order', payload });
@@ -1588,14 +1258,19 @@
         _getMockOrders() { return []; }
     };
 
-    // Auto trigger initial products check & load event
+    // Auto-trigger initial data load (single entry point, no duplicates)
     if (typeof window !== 'undefined') {
         window.addEventListener('DOMContentLoaded', async () => {
             try {
-                await window.SupabaseEngine.getProducts();
-                await window.SupabaseEngine.getCategories();
-                await window.SupabaseEngine.getReviews();
-                await window.SupabaseEngine.getHeroSlides();
+                // Run migration first, then load all sections in parallel
+                await window.SupabaseEngine._migrateFromMonolith();
+                await Promise.all([
+                    window.SupabaseEngine.getProducts(),
+                    window.SupabaseEngine.getCategories(),
+                    window.SupabaseEngine.getReviews(),
+                    window.SupabaseEngine.getHeroSlides(),
+                    window.SupabaseEngine.getAnnouncements()
+                ]);
                 window.dispatchEvent(new Event('productsLoaded'));
             } catch (e) {}
         });
