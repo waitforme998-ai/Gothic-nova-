@@ -3539,6 +3539,11 @@
                     <!-- Dynamically populated via updateCheckoutTotals() -->
                 </div>
 
+                <!-- 1.5 DEDICATED TAROT WIN / PERK HERO BANNER IN PAYMENT STEP -->
+                <div id="checkoutTarotRewardBanner" style="display: none; margin-bottom: 12px; width: 100%; box-sizing: border-box;">
+                    <!-- Dynamically populated via renderCheckoutTarotRewardBanner() -->
+                </div>
+
                 <!-- 2. FINANCIAL BREAKDOWN BANNER (CLEAN & AUTHORITATIVE TOTAL PRICE) -->
                 <div class="checkout-payable-banner" id="checkoutPayableBanner" style="display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; background: linear-gradient(180deg, rgba(255, 232, 190, 0.05) 0%, rgba(18, 9, 14, 0.9) 100%); border: 1px solid rgba(255, 232, 190, 0.25); border-radius: 8px; box-sizing: border-box; width: 100%;">
                     
@@ -4676,7 +4681,8 @@
             if (typeof getStoredDailyReward === 'function') {
                 const stored = getStoredDailyReward();
                 if (stored && (stored.step === 'claimed' || stored.step === 'revealed' || !stored.step) && (stored.reward || stored.selectedReward || stored.claimedReward)) {
-                    if (stored.isOfferActive || (Number(stored.offerExpiresAt || stored.expiresAt || 0) > Date.now())) {
+                    const isExp = Number(stored.offerExpiresAt || stored.expiresAt || 0);
+                    if (stored.isOfferActive || isExp > Date.now() || !isExp) {
                         return stored.reward || stored.selectedReward || stored.claimedReward;
                     }
                 }
@@ -4686,9 +4692,10 @@
                 if (!raw) return null;
                 const parsed = JSON.parse(raw);
                 const reward = parsed && (parsed.reward || parsed.selectedReward || parsed.claimedReward);
-                const offerExpiresAt = parsed && (parsed.offerExpiresAt || parsed.expiresAt || (parsed.timestamp ? parsed.timestamp + 24 * 60 * 60 * 1000 : (parsed.claimedAt ? parsed.claimedAt + 24 * 60 * 60 * 1000 : 0)));
-                if (reward && offerExpiresAt > Date.now()) {
-                    if (!parsed.step || parsed.step === 'claimed' || parsed.step === 'revealed') {
+                if (reward) {
+                    const claimedTime = Number(parsed.claimedAt || parsed.timestamp || 0);
+                    const offerExp = Number(parsed.offerExpiresAt || parsed.expiresAt || (claimedTime > 0 ? claimedTime + 24 * 60 * 60 * 1000 : (Date.now() + 24 * 60 * 60 * 1000)));
+                    if (offerExp > Date.now()) {
                         return reward;
                     }
                 }
@@ -4936,11 +4943,113 @@
             return { delivery_charges: 0 };
         }
 
+        function renderCheckoutTarotRewardBanner(activeReward) {
+            const bannerEl = document.getElementById('checkoutTarotRewardBanner');
+            if (!bannerEl) return;
+
+            if (!activeReward) {
+                bannerEl.style.display = 'none';
+                bannerEl.innerHTML = '';
+                return;
+            }
+
+            const rawSubtotal = checkoutTotalPrice();
+            let accentColor = '#e5c158'; // Gold
+            let bgGradient = 'linear-gradient(135deg, rgba(229, 193, 88, 0.12) 0%, rgba(20, 10, 15, 0.96) 100%)';
+            let borderColor = 'rgba(229, 193, 88, 0.40)';
+            let romanNumeral = activeReward.roman || '✦';
+            let titleText = activeReward.offer || activeReward.title || 'TAROT REWARD';
+            let benefitDesc = 'Daily Tarot Ritual perk unlocked for your order.';
+            let badgeText = 'APPLIED ✓';
+            let badgeColor = '#4ade80';
+            let badgeBg = 'rgba(74, 222, 128, 0.12)';
+            let badgeBorder = 'rgba(74, 222, 128, 0.35)';
+            let valueHtml = '';
+
+            if (activeReward.type === 'percentage_discount') {
+                const pct = Number(activeReward.value || 10);
+                const discountAmount = Math.round(rawSubtotal * (pct / 100));
+                accentColor = '#e5c158';
+                bgGradient = 'linear-gradient(135deg, rgba(229, 193, 88, 0.14) 0%, rgba(25, 12, 18, 0.98) 100%)';
+                borderColor = 'rgba(229, 193, 88, 0.50)';
+                romanNumeral = activeReward.roman || 'IV';
+                titleText = `${pct}% OFF TOTAL ORDER`;
+                benefitDesc = `Instant ${pct}% discount applied to your cart subtotal.`;
+                badgeText = `${pct}% OFF APPLIED ✓`;
+                valueHtml = `<span class="font-mono" style="font-size: 0.95rem; color: #4ade80; font-weight: 900; letter-spacing: 0.02em;">-Rs. ${discountAmount.toLocaleString('en-PK')}</span>`;
+            } else if (activeReward.type === 'free_shipping') {
+                accentColor = '#38bdf8'; // Cyan / Sky Blue
+                bgGradient = 'linear-gradient(135deg, rgba(56, 189, 248, 0.14) 0%, rgba(10, 16, 28, 0.98) 100%)';
+                borderColor = 'rgba(56, 189, 248, 0.50)';
+                romanNumeral = activeReward.roman || 'II';
+                titleText = 'FREE NATIONWIDE DELIVERY';
+                benefitDesc = 'Standard courier delivery fee completely waived for this order.';
+                badgeText = 'FREE DELIVERY ✓';
+                badgeColor = '#38bdf8';
+                badgeBg = 'rgba(56, 189, 248, 0.12)';
+                badgeBorder = 'rgba(56, 189, 248, 0.35)';
+                valueHtml = `<span class="font-mono" style="font-size: 0.82rem; color: #38bdf8; font-weight: 800; letter-spacing: 0.04em;">FREE WAIVED</span>`;
+            } else if (activeReward.type === 'free_gift') {
+                accentColor = '#ff758f'; // Rose / Crimson
+                bgGradient = 'linear-gradient(135deg, rgba(255, 117, 143, 0.14) 0%, rgba(28, 8, 16, 0.98) 100%)';
+                borderColor = 'rgba(255, 117, 143, 0.50)';
+                romanNumeral = activeReward.roman || 'III';
+                titleText = 'FREE MYSTERY GIFT ENCLOSED';
+                benefitDesc = 'Complimentary handcrafted Gothic Nova talisman included in your parcel.';
+                badgeText = 'FREE GIFT INCLUDED ✓';
+                badgeColor = '#ff758f';
+                badgeBg = 'rgba(255, 117, 143, 0.12)';
+                badgeBorder = 'rgba(255, 117, 143, 0.35)';
+                valueHtml = `<span class="font-mono" style="font-size: 0.82rem; color: #ff758f; font-weight: 800; letter-spacing: 0.04em;">COMPLIMENTARY</span>`;
+            } else if (activeReward.type === 'order_upgrade') {
+                accentColor = '#c084fc'; // Violet / Purple
+                bgGradient = 'linear-gradient(135deg, rgba(192, 132, 252, 0.14) 0%, rgba(20, 8, 28, 0.98) 100%)';
+                borderColor = 'rgba(192, 132, 252, 0.50)';
+                romanNumeral = activeReward.roman || 'I';
+                titleText = 'VIP ORDER UPGRADE';
+                benefitDesc = 'Upgraded to signature luxury velvet box packaging & express dispatch queue.';
+                badgeText = 'VIP UPGRADE ✓';
+                badgeColor = '#c084fc';
+                badgeBg = 'rgba(192, 132, 252, 0.12)';
+                badgeBorder = 'rgba(192, 132, 252, 0.35)';
+                valueHtml = `<span class="font-mono" style="font-size: 0.82rem; color: #c084fc; font-weight: 800; letter-spacing: 0.04em;">UPGRADED</span>`;
+            }
+
+            bannerEl.style.display = 'block';
+            bannerEl.innerHTML = `
+                <div style="display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; background: ${bgGradient}; border: 1px solid ${borderColor}; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.55); box-sizing: border-box; width: 100%;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+                        <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
+                            <div style="width: 28px; height: 28px; min-width: 28px; border-radius: 4px; background: rgba(0,0,0,0.65); border: 1px solid ${accentColor}; display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', Georgia, serif; font-size: 0.80rem; font-weight: 900; color: ${accentColor}; flex-shrink: 0; box-shadow: 0 0 10px ${accentColor}33;">
+                                ${romanNumeral}
+                            </div>
+                            <div style="display: flex; flex-direction: column; min-width: 0;">
+                                <span class="font-mono" style="font-size: 0.60rem; color: ${accentColor}; letter-spacing: 0.10em; text-transform: uppercase; font-weight: 700;">TAROT DESTINY REWARD</span>
+                                <span class="font-serif" style="font-size: 0.88rem; font-weight: 800; color: #ffffff; letter-spacing: 0.04em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${titleText}</span>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+                            ${valueHtml}
+                            <span class="font-mono" style="font-size: 0.60rem; color: ${badgeColor}; background: ${badgeBg}; border: 1px solid ${badgeBorder}; padding: 3px 8px; border-radius: 3px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase;">${badgeText}</span>
+                        </div>
+                    </div>
+                    <div style="font-size: 0.70rem; color: rgba(255,255,255,0.82); line-height: 1.35; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: space-between; gap: 6px; flex-wrap: wrap;">
+                        <span>✦ ${benefitDesc}</span>
+                        <span class="font-mono" style="font-size: 0.60rem; color: var(--color-text-muted);">Offer valid 24h</span>
+                    </div>
+                </div>
+            `;
+        }
+        window.renderCheckoutTarotRewardBanner = renderCheckoutTarotRewardBanner;
+
         function updateCheckoutTotals() {
             const currentMap = getActiveCheckoutItems();
             const rawSubtotal = checkoutTotalPrice();
             const count = checkoutTotalItems();
             const activeReward = getActiveDailyReward();
+
+            // 1. Render Dedicated Tarot Win Banner at Top of Step 1
+            renderCheckoutTarotRewardBanner(activeReward);
 
             let discountAmount = 0;
             let savingsAmount = 0;
@@ -4952,21 +5061,33 @@
             const discountVal = document.getElementById('checkoutDiscountValue');
             const savingsBadge = document.getElementById('checkoutSavingsBadge');
 
-            if (activeReward && activeReward.type === 'percentage_discount') {
-                const pct = Number(activeReward.value || 10);
-                discountAmount = Math.round(rawSubtotal * (pct / 100));
-                savingsAmount = discountAmount;
-
-                if (discountRow) {
-                    discountRow.style.display = 'flex';
-                    if (discountLabel) discountLabel.textContent = `✦ REWARD (${activeReward.offer || `${pct}% OFF`}):`;
+            if (activeReward) {
+                if (discountRow) discountRow.style.display = 'flex';
+                if (activeReward.type === 'percentage_discount') {
+                    const pct = Number(activeReward.value || 10);
+                    discountAmount = Math.round(rawSubtotal * (pct / 100));
+                    savingsAmount = discountAmount;
+                    if (discountLabel) discountLabel.textContent = `✦ TAROT DISCOUNT (${activeReward.offer || `${pct}% OFF`}):`;
                     if (discountVal) discountVal.innerHTML = `<span style="color: #4ade80; font-weight: 800;">-Rs. ${discountAmount.toLocaleString('en-PK')}</span>`;
+                } else if (activeReward.type === 'free_shipping') {
+                    savingsAmount = 300; // Standard courier fee saved
+                    if (discountLabel) discountLabel.textContent = `✦ TAROT PERK (FREE DELIVERY):`;
+                    if (discountVal) discountVal.innerHTML = `<span style="color: #38bdf8; font-weight: 800;">FREE COURIER WAIVED ✓</span>`;
+                } else if (activeReward.type === 'free_gift') {
+                    if (discountLabel) discountLabel.textContent = `✦ TAROT PERK (FREE GIFT):`;
+                    if (discountVal) discountVal.innerHTML = `<span style="color: #ff758f; font-weight: 800;">MYSTERY GIFT ENCLOSED ✓</span>`;
+                } else if (activeReward.type === 'order_upgrade') {
+                    if (discountLabel) discountLabel.textContent = `✦ TAROT PERK (ORDER UPGRADE):`;
+                    if (discountVal) discountVal.innerHTML = `<span style="color: #c084fc; font-weight: 800;">VIP DISPATCH UNLOCKED ✓</span>`;
+                } else {
+                    if (discountLabel) discountLabel.textContent = `✦ TAROT PERK (${activeReward.offer || activeReward.title}):`;
+                    if (discountVal) discountVal.innerHTML = `<span style="color: #4ade80; font-weight: 800;">APPLIED ✓</span>`;
                 }
             } else {
                 if (discountRow) discountRow.style.display = 'none';
             }
 
-            // Final total payable is simply the product subtotal minus any valid reward discount
+            // Final total payable is product subtotal minus percentage discount (if applicable)
             const finalTotal = Math.max(0, rawSubtotal - discountAmount);
             const formattedTotal = 'Rs.\u00A0' + finalTotal.toLocaleString('en-PK');
 
@@ -4990,9 +5111,18 @@
             if (elSummaryCount) elSummaryCount.textContent = count;
 
             if (savingsBadge) {
-                if (savingsAmount > 0 && activeReward && (activeReward.type === 'percentage_discount' || activeReward.type === 'free_shipping')) {
+                if (activeReward && activeReward.type === 'percentage_discount' && savingsAmount > 0) {
                     savingsBadge.style.display = 'inline-block';
                     savingsBadge.textContent = `✦ YOU SAVED Rs. ${savingsAmount.toLocaleString('en-PK')}`;
+                } else if (activeReward && activeReward.type === 'free_shipping') {
+                    savingsBadge.style.display = 'inline-block';
+                    savingsBadge.textContent = `✦ YOU SAVED COURIER DELIVERY (FREE)`;
+                } else if (activeReward && activeReward.type === 'free_gift') {
+                    savingsBadge.style.display = 'inline-block';
+                    savingsBadge.textContent = `✦ FREE GIFT INCLUDED`;
+                } else if (activeReward && activeReward.type === 'order_upgrade') {
+                    savingsBadge.style.display = 'inline-block';
+                    savingsBadge.textContent = `✦ VIP UPGRADE ACTIVE`;
                 } else {
                     savingsBadge.style.display = 'none';
                 }
@@ -5033,11 +5163,11 @@
                                 <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
                                     <div style="width: 30px; height: 30px; border-radius: 4px; background: rgba(255, 117, 143, 0.08); border: 1px solid rgba(255, 117, 143, 0.3); display: flex; align-items: center; justify-content: center; font-size: 0.62rem; color: #ff758f; font-family: var(--font-mono); font-weight: 700; flex-shrink: 0;">GIFT</div>
                                     <div style="display: flex; flex-direction: column; min-width: 0;">
-                                        <span style="font-size: 0.76rem; font-weight: 700; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">✦ Free Gift</span>
-                                        <span class="font-mono" style="font-size: 0.60rem; color: #ff9999;">Tarot Reward &bull; Free Gift</span>
+                                        <span style="font-size: 0.76rem; font-weight: 700; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">✦ Free Mystery Gift</span>
+                                        <span class="font-mono" style="font-size: 0.60rem; color: #ff9999;">Tarot Reward &bull; Enclosed in Parcel</span>
                                     </div>
                                 </div>
-                                <span class="font-mono" style="font-size: 0.64rem; color: #4ade80; font-weight: 800; flex-shrink: 0; background: rgba(74, 222, 128, 0.08); border: 1px solid rgba(74, 222, 128, 0.25); padding: 2px 6px; border-radius: 3px;">FREE GIFT</span>
+                                <span class="font-mono" style="font-size: 0.64rem; color: #ff758f; font-weight: 800; flex-shrink: 0; background: rgba(255, 117, 143, 0.08); border: 1px solid rgba(255, 117, 143, 0.25); padding: 2px 6px; border-radius: 3px;">FREE GIFT</span>
                             </div>
                         `;
                     } else if (activeReward && activeReward.type === 'order_upgrade') {
@@ -5046,11 +5176,39 @@
                                 <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
                                     <div style="width: 30px; height: 30px; border-radius: 4px; background: rgba(192, 132, 252, 0.08); border: 1px solid rgba(192, 132, 252, 0.3); display: flex; align-items: center; justify-content: center; font-size: 0.62rem; color: #c084fc; font-family: var(--font-mono); font-weight: 700; flex-shrink: 0;">VIP</div>
                                     <div style="display: flex; flex-direction: column; min-width: 0;">
-                                        <span style="font-size: 0.76rem; font-weight: 700; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">✦ Order Upgrade</span>
-                                        <span class="font-mono" style="font-size: 0.60rem; color: #c084fc;">Tarot Reward &bull; Order Upgrade</span>
+                                        <span style="font-size: 0.76rem; font-weight: 700; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">✦ VIP Order Upgrade</span>
+                                        <span class="font-mono" style="font-size: 0.60rem; color: #c084fc;">Tarot Reward &bull; Velvet Gift Packaging</span>
                                     </div>
                                 </div>
-                                <span class="font-mono" style="font-size: 0.64rem; color: #4ade80; font-weight: 800; flex-shrink: 0; background: rgba(74, 222, 128, 0.08); border: 1px solid rgba(74, 222, 128, 0.25); padding: 2px 6px; border-radius: 3px;">ORDER UPGRADE</span>
+                                <span class="font-mono" style="font-size: 0.64rem; color: #c084fc; font-weight: 800; flex-shrink: 0; background: rgba(192, 132, 252, 0.08); border: 1px solid rgba(192, 132, 252, 0.25); padding: 2px 6px; border-radius: 3px;">ORDER UPGRADE</span>
+                            </div>
+                        `;
+                    } else if (activeReward && activeReward.type === 'free_shipping') {
+                        previewHtml += `
+                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 6px; border-top: 1px solid rgba(255, 232, 190, 0.08); flex-wrap: wrap;">
+                                <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
+                                    <div style="width: 30px; height: 30px; border-radius: 4px; background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.3); display: flex; align-items: center; justify-content: center; font-size: 0.62rem; color: #38bdf8; font-family: var(--font-mono); font-weight: 700; flex-shrink: 0;">SHIP</div>
+                                    <div style="display: flex; flex-direction: column; min-width: 0;">
+                                        <span style="font-size: 0.76rem; font-weight: 700; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">✦ Free Nationwide Delivery</span>
+                                        <span class="font-mono" style="font-size: 0.60rem; color: #38bdf8;">Tarot Reward &bull; Courier Delivery Waived</span>
+                                    </div>
+                                </div>
+                                <span class="font-mono" style="font-size: 0.64rem; color: #38bdf8; font-weight: 800; flex-shrink: 0; background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.25); padding: 2px 6px; border-radius: 3px;">FREE DELIVERY</span>
+                            </div>
+                        `;
+                    } else if (activeReward && activeReward.type === 'percentage_discount') {
+                        const pct = Number(activeReward.value || 10);
+                        const discountAmt = Math.round(rawSubtotal * (pct / 100));
+                        previewHtml += `
+                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 6px; border-top: 1px solid rgba(255, 232, 190, 0.08); flex-wrap: wrap;">
+                                <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
+                                    <div style="width: 30px; height: 30px; border-radius: 4px; background: rgba(229, 193, 88, 0.08); border: 1px solid rgba(229, 193, 88, 0.3); display: flex; align-items: center; justify-content: center; font-size: 0.62rem; color: #e5c158; font-family: var(--font-mono); font-weight: 700; flex-shrink: 0;">${pct}%</div>
+                                    <div style="display: flex; flex-direction: column; min-width: 0;">
+                                        <span style="font-size: 0.76rem; font-weight: 700; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">✦ ${pct}% Discount Benefit</span>
+                                        <span class="font-mono" style="font-size: 0.60rem; color: #e5c158;">Tarot Reward &bull; Applied at Checkout</span>
+                                    </div>
+                                </div>
+                                <span class="font-mono" style="font-size: 0.64rem; color: #4ade80; font-weight: 800; flex-shrink: 0; background: rgba(74, 222, 128, 0.08); border: 1px solid rgba(74, 222, 128, 0.25); padding: 2px 6px; border-radius: 3px;">-Rs. ${discountAmt.toLocaleString('en-PK')}</span>
                             </div>
                         `;
                     }
@@ -5063,7 +5221,7 @@
             }
 
             if (typeof selectPaymentMethod === 'function') {
-                selectPaymentMethod(selectedPaymentMethod || 'cod');
+                selectPaymentMethod(selectedPaymentMethod || 'advance');
             }
 
             // Populate mini summary list for Step 2
@@ -5088,9 +5246,9 @@
                             <div class="checkout-mini-item" style="border-top: 1px solid rgba(255, 232, 190, 0.1); margin-top: 4px; padding-top: 6px;">
                                 <div style="display: flex; align-items: center; gap: 8px;">
                                     <span class="font-mono" style="font-size: 0.60rem; color: #ff758f; background: rgba(255, 117, 143, 0.08); border: 1px solid rgba(255, 117, 143, 0.3); padding: 1px 4px; border-radius: 3px;">GIFT</span>
-                                    <span style="font-weight: 700; color: #ffe8be; font-size: 0.74rem;">✦ Free Gift</span>
+                                    <span style="font-weight: 700; color: #ffe8be; font-size: 0.74rem;">✦ Free Gift Enclosed</span>
                                 </div>
-                                <span class="font-mono" style="color: #4ade80; font-weight: 800; font-size: 0.70rem;">FREE GIFT</span>
+                                <span class="font-mono" style="color: #ff758f; font-weight: 800; font-size: 0.70rem;">FREE GIFT</span>
                             </div>
                         `;
                     } else if (activeReward.type === 'order_upgrade') {
@@ -5098,9 +5256,19 @@
                             <div class="checkout-mini-item" style="border-top: 1px solid rgba(255, 232, 190, 0.1); margin-top: 4px; padding-top: 6px;">
                                 <div style="display: flex; align-items: center; gap: 8px;">
                                     <span class="font-mono" style="font-size: 0.60rem; color: #c084fc; background: rgba(192, 132, 252, 0.08); border: 1px solid rgba(192, 132, 252, 0.3); padding: 1px 4px; border-radius: 3px;">VIP</span>
-                                    <span style="font-weight: 700; color: #ffe8be; font-size: 0.74rem;">✦ Order Upgrade</span>
+                                    <span style="font-weight: 700; color: #ffe8be; font-size: 0.74rem;">✦ VIP Order Upgrade</span>
                                 </div>
-                                <span class="font-mono" style="color: #4ade80; font-weight: 800; font-size: 0.70rem;">ORDER UPGRADE</span>
+                                <span class="font-mono" style="color: #c084fc; font-weight: 800; font-size: 0.70rem;">ORDER UPGRADE</span>
+                            </div>
+                        `;
+                    } else if (activeReward.type === 'free_shipping') {
+                        itemsHtml += `
+                            <div class="checkout-mini-item" style="border-top: 1px solid rgba(255, 232, 190, 0.1); margin-top: 4px; padding-top: 6px;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span class="font-mono" style="font-size: 0.60rem; color: #38bdf8; background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.3); padding: 1px 4px; border-radius: 3px;">SHIP</span>
+                                    <span style="font-weight: 700; color: #ffe8be; font-size: 0.74rem;">✦ Free Nationwide Delivery</span>
+                                </div>
+                                <span class="font-mono" style="color: #38bdf8; font-weight: 800; font-size: 0.70rem;">FREE DELIVERY</span>
                             </div>
                         `;
                     } else {
