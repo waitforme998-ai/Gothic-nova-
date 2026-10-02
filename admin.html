@@ -4971,6 +4971,7 @@
             let modified = false;
             items.forEach(it => {
                 const pid = it.id || it.product_id;
+                if (!pid || pid === 'free_gift') return;
                 const qty = Number(it.quantity || it.qty || 1);
                 const pIdx = products.findIndex(p => String(p.id) === String(pid));
                 if (pIdx !== -1) {
@@ -4986,6 +4987,7 @@
             });
 
             if (modified) {
+                window.gn_products = products;
                 localStorage.setItem('gn_products', JSON.stringify(products));
                 renderDashboard();
                 try {
@@ -5003,13 +5005,11 @@
             let modified = false;
             items.forEach(it => {
                 const pid = it.id || it.product_id;
+                if (!pid || pid === 'free_gift') return;
                 const qty = Number(it.quantity || it.qty || 1);
                 const pIdx = products.findIndex(p => String(p.id) === String(pid));
                 if (pIdx !== -1) {
                     products[pIdx].stock = Math.max(0, Number(products[pIdx].stock || 0) - qty);
-                    if (products[pIdx].stock === 0) {
-                        products[pIdx].active = false;
-                    }
                     modified = true;
                     if (window.SupabaseEngine) {
                         window.SupabaseEngine.saveProduct(products[pIdx]).catch(() => {});
@@ -5018,6 +5018,7 @@
             });
 
             if (modified) {
+                window.gn_products = products;
                 localStorage.setItem('gn_products', JSON.stringify(products));
                 renderDashboard();
                 try {
@@ -5449,11 +5450,11 @@
 
             showCustomConfirm({
                 title: 'Delete Order?',
-                message: `Permanently delete Order #${orderNum} (${targetOrder.customer_name || 'Customer'})? Product stock will be replenished into inventory and uploaded payment files removed.`,
+                message: `Permanently delete Order #${orderNum} (${targetOrder.customer_name || 'Customer'})?`,
                 confirmText: 'Delete Order',
                 isDanger: true,
                 onConfirm: async () => {
-                    if (targetOrder.status !== 'Cancelled') {
+                    if (targetOrder.status === 'Delivered') {
                         replenishOrderStock(targetOrder);
                     }
 
@@ -5477,7 +5478,7 @@
                     updateOrdersHeaderMetrics();
                     renderOrdersAdmin();
                     renderDashboard();
-                    showToast(`Order #${orderNum} deleted & stock replenished`);
+                    showToast(`Order #${orderNum} deleted`);
 
                     if (window.SupabaseEngine) {
                         try {
@@ -5533,14 +5534,16 @@
             adminOrders[idx].status = newStatus;
             adminOrders[idx].updated_at = new Date().toISOString();
 
-            if (oldStatus !== 'Cancelled' && newStatus === 'Cancelled') {
-                replenishOrderStock(targetOrder);
-                showToast(`Order #${targetOrder.order_number || orderId} cancelled & stock restored (+items)`);
-            } else if (oldStatus === 'Cancelled' && newStatus !== 'Cancelled') {
+            // Stock state machine: Stock is ONLY deducted when status transitions TO 'Delivered'.
+            // If an already 'Delivered' order transitions AWAY from 'Delivered', stock is replenished.
+            if (oldStatus !== 'Delivered' && newStatus === 'Delivered') {
                 deductOrderStock(targetOrder);
-                showToast(`Order reactivated: ${newStatus}`);
+                showToast(`Order #${targetOrder.order_number || orderId} marked Delivered — inventory stock deducted`);
+            } else if (oldStatus === 'Delivered' && newStatus !== 'Delivered') {
+                replenishOrderStock(targetOrder);
+                showToast(`Order #${targetOrder.order_number || orderId} changed from Delivered to ${newStatus} — inventory stock replenished`);
             } else {
-                showToast(`Order status updated to: ${newStatus}`);
+                showToast(`Order #${targetOrder.order_number || orderId} status updated to: ${newStatus}`);
             }
 
             window.adminOrders = adminOrders;

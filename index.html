@@ -5625,33 +5625,6 @@
                     localStorage.setItem('gn_orders', JSON.stringify(localOrders));
                 }
 
-                // 2-Way Product Stock Deduction: Lower stock by ordered quantity
-                try {
-                    let currentProducts = JSON.parse(localStorage.getItem('gn_products') || '[]');
-                    if (Array.isArray(currentProducts) && currentProducts.length > 0) {
-                        itemsArray.forEach(orderedItem => {
-                            const prod = currentProducts.find(p => String(p.id) === String(orderedItem.id));
-                            if (prod) {
-                                const orderedQty = Number(orderedItem.quantity || orderedItem.qty || 1);
-                                prod.stock = Math.max(0, (Number(prod.stock) || 0) - orderedQty);
-                            }
-                        });
-                        localStorage.setItem('gn_products', JSON.stringify(currentProducts));
-                        window.gn_products = currentProducts;
-                        if (typeof window.renderMainCatalog === 'function') {
-                            window.renderMainCatalog();
-                        }
-                        if (typeof window.renderCategoryTabs === 'function') {
-                            window.renderCategoryTabs();
-                        }
-                        if (typeof window.renderNewArrivals === 'function') {
-                            window.renderNewArrivals();
-                        }
-                    }
-                } catch(stockErr) {
-                    console.warn("Error updating product stock locally upon order creation:", stockErr);
-                }
-
                 // Clear Cart only if standard cart checkout; preserve cart if Buy Now
                 if (!activeCheckoutItemsMap) {
                     cartMap = {};
