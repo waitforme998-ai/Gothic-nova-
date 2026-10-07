@@ -3744,6 +3744,9 @@
             if (gate) gate.style.display = 'none';
             if (app) app.style.display = 'block';
             if (typeof renderDashboard === 'function') renderDashboard();
+            if (typeof loadProducts === 'function') loadProducts().then(() => renderDashboard());
+            if (typeof loadCategoriesIntoAdmin === 'function') loadCategoriesIntoAdmin();
+            if (typeof loadAnnouncementsIntoAdmin === 'function') loadAnnouncementsIntoAdmin();
             if (typeof loadReviewsAdmin === 'function') loadReviewsAdmin();
             if (typeof loadOrdersAdmin === 'function') loadOrdersAdmin();
         }
@@ -7696,22 +7699,77 @@
             }
         });
 
-        // Listen for Realtime Order Updates
+        // Listen for Realtime & Cross-tab Updates across ALL admin sections
         window.addEventListener('ordersUpdated', () => {
-            if (window.SupabaseEngine && window.SupabaseEngine.isLive) {
-                loadOrdersAdmin();
-            } else {
-                try {
-                    const rawLocal = localStorage.getItem('gn_orders');
-                    if (rawLocal) {
-                        adminOrders = JSON.parse(rawLocal);
-                        window.adminOrders = adminOrders;
-                        updateOrdersHeaderMetrics();
-                        renderOrdersAdmin();
-                    }
-                } catch(e) {}
+            loadOrdersAdmin();
+        });
+
+        window.addEventListener('productsUpdated', () => {
+            loadProducts().then(() => renderDashboard());
+        });
+
+        window.addEventListener('gn:productsUpdated', (e) => {
+            if (e && e.detail && Array.isArray(e.detail.products)) {
+                products = e.detail.products;
+                window.gn_products = products;
+                try { localStorage.setItem('gn_products', JSON.stringify(products)); } catch(err) {}
+            }
+            renderDashboard();
+        });
+
+        window.addEventListener('categoriesUpdated', () => {
+            loadCategoriesIntoAdmin();
+        });
+
+        window.addEventListener('gn:categoriesUpdated', (e) => {
+            if (e && e.detail && Array.isArray(e.detail.categories)) {
+                saveCategoryList(e.detail.categories);
+                populateCategoryDropdowns();
+                renderDashboard();
             }
         });
+
+        window.addEventListener('reviewsUpdated', () => {
+            loadReviewsAdmin();
+        });
+
+        window.addEventListener('announcementsUpdated', () => {
+            loadAnnouncementsIntoAdmin();
+        });
+
+        window.addEventListener('storage', (e) => {
+            if (!e || !e.key) return;
+            if (e.key === 'gn_products') loadProducts().then(() => renderDashboard());
+            if (e.key === 'gn_orders') loadOrdersAdmin();
+            if (e.key === 'gn_reviews') loadReviewsAdmin();
+            if (e.key === 'gn_announcements') loadAnnouncementsIntoAdmin();
+            if (e.key === 'gn_categories_meta') loadCategoriesIntoAdmin();
+        });
+
+        // Cross-tab BroadcastChannel listener for instant admin synchronization
+        try {
+            const adminBc = getGnAdminBroadcastChannel();
+            if (adminBc) {
+                adminBc.onmessage = function(ev) {
+                    if (!ev || !ev.data) return;
+                    if (ev.data.type === 'STORE_SYNC_UPDATED' || ev.data.type === 'PRODUCTS_UPDATED') {
+                        loadProducts().then(() => renderDashboard());
+                    }
+                    if (ev.data.type === 'CATEGORIES_UPDATED') {
+                        loadCategoriesIntoAdmin();
+                    }
+                    if (ev.data.type === 'REVIEWS_UPDATED') {
+                        loadReviewsAdmin();
+                    }
+                    if (ev.data.type === 'ANNOUNCEMENTS_UPDATED') {
+                        loadAnnouncementsIntoAdmin();
+                    }
+                    if (ev.data.type === 'ORDER_CREATED' || ev.data.type === 'ORDER_UPDATED' || ev.data.type === 'ORDER_DELETED') {
+                        loadOrdersAdmin();
+                    }
+                };
+            }
+        } catch(e) {}
 
         // Init
         checkAdminAuth();
