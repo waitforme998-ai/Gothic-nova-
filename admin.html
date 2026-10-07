@@ -3688,10 +3688,13 @@
             { id: "6", name: "Reaper Pendant", category: "pendants", img: "assets/reaper_pendant.png", price: 8999, salePrice: 7499, stock: 15, threshold: 3, active: true }
         ];
 
-        let products = [...defaultCatalog];
+        let products = [];
         try {
             let stored = localStorage.getItem('gn_products');
-            if (stored) { let parsed = JSON.parse(stored); if (Array.isArray(parsed) && parsed.length > 0) products = parsed; }
+            if (stored) { 
+                let parsed = JSON.parse(stored); 
+                if (Array.isArray(parsed)) products = parsed; 
+            }
         } catch(e) {}
         window.gn_products = products;
 
@@ -4024,10 +4027,7 @@
                 } catch(e) {}
             }
             if (products === null) {
-                products = defaultCatalog.map(p => ({
-                    ...p,
-                    category: normalizeProductCategoryForAdmin(p, currentCatList)
-                }));
+                products = [];
                 window.gn_products = products;
             }
             return products;
@@ -4458,7 +4458,9 @@
 
             // 5. Background save to Supabase
             if (window.SupabaseEngine) {
-                window.SupabaseEngine.saveProduct(products[idx]).catch(() => {});
+                window.SupabaseEngine.saveProduct(products[idx]).catch(err => {
+                    console.warn("Stock sync notice:", err);
+                });
             }
         };
 
@@ -4988,7 +4990,9 @@
                     }
                     modified = true;
                     if (window.SupabaseEngine) {
-                        window.SupabaseEngine.saveProduct(products[pIdx]).catch(() => {});
+                        window.SupabaseEngine.saveProduct(products[pIdx]).catch(err => {
+                            console.warn("Replenish stock sync notice:", err);
+                        });
                     }
                 }
             });
@@ -5019,7 +5023,9 @@
                     products[pIdx].stock = Math.max(0, Number(products[pIdx].stock || 0) - qty);
                     modified = true;
                     if (window.SupabaseEngine) {
-                        window.SupabaseEngine.saveProduct(products[pIdx]).catch(() => {});
+                        window.SupabaseEngine.saveProduct(products[pIdx]).catch(err => {
+                            console.warn("Deduct stock sync notice:", err);
+                        });
                     }
                 }
             });
@@ -5568,7 +5574,8 @@
                 try {
                     await window.SupabaseEngine.updateOrderStatus(orderId, newStatus);
                 } catch(e) {
-                    console.warn("Supabase updateOrderStatus error:", e);
+                    console.warn("Supabase updateOrderStatus notice:", e);
+                    showToast("Order status saved locally (cloud sync queued)", true);
                 }
             }
         }
@@ -6228,7 +6235,12 @@
                         existing.stockImages = [...singleProductStockImages];
                         saveProducts();
                         if (window.SupabaseEngine) { 
-                            try { await window.SupabaseEngine.saveProduct(existing); } catch(e) {} 
+                            try { 
+                                await window.SupabaseEngine.saveProduct(existing); 
+                            } catch(e) {
+                                console.warn("Cloud save notice for single product:", e);
+                                showToast("Saved locally. Cloud sync pending.", true);
+                            } 
                         }
                         renderDashboard(); 
                         if (btnState) btnState.success('SAVED ✓');
@@ -6306,7 +6318,10 @@
                 } else if (window.SupabaseEngine) {
                     for (const p of newItems) await window.SupabaseEngine.saveProduct(p);
                 }
-            } catch(e) {}
+            } catch(e) {
+                console.warn("Bulk product save cloud notice:", e);
+                showToast("Saved locally. Cloud sync pending.", true);
+            }
             renderDashboard();
             window.dispatchEvent(new Event('productsLoaded'));
             window.dispatchEvent(new Event('storage'));

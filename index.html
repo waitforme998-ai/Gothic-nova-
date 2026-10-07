@@ -1000,12 +1000,13 @@
             }
 
             const now = Date.now();
-            const offerExpiresAt = (Number(targetOfferExpiresAt) > now)
+            const stored = (typeof getStoredDailyReward === 'function') ? getStoredDailyReward() : null;
+            const offerExpiresAt = Number(targetOfferExpiresAt) > 0
                 ? Number(targetOfferExpiresAt)
-                : (now + TWENTY_FOUR_HOURS);
-            const shuffleUnlockAt = (Number(targetShuffleUnlockAt) > now)
+                : (stored && Number(stored.offerExpiresAt) > 0 ? Number(stored.offerExpiresAt) : (now + TWENTY_FOUR_HOURS));
+            const shuffleUnlockAt = Number(targetShuffleUnlockAt) > 0
                 ? Number(targetShuffleUnlockAt)
-                : (offerExpiresAt + TWENTY_FOUR_HOURS);
+                : (stored && Number(stored.shuffleUnlockAt) > 0 ? Number(stored.shuffleUnlockAt) : (offerExpiresAt + TWENTY_FOUR_HOURS));
 
             function updateTimer() {
                 const currentNow = Date.now();
@@ -1639,7 +1640,8 @@
                 if (Array.isArray(parsed)) storedProducts = parsed;
             }
         } catch(e) {}
-        window.gn_products = (storedProducts !== null) ? storedProducts : defaultProducts;
+        const hasConfirmedProducts = localStorage.getItem('gn_products_confirmed_at');
+        window.gn_products = (storedProducts !== null) ? storedProducts : (hasConfirmedProducts ? [] : defaultProducts);
 
         // Async Background Sync (Supabase Dual-Mode & Realtime Broadcaster)
         window.addEventListener('DOMContentLoaded', async function() {
@@ -3145,26 +3147,18 @@
                         const syncChannel = new BroadcastChannel('gn_store_sync');
                         syncChannel.onmessage = function(ev) {
                             if (ev && ev.data) {
+                                if (window.SupabaseEngine && typeof window.SupabaseEngine.refreshAll === 'function') {
+                                    window.SupabaseEngine.refreshAll();
+                                }
                                 if (ev.data.type === 'STORE_SYNC_UPDATED' && ev.data.state) {
                                     const s = ev.data.state;
                                     if (Array.isArray(s.products)) {
                                         window.gn_products = s.products;
-                                        try { localStorage.setItem('gn_products', JSON.stringify(s.products)); } catch(e) {}
-                                    }
-                                    if (Array.isArray(s.announcements)) {
-                                        try { localStorage.setItem('gn_announcements', JSON.stringify(s.announcements)); } catch(e) {}
-                                    }
-                                    if (Array.isArray(s.reviews)) {
-                                        try { localStorage.setItem('gn_reviews', JSON.stringify(s.reviews)); } catch(e) {}
-                                    }
-                                    if (Array.isArray(s.categories)) {
-                                        try { localStorage.setItem('gn_categories_meta', JSON.stringify(s.categories)); } catch(e) {}
                                     }
                                     refreshStorefrontCatalog();
                                 }
                                 if (ev.data.type === 'PRODUCTS_UPDATED' && Array.isArray(ev.data.products)) {
                                     window.gn_products = ev.data.products;
-                                    try { localStorage.setItem('gn_products', JSON.stringify(ev.data.products)); } catch(e) {}
                                     refreshStorefrontCatalog();
                                 }
                                 if (ev.data.type === 'ANNOUNCEMENTS_UPDATED' && Array.isArray(ev.data.announcements)) {

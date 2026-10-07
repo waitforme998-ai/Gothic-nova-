@@ -1,7 +1,7 @@
 // supabase-engine.js
 // GOTHIC NOVA - Enterprise Dual-Mode & Live Supabase Data Adapter
 // Seamlessly bridges Supabase PostgreSQL Cloud & LocalStorage fallback
-// Per-Section Independent Synchronization Engine
+// Per-Section Independent Synchronization Engine (Hardened Stage A)
 
 (function() {
     'use strict';
@@ -9,29 +9,88 @@
     const DEFAULT_SUPABASE_URL = 'https://ogjyubekshcxcirlboue.supabase.co';
     const DEFAULT_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9nanl1YmVrc2hjeGNpcmxib3VlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2MzU3NzIsImV4cCI6MjEwNTIxMTc3Mn0.DgLLeJfRhTgJhJsDhj5LSmxjk9U7q7FYskX-QB10BiM';
 
-    const SUPABASE_URL = (typeof localStorage !== 'undefined' && localStorage.getItem('gn_supabase_url')) || DEFAULT_SUPABASE_URL; 
-    const SUPABASE_ANON_KEY = (typeof localStorage !== 'undefined' && localStorage.getItem('gn_supabase_anon_key')) || DEFAULT_SUPABASE_ANON_KEY; 
-    
     let supabase = null;
 
-    if (SUPABASE_URL && SUPABASE_ANON_KEY && typeof window !== 'undefined' && window.supabase) {
+    function safeLocalStorageSet(key, val) {
         try {
-            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-                auth: {
-                    persistSession: true,
-                    autoRefreshToken: true,
-                    detectSessionInUrl: true
-                }
-            });
-            console.log("⚡ Gothic Nova Supabase Engine: LIVE Cloud Mode initialized.");
+            localStorage.setItem(key, typeof val === 'string' ? val : JSON.stringify(val));
+            return true;
         } catch (e) {
-            console.warn("Supabase init error, falling back to local mode:", e);
+            if (e && (e.name === 'QuotaExceededError' || e.code === 22)) {
+                console.warn("Storage quota exceeded for key: " + key);
+                try {
+                    const nonEssential = ['gn_search_cache', 'gn_recent_views', 'gn_order_counter_backup'];
+                    nonEssential.forEach(k => { try { localStorage.removeItem(k); } catch(_) {} });
+                    localStorage.setItem(key, typeof val === 'string' ? val : JSON.stringify(val));
+                    return true;
+                } catch(inner) {
+                    if (typeof window !== 'undefined' && typeof window.showToast === 'function') {
+                        window.showToast("Device storage full. Syncing directly via Cloud.", true);
+                    }
+                }
+            }
+            return false;
         }
-    } else {
-        console.log("⚡ Gothic Nova Supabase Engine: MOCKUP Mode (localStorage).");
     }
 
-    // Default Seed Catalog (Only used for very first cold start when no database state exists)
+    function initSupabase() {
+        if (supabase) return supabase;
+        const url = (typeof localStorage !== 'undefined' && localStorage.getItem('gn_supabase_url')) || DEFAULT_SUPABASE_URL; 
+        const key = (typeof localStorage !== 'undefined' && localStorage.getItem('gn_supabase_anon_key')) || DEFAULT_SUPABASE_ANON_KEY; 
+        if (url && key && typeof window !== 'undefined' && window.supabase && typeof window.supabase.createClient === 'function') {
+            try {
+                supabase = window.supabase.createClient(url, key, {
+                    auth: {
+                        persistSession: true,
+                        autoRefreshToken: true,
+                        detectSessionInUrl: true
+                    }
+                });
+                console.log("⚡ Gothic Nova Supabase Engine: LIVE Cloud Mode active.");
+            } catch (e) {
+                console.warn("Supabase init error, operating in offline fallback:", e);
+            }
+        }
+        return supabase;
+    }
+
+    // Attempt immediate init
+    initSupabase();
+
+    // Outbox for offline resilience
+    function getOutbox() {
+        try {
+            return JSON.parse(localStorage.getItem('gn_outbox') || '[]');
+        } catch(e) { return []; }
+    }
+    function addToOutbox(item) {
+        try {
+            const outbox = getOutbox();
+            outbox.push({ ...item, timestamp: Date.now() });
+            safeLocalStorageSet('gn_outbox', outbox);
+        } catch(e) {}
+    }
+    async function flushOutbox() {
+        const client = initSupabase();
+        if (!client) return;
+        const outbox = getOutbox();
+        if (!outbox.length) return;
+        const remaining = [];
+        for (const op of outbox) {
+            try {
+                if (op.type === 'saveSection') {
+                    await window.SupabaseEngine._saveSection(op.sectionKey, op.data, { allowEmpty: true });
+                } else if (op.type === 'updateOrderStatus') {
+                    await client.from('gn_orders').update({ status: op.status, updated_at: new Date().toISOString() }).eq('id', op.orderId);
+                }
+            } catch(e) {
+                remaining.push(op);
+            }
+        }
+        safeLocalStorageSet('gn_outbox', remaining);
+    }
+
+    // Default Seed Catalog (Only used on brand-new fresh install if cloud has 0 rows and localStorage is empty)
     const defaultCatalog = [
         { id: "1", name: "Venom Spider Ring", category: "rings", img: "assets/venom_spider_ring.png", price: 3499, sale_price: null, salePrice: null, stock: 15, threshold: 3, description: "Intricate spider silhouette ring cast in 316L solid surgical steel.", active: true, display_order: 1 },
         { id: "2", name: "Crimson Cross", category: "chains", img: "assets/crimson_cross_choker.png", price: 5999, sale_price: 4499, salePrice: 4499, stock: 8, threshold: 3, description: "Heavyweight gothic cross choker with crimson blood-drop stone inlay.", active: true, display_order: 2 },
@@ -41,7 +100,6 @@
         { id: "6", name: "Reaper Pendant", category: "pendants", img: "assets/reaper_pendant.png", price: 8999, sale_price: 7499, salePrice: 7499, stock: 15, threshold: 3, description: "Solid onyx and stainless steel reaper emblem with 60cm rope chain.", active: true, display_order: 6 }
     ];
 
-    // Default Seed Categories
     const defaultCategories = [
         { id: "chains", name: "Chains", display_order: 1 },
         { id: "rings", name: "Rings", display_order: 2 },
@@ -49,7 +107,6 @@
         { id: "pendants", name: "Pendants", display_order: 4 }
     ];
 
-    // Default Seed Reviews
     const defaultReviews = [
         { id: "r1", customer_name: "Sarah M.", author: "Sarah M.", location: "Pakistan", rating: 5, review_text: "The Venom Spider Ring exceeded all expectations. Incredibly detailed craftsmanship.", comment: "The Venom Spider Ring exceeded all expectations. Incredibly detailed craftsmanship.", product_name: "Venom Spider Ring", is_sample: true },
         { id: "r2", customer_name: "Arjun K.", author: "Arjun K.", location: "Pakistan", rating: 5, review_text: "Reaper Pendant is a showstopper. Everyone asks where I got it.", comment: "Reaper Pendant is a showstopper. Everyone asks where I got it.", product_name: "Reaper Pendant", is_sample: true },
@@ -61,7 +118,6 @@
         { id: "r8", customer_name: "James W.", author: "James W.", location: "Pakistan", rating: 5, review_text: "The gothic aesthetic is exactly what I was looking for. Masterpiece.", comment: "The gothic aesthetic is exactly what I was looking for. Masterpiece.", product_name: "General Store", is_sample: true }
     ];
 
-    // Default Seed Hero Slides
     const defaultHeroSlides = [
         { 
             id: "s1", 
@@ -113,12 +169,6 @@
         }
     ];
 
-    // =========================================================================
-    // PER-SECTION INDEPENDENT SYNC ENGINE
-    // Each section (products, categories, reviews, announcements, hero_slides)
-    // has its own cloud row, its own cache, and its own save queue.
-    // Saving one section NEVER reads or writes another section's data.
-    // =========================================================================
     const SECTION_CONFIG = {
         products:       { syncName: '__GN_SYNC_PRODUCTS__',       localKey: 'gn_products',        defaultData: defaultCatalog },
         categories:     { syncName: '__GN_SYNC_CATEGORIES__',     localKey: 'gn_categories_meta', defaultData: defaultCategories },
@@ -127,12 +177,13 @@
         hero_slides:    { syncName: '__GN_SYNC_HERO_SLIDES__',    localKey: 'gn_hero_slides',     defaultData: defaultHeroSlides }
     };
 
-    // Per-section in-memory caches and save queues
     const _sectionCache = {};
     const _sectionSaveQueue = {};
+    const _sectionRowId = {};
     for (const key of Object.keys(SECTION_CONFIG)) {
         _sectionCache[key] = null;
         _sectionSaveQueue[key] = Promise.resolve();
+        _sectionRowId[key] = null;
     }
     let _migrationDone = false;
 
@@ -166,7 +217,6 @@
             if (updatedState.hero_slides !== undefined) {
                 window.dispatchEvent(new Event('heroSlidesUpdated'));
             }
-            window.dispatchEvent(new Event('storage'));
             window.dispatchEvent(new CustomEvent('gn:storeSyncUpdated', { detail: updatedState }));
 
             const bc = getStoreSyncBroadcastChannel();
@@ -179,42 +229,40 @@
     }
 
     window.SupabaseEngine = {
-        client: supabase,
-        isLive: !!supabase,
+        get client() {
+            return initSupabase();
+        },
+        get isLive() {
+            return !!initSupabase();
+        },
 
-        // =========================================================================
-        // PER-SECTION CLOUD SYNC — INDEPENDENT READ/WRITE
-        // Each section stored in its own gn_orders row. No cross-contamination.
-        // =========================================================================
-
-        /**
-         * One-time migration: reads the old monolithic __GN_STORE_SYNC__ row,
-         * splits its data into 5 independent rows, then marks migration done.
-         * Safe to call multiple times — only runs once per session.
-         */
         async _migrateFromMonolith() {
             if (_migrationDone) return;
-            _migrationDone = true;
-            if (!this.isLive || !supabase) return;
+            const client = this.client;
+            if (!client) return;
 
             try {
-                // Check if new-style rows already exist
-                const { data: checkData } = await supabase
+                const { data: checkData, error: checkErr } = await client
                     .from('gn_orders')
                     .select('customer_name')
                     .in('customer_name', Object.values(SECTION_CONFIG).map(c => c.syncName))
                     .limit(1);
 
-                if (checkData && checkData.length > 0) {
-                    // New rows already exist, migration already happened
+                if (checkErr) {
+                    console.warn("Migration check error, skipping migration:", checkErr);
                     return;
                 }
 
-                // Read the old monolithic row
+                if (checkData && checkData.length > 0) {
+                    _migrationDone = true;
+                    return;
+                }
+
+                _migrationDone = true;
                 const CANONICAL_SYNC_ID = 'a29dc3da-0d01-4ba1-a1cf-d6f0ce82571e';
                 let oldData = null;
 
-                const { data: oldRow } = await supabase
+                const { data: oldRow } = await client
                     .from('gn_orders')
                     .select('id, items')
                     .eq('id', CANONICAL_SYNC_ID)
@@ -223,8 +271,7 @@
                 if (oldRow && oldRow.length > 0 && oldRow[0].items) {
                     oldData = oldRow[0].items;
                 } else {
-                    // Try fallback lookup
-                    const { data: fallbackRow } = await supabase
+                    const { data: fallbackRow } = await client
                         .from('gn_orders')
                         .select('id, items')
                         .eq('customer_name', '__GN_STORE_SYNC__')
@@ -235,14 +282,13 @@
                     }
                 }
 
-                if (!oldData) return; // No old data to migrate
+                if (!oldData) return;
 
-                // Write each section to its own row
                 for (const [sectionKey, config] of Object.entries(SECTION_CONFIG)) {
                     const sectionData = Array.isArray(oldData[sectionKey]) ? oldData[sectionKey] : config.defaultData;
                     if (sectionData.length === 0 && config.defaultData.length === 0) continue;
 
-                    await supabase
+                    const { data: inserted } = await client
                         .from('gn_orders')
                         .insert({
                             customer_name: config.syncName,
@@ -256,36 +302,33 @@
                             items: { [sectionKey]: sectionData, updated_at: new Date().toISOString() },
                             total_amount: 0,
                             status: 'Cancelled'
-                        });
+                        })
+                        .select();
+
+                    if (inserted && inserted[0]) {
+                        _sectionRowId[sectionKey] = inserted[0].id;
+                    }
 
                     _sectionCache[sectionKey] = sectionData;
-                    try { localStorage.setItem(config.localKey, JSON.stringify(sectionData)); } catch(e) {}
+                    safeLocalStorageSet(config.localKey, sectionData);
                 }
 
-                console.log("⚡ Gothic Nova: Migration from monolithic sync to per-section sync complete!");
+                console.log("⚡ Gothic Nova: Per-section sync initialization complete!");
             } catch (e) {
                 console.warn("Migration notice:", e);
-                _migrationDone = false; // Allow retry on next call
             }
         },
 
-        /**
-         * Read ONE section from its dedicated cloud row. Never touches other sections.
-         * @param {string} sectionKey - 'products' | 'categories' | 'reviews' | 'announcements' | 'hero_slides'
-         * @param {boolean} forceFresh - If true, bypass cache and read from cloud
-         * @returns {Array} The section data array
-         */
         async _getSection(sectionKey, forceFresh = false) {
             const config = SECTION_CONFIG[sectionKey];
             if (!config) return [];
 
-            // Return cache if fresh
             if (!forceFresh && _sectionCache[sectionKey] !== null) {
                 return _sectionCache[sectionKey];
             }
 
-            if (!this.isLive || !supabase) {
-                // Offline: read from localStorage
+            const client = this.client;
+            if (!client) {
                 try {
                     const raw = localStorage.getItem(config.localKey);
                     if (raw !== null) {
@@ -296,34 +339,57 @@
                         }
                     }
                 } catch(e) {}
-                return config.defaultData;
+                const hasConfirmed = localStorage.getItem('gn_' + sectionKey + '_confirmed_at');
+                return hasConfirmed ? [] : config.defaultData;
             }
 
-            // Ensure migration has happened
-            await this._migrateFromMonolith();
-
             try {
-                const { data, error } = await supabase
+                const { data, error } = await client
                     .from('gn_orders')
                     .select('id, items, updated_at')
                     .eq('customer_name', config.syncName)
-                    .order('updated_at', { ascending: false })
-                    .limit(1);
+                    .order('updated_at', { ascending: false });
 
-                if (!error && Array.isArray(data) && data.length > 0 && data[0].items) {
-                    const sectionData = Array.isArray(data[0].items[sectionKey])
+                if (error) {
+                    console.warn(`Notice: Fetching ${sectionKey} from cloud error:`, error);
+                    if (_sectionCache[sectionKey] !== null) {
+                        return _sectionCache[sectionKey];
+                    }
+                    const raw = localStorage.getItem(config.localKey);
+                    if (raw !== null) {
+                        try {
+                            const parsed = JSON.parse(raw);
+                            if (Array.isArray(parsed)) {
+                                _sectionCache[sectionKey] = parsed;
+                                return parsed;
+                            }
+                        } catch(e) {}
+                    }
+                    const hasConfirmed = localStorage.getItem('gn_' + sectionKey + '_confirmed_at');
+                    return hasConfirmed ? [] : config.defaultData;
+                }
+
+                if (Array.isArray(data) && data.length > 0) {
+                    _sectionRowId[sectionKey] = data[0].id;
+                    if (data.length > 1) {
+                        for (let i = 1; i < data.length; i++) {
+                            client.from('gn_orders').delete().eq('id', data[i].id).catch(() => {});
+                        }
+                    }
+
+                    const sectionData = (data[0].items && Array.isArray(data[0].items[sectionKey]))
                         ? data[0].items[sectionKey]
                         : [];
 
                     _sectionCache[sectionKey] = sectionData;
-                    try { localStorage.setItem(config.localKey, JSON.stringify(sectionData)); } catch(e) {}
+                    safeLocalStorageSet(config.localKey, sectionData);
+                    safeLocalStorageSet('gn_' + sectionKey + '_confirmed_at', Date.now());
                     return sectionData;
                 }
             } catch (e) {
-                console.warn(`Notice: Fetching ${sectionKey} from cloud:`, e);
+                console.warn(`Notice: Fetching ${sectionKey} exception:`, e);
             }
 
-            // Fallback to localStorage
             try {
                 const raw = localStorage.getItem(config.localKey);
                 if (raw !== null) {
@@ -335,97 +401,133 @@
                 }
             } catch(e) {}
 
-            return config.defaultData;
+            const hasConfirmed = localStorage.getItem('gn_' + sectionKey + '_confirmed_at');
+            return hasConfirmed ? [] : config.defaultData;
         },
 
-        /**
-         * Write ONE section to its dedicated cloud row. Never touches other sections.
-         * Uses a per-section sequential queue to prevent race conditions.
-         * @param {string} sectionKey - 'products' | 'categories' | 'reviews' | 'announcements' | 'hero_slides'
-         * @param {Array} data - The complete section data array to save
-         */
-        async _saveSection(sectionKey, data) {
+        async _saveSection(sectionKey, data, options = {}) {
             const config = SECTION_CONFIG[sectionKey];
             if (!config) return;
             if (!Array.isArray(data)) data = [];
 
-            // 1. Update in-memory cache immediately
+            const existingCount = Array.isArray(_sectionCache[sectionKey]) ? _sectionCache[sectionKey].length : 0;
+            if (existingCount > 0 && data.length === 0 && !options.allowEmpty) {
+                console.warn(`[WIPE GUARD] Blocked empty overwrite for ${sectionKey} (${existingCount} items exist).`);
+                throw new Error(`Wipe guard: cannot overwrite ${existingCount} items with empty list without allowEmpty.`);
+            }
+
             _sectionCache[sectionKey] = data;
+            safeLocalStorageSet(config.localKey, data);
+            dispatchUniversalSyncEvents({ [sectionKey]: data });
 
-            // 2. Update localStorage immediately
-            try { localStorage.setItem(config.localKey, JSON.stringify(data)); } catch(e) {}
-
-            // 3. Dispatch events for this section only
-            const eventPayload = { [sectionKey]: data };
-            dispatchUniversalSyncEvents(eventPayload);
-
-            // 4. Queue cloud write (sequential per-section, no cross-contamination)
-            if (this.isLive && supabase) {
+            const client = this.client;
+            if (client) {
                 _sectionSaveQueue[sectionKey] = _sectionSaveQueue[sectionKey].then(async () => {
-                    try {
-                        const payload = {
-                            [sectionKey]: _sectionCache[sectionKey], // Always use latest cache
-                            updated_at: new Date().toISOString()
-                        };
+                    const payload = {
+                        [sectionKey]: _sectionCache[sectionKey],
+                        updated_at: new Date().toISOString()
+                    };
 
-                        // Try update first
-                        const { data: updateResult, error: updateErr } = await supabase
-                            .from('gn_orders')
-                            .update({
-                                items: payload,
-                                updated_at: new Date().toISOString()
-                            })
-                            .eq('customer_name', config.syncName)
-                            .select();
+                    let success = false;
+                    for (let attempt = 1; attempt <= 3; attempt++) {
+                        try {
+                            const targetRowId = _sectionRowId[sectionKey];
+                            let updateResult = null;
+                            let updateErr = null;
 
-                        if (updateErr || !updateResult || updateResult.length === 0) {
-                            // Row doesn't exist yet, insert
-                            await supabase
-                                .from('gn_orders')
-                                .insert({
-                                    customer_name: config.syncName,
-                                    phone_number: '00000000000',
-                                    house_flat_no: 'SYSTEM',
-                                    street_address: 'SYSTEM',
-                                    city: 'SYSTEM',
-                                    province: 'SYSTEM',
-                                    nearest_landmark: 'SYSTEM',
-                                    payment_method: 'cod',
-                                    items: payload,
-                                    total_amount: 0,
-                                    status: 'Cancelled'
-                                });
+                            if (targetRowId) {
+                                const res = await client
+                                    .from('gn_orders')
+                                    .update({
+                                        items: payload,
+                                        updated_at: new Date().toISOString()
+                                    })
+                                    .eq('id', targetRowId)
+                                    .select();
+                                updateResult = res.data;
+                                updateErr = res.error;
+                            }
+
+                            if (updateErr || !updateResult || updateResult.length === 0) {
+                                const res2 = await client
+                                    .from('gn_orders')
+                                    .update({
+                                        items: payload,
+                                        updated_at: new Date().toISOString()
+                                    })
+                                    .eq('customer_name', config.syncName)
+                                    .select();
+                                updateResult = res2.data;
+                                updateErr = res2.error;
+                            }
+
+                            if (updateErr || !updateResult || updateResult.length === 0) {
+                                const insertRes = await client
+                                    .from('gn_orders')
+                                    .insert({
+                                        customer_name: config.syncName,
+                                        phone_number: '00000000000',
+                                        house_flat_no: 'SYSTEM',
+                                        street_address: 'SYSTEM',
+                                        city: 'SYSTEM',
+                                        province: 'SYSTEM',
+                                        nearest_landmark: 'SYSTEM',
+                                        payment_method: 'cod',
+                                        items: payload,
+                                        total_amount: 0,
+                                        status: 'Cancelled'
+                                    })
+                                    .select();
+                                if (insertRes.error) throw insertRes.error;
+                                if (insertRes.data && insertRes.data[0]) {
+                                    _sectionRowId[sectionKey] = insertRes.data[0].id;
+                                }
+                            } else if (updateResult && updateResult[0]) {
+                                _sectionRowId[sectionKey] = updateResult[0].id;
+                            }
+
+                            safeLocalStorageSet('gn_' + sectionKey + '_confirmed_at', Date.now());
+                            success = true;
+                            break;
+                        } catch (e) {
+                            console.warn(`Attempt ${attempt} to persist ${sectionKey} failed:`, e);
+                            if (attempt < 3) {
+                                await new Promise(r => setTimeout(r, attempt * 350));
+                            }
                         }
-                    } catch (e) {
-                        console.warn(`Notice: Persisting ${sectionKey} to cloud:`, e);
                     }
+
+                    if (!success) {
+                        addToOutbox({ type: 'saveSection', sectionKey, data: payload[sectionKey] });
+                        throw new Error(`Failed to persist ${sectionKey} to cloud after 3 attempts.`);
+                    }
+                }).catch(err => {
+                    console.error(`Save queue error for ${sectionKey}:`, err);
+                    throw err;
                 });
                 await _sectionSaveQueue[sectionKey];
+            } else {
+                addToOutbox({ type: 'saveSection', sectionKey, data });
             }
         },
 
-        /**
-         * Backward-compatible pushAllToCloud. Saves each section independently.
-         * Called from admin.html "Force Sync" button.
-         */
         async pushAllToCloud(state = {}) {
             if (!state) state = {};
 
             const sections = {
-                products: Array.isArray(state.products) && state.products.length > 0 ? state.products : null,
-                categories: Array.isArray(state.categories) && state.categories.length > 0 ? state.categories : null,
-                reviews: Array.isArray(state.reviews) && state.reviews.length > 0 ? state.reviews : null,
+                products: Array.isArray(state.products) ? state.products : null,
+                categories: Array.isArray(state.categories) ? state.categories : null,
+                reviews: Array.isArray(state.reviews) ? state.reviews : null,
                 announcements: Array.isArray(state.announcements) ? state.announcements : null,
-                hero_slides: Array.isArray(state.hero_slides) && state.hero_slides.length > 0 ? state.hero_slides : null
+                hero_slides: Array.isArray(state.hero_slides) ? state.hero_slides : null
             };
 
             for (const [key, data] of Object.entries(sections)) {
                 if (data !== null) {
-                    await this._saveSection(key, data);
+                    await this._saveSection(key, data, { allowEmpty: true });
                 }
             }
 
-            // Return combined state for backward compatibility
             return {
                 products: _sectionCache.products || [],
                 categories: _sectionCache.categories || [],
@@ -437,16 +539,12 @@
             };
         },
 
-        /**
-         * Backward-compatible _saveCloudSyncState. Routes to per-section saves.
-         * Called from admin.html fallback code.
-         */
         async _saveCloudSyncState(partial) {
             if (!partial || typeof partial !== 'object') return;
             const promises = [];
             for (const [key, config] of Object.entries(SECTION_CONFIG)) {
                 if (partial[key] !== undefined && Array.isArray(partial[key])) {
-                    promises.push(this._saveSection(key, partial[key]));
+                    promises.push(this._saveSection(key, partial[key], { allowEmpty: true }));
                 }
             }
             await Promise.all(promises);
@@ -461,9 +559,6 @@
             };
         },
 
-        /**
-         * Backward-compatible _getCloudSyncState. Reads all sections independently.
-         */
         async _getCloudSyncState(forceFresh = false) {
             const results = {};
             for (const key of Object.keys(SECTION_CONFIG)) {
@@ -477,7 +572,9 @@
         // =========================================================================
         async getProducts() {
             const products = await this._getSection('products');
-            return Array.isArray(products) && products.length > 0 ? products : defaultCatalog;
+            if (Array.isArray(products) && products.length > 0) return products;
+            const hasConfirmed = localStorage.getItem('gn_products_confirmed_at');
+            return hasConfirmed ? (products || []) : defaultCatalog;
         },
 
         async saveProduct(product) {
@@ -501,19 +598,19 @@
                 display_order: Number(product.display_order || product.displayOrder || 1)
             };
 
-            let list = await this._getSection('products');
+            let list = await this._getSection('products', true);
             if (!Array.isArray(list)) list = [];
 
             const idx = list.findIndex(p => String(p.id) === String(normalized.id));
             if (idx >= 0) list[idx] = normalized;
             else list.push(normalized);
 
-            await this._saveSection('products', list);
+            await this._saveSection('products', list, { allowEmpty: (list.length === 0) });
 
-            // Best-effort write to gn_products table
-            if (this.isLive && supabase) {
+            const client = this.client;
+            if (client) {
                 try {
-                    await supabase.from('gn_products').upsert({
+                    await client.from('gn_products').upsert({
                         id: normalized.id,
                         name: normalized.name,
                         category: normalized.category,
@@ -534,14 +631,14 @@
 
         async deleteProduct(id) {
             const cleanId = String(id);
-            let list = await this._getSection('products');
+            let list = await this._getSection('products', true);
             if (!Array.isArray(list)) list = [];
             list = list.filter(p => String(p.id) !== cleanId);
-            await this._saveSection('products', list);
+            await this._saveSection('products', list, { allowEmpty: true });
 
-            // Best-effort delete from gn_products table
-            if (this.isLive && supabase) {
-                try { await supabase.from('gn_products').delete().eq('id', cleanId); } catch(e) {}
+            const client = this.client;
+            if (client) {
+                try { await client.from('gn_products').delete().eq('id', cleanId); } catch(e) {}
             }
             return true;
         },
@@ -568,7 +665,7 @@
                     display_order: Number(product.display_order || product.displayOrder || (idx + 1))
                 };
             });
-            await this._saveSection('products', normalizedArray);
+            await this._saveSection('products', normalizedArray, { allowEmpty: (normalizedArray.length === 0) });
             return normalizedArray;
         },
 
@@ -577,7 +674,9 @@
         // =========================================================================
         async getCategories() {
             const cats = await this._getSection('categories');
-            return Array.isArray(cats) && cats.length > 0 ? cats : defaultCategories;
+            if (Array.isArray(cats) && cats.length > 0) return cats;
+            const hasConfirmed = localStorage.getItem('gn_categories_confirmed_at');
+            return hasConfirmed ? (cats || []) : defaultCategories;
         },
 
         async saveCategory(category) {
@@ -591,14 +690,14 @@
                 display_order: Number(category.display_order || 0)
             };
 
-            let list = await this._getSection('categories');
+            let list = await this._getSection('categories', true);
             if (!Array.isArray(list)) list = [...defaultCategories];
 
             const idx = list.findIndex(c => String(c.id).toLowerCase() === cleanSlug);
             if (idx >= 0) list[idx] = { ...list[idx], ...payload };
             else list.push(payload);
 
-            try { localStorage.setItem('gn_categories', JSON.stringify(list.map(c => c.id))); } catch(e) {}
+            safeLocalStorageSet('gn_categories', list.map(c => c.id));
             await this._saveSection('categories', list);
             return payload;
         },
@@ -606,24 +705,21 @@
         async saveCategoryList(categories) {
             if (!Array.isArray(categories)) return false;
             const cleanList = categories.filter(c => c && c.id && String(c.id).toLowerCase() !== 'general' && String(c.id).toLowerCase() !== 'all');
-            try { localStorage.setItem('gn_categories', JSON.stringify(cleanList.map(c => c.id))); } catch(e) {}
-            await this._saveSection('categories', cleanList);
+            safeLocalStorageSet('gn_categories', cleanList.map(c => c.id));
+            await this._saveSection('categories', cleanList, { allowEmpty: (cleanList.length === 0) });
             return true;
         },
 
         async deleteCategory(id) {
             const cleanId = String(id).trim().toLowerCase();
-
-            // 1. Remove category from list
-            let list = await this._getSection('categories');
+            let list = await this._getSection('categories', true);
             if (!Array.isArray(list)) list = [...defaultCategories];
             list = list.filter(c => c && String(c.id).toLowerCase() !== cleanId);
 
-            try { localStorage.setItem('gn_categories', JSON.stringify(list.map(c => c.id))); } catch(e) {}
-            await this._saveSection('categories', list);
+            safeLocalStorageSet('gn_categories', list.map(c => c.id));
+            await this._saveSection('categories', list, { allowEmpty: true });
 
-            // 2. Reassign products with this category to 'all'
-            let products = await this._getSection('products');
+            let products = await this._getSection('products', true);
             if (Array.isArray(products) && products.length > 0) {
                 let modified = false;
                 products = products.map(p => {
@@ -661,7 +757,7 @@
                 is_sample: Boolean(review.is_sample || review.isSample || false)
             };
 
-            let list = await this._getSection('reviews');
+            let list = await this._getSection('reviews', true);
             if (!Array.isArray(list)) list = [];
 
             const idx = list.findIndex(r => String(r.id) === String(payload.id));
@@ -674,10 +770,10 @@
 
         async deleteReview(id) {
             const cleanId = String(id);
-            let list = await this._getSection('reviews');
+            let list = await this._getSection('reviews', true);
             if (!Array.isArray(list)) list = [];
             list = list.filter(r => String(r.id) !== cleanId);
-            await this._saveSection('reviews', list);
+            await this._saveSection('reviews', list, { allowEmpty: true });
             return true;
         },
 
@@ -691,7 +787,7 @@
 
         async saveAnnouncements(offers) {
             const cleanOffers = Array.isArray(offers) ? offers.map(o => String(o).trim()).filter(Boolean) : [];
-            await this._saveSection('announcements', cleanOffers);
+            await this._saveSection('announcements', cleanOffers, { allowEmpty: true });
             return cleanOffers;
         },
 
@@ -699,8 +795,7 @@
             if (key === 'announcements') {
                 return await this.saveAnnouncements(val);
             }
-            // For non-section settings, use localStorage only
-            try { localStorage.setItem('gn_' + key, JSON.stringify(val)); } catch(e) {}
+            safeLocalStorageSet('gn_' + key, val);
             return val;
         },
 
@@ -720,7 +815,9 @@
         // =========================================================================
         async getHeroSlides() {
             const slides = await this._getSection('hero_slides');
-            return Array.isArray(slides) && slides.length > 0 ? slides : defaultHeroSlides;
+            if (Array.isArray(slides) && slides.length > 0) return slides;
+            const hasConfirmed = localStorage.getItem('gn_hero_slides_confirmed_at');
+            return hasConfirmed ? (slides || []) : defaultHeroSlides;
         },
 
         async saveHeroSlide(slide) {
@@ -742,7 +839,7 @@
                 active: isActive, is_active: isActive
             };
 
-            let list = await this._getSection('hero_slides');
+            let list = await this._getSection('hero_slides', true);
             if (!Array.isArray(list)) list = [...defaultHeroSlides];
 
             const idx = list.findIndex(s => String(s.id) === String(payload.id));
@@ -754,10 +851,10 @@
         },
 
         async deleteHeroSlide(id) {
-            let list = await this._getSection('hero_slides');
+            let list = await this._getSection('hero_slides', true);
             if (!Array.isArray(list)) list = [...defaultHeroSlides];
             list = list.filter(s => String(s.id) !== String(id));
-            await this._saveSection('hero_slides', list);
+            await this._saveSection('hero_slides', list, { allowEmpty: true });
             return true;
         },
 
@@ -765,7 +862,8 @@
         // 6. SUPABASE AUTH INTEGRATION
         // =========================================================================
         async signIn(email, password) {
-            if (!this.isLive) {
+            const client = this.client;
+            if (!client) {
                 if (password === 'gothicnova51214' || password === 'admin') {
                     const mockSession = { user: { email: email || 'admin@gothicnova.com' }, token: 'mock-jwt-token' };
                     try { sessionStorage.setItem('gn_admin_session', JSON.stringify(mockSession)); } catch(e) {}
@@ -775,7 +873,7 @@
             }
 
             try {
-                const { data, error } = await supabase.auth.signInWithPassword({
+                const { data, error } = await client.auth.signInWithPassword({
                     email: (email || '').trim(),
                     password: password
                 });
@@ -791,15 +889,17 @@
 
         async signOut() {
             try { sessionStorage.removeItem('gn_admin_session'); } catch(e) {}
-            if (this.isLive && supabase) {
-                try { await supabase.auth.signOut(); } catch (e) {}
+            const client = this.client;
+            if (client) {
+                try { await client.auth.signOut(); } catch (e) {}
             }
         },
 
         async getSession() {
-            if (this.isLive && supabase) {
+            const client = this.client;
+            if (client) {
                 try {
-                    const { data } = await supabase.auth.getSession();
+                    const { data } = await client.auth.getSession();
                     if (data && data.session) return data.session;
                 } catch (e) {}
             }
@@ -825,7 +925,8 @@
         },
 
         async uploadMedia(fileOrBase64, filename = '') {
-            if (!this.isLive || !supabase) return fileOrBase64;
+            const client = this.client;
+            if (!client) return fileOrBase64;
 
             try {
                 let blob = fileOrBase64;
@@ -841,7 +942,7 @@
                 const cleanName = (filename || 'media_' + Date.now()).replace(/[^a-zA-Z0-9_.-]/g, '_');
                 const path = `uploads/${Date.now()}_${cleanName}.webp`;
 
-                const { error } = await supabase.storage
+                const { error } = await client.storage
                     .from('product-media')
                     .upload(path, blob, {
                         cacheControl: '3600',
@@ -853,7 +954,7 @@
                     return fileOrBase64;
                 }
 
-                const { data: publicUrlData } = supabase.storage
+                const { data: publicUrlData } = client.storage
                     .from('product-media')
                     .getPublicUrl(path);
 
@@ -864,13 +965,14 @@
         },
 
         async uploadProductImage(file, path) {
-            if (this.isLive && supabase) {
+            const client = this.client;
+            if (client) {
                 try {
                     const fileExt = file && file.name ? file.name.split('.').pop() : 'png';
                     const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
                     const filePath = path ? `${path}/${fileName}` : fileName;
 
-                    const { error } = await supabase.storage
+                    const { error } = await client.storage
                         .from('product-media')
                         .upload(filePath, file, {
                             cacheControl: '3600',
@@ -879,7 +981,7 @@
 
                     if (error) throw error;
 
-                    const { data: publicUrlData } = supabase.storage
+                    const { data: publicUrlData } = client.storage
                         .from('product-media')
                         .getPublicUrl(filePath);
 
@@ -892,7 +994,8 @@
         },
 
         async uploadPaymentScreenshot(fileOrBlob) {
-            if (this.isLive && supabase) {
+            const client = this.client;
+            if (client) {
                 try {
                     let fileToUpload = fileOrBlob;
                     let fileExt = 'webp';
@@ -912,7 +1015,7 @@
                     const fileName = `slip_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
                     const filePath = `slips/${fileName}`;
 
-                    const { error } = await supabase.storage
+                    const { error } = await client.storage
                         .from('payment_slips')
                         .upload(filePath, fileToUpload, {
                             cacheControl: '3600',
@@ -920,15 +1023,15 @@
                         });
 
                     if (error) {
-                        const fallbackRes = await supabase.storage.from('product-media').upload(`payment_slips/${fileName}`, fileToUpload, { cacheControl: '3600', upsert: true });
+                        const fallbackRes = await client.storage.from('product-media').upload(`payment_slips/${fileName}`, fileToUpload, { cacheControl: '3600', upsert: true });
                         if (!fallbackRes.error) {
-                            const { data: fbUrl } = supabase.storage.from('product-media').getPublicUrl(`payment_slips/${fileName}`);
+                            const { data: fbUrl } = client.storage.from('product-media').getPublicUrl(`payment_slips/${fileName}`);
                             return fbUrl ? fbUrl.publicUrl : fileOrBlob;
                         }
                         throw error;
                     }
 
-                    const { data: publicUrlData } = supabase.storage
+                    const { data: publicUrlData } = client.storage
                         .from('payment_slips')
                         .getPublicUrl(filePath);
 
@@ -981,8 +1084,9 @@
             };
 
             let createdOrder = null;
+            const client = this.client;
 
-            if (this.isLive && supabase) {
+            if (client) {
                 try {
                     const cloudPayload = {
                         customer_name: orderPayload.customer_name,
@@ -999,7 +1103,7 @@
                         status: orderPayload.status
                     };
 
-                    const { data, error } = await supabase
+                    const { data, error } = await client
                         .from('gn_orders')
                         .insert(cloudPayload)
                         .select();
@@ -1016,7 +1120,7 @@
             if (!createdOrder) {
                 let currentCounter = Number(localStorage.getItem('gn_order_counter') || 0);
                 currentCounter += 1;
-                try { localStorage.setItem('gn_order_counter', String(currentCounter)); } catch(e) {}
+                safeLocalStorageSet('gn_order_counter', String(currentCounter));
                 createdOrder = {
                     id: 'ord_' + Date.now(),
                     order_number: 1000 + currentCounter,
@@ -1024,7 +1128,6 @@
                 };
             }
 
-            // Update local orders list
             let localOrders = [];
             try {
                 const raw = localStorage.getItem('gn_orders');
@@ -1032,7 +1135,7 @@
             } catch(e) {}
             if (!Array.isArray(localOrders)) localOrders = [];
             localOrders.unshift(createdOrder);
-            try { localStorage.setItem('gn_orders', JSON.stringify(localOrders)); } catch(e) {}
+            safeLocalStorageSet('gn_orders', localOrders);
 
             try {
                 window.dispatchEvent(new Event('ordersUpdated'));
@@ -1050,9 +1153,10 @@
                 if (rawDel) JSON.parse(rawDel).forEach(id => deletedSet.add(String(id)));
             } catch(e) {}
 
-            if (this.isLive && supabase) {
+            const client = this.client;
+            if (client) {
                 try {
-                    const { data, error } = await supabase
+                    const { data, error } = await client
                         .from('gn_orders')
                         .select('*')
                         .order('created_at', { ascending: false });
@@ -1075,7 +1179,6 @@
                         const remoteIds = new Set(data.map(o => String(o.id)));
                         const remoteOrderNums = new Set(data.map(o => String(o.order_number)));
 
-                        // Strict filter: Exclude ONLY the system synchronization record
                         const validRemote = data.filter(o => {
                             if (!o) return false;
                             if (o.is_deleted || o.deleted_at || o.customer_name === '__TEST_DELETED__') return false;
@@ -1087,9 +1190,7 @@
                             let merged = { ...o };
                             if (cached) {
                                 if (cached.card_reward_applied && !o.card_reward_applied) merged.card_reward_applied = cached.card_reward_applied;
-                                if (cached.status && cached.status !== o.status) {
-                                    merged.status = cached.status;
-                                }
+                                // Remote status is AUTHORITATIVE. Do not overwrite remote status with cached status.
                             }
                             return merged;
                         });
@@ -1102,7 +1203,7 @@
                         );
 
                         const combined = [...validRemote, ...localOnly];
-                        try { localStorage.setItem('gn_orders', JSON.stringify(combined)); } catch(e) {}
+                        safeLocalStorageSet('gn_orders', combined);
                         return combined;
                     }
                 } catch (e) {
@@ -1110,7 +1211,6 @@
                 }
             }
 
-            // Fallback to local storage
             let cachedList = [];
             try {
                 const raw = localStorage.getItem('gn_orders');
@@ -1126,7 +1226,7 @@
                 let deletedList = JSON.parse(localStorage.getItem('gn_deleted_orders') || '[]');
                 if (!Array.isArray(deletedList)) deletedList = [];
                 deletedList.push(String(orderId));
-                localStorage.setItem('gn_deleted_orders', JSON.stringify([...new Set(deletedList)]));
+                safeLocalStorageSet('gn_deleted_orders', [...new Set(deletedList)]);
             } catch(e) {}
 
             let localOrders = [];
@@ -1136,14 +1236,15 @@
             } catch(e) {}
             if (Array.isArray(localOrders)) {
                 localOrders = localOrders.filter(o => String(o.id) !== String(orderId) && String(o.order_number) !== String(orderId));
-                try { localStorage.setItem('gn_orders', JSON.stringify(localOrders)); } catch(e) {}
+                safeLocalStorageSet('gn_orders', localOrders);
             }
 
-            if (this.isLive && supabase) {
+            const client = this.client;
+            if (client) {
                 try {
-                    await supabase.from('gn_orders').delete().eq('id', orderId);
-                    if (!isNaN(Number(orderId))) {
-                        await supabase.from('gn_orders').delete().eq('id', Number(orderId));
+                    let { error } = await client.from('gn_orders').delete().eq('id', orderId);
+                    if (error && !isNaN(Number(orderId))) {
+                        await client.from('gn_orders').delete().eq('id', Number(orderId));
                     }
                 } catch (e) {}
             }
@@ -1167,19 +1268,37 @@
             if (!Array.isArray(localOrders)) localOrders = [];
 
             const idx = localOrders.findIndex(o => String(o.id) === String(orderId) || String(o.order_number) === String(orderId));
+            const oldStatus = idx >= 0 ? localOrders[idx].status : null;
             if (idx >= 0) {
                 localOrders[idx].status = newStatus;
                 localOrders[idx].updated_at = now;
-                try { localStorage.setItem('gn_orders', JSON.stringify(localOrders)); } catch(e) {}
+                safeLocalStorageSet('gn_orders', localOrders);
             }
 
-            if (this.isLive && supabase) {
+            const client = this.client;
+            if (client) {
                 try {
-                    await supabase.from('gn_orders').update({ status: newStatus, updated_at: now }).eq('id', orderId);
-                    if (!isNaN(Number(orderId))) {
-                        await supabase.from('gn_orders').update({ status: newStatus, updated_at: now }).eq('id', Number(orderId));
+                    let { error } = await client.from('gn_orders').update({ status: newStatus, updated_at: now }).eq('id', orderId);
+                    if (error && !isNaN(Number(orderId))) {
+                        const res2 = await client.from('gn_orders').update({ status: newStatus, updated_at: now }).eq('id', Number(orderId));
+                        error = res2.error;
                     }
-                } catch (e) {}
+                    if (error) {
+                        console.error("Order status update failed:", error);
+                        if (idx >= 0 && oldStatus !== null) {
+                            localOrders[idx].status = oldStatus;
+                            safeLocalStorageSet('gn_orders', localOrders);
+                        }
+                        addToOutbox({ type: 'updateOrderStatus', orderId, status: newStatus });
+                        throw error;
+                    }
+                } catch (e) {
+                    if (idx >= 0 && oldStatus !== null) {
+                        localOrders[idx].status = oldStatus;
+                        safeLocalStorageSet('gn_orders', localOrders);
+                    }
+                    throw e;
+                }
             }
 
             try {
@@ -1192,23 +1311,22 @@
         },
 
         // =========================================================================
-        // 9. REALTIME SUBSCRIPTIONS
+        // 9. REALTIME SUBSCRIPTIONS & MULTI-DEVICE PROPAGATION
         // =========================================================================
         subscribeRealtime(callback) {
-            if (!this.isLive || !supabase) return null;
+            const client = this.client;
+            if (!client) return null;
 
             try {
                 const self = this;
-                const channel = supabase
+                const channel = client
                     .channel('gn-universal-realtime')
                     .on('postgres_changes', { event: '*', schema: 'public', table: 'gn_orders' }, payload => {
                         const rec = payload.new || payload.old;
                         if (rec && rec.customer_name) {
                             const name = rec.customer_name;
-                            // Check if it's one of our sync rows
                             for (const [sectionKey, config] of Object.entries(SECTION_CONFIG)) {
                                 if (name === config.syncName) {
-                                    // Re-fetch just this section
                                     self._getSection(sectionKey, true).then(freshData => {
                                         dispatchUniversalSyncEvents({ [sectionKey]: freshData });
                                     });
@@ -1216,29 +1334,35 @@
                                     return;
                                 }
                             }
-                            // Legacy monolithic sync row
                             if (name === '__GN_STORE_SYNC__' || name.startsWith('__GN_')) {
-                                return; // Ignore legacy rows
+                                return;
                             }
-                            // Regular order
                             window.dispatchEvent(new Event('ordersUpdated'));
                         }
                         if (callback) callback({ type: 'order', payload });
                     })
                     .on('postgres_changes', { event: '*', schema: 'public', table: 'gn_products' }, payload => {
-                        window.dispatchEvent(new Event('productsUpdated'));
+                        self._getSection('products', true).then(freshData => {
+                            dispatchUniversalSyncEvents({ products: freshData });
+                        });
                         if (callback) callback({ type: 'product', payload });
                     })
                     .on('postgres_changes', { event: '*', schema: 'public', table: 'gn_categories' }, payload => {
-                        window.dispatchEvent(new Event('categoriesUpdated'));
+                        self._getSection('categories', true).then(freshData => {
+                            dispatchUniversalSyncEvents({ categories: freshData });
+                        });
                         if (callback) callback({ type: 'category', payload });
                     })
                     .on('postgres_changes', { event: '*', schema: 'public', table: 'gn_reviews' }, payload => {
-                        window.dispatchEvent(new Event('reviewsUpdated'));
+                        self._getSection('reviews', true).then(freshData => {
+                            dispatchUniversalSyncEvents({ reviews: freshData });
+                        });
                         if (callback) callback({ type: 'review', payload });
                     })
                     .on('postgres_changes', { event: '*', schema: 'public', table: 'gn_hero_slides' }, payload => {
-                        window.dispatchEvent(new Event('heroSlidesUpdated'));
+                        self._getSection('hero_slides', true).then(freshData => {
+                            dispatchUniversalSyncEvents({ hero_slides: freshData });
+                        });
                         if (callback) callback({ type: 'hero_slide', payload });
                     })
                     .subscribe();
@@ -1250,7 +1374,31 @@
             }
         },
 
-        // Backward compatibility mock methods
+        async refreshAll(force = false) {
+            const client = this.client;
+            if (!client) return;
+            try {
+                const [prods, cats, revs, slides, ann] = await Promise.all([
+                    this._getSection('products', true),
+                    this._getSection('categories', true),
+                    this._getSection('reviews', true),
+                    this._getSection('hero_slides', true),
+                    this._getSection('announcements', true)
+                ]);
+                dispatchUniversalSyncEvents({
+                    products: prods,
+                    categories: cats,
+                    reviews: revs,
+                    hero_slides: slides,
+                    announcements: ann
+                });
+            } catch(e) {}
+        },
+
+        async flushOutbox() {
+            await flushOutbox();
+        },
+
         _getMockProducts() { return defaultCatalog; },
         _getMockCategories() { return defaultCategories; },
         _getMockReviews() { return []; },
@@ -1258,22 +1406,38 @@
         _getMockOrders() { return []; }
     };
 
-    // Auto-trigger initial data load (single entry point, no duplicates)
+    // Auto-trigger data load & lifecycle revalidation
     if (typeof window !== 'undefined') {
         window.addEventListener('DOMContentLoaded', async () => {
             try {
-                // Run migration first, then load all sections in parallel
                 await window.SupabaseEngine._migrateFromMonolith();
-                await Promise.all([
-                    window.SupabaseEngine.getProducts(),
-                    window.SupabaseEngine.getCategories(),
-                    window.SupabaseEngine.getReviews(),
-                    window.SupabaseEngine.getHeroSlides(),
-                    window.SupabaseEngine.getAnnouncements()
-                ]);
+                await window.SupabaseEngine.refreshAll(true);
                 window.dispatchEvent(new Event('productsLoaded'));
             } catch (e) {}
         });
+
+        window.addEventListener('focus', () => {
+            if (window.SupabaseEngine) window.SupabaseEngine.refreshAll(true);
+        });
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden && window.SupabaseEngine) {
+                window.SupabaseEngine.refreshAll(true);
+            }
+        });
+        window.addEventListener('online', () => {
+            if (window.SupabaseEngine) {
+                window.SupabaseEngine.flushOutbox();
+                window.SupabaseEngine.refreshAll(true);
+            }
+        });
+        window.addEventListener('pageshow', () => {
+            if (window.SupabaseEngine) window.SupabaseEngine.refreshAll(true);
+        });
+        setInterval(() => {
+            if (typeof document !== 'undefined' && !document.hidden && window.SupabaseEngine) {
+                window.SupabaseEngine.refreshAll(true);
+            }
+        }, 45000);
     }
 
     // =========================================================================
