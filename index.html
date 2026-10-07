@@ -1623,14 +1623,7 @@
     
     <script>
         // Synchronous Instant Initialization for 0ms Load
-        const defaultProducts = [
-            { id: "1", name: "Venom Spider Ring", category: "rings", img: "assets/venom_spider_ring.png", price: 3499, salePrice: null, stock: 15, threshold: 3, active: true, delivery_charges: 0, description: "Handcrafted cyber-gothic spider ring featuring sculpted arachnid anatomy and antiqued dark alloy finish. Engineered for bold statement wear with Cash on Delivery across Pakistan.", desc: "Handcrafted cyber-gothic spider ring featuring sculpted arachnid anatomy and antiqued dark alloy finish. Engineered for bold statement wear with Cash on Delivery across Pakistan." },
-            { id: "2", name: "Crimson Cross", category: "chains", img: "assets/crimson_cross_choker.png", price: 5999, salePrice: 4499, stock: 8, threshold: 3, active: true, delivery_charges: 0, description: "Intricate gothic crucifix choker with blood-red crimson stone centerpiece, obsidian detailing, and reinforced link chain. Fast shipping across Karachi, Lahore, Islamabad, and nationwide.", desc: "Intricate gothic crucifix choker with blood-red crimson stone centerpiece, obsidian detailing, and reinforced link chain. Fast shipping across Karachi, Lahore, Islamabad, and nationwide." },
-            { id: "3", name: "Obsidian Helix", category: "chains", img: "assets/obsidian_helix_chain.png", price: 5999, salePrice: null, stock: 12, threshold: 3, active: true, delivery_charges: 0, description: "Minimalist helical link statement chain finished in dark obsidian electroplate with high-durability locking clasp. Premium unisex dark aesthetic jewelry.", desc: "Minimalist helical link statement chain finished in dark obsidian electroplate with high-durability locking clasp. Premium unisex dark aesthetic jewelry." },
-            { id: "4", name: "Shadow Claw", category: "rings", img: "assets/shadow_claw_ring.png", price: 3899, salePrice: null, stock: 10, threshold: 3, active: true, delivery_charges: 0, description: "Sculpted talon silhouette claw ring forged in heavyweight matte black steel alloy. Ergonomic comfort fit with aggressive gothic Japanese styling.", desc: "Sculpted talon silhouette claw ring forged in heavyweight matte black steel alloy. Ergonomic comfort fit with aggressive gothic Japanese styling." },
-            { id: "5", name: "Spine Bracelet", category: "chains", img: "assets/spine_bracelet.png", price: 6899, salePrice: null, stock: 5, threshold: 3, active: true, delivery_charges: 0, description: "Articulated skeletal vertebrae link bracelet designed with fluid anatomical movement and high-grade stainless clasp. Limited edition cyber-goth luxury.", desc: "Articulated skeletal vertebrae link bracelet designed with fluid anatomical movement and high-grade stainless clasp. Limited edition cyber-goth luxury." },
-            { id: "6", name: "Reaper Pendant", category: "pendants", img: "assets/reaper_pendant.png", price: 8999, salePrice: 7499, stock: 15, threshold: 3, active: true, delivery_charges: 0, description: "Iconic grim reaper silhouette pendant carved with precision relief, hooded shroud drape, and dark gunmetal chain. Signature Gothic Nova centerpiece.", desc: "Iconic grim reaper silhouette pendant carved with precision relief, hooded shroud drape, and dark gunmetal chain. Signature Gothic Nova centerpiece." }
-        ];
+        const defaultProducts = [];
         
         let storedProducts = null;
         try {
@@ -1640,8 +1633,7 @@
                 if (Array.isArray(parsed)) storedProducts = parsed;
             }
         } catch(e) {}
-        const hasConfirmedProducts = localStorage.getItem('gn_products_confirmed_at');
-        window.gn_products = (storedProducts !== null) ? storedProducts : (hasConfirmedProducts ? [] : defaultProducts);
+        window.gn_products = (storedProducts !== null) ? storedProducts : [];
 
         // Async Background Sync (Supabase Dual-Mode & Realtime Broadcaster)
         window.addEventListener('DOMContentLoaded', async function() {
@@ -1708,7 +1700,7 @@
         // =========================================================================
         function injectDynamicSEO() {
             try {
-                const prods = (window.gn_products && window.gn_products.length) ? window.gn_products : defaultProducts;
+                const prods = (window.gn_products && window.gn_products.length) ? window.gn_products : [];
                 const activeProds = prods.filter(p => p.active !== false);
                 if (!activeProds.length) return;
 
@@ -1997,28 +1989,42 @@
                 <div class="marquee-track" id="new-arrivals-marquee"></div>
             </div>
             <script>
+                let _lastArrivalsKey = '';
                 window.renderNewArrivals = function() {
-                    const allProds = (typeof getAllProducts === 'function') ? getAllProducts() : (window.gn_products || defaultProducts);
+                    const allProds = (typeof getAllProducts === 'function') ? getAllProducts() : (window.gn_products || []);
+                    const marqueeSection = document.querySelector('.marquee-section');
+
+                    const activeProds = (Array.isArray(allProds) ? allProds : []).filter(p => p && p.active !== false);
+                    if (!activeProds.length) {
+                        if (marqueeSection) marqueeSection.style.display = 'none';
+                        return;
+                    }
+                    if (marqueeSection) marqueeSection.style.display = '';
 
                     // Automatic recency-based sorting (created_at descending, fallback to product id/index)
-                    const activeProds = allProds.filter(p => p.active !== false);
                     const sortedProds = [...activeProds].sort((a, b) => {
                         const timeA = a.created_at ? new Date(a.created_at).getTime() : (Number(a.id) || (typeof a.id === 'string' && a.id.startsWith('prod_') ? Number(a.id.replace('prod_', '')) : 0));
                         const timeB = b.created_at ? new Date(b.created_at).getTime() : (Number(b.id) || (typeof b.id === 'string' && b.id.startsWith('prod_') ? Number(b.id.replace('prod_', '')) : 0));
                         return timeB - timeA;
                     });
 
-                    // Cap to 10 most recent products (or all if fewer than 10)
+                    // Cap to 10 most recent products
                     const MAX_ARRIVALS = 10;
                     const products = sortedProds.slice(0, MAX_ARRIVALS);
-                    if (!products.length) return;
-                    
+
                     const marqueeTrack = document.getElementById('new-arrivals-marquee');
                     if (!marqueeTrack) return;
+
+                    const currentKey = products.map(p => `${p.id}:${p.name}:${p.price}:${p.salePrice || p.sale_price}`).join('|');
+                    if (_lastArrivalsKey === currentKey && marqueeTrack.children.length > 0) {
+                        return; // Prevent glitching: do not rebuild DOM if products have not changed
+                    }
+                    _lastArrivalsKey = currentKey;
+
                     marqueeTrack.innerHTML = '';
                     
                     let items = [];
-                    while (items.length < Math.max(6, products.length)) {
+                    while (items.length < Math.max(6, products.length * 2)) {
                         items = items.concat(products);
                     }
                     
@@ -2104,8 +2110,8 @@
                     const baseSpeed = 0.6; // ~36px/sec smooth marquee
 
                     function getGroupWidth() {
-                        const w = group1.offsetWidth;
-                        return w > 0 ? w + 24 : 1600;
+                        const w = group1.getBoundingClientRect().width || group1.offsetWidth;
+                        return w > 0 ? w + 24 : items.length * 284;
                     }
 
                     function updateMarquee() {
@@ -2308,15 +2314,8 @@
                 }
                 window.updateCatFades = updateCatFades;
 
-                // Fallback / Base Catalog
-                const defaultSeedProducts = [
-                    { id: "1", name: "Venom Spider Ring", category: "rings", img: "assets/venom_spider_ring.png", price: 3499, salePrice: null, stock: 15, threshold: 3, active: true },
-                    { id: "2", name: "Crimson Cross", category: "chains", img: "assets/crimson_cross_choker.png", price: 5999, salePrice: 4499, stock: 8, threshold: 3, active: true },
-                    { id: "3", name: "Obsidian Helix", category: "chains", img: "assets/obsidian_helix_chain.png", price: 5999, salePrice: null, stock: 12, threshold: 3, active: true },
-                    { id: "4", name: "Shadow Claw", category: "rings", img: "assets/shadow_claw_ring.png", price: 3899, salePrice: null, stock: 10, threshold: 3, active: true },
-                    { id: "5", name: "Spine Bracelet", category: "bracelets", img: "assets/spine_bracelet.png", price: 6899, salePrice: null, stock: 5, threshold: 3, active: true },
-                    { id: "6", name: "Reaper Pendant", category: "pendants", img: "assets/reaper_pendant.png", price: 8999, salePrice: 7499, stock: 15, threshold: 3, active: true }
-                ];
+                // Base Catalog (Starts empty, authoritative cloud products only)
+                const defaultSeedProducts = [];
 
                 function normalizeProductCategorySlug(p) {
                     let cat = (p && p.category ? String(p.category) : '').trim().toLowerCase();
@@ -2336,7 +2335,7 @@
                         } catch(e) {}
                     }
                     if (prods === null || !Array.isArray(prods)) {
-                        prods = defaultSeedProducts;
+                        prods = [];
                         window.gn_products = prods;
                     }
                     return prods.filter(p => p && p.active !== false).map(p => ({
@@ -3953,14 +3952,7 @@
             if (Array.isArray(window.gn_products) && window.gn_products.length > 0) {
                 return window.gn_products;
             }
-            return [
-                { id: "1", name: "Venom Spider Ring", category: "rings", img: "assets/venom_spider_ring.png", price: 3499, salePrice: null, stock: 15, threshold: 3, active: true },
-                { id: "2", name: "Crimson Cross", category: "chains", img: "assets/crimson_cross_choker.png", price: 5999, salePrice: 4499, stock: 8, threshold: 3, active: true },
-                { id: "3", name: "Obsidian Helix", category: "chains", img: "assets/obsidian_helix_chain.png", price: 5999, salePrice: null, stock: 12, threshold: 3, active: true },
-                { id: "4", name: "Shadow Claw", category: "rings", img: "assets/shadow_claw_ring.png", price: 3899, salePrice: null, stock: 10, threshold: 3, active: true },
-                { id: "5", name: "Spine Bracelet", category: "bracelets", img: "assets/spine_bracelet.png", price: 6899, salePrice: null, stock: 5, threshold: 3, active: true },
-                { id: "6", name: "Reaper Pendant", category: "pendants", img: "assets/reaper_pendant.png", price: 8999, salePrice: 7499, stock: 15, threshold: 3, active: true }
-            ];
+            return [];
         }
 
         function renderSearchTrendingChips() {

@@ -90,91 +90,18 @@
         safeLocalStorageSet('gn_outbox', remaining);
     }
 
-    // Default Seed Catalog (Only used on brand-new fresh install if cloud has 0 rows and localStorage is empty)
-    const defaultCatalog = [
-        { id: "1", name: "Venom Spider Ring", category: "rings", img: "assets/venom_spider_ring.png", price: 3499, sale_price: null, salePrice: null, stock: 15, threshold: 3, description: "Intricate spider silhouette ring cast in 316L solid surgical steel.", active: true, display_order: 1 },
-        { id: "2", name: "Crimson Cross", category: "chains", img: "assets/crimson_cross_choker.png", price: 5999, sale_price: 4499, salePrice: 4499, stock: 8, threshold: 3, description: "Heavyweight gothic cross choker with crimson blood-drop stone inlay.", active: true, display_order: 2 },
-        { id: "3", name: "Obsidian Helix", category: "chains", img: "assets/obsidian_helix_chain.png", price: 5999, sale_price: null, salePrice: null, stock: 12, threshold: 3, description: "Interlocking matte obsidian link chain with industrial quick-release clasp.", active: true, display_order: 3 },
-        { id: "4", name: "Shadow Claw", category: "rings", img: "assets/shadow_claw_ring.png", price: 3899, sale_price: null, salePrice: null, stock: 10, threshold: 3, description: "Full-finger articulated talon ring engineered for effortless movement.", active: true, display_order: 4 },
-        { id: "5", name: "Spine Bracelet", category: "bracelets", img: "assets/spine_bracelet.png", price: 6899, sale_price: null, salePrice: null, stock: 5, threshold: 3, description: "Vertebrae link bracelet with gothic cyber-matte finish.", active: true, display_order: 5 },
-        { id: "6", name: "Reaper Pendant", category: "pendants", img: "assets/reaper_pendant.png", price: 8999, sale_price: 7499, salePrice: 7499, stock: 15, threshold: 3, description: "Solid onyx and stainless steel reaper emblem with 60cm rope chain.", active: true, display_order: 6 }
-    ];
-
-    const defaultCategories = [
-        { id: "chains", name: "Chains", display_order: 1 },
-        { id: "rings", name: "Rings", display_order: 2 },
-        { id: "bracelets", name: "Bracelets", display_order: 3 },
-        { id: "pendants", name: "Pendants", display_order: 4 }
-    ];
-
-    const defaultReviews = [
-        { id: "r1", customer_name: "Sarah M.", author: "Sarah M.", location: "Pakistan", rating: 5, review_text: "The Venom Spider Ring exceeded all expectations. Incredibly detailed craftsmanship.", comment: "The Venom Spider Ring exceeded all expectations. Incredibly detailed craftsmanship.", product_name: "Venom Spider Ring", is_sample: true },
-        { id: "r2", customer_name: "Arjun K.", author: "Arjun K.", location: "Pakistan", rating: 5, review_text: "Reaper Pendant is a showstopper. Everyone asks where I got it.", comment: "Reaper Pendant is a showstopper. Everyone asks where I got it.", product_name: "Reaper Pendant", is_sample: true },
-        { id: "r3", customer_name: "Emily R.", author: "Emily R.", location: "Pakistan", rating: 5, review_text: "Obsidian Helix is the most beautiful chain I own. Dark and elegant.", comment: "Obsidian Helix is the most beautiful chain I own. Dark and elegant.", product_name: "Obsidian Helix", is_sample: true },
-        { id: "r4", customer_name: "Zain A.", author: "Zain A.", location: "Pakistan", rating: 5, review_text: "Fast shipping, premium packaging. This brand is the real deal.", comment: "Fast shipping, premium packaging. This brand is the real deal.", product_name: "General Store", is_sample: true },
-        { id: "r5", customer_name: "Priya S.", author: "Priya S.", location: "Pakistan", rating: 4, review_text: "Crimson Cross choker — I get compliments every single time.", comment: "Crimson Cross choker — I get compliments every single time.", product_name: "Crimson Cross", is_sample: true },
-        { id: "r6", customer_name: "Liam T.", author: "Liam T.", location: "Pakistan", rating: 5, review_text: "Spine Bracelet fits perfectly. Heavy, solid, worth every rupee.", comment: "Spine Bracelet fits perfectly. Heavy, solid, worth every rupee.", product_name: "Spine Bracelet", is_sample: true },
-        { id: "r7", customer_name: "Noor F.", author: "Noor F.", location: "Pakistan", rating: 5, review_text: "Ordered two pieces. Both arrived flawless. Gothic Nova is unmatched.", comment: "Ordered two pieces. Both arrived flawless. Gothic Nova is unmatched.", product_name: "General Store", is_sample: true },
-        { id: "r8", customer_name: "James W.", author: "James W.", location: "Pakistan", rating: 5, review_text: "The gothic aesthetic is exactly what I was looking for. Masterpiece.", comment: "The gothic aesthetic is exactly what I was looking for. Masterpiece.", product_name: "General Store", is_sample: true }
-    ];
-
-    const defaultHeroSlides = [
-        { 
-            id: "s1", 
-            headline: "GOTHIC NOVA // IMMORTAL DROP", 
-            title: "GOTHIC NOVA // IMMORTAL DROP", 
-            subtext: "Gothic × Japanese Jewelry. Limited. Eternal. Wear the darkness you feel.", 
-            subtitle: "Gothic × Japanese Jewelry. Limited. Eternal. Wear the darkness you feel.", 
-            button_label: "Explore Drop", 
-            cta_text: "Explore Drop", 
-            button_link: "#active-drop", 
-            cta_link: "#active-drop", 
-            img: "assets/hero_gothic_bg.png", 
-            image_url: "assets/hero_gothic_bg.png", 
-            display_order: 1, 
-            active: true, 
-            is_active: true 
-        },
-        { 
-            id: "s2", 
-            headline: "REAPER COLLECTION", 
-            title: "REAPER COLLECTION", 
-            subtext: "Handcrafted 316L Stainless Steel & Onyx PVD. Midnight Drop.", 
-            subtitle: "Handcrafted 316L Stainless Steel & Onyx PVD. Midnight Drop.", 
-            button_label: "Shop Pendants", 
-            cta_text: "Shop Pendants", 
-            button_link: "index.html?cat=pendants", 
-            cta_link: "index.html?cat=pendants", 
-            img: "assets/gothic_cathedral_bg.jpg", 
-            image_url: "assets/gothic_cathedral_bg.jpg", 
-            display_order: 2, 
-            active: true, 
-            is_active: true 
-        },
-        { 
-            id: "s3", 
-            headline: "CRIMSON & HELIX", 
-            title: "CRIMSON & HELIX", 
-            subtext: "Intricate cyber-goth chains & artifacts engineered for immortality.", 
-            subtitle: "Intricate cyber-goth chains & artifacts engineered for immortality.", 
-            button_label: "Explore Chains", 
-            cta_text: "Explore Chains", 
-            button_link: "index.html?cat=chains", 
-            cta_link: "index.html?cat=chains", 
-            img: "assets/hero_original_bg.webp", 
-            image_url: "assets/hero_original_bg.webp", 
-            display_order: 3, 
-            active: true, 
-            is_active: true 
-        }
-    ];
+    // Clean schemas with zero seed data (Strict cloud-first single source of truth)
+    const defaultCatalog = [];
+    const defaultCategories = [];
+    const defaultReviews = [];
+    const defaultHeroSlides = [];
 
     const SECTION_CONFIG = {
-        products:       { syncName: '__GN_SYNC_PRODUCTS__',       localKey: 'gn_products',        defaultData: defaultCatalog },
-        categories:     { syncName: '__GN_SYNC_CATEGORIES__',     localKey: 'gn_categories_meta', defaultData: defaultCategories },
+        products:       { syncName: '__GN_SYNC_PRODUCTS__',       localKey: 'gn_products',        defaultData: [] },
+        categories:     { syncName: '__GN_SYNC_CATEGORIES__',     localKey: 'gn_categories_meta', defaultData: [] },
         reviews:        { syncName: '__GN_SYNC_REVIEWS__',        localKey: 'gn_reviews',         defaultData: [] },
         announcements:  { syncName: '__GN_SYNC_ANNOUNCEMENTS__',  localKey: 'gn_announcements',   defaultData: [] },
-        hero_slides:    { syncName: '__GN_SYNC_HERO_SLIDES__',    localKey: 'gn_hero_slides',     defaultData: defaultHeroSlides }
+        hero_slides:    { syncName: '__GN_SYNC_HERO_SLIDES__',    localKey: 'gn_hero_slides',     defaultData: [] }
     };
 
     const _sectionCache = {};
@@ -340,7 +267,7 @@
                     }
                 } catch(e) {}
                 const hasConfirmed = localStorage.getItem('gn_' + sectionKey + '_confirmed_at');
-                return hasConfirmed ? [] : config.defaultData;
+                return [];
             }
 
             try {
@@ -366,7 +293,7 @@
                         } catch(e) {}
                     }
                     const hasConfirmed = localStorage.getItem('gn_' + sectionKey + '_confirmed_at');
-                    return hasConfirmed ? [] : config.defaultData;
+                    return [];
                 }
 
                 if (Array.isArray(data) && data.length > 0) {
@@ -402,7 +329,7 @@
             } catch(e) {}
 
             const hasConfirmed = localStorage.getItem('gn_' + sectionKey + '_confirmed_at');
-            return hasConfirmed ? [] : config.defaultData;
+            return [];
         },
 
         async _saveSection(sectionKey, data, options = {}) {
@@ -572,9 +499,7 @@
         // =========================================================================
         async getProducts() {
             const products = await this._getSection('products');
-            if (Array.isArray(products) && products.length > 0) return products;
-            const hasConfirmed = localStorage.getItem('gn_products_confirmed_at');
-            return hasConfirmed ? (products || []) : defaultCatalog;
+            return Array.isArray(products) ? products : [];
         },
 
         async saveProduct(product) {
@@ -674,9 +599,7 @@
         // =========================================================================
         async getCategories() {
             const cats = await this._getSection('categories');
-            if (Array.isArray(cats) && cats.length > 0) return cats;
-            const hasConfirmed = localStorage.getItem('gn_categories_confirmed_at');
-            return hasConfirmed ? (cats || []) : defaultCategories;
+            return Array.isArray(cats) ? cats : [];
         },
 
         async saveCategory(category) {
@@ -815,9 +738,7 @@
         // =========================================================================
         async getHeroSlides() {
             const slides = await this._getSection('hero_slides');
-            if (Array.isArray(slides) && slides.length > 0) return slides;
-            const hasConfirmed = localStorage.getItem('gn_hero_slides_confirmed_at');
-            return hasConfirmed ? (slides || []) : defaultHeroSlides;
+            return Array.isArray(slides) ? slides : [];
         },
 
         async saveHeroSlide(slide) {
@@ -1181,7 +1102,7 @@
 
                         const validRemote = data.filter(o => {
                             if (!o) return false;
-                            if (o.is_deleted || o.deleted_at || o.customer_name === '__TEST_DELETED__') return false;
+                            if (o.is_deleted === true || o.deleted_at || o.customer_name === '__TEST_DELETED__') return false;
                             if (o.customer_name && (o.customer_name === '__GN_STORE_SYNC__' || String(o.customer_name).startsWith('__GN_'))) return false;
                             if (deletedSet.has(String(o.id)) || deletedSet.has(String(o.order_number))) return false;
                             return true;
@@ -1195,14 +1116,20 @@
                             return merged;
                         });
 
-                        const localOnly = localOrdersList.filter(lo => 
-                            lo && !deletedSet.has(String(lo.id)) && !deletedSet.has(String(lo.order_number)) &&
-                            !remoteIds.has(String(lo.id)) && !remoteOrderNums.has(String(lo.order_number)) &&
-                            !lo.is_deleted && !lo.deleted_at && lo.customer_name !== '__TEST_DELETED__' &&
-                            !(lo.customer_name && (lo.customer_name === '__GN_STORE_SYNC__' || String(lo.customer_name).startsWith('__GN_')))
-                        );
+                        // Only include local orders if they are queued for cloud sync in outbox
+                        let pendingLocal = [];
+                        try {
+                            const outbox = JSON.parse(localStorage.getItem('gn_outbox') || '[]');
+                            const outboxIds = new Set(outbox.filter(x => x && x.type === 'createOrder').map(x => String(x.orderId)));
+                            if (outboxIds.size > 0) {
+                                const rawLocal = localStorage.getItem('gn_orders');
+                                if (rawLocal) {
+                                    pendingLocal = JSON.parse(rawLocal).filter(lo => lo && outboxIds.has(String(lo.id)));
+                                }
+                            }
+                        } catch(e) {}
 
-                        const combined = [...validRemote, ...localOnly];
+                        const combined = [...validRemote, ...pendingLocal];
                         safeLocalStorageSet('gn_orders', combined);
                         return combined;
                     }
@@ -1217,7 +1144,7 @@
                 if (raw) cachedList = JSON.parse(raw);
             } catch(e) {}
             if (!Array.isArray(cachedList)) cachedList = [];
-            return cachedList.filter(o => o && !deletedSet.has(String(o.id)) && !deletedSet.has(String(o.order_number)) && !(o.customer_name && (o.customer_name === '__GN_STORE_SYNC__' || String(o.customer_name).startsWith('__GN_'))));
+            return cachedList.filter(o => o && !deletedSet.has(String(o.id)) && !deletedSet.has(String(o.order_number)) && !o.is_deleted && o.customer_name !== '__TEST_DELETED__' && !(o.customer_name && (o.customer_name === '__GN_STORE_SYNC__' || String(o.customer_name).startsWith('__GN_'))));
         },
 
         async deleteOrder(orderId) {
@@ -1242,9 +1169,22 @@
             const client = this.client;
             if (client) {
                 try {
+                    // Update in Supabase cloud so ALL devices see the order deleted immediately!
+                    const updatePayload = {
+                        customer_name: '__TEST_DELETED__',
+                        is_deleted: true,
+                        status: 'Cancelled',
+                        updated_at: new Date().toISOString()
+                    };
+                    await client.from('gn_orders').update(updatePayload).eq('id', orderId);
+                    if (!isNaN(Number(orderId))) {
+                        await client.from('gn_orders').update(updatePayload).eq('order_number', Number(orderId));
+                    }
+
+                    // Also try hard delete
                     let { error } = await client.from('gn_orders').delete().eq('id', orderId);
                     if (error && !isNaN(Number(orderId))) {
-                        await client.from('gn_orders').delete().eq('id', Number(orderId));
+                        await client.from('gn_orders').delete().eq('order_number', Number(orderId));
                     }
                 } catch (e) {}
             }
@@ -1399,10 +1339,10 @@
             await flushOutbox();
         },
 
-        _getMockProducts() { return defaultCatalog; },
-        _getMockCategories() { return defaultCategories; },
+        _getMockProducts() { return []; },
+        _getMockCategories() { return []; },
         _getMockReviews() { return []; },
-        _getMockHeroSlides() { return defaultHeroSlides; },
+        _getMockHeroSlides() { return []; },
         _getMockOrders() { return []; }
     };
 
