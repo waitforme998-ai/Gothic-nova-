@@ -253,9 +253,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const artisan = card.querySelector('.text-on-surface\x2f40').textContent;
             const imgSrc = card.querySelector('img').getAttribute('src');
             const progress = card.querySelector('.space-y-2 span:last-child').textContent;
-            const specText = title === 'Venom Spider Ring' ? '92.5% Silver, 7.5% Titanium Alloy base with deep obsidian filigree set in 960°C forging.' :
-                             title === 'Crimson Cross Choker' ? 'Premium hand-finished oxidized silver cross with custom laser engraving and micro-joints.' :
-                             'Complex structural dual-helix titanium chain linked using micro-welding in vacuum environments.';
+            const specText = 'Hand-finished dark alloy jewelry handcrafted with precision detailing and premium dark aesthetic styling.';
 
             activeCardForDrawer = card;
 
@@ -393,7 +391,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Dynamic money increase simulation
                 const revText = document.getElementById('stat-revenue');
                 if (revText) {
-                    const price = title === 'Venom Spider Ring' ? 3499 : title === 'Crimson Cross Choker' ? 4499 : 5999;
+                    const price = 4499;
                     const oldVal = parseInt(revText.textContent.replace(/[^0-9]/g, ''));
                     animateValue(revText, oldVal, oldVal + price, 1000, '', 'Rs. ');
                 }

@@ -164,86 +164,8 @@
         },
 
         async _migrateFromMonolith() {
-            if (_migrationDone) return;
-            const client = this.client;
-            if (!client) return;
-
-            try {
-                const { data: checkData, error: checkErr } = await client
-                    .from('gn_orders')
-                    .select('customer_name')
-                    .in('customer_name', Object.values(SECTION_CONFIG).map(c => c.syncName))
-                    .limit(1);
-
-                if (checkErr) {
-                    console.warn("Migration check error, skipping migration:", checkErr);
-                    return;
-                }
-
-                if (checkData && checkData.length > 0) {
-                    _migrationDone = true;
-                    return;
-                }
-
-                _migrationDone = true;
-                const CANONICAL_SYNC_ID = 'a29dc3da-0d01-4ba1-a1cf-d6f0ce82571e';
-                let oldData = null;
-
-                const { data: oldRow } = await client
-                    .from('gn_orders')
-                    .select('id, items')
-                    .eq('id', CANONICAL_SYNC_ID)
-                    .limit(1);
-
-                if (oldRow && oldRow.length > 0 && oldRow[0].items) {
-                    oldData = oldRow[0].items;
-                } else {
-                    const { data: fallbackRow } = await client
-                        .from('gn_orders')
-                        .select('id, items')
-                        .eq('customer_name', '__GN_STORE_SYNC__')
-                        .order('updated_at', { ascending: false })
-                        .limit(1);
-                    if (fallbackRow && fallbackRow.length > 0 && fallbackRow[0].items) {
-                        oldData = fallbackRow[0].items;
-                    }
-                }
-
-                if (!oldData) return;
-
-                for (const [sectionKey, config] of Object.entries(SECTION_CONFIG)) {
-                    const sectionData = Array.isArray(oldData[sectionKey]) ? oldData[sectionKey] : config.defaultData;
-                    if (sectionData.length === 0 && config.defaultData.length === 0) continue;
-
-                    const { data: inserted } = await client
-                        .from('gn_orders')
-                        .insert({
-                            customer_name: config.syncName,
-                            phone_number: '00000000000',
-                            house_flat_no: 'SYSTEM',
-                            street_address: 'SYSTEM',
-                            city: 'SYSTEM',
-                            province: 'SYSTEM',
-                            nearest_landmark: 'SYSTEM',
-                            payment_method: 'cod',
-                            items: { [sectionKey]: sectionData, updated_at: new Date().toISOString() },
-                            total_amount: 0,
-                            status: 'Cancelled'
-                        })
-                        .select();
-
-                    if (inserted && inserted[0]) {
-                        _sectionRowId[sectionKey] = inserted[0].id;
-                    }
-
-                    _sectionCache[sectionKey] = sectionData;
-                    safeLocalStorageSet(config.localKey, sectionData);
-                }
-
-                console.log("⚡ Gothic Nova: Per-section sync initialization complete!");
-            } catch (e) {
-                console.warn("Migration notice:", e);
-            }
+            _migrationDone = true;
+            return;
         },
 
         async _getSection(sectionKey, forceFresh = false) {
@@ -1172,7 +1094,6 @@
                     // Update in Supabase cloud so ALL devices see the order deleted immediately!
                     const updatePayload = {
                         customer_name: '__TEST_DELETED__',
-                        is_deleted: true,
                         status: 'Cancelled',
                         updated_at: new Date().toISOString()
                     };
