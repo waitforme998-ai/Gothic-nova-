@@ -6564,10 +6564,34 @@ select option {
 .tarot-card-wrapper.flipped .tarot-card-inner {
     transform: rotateY(0deg);
 }
+.tarot-card-wrapper.flipped .tarot-front {
+    opacity: 1 !important;
+    visibility: visible !important;
+    z-index: 2 !important;
+    pointer-events: auto !important;
+}
+.tarot-card-wrapper.flipped .tarot-back {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    z-index: 1 !important;
+    pointer-events: none !important;
+}
 
 /* State: Face-Down */
 .tarot-card-wrapper.face-down .tarot-card-inner {
     transform: rotateY(180deg);
+}
+.tarot-card-wrapper.face-down .tarot-front {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    z-index: 1 !important;
+    pointer-events: none !important;
+}
+.tarot-card-wrapper.face-down .tarot-back {
+    opacity: 1 !important;
+    visibility: visible !important;
+    z-index: 2 !important;
+    pointer-events: auto !important;
 }
 
 /* Natural slight organic rotation */

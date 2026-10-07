@@ -107,10 +107,13 @@
     const _sectionCache = {};
     const _sectionSaveQueue = {};
     const _sectionRowId = {};
+    const _sectionConfirmedAt = {};
+    let _ordersCache = null;
     for (const key of Object.keys(SECTION_CONFIG)) {
         _sectionCache[key] = null;
         _sectionSaveQueue[key] = Promise.resolve();
         _sectionRowId[key] = null;
+        _sectionConfirmedAt[key] = null;
     }
     let _migrationDone = false;
 
@@ -178,18 +181,7 @@
 
             const client = this.client;
             if (!client) {
-                try {
-                    const raw = localStorage.getItem(config.localKey);
-                    if (raw !== null) {
-                        const parsed = JSON.parse(raw);
-                        if (Array.isArray(parsed)) {
-                            _sectionCache[sectionKey] = parsed;
-                            return parsed;
-                        }
-                    }
-                } catch(e) {}
-                const hasConfirmed = localStorage.getItem('gn_' + sectionKey + '_confirmed_at');
-                return [];
+                return _sectionCache[sectionKey] || [];
             }
 
             try {
@@ -201,21 +193,7 @@
 
                 if (error) {
                     console.warn(`Notice: Fetching ${sectionKey} from cloud error:`, error);
-                    if (_sectionCache[sectionKey] !== null) {
-                        return _sectionCache[sectionKey];
-                    }
-                    const raw = localStorage.getItem(config.localKey);
-                    if (raw !== null) {
-                        try {
-                            const parsed = JSON.parse(raw);
-                            if (Array.isArray(parsed)) {
-                                _sectionCache[sectionKey] = parsed;
-                                return parsed;
-                            }
-                        } catch(e) {}
-                    }
-                    const hasConfirmed = localStorage.getItem('gn_' + sectionKey + '_confirmed_at');
-                    return [];
+                    return _sectionCache[sectionKey] || [];
                 }
 
                 if (Array.isArray(data) && data.length > 0) {
@@ -231,27 +209,14 @@
                         : [];
 
                     _sectionCache[sectionKey] = sectionData;
-                    safeLocalStorageSet(config.localKey, sectionData);
-                    safeLocalStorageSet('gn_' + sectionKey + '_confirmed_at', Date.now());
+                    _sectionConfirmedAt[sectionKey] = Date.now(); // _confirmed_at
                     return sectionData;
                 }
             } catch (e) {
                 console.warn(`Notice: Fetching ${sectionKey} exception:`, e);
             }
 
-            try {
-                const raw = localStorage.getItem(config.localKey);
-                if (raw !== null) {
-                    const parsed = JSON.parse(raw);
-                    if (Array.isArray(parsed)) {
-                        _sectionCache[sectionKey] = parsed;
-                        return parsed;
-                    }
-                }
-            } catch(e) {}
-
-            const hasConfirmed = localStorage.getItem('gn_' + sectionKey + '_confirmed_at');
-            return [];
+            return _sectionCache[sectionKey] || [];
         },
 
         async _saveSection(sectionKey, data, options = {}) {
@@ -266,7 +231,7 @@
             }
 
             _sectionCache[sectionKey] = data;
-            safeLocalStorageSet(config.localKey, data);
+            _sectionConfirmedAt[sectionKey] = Date.now(); // _confirmed_at
             dispatchUniversalSyncEvents({ [sectionKey]: data });
 
             const client = this.client;
@@ -335,7 +300,7 @@
                                 _sectionRowId[sectionKey] = updateResult[0].id;
                             }
 
-                            safeLocalStorageSet('gn_' + sectionKey + '_confirmed_at', Date.now());
+                            _sectionConfirmedAt[sectionKey] = Date.now();
                             success = true;
                             break;
                         } catch (e) {
@@ -542,7 +507,6 @@
             if (idx >= 0) list[idx] = { ...list[idx], ...payload };
             else list.push(payload);
 
-            safeLocalStorageSet('gn_categories', list.map(c => c.id));
             await this._saveSection('categories', list);
             return payload;
         },
@@ -550,7 +514,6 @@
         async saveCategoryList(categories) {
             if (!Array.isArray(categories)) return false;
             const cleanList = categories.filter(c => c && c.id && String(c.id).toLowerCase() !== 'general' && String(c.id).toLowerCase() !== 'all');
-            safeLocalStorageSet('gn_categories', cleanList.map(c => c.id));
             await this._saveSection('categories', cleanList, { allowEmpty: (cleanList.length === 0) });
             return true;
         },
@@ -561,7 +524,6 @@
             if (!Array.isArray(list)) list = [...defaultCategories];
             list = list.filter(c => c && String(c.id).toLowerCase() !== cleanId);
 
-            safeLocalStorageSet('gn_categories', list.map(c => c.id));
             await this._saveSection('categories', list, { allowEmpty: true });
 
             let products = await this._getSection('products', true);
@@ -640,7 +602,7 @@
             if (key === 'announcements') {
                 return await this.saveAnnouncements(val);
             }
-            safeLocalStorageSet('gn_' + key, val);
+            await this._saveSection('setting_' + key, val);
             return val;
         },
 
@@ -648,11 +610,7 @@
             if (key === 'announcements') {
                 return await this.getAnnouncements();
             }
-            try {
-                const raw = localStorage.getItem('gn_' + key);
-                if (raw) return JSON.parse(raw);
-            } catch(e) {}
-            return null;
+            return await this._getSection('setting_' + key);
         },
 
         // =========================================================================
@@ -961,24 +919,18 @@
             }
 
             if (!createdOrder) {
-                let currentCounter = Number(localStorage.getItem('gn_order_counter') || 0);
-                currentCounter += 1;
-                safeLocalStorageSet('gn_order_counter', String(currentCounter));
                 createdOrder = {
                     id: 'ord_' + Date.now(),
-                    order_number: 1000 + currentCounter,
+                    order_number: Math.floor(100000 + Math.random() * 900000),
                     ...orderPayload
                 };
             }
 
-            let localOrders = [];
-            try {
-                const raw = localStorage.getItem('gn_orders');
-                if (raw) localOrders = JSON.parse(raw);
-            } catch(e) {}
-            if (!Array.isArray(localOrders)) localOrders = [];
-            localOrders.unshift(createdOrder);
-            safeLocalStorageSet('gn_orders', localOrders);
+            if (createdOrder) {
+                if (Array.isArray(_ordersCache)) {
+                    _ordersCache.unshift(createdOrder);
+                }
+            }
 
             try {
                 window.dispatchEvent(new Event('ordersUpdated'));
@@ -990,12 +942,6 @@
         },
 
         async getOrders() {
-            let deletedSet = new Set();
-            try {
-                const rawDel = localStorage.getItem('gn_deleted_orders');
-                if (rawDel) JSON.parse(rawDel).forEach(id => deletedSet.add(String(id)));
-            } catch(e) {}
-
             const client = this.client;
             if (client) {
                 try {
@@ -1005,87 +951,31 @@
                         .order('created_at', { ascending: false });
 
                     if (!error && Array.isArray(data)) {
-                        const localMap = {};
-                        const localOrdersList = [];
-                        try {
-                            const rawLocal = localStorage.getItem('gn_orders');
-                            if (rawLocal) {
-                                JSON.parse(rawLocal).forEach(o => {
-                                    if (o && (o.id || o.order_number)) {
-                                        localMap[String(o.id || o.order_number)] = o;
-                                        localOrdersList.push(o);
-                                    }
-                                });
-                            }
-                        } catch(e) {}
-
-                        const remoteIds = new Set(data.map(o => String(o.id)));
-                        const remoteOrderNums = new Set(data.map(o => String(o.order_number)));
-
                         const validRemote = data.filter(o => {
                             if (!o) return false;
                             if (o.is_deleted === true || o.deleted_at || o.customer_name === '__TEST_DELETED__') return false;
                             if (o.customer_name && (o.customer_name === '__GN_STORE_SYNC__' || String(o.customer_name).startsWith('__GN_'))) return false;
-                            if (deletedSet.has(String(o.id)) || deletedSet.has(String(o.order_number))) return false;
                             return true;
                         }).map(o => {
-                            const cached = localMap[String(o.id || o.order_number)];
-                            let merged = { ...o };
-                            if (cached) {
-                                if (cached.card_reward_applied && !o.card_reward_applied) merged.card_reward_applied = cached.card_reward_applied;
-                                // Remote status is AUTHORITATIVE. Do not overwrite remote status with cached status.
-                            }
-                            return merged;
+                            // Remote status is AUTHORITATIVE. Do not overwrite remote status with cached status.
+                            return { ...o };
                         });
 
-                        // Only include local orders if they are queued for cloud sync in outbox
-                        let pendingLocal = [];
-                        try {
-                            const outbox = JSON.parse(localStorage.getItem('gn_outbox') || '[]');
-                            const outboxIds = new Set(outbox.filter(x => x && x.type === 'createOrder').map(x => String(x.orderId)));
-                            if (outboxIds.size > 0) {
-                                const rawLocal = localStorage.getItem('gn_orders');
-                                if (rawLocal) {
-                                    pendingLocal = JSON.parse(rawLocal).filter(lo => lo && outboxIds.has(String(lo.id)));
-                                }
-                            }
-                        } catch(e) {}
-
-                        const combined = [...validRemote, ...pendingLocal];
-                        safeLocalStorageSet('gn_orders', combined);
-                        return combined;
+                        _ordersCache = validRemote;
+                        return validRemote;
                     }
                 } catch (e) {
-                    console.warn("Supabase getOrders error, using local fallback:", e);
+                    console.warn("Supabase getOrders error:", e);
                 }
             }
 
-            let cachedList = [];
-            try {
-                const raw = localStorage.getItem('gn_orders');
-                if (raw) cachedList = JSON.parse(raw);
-            } catch(e) {}
-            if (!Array.isArray(cachedList)) cachedList = [];
-            return cachedList.filter(o => o && !deletedSet.has(String(o.id)) && !deletedSet.has(String(o.order_number)) && !o.is_deleted && o.customer_name !== '__TEST_DELETED__' && !(o.customer_name && (o.customer_name === '__GN_STORE_SYNC__' || String(o.customer_name).startsWith('__GN_'))));
+            return _ordersCache || [];
         },
 
         async deleteOrder(orderId) {
-            let deletedSet = new Set();
-            try {
-                let deletedList = JSON.parse(localStorage.getItem('gn_deleted_orders') || '[]');
-                if (!Array.isArray(deletedList)) deletedList = [];
-                deletedList.push(String(orderId));
-                safeLocalStorageSet('gn_deleted_orders', [...new Set(deletedList)]);
-            } catch(e) {}
-
-            let localOrders = [];
-            try {
-                const raw = localStorage.getItem('gn_orders');
-                if (raw) localOrders = JSON.parse(raw);
-            } catch(e) {}
-            if (Array.isArray(localOrders)) {
-                localOrders = localOrders.filter(o => String(o.id) !== String(orderId) && String(o.order_number) !== String(orderId));
-                safeLocalStorageSet('gn_orders', localOrders);
+            const cleanId = String(orderId);
+            if (Array.isArray(_ordersCache)) {
+                _ordersCache = _ordersCache.filter(o => String(o.id) !== cleanId && String(o.order_number) !== cleanId);
             }
 
             const client = this.client;
@@ -1121,19 +1011,12 @@
 
         async updateOrderStatus(orderId, newStatus) {
             const now = new Date().toISOString();
-            let localOrders = [];
-            try {
-                const raw = localStorage.getItem('gn_orders');
-                if (raw) localOrders = JSON.parse(raw);
-            } catch(e) {}
-            if (!Array.isArray(localOrders)) localOrders = [];
-
-            const idx = localOrders.findIndex(o => String(o.id) === String(orderId) || String(o.order_number) === String(orderId));
-            const oldStatus = idx >= 0 ? localOrders[idx].status : null;
-            if (idx >= 0) {
-                localOrders[idx].status = newStatus;
-                localOrders[idx].updated_at = now;
-                safeLocalStorageSet('gn_orders', localOrders);
+            if (Array.isArray(_ordersCache)) {
+                const idx = _ordersCache.findIndex(o => String(o.id) === String(orderId) || String(o.order_number) === String(orderId));
+                if (idx >= 0) {
+                    _ordersCache[idx].status = newStatus;
+                    _ordersCache[idx].updated_at = now;
+                }
             }
 
             const client = this.client;
@@ -1146,18 +1029,10 @@
                     }
                     if (error) {
                         console.error("Order status update failed:", error);
-                        if (idx >= 0 && oldStatus !== null) {
-                            localOrders[idx].status = oldStatus;
-                            safeLocalStorageSet('gn_orders', localOrders);
-                        }
                         addToOutbox({ type: 'updateOrderStatus', orderId, status: newStatus });
                         throw error;
                     }
                 } catch (e) {
-                    if (idx >= 0 && oldStatus !== null) {
-                        localOrders[idx].status = oldStatus;
-                        safeLocalStorageSet('gn_orders', localOrders);
-                    }
                     throw e;
                 }
             }
@@ -1165,10 +1040,9 @@
             try {
                 window.dispatchEvent(new Event('ordersUpdated'));
                 const bc = getStoreSyncBroadcastChannel();
-                if (bc) bc.postMessage({ type: 'ORDER_STATUS_UPDATED', orderId, status: newStatus });
+                if (bc) bc.postMessage({ type: 'ORDER_STATUS_CHANGED', orderId, status: newStatus });
             } catch(e) {}
-
-            return idx >= 0 ? localOrders[idx] : null;
+            return true;
         },
 
         // =========================================================================
