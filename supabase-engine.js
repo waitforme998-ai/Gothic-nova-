@@ -130,21 +130,31 @@
         if (typeof window === 'undefined') return;
         try {
             if (updatedState.products !== undefined) {
+                window.gn_products = updatedState.products;
+                window.gn_products_loaded = true;
                 window.dispatchEvent(new Event('productsUpdated'));
                 window.dispatchEvent(new Event('productsLoaded'));
                 window.dispatchEvent(new CustomEvent('gn:productsUpdated', { detail: { products: updatedState.products } }));
             }
             if (updatedState.categories !== undefined) {
+                window.gn_categories_meta = updatedState.categories;
+                window.gn_categories_loaded = true;
                 window.dispatchEvent(new Event('categoriesUpdated'));
                 window.dispatchEvent(new CustomEvent('gn:categoriesUpdated', { detail: { categories: updatedState.categories } }));
             }
             if (updatedState.reviews !== undefined) {
+                window.gn_reviews = updatedState.reviews;
+                window.gn_reviews_loaded = true;
                 window.dispatchEvent(new Event('reviewsUpdated'));
             }
             if (updatedState.announcements !== undefined) {
+                window.gn_announcements = updatedState.announcements;
+                window.gn_announcements_loaded = true;
                 window.dispatchEvent(new Event('announcementsUpdated'));
             }
             if (updatedState.hero_slides !== undefined) {
+                window.gn_hero_slides = updatedState.hero_slides;
+                window.gn_hero_slides_loaded = true;
                 window.dispatchEvent(new Event('heroSlidesUpdated'));
             }
             window.dispatchEvent(new CustomEvent('gn:storeSyncUpdated', { detail: updatedState }));
@@ -1141,15 +1151,25 @@
         _getMockOrders() { return []; }
     };
 
-    // Auto-trigger data load & lifecycle revalidation
+    // Auto-trigger immediate data load & lifecycle revalidation
     if (typeof window !== 'undefined') {
-        window.addEventListener('DOMContentLoaded', async () => {
+        const bootSync = async () => {
             try {
-                await window.SupabaseEngine._migrateFromMonolith();
-                await window.SupabaseEngine.refreshAll(true);
-                window.dispatchEvent(new Event('productsLoaded'));
+                if (window.SupabaseEngine) {
+                    window.SupabaseEngine.subscribeRealtime();
+                    await window.SupabaseEngine._migrateFromMonolith();
+                    await window.SupabaseEngine.refreshAll(true);
+                    window.dispatchEvent(new Event('productsLoaded'));
+                }
             } catch (e) {}
-        });
+        };
+
+        // Fire immediately at script parse time for zero-latency network launch
+        bootSync();
+
+        if (document.readyState === 'loading') {
+            window.addEventListener('DOMContentLoaded', bootSync);
+        }
 
         window.addEventListener('focus', () => {
             if (window.SupabaseEngine) window.SupabaseEngine.refreshAll(true);

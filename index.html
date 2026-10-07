@@ -1659,12 +1659,14 @@
         window.gn_categories_meta = window.gn_categories_meta || [];
         window.gn_announcements = window.gn_announcements || [];
         window.gn_reviews = window.gn_reviews || [];
+        window.gn_products_loaded = false;
+        window.gn_announcements_loaded = false;
 
-        // Direct Cloud Hydration Engine (Fast, Guaranteed & Auto-Retrying)
+        // Direct Parallel Cloud Hydration Engine (Ultra-Fast & Multi-Device Synchronized)
         async function hydrateStorefrontFromCloud() {
             if (!window.SupabaseEngine) return;
             
-            // Initialize Realtime subscription
+            // Initialize Realtime WebSocket subscription immediately
             if (typeof window.SupabaseEngine.subscribeRealtime === 'function') {
                 try {
                     window.SupabaseEngine.subscribeRealtime();
@@ -1672,71 +1674,80 @@
             }
 
             try {
-                const prods = await window.SupabaseEngine.getProducts();
-                if (Array.isArray(prods)) {
-                    window.gn_products = prods;
+                const results = await Promise.allSettled([
+                    window.SupabaseEngine.getAnnouncements(),
+                    window.SupabaseEngine.getProducts(),
+                    window.SupabaseEngine.getCategories(),
+                    window.SupabaseEngine.getReviews()
+                ]);
+
+                // 1. Announcements (fastest, ~80ms)
+                if (results[0].status === 'fulfilled' && Array.isArray(results[0].value)) {
+                    window.gn_announcements = results[0].value;
+                    window.gn_announcements_loaded = true;
+                    if (typeof window.renderSaleTicker === 'function') window.renderSaleTicker();
+                }
+
+                // 2. Products (~150-200ms)
+                if (results[1].status === 'fulfilled' && Array.isArray(results[1].value)) {
+                    window.gn_products = results[1].value;
+                    window.gn_products_loaded = true;
                     if (typeof window.refreshStorefrontCatalog === 'function') {
                         window.refreshStorefrontCatalog();
                     }
                     window.dispatchEvent(new Event('productsLoaded'));
                 }
+
+                // 3. Categories (~80ms)
+                if (results[2].status === 'fulfilled' && Array.isArray(results[2].value)) {
+                    window.gn_categories_meta = results[2].value;
+                    if (typeof renderCategoryTabs === 'function') renderCategoryTabs();
+                    if (typeof renderSearchCategoryChips === 'function') renderSearchCategoryChips();
+                    if (typeof window.renderFooterCollections === 'function') window.renderFooterCollections();
+                }
+
+                // 4. Reviews (~100ms)
+                if (results[3].status === 'fulfilled' && Array.isArray(results[3].value)) {
+                    window.gn_reviews = results[3].value;
+                    if (typeof window.renderCustomerReviews === 'function') window.renderCustomerReviews();
+                }
             } catch(e) {
-                console.error("Supabase products sync error:", e);
-            }
-
-            // Sync announcements from cloud
-            if (typeof window.SupabaseEngine.getAnnouncements === 'function') {
-                try {
-                    const ann = await window.SupabaseEngine.getAnnouncements();
-                    if (Array.isArray(ann)) {
-                        window.gn_announcements = ann;
-                        if (typeof window.renderSaleTicker === 'function') window.renderSaleTicker();
-                    }
-                } catch(e) {}
-            }
-
-            // Sync reviews from cloud
-            if (typeof window.SupabaseEngine.getReviews === 'function') {
-                try {
-                    const revs = await window.SupabaseEngine.getReviews();
-                    if (Array.isArray(revs)) {
-                        window.gn_reviews = revs;
-                        if (typeof window.renderCustomerReviews === 'function') window.renderCustomerReviews();
-                    }
-                } catch(e) {}
-            }
-
-            // Sync categories from cloud
-            if (typeof window.SupabaseEngine.getCategories === 'function') {
-                try {
-                    const cats = await window.SupabaseEngine.getCategories();
-                    if (Array.isArray(cats)) {
-                        window.gn_categories_meta = cats;
-                        if (typeof renderCategoryTabs === 'function') renderCategoryTabs();
-                        if (typeof renderSearchCategoryChips === 'function') renderSearchCategoryChips();
-                    }
-                } catch(e) {}
+                console.error("Storefront cloud hydration notice:", e);
             }
         }
         window.hydrateStorefrontFromCloud = hydrateStorefrontFromCloud;
 
-        // Trigger immediate hydration and retry loop until SupabaseEngine is loaded
+        // Trigger immediate hydration immediately at script load without waiting for DOMContentLoaded
         (function initStorefrontSync() {
             let attempts = 0;
-            const maxAttempts = 25;
+            const maxAttempts = 30;
             function trySync() {
                 attempts++;
                 if (window.SupabaseEngine) {
                     hydrateStorefrontFromCloud();
                 } else if (attempts < maxAttempts) {
-                    setTimeout(trySync, 100);
+                    setTimeout(trySync, 60);
                 }
             }
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', trySync);
-            } else {
-                trySync();
-            }
+            trySync();
+
+            // Mobile Background/Foreground Lifecycle Auto-Wake:
+            // When user wakes their phone screen, unlocks device, or focuses tab -> instant re-sync!
+            document.addEventListener('visibilitychange', function() {
+                if (document.visibilityState === 'visible') {
+                    hydrateStorefrontFromCloud();
+                }
+            });
+            window.addEventListener('focus', function() {
+                hydrateStorefrontFromCloud();
+            });
+
+            // 45-second heartbeat poll for maximum multi-device reliability
+            setInterval(function() {
+                if (document.visibilityState === 'visible') {
+                    hydrateStorefrontFromCloud();
+                }
+            }, 45000);
         })();
         // =========================================================================
         // DYNAMIC SEO & JSON-LD STRUCTURED DATA INJECTION ENGINE
@@ -1883,34 +1894,6 @@
             </div>
         </div>
     </div>
-    <script>
-        (function() {
-            try {
-                var offers = Array.isArray(window.gn_announcements) ? window.gn_announcements : [];
-                    if (Array.isArray(offers)) {
-                        offers = offers.filter(function(o) { return o && String(o).trim(); });
-                        var band = document.getElementById('saleTickerBand');
-                        var track = document.getElementById('saleTickerTrack');
-                        if (band && track) {
-                            if (offers.length === 0) {
-                                band.style.display = 'none';
-                                document.body.classList.add('no-ticker');
-                            } else if (offers.length === 1) {
-                                band.style.display = 'flex';
-                                band.classList.add('single-offer');
-                                track.innerHTML = '<span>⚡ ' + offers[0] + '</span>';
-                                track.style.animation = 'none';
-                            } else {
-                                band.style.display = 'flex';
-                                band.classList.remove('single-offer');
-                                var singleSet = offers.map(function(o) { return '<span>⚡ ' + o + '</span>'; }).join('');
-                                track.innerHTML = '<div class="sale-ticker-group">' + singleSet + '</div><div class="sale-ticker-group" aria-hidden="true">' + singleSet + '</div>';
-                            }
-                    }
-                }
-            } catch(e) {}
-        })();
-    </script>
 
     <!-- FIXED GLASSMORPHIC NAVBAR -->
     <nav class="navbar reveal-header" id="mainNav">
@@ -2300,7 +2283,40 @@
         </div>
 
         <!-- MATHEMATICALLY BALANCED DROP GRID -->
-        <div class="drop-grid" id="main-drop-grid"></div>
+        <div class="drop-grid" id="main-drop-grid">
+            <div class="product-card skeleton-card">
+                <div class="card-img-wrapper skeleton-img-box skeleton-shimmer"></div>
+                <div class="card-details">
+                    <div class="skeleton-line skeleton-line-title"></div>
+                    <div class="skeleton-line skeleton-line-price"></div>
+                </div>
+                <div class="card-actions"><div class="skeleton-line skeleton-line-btn"></div></div>
+            </div>
+            <div class="product-card skeleton-card">
+                <div class="card-img-wrapper skeleton-img-box skeleton-shimmer"></div>
+                <div class="card-details">
+                    <div class="skeleton-line skeleton-line-title"></div>
+                    <div class="skeleton-line skeleton-line-price"></div>
+                </div>
+                <div class="card-actions"><div class="skeleton-line skeleton-line-btn"></div></div>
+            </div>
+            <div class="product-card skeleton-card">
+                <div class="card-img-wrapper skeleton-img-box skeleton-shimmer"></div>
+                <div class="card-details">
+                    <div class="skeleton-line skeleton-line-title"></div>
+                    <div class="skeleton-line skeleton-line-price"></div>
+                </div>
+                <div class="card-actions"><div class="skeleton-line skeleton-line-btn"></div></div>
+            </div>
+            <div class="product-card skeleton-card">
+                <div class="card-img-wrapper skeleton-img-box skeleton-shimmer"></div>
+                <div class="card-details">
+                    <div class="skeleton-line skeleton-line-title"></div>
+                    <div class="skeleton-line skeleton-line-price"></div>
+                </div>
+                <div class="card-actions"><div class="skeleton-line skeleton-line-btn"></div></div>
+            </div>
+        </div>
 
         <!-- DISCREET LUXURY LOAD MORE CONTROLLER (ACTIVATES AFTER 12 PRODUCTS) -->
         <div class="catalog-load-more-wrap" id="catalogLoadMoreWrap" style="display: none;">
@@ -2777,6 +2793,33 @@
                     const totalCount = list.length;
 
                     if (totalCount === 0) {
+                        if (!window.gn_products_loaded) {
+                            grid.innerHTML = `
+                                <div class="product-card skeleton-card">
+                                    <div class="card-img-wrapper skeleton-img-box skeleton-shimmer"></div>
+                                    <div class="card-details"><div class="skeleton-line skeleton-line-title"></div><div class="skeleton-line skeleton-line-price"></div></div>
+                                    <div class="card-actions"><div class="skeleton-line skeleton-line-btn"></div></div>
+                                </div>
+                                <div class="product-card skeleton-card">
+                                    <div class="card-img-wrapper skeleton-img-box skeleton-shimmer"></div>
+                                    <div class="card-details"><div class="skeleton-line skeleton-line-title"></div><div class="skeleton-line skeleton-line-price"></div></div>
+                                    <div class="card-actions"><div class="skeleton-line skeleton-line-btn"></div></div>
+                                </div>
+                                <div class="product-card skeleton-card">
+                                    <div class="card-img-wrapper skeleton-img-box skeleton-shimmer"></div>
+                                    <div class="card-details"><div class="skeleton-line skeleton-line-title"></div><div class="skeleton-line skeleton-line-price"></div></div>
+                                    <div class="card-actions"><div class="skeleton-line skeleton-line-btn"></div></div>
+                                </div>
+                                <div class="product-card skeleton-card">
+                                    <div class="card-img-wrapper skeleton-img-box skeleton-shimmer"></div>
+                                    <div class="card-details"><div class="skeleton-line skeleton-line-title"></div><div class="skeleton-line skeleton-line-price"></div></div>
+                                    <div class="card-actions"><div class="skeleton-line skeleton-line-btn"></div></div>
+                                </div>
+                            `;
+                            if (loadMoreWrap) loadMoreWrap.style.display = 'none';
+                            return;
+                        }
+
                         grid.innerHTML = `
                             <div class="gothic-empty-state-box">
                                 <div class="gothic-empty-icon-wrap">
@@ -2928,6 +2971,12 @@
                     offers = offers.filter(o => o && String(o).trim());
 
                     if (offers.length === 0) {
+                        if (!window.gn_announcements_loaded) {
+                            // Keep default static announcement bar visible during initial hydration
+                            band.style.display = 'flex';
+                            document.body.classList.remove('no-ticker');
+                            return;
+                        }
                         band.style.display = 'none';
                         document.body.classList.add('no-ticker');
                         track.innerHTML = '';
