@@ -1879,20 +1879,9 @@
         });
     </script>
     
-    <!-- SALE TICKER BAND (0MS INSTANT INITIAL RENDER) -->
-    <div class="sale-ticker-band" id="saleTickerBand">
-        <div class="sale-ticker-track" id="saleTickerTrack">
-            <div class="sale-ticker-group">
-                <span>⚡ MIDNIGHT DROP // FREE SHIPPING OVER RS. 4000</span>
-                <span>⚡ HANDCRAFTED 316L STAINLESS STEEL</span>
-                <span>⚡ CASH ON DELIVERY NATIONWIDE</span>
-            </div>
-            <div class="sale-ticker-group" aria-hidden="true">
-                <span>⚡ MIDNIGHT DROP // FREE SHIPPING OVER RS. 4000</span>
-                <span>⚡ HANDCRAFTED 316L STAINLESS STEEL</span>
-                <span>⚡ CASH ON DELIVERY NATIONWIDE</span>
-            </div>
-        </div>
+    <!-- SALE TICKER BAND (DYNAMIC CLOUD ONLY - ZERO HARDCODED FALLBACK) -->
+    <div class="sale-ticker-band" id="saleTickerBand" style="display: none;">
+        <div class="sale-ticker-track" id="saleTickerTrack"></div>
     </div>
 
     <!-- FIXED GLASSMORPHIC NAVBAR -->
@@ -2971,12 +2960,6 @@
                     offers = offers.filter(o => o && String(o).trim());
 
                     if (offers.length === 0) {
-                        if (!window.gn_announcements_loaded) {
-                            // Keep default static announcement bar visible during initial hydration
-                            band.style.display = 'flex';
-                            document.body.classList.remove('no-ticker');
-                            return;
-                        }
                         band.style.display = 'none';
                         document.body.classList.add('no-ticker');
                         track.innerHTML = '';

@@ -116,6 +116,7 @@
         _sectionConfirmedAt[key] = null;
     }
     let _migrationDone = false;
+    let _realtimeChannel = null;
 
     function getStoreSyncBroadcastChannel() {
         if (typeof BroadcastChannel !== 'undefined') {
@@ -199,7 +200,9 @@
                     .from('gn_orders')
                     .select('id, items, updated_at')
                     .eq('customer_name', config.syncName)
-                    .order('updated_at', { ascending: false });
+                    .order('updated_at', { ascending: false })
+                    .order('id', { ascending: false })
+                    .limit(1);
 
                 if (error) {
                     console.warn(`Notice: Fetching ${sectionKey} from cloud error:`, error);
@@ -208,18 +211,12 @@
 
                 if (Array.isArray(data) && data.length > 0) {
                     _sectionRowId[sectionKey] = data[0].id;
-                    if (data.length > 1) {
-                        for (let i = 1; i < data.length; i++) {
-                            client.from('gn_orders').delete().eq('id', data[i].id).catch(() => {});
-                        }
-                    }
-
                     const sectionData = (data[0].items && Array.isArray(data[0].items[sectionKey]))
                         ? data[0].items[sectionKey]
                         : [];
 
                     _sectionCache[sectionKey] = sectionData;
-                    _sectionConfirmedAt[sectionKey] = Date.now(); // _confirmed_at
+                    _sectionConfirmedAt[sectionKey] = Date.now();
                     return sectionData;
                 }
             } catch (e) {
@@ -1059,6 +1056,9 @@
         // 9. REALTIME SUBSCRIPTIONS & MULTI-DEVICE PROPAGATION
         // =========================================================================
         subscribeRealtime(callback) {
+            if (_realtimeChannel) {
+                return _realtimeChannel;
+            }
             const client = this.client;
             if (!client) return null;
 
@@ -1112,6 +1112,7 @@
                     })
                     .subscribe();
 
+                _realtimeChannel = channel;
                 return channel;
             } catch (e) {
                 console.warn("Realtime subscription notice:", e);
