@@ -1649,9 +1649,24 @@
     </script>
     
     <script>
-        // Clean out any legacy storage pollution to guarantee zero dual-storage contention
+        // 0ms SWR Local Authority Fast Hydration (Zero Blank Flash & Instant Offline/Refresh Continuity)
         try {
-            ['gn_products', 'gn_categories_meta', 'gn_categories', 'gn_reviews', 'gn_announcements', 'gn_orders', 'gn_deleted_orders', 'gn_mock_products'].forEach(k => localStorage.removeItem(k));
+            const cachedProds = localStorage.getItem('gn_swr_products');
+            if (cachedProds) {
+                const parsed = JSON.parse(cachedProds);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    window.gn_products = parsed;
+                    window.gn_products_loaded = true;
+                }
+            }
+            const cachedAnns = localStorage.getItem('gn_swr_announcements');
+            if (cachedAnns) {
+                const parsed = JSON.parse(cachedAnns);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    window.gn_announcements = parsed;
+                    window.gn_announcements_loaded = true;
+                }
+            }
         } catch(e) {}
 
         // In-Memory Cloud Authority Storefront State
@@ -1659,8 +1674,8 @@
         window.gn_categories_meta = window.gn_categories_meta || [];
         window.gn_announcements = window.gn_announcements || [];
         window.gn_reviews = window.gn_reviews || [];
-        window.gn_products_loaded = false;
-        window.gn_announcements_loaded = false;
+        window.gn_products_loaded = !!(window.gn_products && window.gn_products.length > 0);
+        window.gn_announcements_loaded = !!(window.gn_announcements && window.gn_announcements.length > 0);
 
         // Direct Parallel Cloud Hydration Engine (Ultra-Fast & Multi-Device Synchronized)
         async function hydrateStorefrontFromCloud() {

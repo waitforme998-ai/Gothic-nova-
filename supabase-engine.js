@@ -190,6 +190,22 @@
                 return _sectionCache[sectionKey];
             }
 
+            // SWR Local Storage instant cache hit (0ms offline/refresh guarantee)
+            if (!forceFresh && _sectionCache[sectionKey] === null) {
+                try {
+                    const cachedRaw = localStorage.getItem('gn_swr_' + sectionKey);
+                    if (cachedRaw) {
+                        const parsed = JSON.parse(cachedRaw);
+                        if (Array.isArray(parsed) && parsed.length > 0) {
+                            _sectionCache[sectionKey] = parsed;
+                            // Trigger background cloud revalidation without blocking caller
+                            this._getSection(sectionKey, true).catch(() => {});
+                            return parsed;
+                        }
+                    }
+                } catch(e) {}
+            }
+
             const client = this.client;
             if (!client) {
                 return _sectionCache[sectionKey] || [];
@@ -217,6 +233,9 @@
 
                     _sectionCache[sectionKey] = sectionData;
                     _sectionConfirmedAt[sectionKey] = Date.now();
+                    try {
+                        localStorage.setItem('gn_swr_' + sectionKey, JSON.stringify(sectionData));
+                    } catch(e) {}
                     return sectionData;
                 }
             } catch (e) {
@@ -239,11 +258,14 @@
 
             _sectionCache[sectionKey] = data;
             _sectionConfirmedAt[sectionKey] = Date.now(); // _confirmed_at
+            try {
+                localStorage.setItem('gn_swr_' + sectionKey, JSON.stringify(data));
+            } catch(e) {}
             dispatchUniversalSyncEvents({ [sectionKey]: data });
 
             const client = this.client;
             if (client) {
-                _sectionSaveQueue[sectionKey] = _sectionSaveQueue[sectionKey].then(async () => {
+                _sectionSaveQueue[sectionKey] = Promise.resolve(_sectionSaveQueue[sectionKey]).catch(() => {}).then(async () => {
                     const payload = {
                         [sectionKey]: _sectionCache[sectionKey],
                         updated_at: new Date().toISOString()

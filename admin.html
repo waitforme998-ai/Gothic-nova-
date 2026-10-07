@@ -3735,6 +3735,7 @@
             const app = document.getElementById('adminDashboardApp');
             if (gate) gate.style.display = 'none';
             if (app) app.style.display = 'block';
+            if (typeof toggleCategoriesSection === 'function') toggleCategoriesSection(true);
             if (typeof renderDashboard === 'function') renderDashboard();
             if (typeof loadProducts === 'function') loadProducts().then(() => renderDashboard());
             if (typeof loadCategoriesIntoAdmin === 'function') loadCategoriesIntoAdmin();
@@ -4064,7 +4065,7 @@
         }
 
         // --- SECTION TOGGLES ---
-        let categoriesSectionOpen = false;
+        let categoriesSectionOpen = true; // Open by default for immediate catalog visibility
         window.toggleCategoriesSection = function(forceOpen) {
             if (forceOpen === true) categoriesSectionOpen = true;
             else if (forceOpen === false) categoriesSectionOpen = false;
@@ -4100,7 +4101,7 @@
             }
         };
 
-        let openCategoryAccordions = new Set();
+        let openCategoryAccordions = new Set(['all']); // Expand 'all' by default so products are visible immediately
         window.toggleCategoryAccordion = function(slug) {
             if (openCategoryAccordions.has(slug)) openCategoryAccordions.delete(slug);
             else openCategoryAccordions.add(slug);
@@ -6120,6 +6121,9 @@
                                 showToast("Saved locally. Cloud sync pending.", true);
                             } 
                         }
+                        toggleCategoriesSection(true);
+                        openCategoryAccordions.add('all');
+                        if (existing.category) openCategoryAccordions.add(existing.category);
                         renderDashboard(); 
                         if (btnState) btnState.success('SAVED ✓');
                         showToast(`"${existing.name}" updated!`);
@@ -6199,6 +6203,9 @@
                 console.warn("Bulk product save cloud notice:", e);
                 showToast("Cloud sync pending.", true);
             }
+            toggleCategoriesSection(true);
+            openCategoryAccordions.add('all');
+            newItems.forEach(p => { if (p && p.category) openCategoryAccordions.add(p.category); });
             renderDashboard();
             window.dispatchEvent(new Event('productsLoaded'));
             broadcastProductsUpdate(products);
@@ -7631,11 +7638,16 @@
         // Init
         checkAdminAuth();
 
-        // 1. Storage Purge & Clean Initialization (Pure Supabase Authority)
+        // 1. SWR 0ms Fast Hydration from local cache (Instant display on refresh)
         try {
-            ['gn_products', 'gn_categories_meta', 'gn_categories', 'gn_reviews', 'gn_announcements', 'gn_orders', 'gn_deleted_orders', 'gn_mock_products'].forEach(k => {
-                try { localStorage.removeItem(k); } catch(err) {}
-            });
+            const cachedProds = localStorage.getItem('gn_swr_products');
+            if (cachedProds) {
+                const parsed = JSON.parse(cachedProds);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    products = parsed;
+                    window.gn_products = products;
+                }
+            }
         } catch(e) {}
 
         // Immediate Initial Render
