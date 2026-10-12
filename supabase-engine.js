@@ -413,13 +413,76 @@
         // =========================================================================
         // 1. PRODUCTS API
         // =========================================================================
+        getDefaultStock() {
+            try {
+                const stored = localStorage.getItem('gn_default_stock');
+                if (stored !== null && !isNaN(parseInt(stored, 10))) {
+                    return Math.max(0, parseInt(stored, 10));
+                }
+            } catch(e) {}
+            return 5; // Clean configurable fallback instead of hardcoded 10
+        },
+
+        setDefaultStock(val) {
+            const num = Math.max(0, parseInt(val, 10) || 0);
+            try {
+                localStorage.setItem('gn_default_stock', String(num));
+            } catch(e) {}
+            return num;
+        },
+
         async getProducts() {
             const products = await this._getSection('products');
             return Array.isArray(products) ? products : [];
         },
 
+        async updateProductStock(id, newStock) {
+            const cleanId = String(id);
+            const stockNum = Math.max(0, parseInt(newStock, 10) || 0);
+
+            let list = await this._getSection('products', false);
+            if (!Array.isArray(list)) list = [];
+
+            let targetIdx = list.findIndex(p => String(p.id) === cleanId);
+            if (targetIdx === -1) {
+                // If not found in cache, attempt fresh cloud read
+                list = await this._getSection('products', true);
+                if (!Array.isArray(list)) list = [];
+                targetIdx = list.findIndex(p => String(p.id) === cleanId);
+            }
+
+            if (targetIdx === -1) {
+                throw new Error(`Product with ID "${cleanId}" not found.`);
+            }
+
+            // Create updated item
+            const updatedProduct = {
+                ...list[targetIdx],
+                stock: stockNum,
+                active: stockNum > 0 ? true : list[targetIdx].active
+            };
+            list[targetIdx] = updatedProduct;
+
+            // Commit to cloud and strictly await confirmation
+            await this._saveSection('products', list, { allowEmpty: false });
+
+            // Mirror to gn_products table if available
+            const client = this.client;
+            if (client) {
+                try {
+                    await client.from('gn_products').update({
+                        stock: stockNum,
+                        active: updatedProduct.active
+                    }).eq('id', cleanId);
+                } catch(e) {}
+            }
+
+            return updatedProduct;
+        },
+
         async saveProduct(product) {
             const stock_images = Array.isArray(product.stock_images) ? product.stock_images : (Array.isArray(product.stockImages) ? product.stockImages : []);
+            const defaultStock = this.getDefaultStock();
             const normalized = {
                 id: String(product.id || Date.now()),
                 name: (product.name || 'Gothic Artifact').trim(),
@@ -427,7 +490,7 @@
                 price: Number(product.price || 0),
                 sale_price: (product.salePrice !== undefined && product.salePrice !== null && product.salePrice !== '') ? Number(product.salePrice) : ((product.sale_price !== undefined && product.sale_price !== null && product.sale_price !== '') ? Number(product.sale_price) : null),
                 salePrice: (product.salePrice !== undefined && product.salePrice !== null && product.salePrice !== '') ? Number(product.salePrice) : ((product.sale_price !== undefined && product.sale_price !== null && product.sale_price !== '') ? Number(product.sale_price) : null),
-                stock: Number(product.stock !== undefined ? product.stock : 10),
+                stock: Number(product.stock !== undefined ? product.stock : defaultStock),
                 threshold: Number(product.threshold !== undefined ? product.threshold : 3),
                 description: product.description || product.desc || '',
                 desc: product.description || product.desc || '',
@@ -485,6 +548,7 @@
         },
 
         async saveProductsBulk(productsArray) {
+            const defaultStock = this.getDefaultStock();
             const normalizedArray = (productsArray || []).map((product, idx) => {
                 const stock_images = Array.isArray(product.stock_images) ? product.stock_images : (Array.isArray(product.stockImages) ? product.stockImages : []);
                 return {
@@ -494,7 +558,7 @@
                     price: Number(product.price || 0),
                     sale_price: (product.salePrice !== undefined && product.salePrice !== null && product.salePrice !== '') ? Number(product.salePrice) : ((product.sale_price !== undefined && product.sale_price !== null && product.sale_price !== '') ? Number(product.sale_price) : null),
                     salePrice: (product.salePrice !== undefined && product.salePrice !== null && product.salePrice !== '') ? Number(product.salePrice) : ((product.sale_price !== undefined && product.sale_price !== null && product.sale_price !== '') ? Number(product.sale_price) : null),
-                    stock: Number(product.stock !== undefined ? product.stock : 10),
+                    stock: Number(product.stock !== undefined ? product.stock : defaultStock),
                     threshold: Number(product.threshold !== undefined ? product.threshold : 3),
                     description: product.description || product.desc || '',
                     desc: product.description || product.desc || '',

@@ -3064,6 +3064,29 @@
                     if (typeof window.renderMainCatalog === 'function') window.renderMainCatalog();
                     if (typeof window.renderNewArrivals === 'function') window.renderNewArrivals();
                     if (typeof window.renderCustomerReviews === 'function') window.renderCustomerReviews();
+
+                    // Real-time cart auto-clamp against authoritative stock
+                    if (window.gn_cart && typeof window.saveCart === 'function') {
+                        const prods = (typeof getAllProducts === 'function') ? getAllProducts() : (window.gn_products || []);
+                        let cartMutated = false;
+                        Object.keys(window.gn_cart).forEach(cId => {
+                            const p = prods.find(item => String(item.id) === String(cId));
+                            if (p) {
+                                const availStock = Math.max(0, Number(p.stock !== undefined ? p.stock : 0));
+                                if (availStock <= 0) {
+                                    delete window.gn_cart[cId];
+                                    cartMutated = true;
+                                } else if (window.gn_cart[cId].qty > availStock) {
+                                    window.gn_cart[cId].qty = availStock;
+                                    cartMutated = true;
+                                }
+                            }
+                        });
+                        if (cartMutated) {
+                            window.saveCart();
+                            if (typeof window.renderCart === 'function') window.renderCart();
+                        }
+                    }
                     
                     // Live update active centered PDP modal if open
                     const pdpOverlay = document.getElementById('pdpModalOverlay');
@@ -4161,6 +4184,12 @@
             cartFooter.style.display = 'flex';
 
             items.forEach(([pid, item]) => {
+                const prods = (typeof getAllProducts === 'function') ? getAllProducts() : (window.gn_products || []);
+                const product = prods.find(p => String(p.id) === String(pid));
+                const availStock = product ? Math.max(0, Number(product.stock !== undefined ? product.stock : 0)) : 999;
+                const isAtMax = item.qty >= availStock;
+                const isSoldOut = availStock <= 0;
+
                 const row = document.createElement('div');
                 row.className = 'cart-item-row';
                 row.style.cssText = 'display:flex;align-items:center;padding:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(138,26,46,0.35);border-radius:4px;gap:12px;animation:fadeIn 0.25s ease;';
@@ -4174,11 +4203,14 @@
                         <div style="display:flex;align-items:center;gap:4px;">
                             <span style="font-family:var(--font-heading);font-size:0.9rem;font-weight:700;color:#ffffff;text-transform:uppercase;letter-spacing:0.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.name}</span>
                         </div>
-                        <div style="font-family:var(--font-mono);font-size:0.8rem;color:#ffe8be;font-weight:700;margin-top:2px;">${item.price}</div>
+                        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;">
+                            <span style="font-family:var(--font-mono);font-size:0.8rem;color:#ffe8be;font-weight:700;">${item.price}</span>
+                            ${isSoldOut ? '<span style="color:#ff3b30;font-size:0.7rem;font-weight:700;font-family:var(--font-mono);">SOLD OUT</span>' : (availStock <= 3 ? `<span style="color:#ff9f0a;font-size:0.68rem;font-weight:600;font-family:var(--font-mono);">(Only ${availStock} left)</span>` : '')}
+                        </div>
                         <div style="display:flex;align-items:center;gap:8px;background:rgba(92,15,31,0.4);border:1px solid rgba(138,26,46,0.5);border-radius:4px;padding:3px 12px;margin-top:6px;width:fit-content;">
                             <button onclick="adjustQty('${pid}',-1)" style="background:none;border:none;cursor:pointer;font-size:1rem;line-height:1;color:#ffffff;padding:0 2px;">−</button>
                             <span id="cart-qty-${pid}" style="font-size:0.8rem;min-width:16px;text-align:center;color:#ffffff;font-family:var(--font-mono);font-weight:700;">${item.qty}</span>
-                            <button onclick="adjustQty('${pid}',1)" style="background:none;border:none;cursor:pointer;font-size:1rem;line-height:1;color:#ffffff;padding:0 2px;">+</button>
+                            <button onclick="adjustQty('${pid}',1)" ${isAtMax ? 'disabled style="background:none;border:none;opacity:0.25;cursor:not-allowed;font-size:1rem;line-height:1;color:#ffffff;padding:0 2px;"' : 'style="background:none;border:none;cursor:pointer;font-size:1rem;line-height:1;color:#ffffff;padding:0 2px;"'}>+</button>
                         </div>
                     </div>
                     <button onclick="removeFromCart('${pid}')" style="background:none;border:none;cursor:pointer;padding:6px;color:#ff3b30;opacity:0.75;transition:opacity 0.2s;flex-shrink:0;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.75'">
@@ -4196,15 +4228,22 @@
 
         window.adjustQty = function(pid, delta) {
             if (!cartMap[pid]) return;
-            const products = window.gn_products || [];
-            const product = products.find(p => p.id === pid);
-            const stock = product ? product.stock : 999;
+            const prods = (typeof getAllProducts === 'function') ? getAllProducts() : (window.gn_products || []);
+            const product = prods.find(p => String(p.id) === String(pid));
+            const stock = product ? Math.max(0, Number(product.stock !== undefined ? product.stock : 0)) : 999;
             
             const newQty = cartMap[pid].qty + delta;
             if (newQty < 1) {
                 window.removeFromCart(pid);
+            } else if (newQty > stock) {
+                if (typeof showLuxuryAlert === 'function') {
+                    showLuxuryAlert(`Only ${stock} unit${stock === 1 ? '' : 's'} available in stock.`, 'STOCK LIMIT', 'info');
+                }
+                cartMap[pid].qty = Math.max(1, stock);
+                saveCart();
+                renderCart();
             } else {
-                cartMap[pid].qty = Math.min(stock, newQty);
+                cartMap[pid].qty = newQty;
                 saveCart();
                 renderCart();
             }
@@ -4497,23 +4536,23 @@
             });
 
             qtyPlus.addEventListener('click', () => {
-                const maxStock = activeModalProduct ? Number(activeModalProduct.stock || 999) : 999;
-                const inCart = (activeModalProduct && window.gn_cart && window.gn_cart[activeModalProduct.id]) ? window.gn_cart[activeModalProduct.id].qty : 0;
+                const maxStock = activeModalProduct ? Math.max(0, Number(activeModalProduct.stock !== undefined ? activeModalProduct.stock : 0)) : 0;
+                const inCart = (activeModalProduct && window.gn_cart && window.gn_cart[activeModalProduct.id]) ? Number(window.gn_cart[activeModalProduct.id].qty || 0) : 0;
                 if (currentModalQty + inCart < maxStock) {
                     currentModalQty++;
                     qtyVal.textContent = currentModalQty;
                 } else {
                     if (typeof showLuxuryAlert === 'function') {
-                        showLuxuryAlert(`Maximum available stock for this artifact is ${maxStock} units.`, 'STOCK LIMIT', 'info');
+                        showLuxuryAlert(`Maximum available stock for this artifact is ${maxStock} unit${maxStock === 1 ? '' : 's'}.`, 'STOCK LIMIT', 'info');
                     }
                 }
             });
 
             buyNowBtn.addEventListener('click', () => {
-                if (!activeModalProduct || Number(activeModalProduct.stock || 0) <= 0) return;
+                if (!activeModalProduct || Number(activeModalProduct.stock !== undefined ? activeModalProduct.stock : 0) <= 0) return;
                 const pid = activeModalProduct.id;
-                const maxStock = Number(activeModalProduct.stock || 999);
-                const purchaseQty = Math.min(currentModalQty, maxStock);
+                const maxStock = Math.max(0, Number(activeModalProduct.stock !== undefined ? activeModalProduct.stock : 0));
+                const purchaseQty = Math.max(1, Math.min(currentModalQty, maxStock));
 
                 const saleVal = activeModalProduct.salePrice !== undefined && activeModalProduct.salePrice !== null ? activeModalProduct.salePrice : activeModalProduct.saleprice;
                 const priceVal = Number(activeModalProduct.price || 0);
@@ -4539,7 +4578,7 @@
             });
 
             addToCartBtn.addEventListener('click', () => {
-                if (!activeModalProduct || Number(activeModalProduct.stock || 0) <= 0) return;
+                if (!activeModalProduct || Number(activeModalProduct.stock !== undefined ? activeModalProduct.stock : 0) <= 0) return;
                 
                 // If button is already in VIEW CART state, open cart
                 if (addToCartBtn.classList.contains('view-cart-mode')) {
@@ -4549,17 +4588,17 @@
                 }
 
                 const pid = activeModalProduct.id;
-                const maxStock = Number(activeModalProduct.stock || 999);
-                const existingInCart = (window.gn_cart && window.gn_cart[pid]) ? window.gn_cart[pid].qty : 0;
+                const maxStock = Math.max(0, Number(activeModalProduct.stock !== undefined ? activeModalProduct.stock : 0));
+                const existingInCart = (window.gn_cart && window.gn_cart[pid]) ? Number(window.gn_cart[pid].qty || 0) : 0;
 
                 if (existingInCart >= maxStock) {
-                    showLuxuryAlert(`Maximum available stock (${maxStock} units) already in cart.`);
+                    showLuxuryAlert(`Maximum available stock (${maxStock} unit${maxStock === 1 ? '' : 's'}) already in cart.`);
                     addToCartBtn.classList.add('view-cart-mode');
                     addToCartBtn.innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="stroke-width:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg> VIEW CART`;
                     return;
                 }
 
-                const addable = Math.min(currentModalQty, maxStock - existingInCart);
+                const addable = Math.max(1, Math.min(currentModalQty, maxStock - existingInCart));
                 const saleVal = activeModalProduct.salePrice !== undefined && activeModalProduct.salePrice !== null ? activeModalProduct.salePrice : activeModalProduct.saleprice;
                 const priceVal = Number(activeModalProduct.price || 0);
                 const isSale = saleVal !== null && saleVal !== undefined && saleVal !== '' && Number(saleVal) < priceVal;

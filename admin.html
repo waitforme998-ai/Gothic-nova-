@@ -2990,6 +2990,16 @@
                                 <span>Add Category</span>
                             </button>
                         </div>
+                        <div class="default-stock-setting-bar" style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; margin-bottom: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: var(--radius-sm);">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffe8be" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                                <span style="font-size: 0.76rem; font-weight: 600; color: #d4d4d8; text-transform: uppercase; letter-spacing: 0.05em;">Default New Product Stock:</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <input type="number" id="storeDefaultStockInput" min="1" max="9999" value="5" style="width: 64px; padding: 4px 8px; background: #000; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; color: #ffe8be; font-family: var(--font-mono); font-size: 0.8rem; text-align: center;" onchange="updateStoreDefaultStock(this.value)">
+                                <span style="font-size: 0.72rem; color: #8e8e93;">units</span>
+                            </div>
+                        </div>
                         <div id="categoryAccordionList">
                             <!-- Dynamically populated category accordions with nested products (closed by default) -->
                         </div>
@@ -4020,6 +4030,27 @@
         }
         window.saveProducts = saveProducts;
 
+        function getAppDefaultStock() {
+            if (window.SupabaseEngine && typeof window.SupabaseEngine.getDefaultStock === 'function') {
+                return window.SupabaseEngine.getDefaultStock();
+            }
+            const stored = localStorage.getItem('gn_default_stock');
+            return stored ? Math.max(0, parseInt(stored, 10)) : 5;
+        }
+        window.getAppDefaultStock = getAppDefaultStock;
+
+        window.updateStoreDefaultStock = function(val) {
+            const num = Math.max(1, parseInt(val, 10) || 5);
+            const inp = document.getElementById('storeDefaultStockInput');
+            if (inp) inp.value = num;
+            if (window.SupabaseEngine && typeof window.SupabaseEngine.setDefaultStock === 'function') {
+                window.SupabaseEngine.setDefaultStock(num);
+            } else {
+                localStorage.setItem('gn_default_stock', String(num));
+            }
+            showToast(`Default product stock set to ${num}`);
+        };
+
         // --- CATEGORY MANAGEMENT ---
         window.adminCategories = null;
 
@@ -4187,33 +4218,34 @@
 
             try {
                 const newCat = { id: slug, name: rawName, display_order: catList.length + 1 };
-                catList.push(newCat);
-                saveCategoryList(catList);
+                const updatedCatList = [...catList, newCat];
 
-                // 1. INSTANT 0ms OPTIMISTIC UI REFRESH
+                // 1. Authoritative Cloud Persistence First - No Fake Success
+                if (window.SupabaseEngine) {
+                    if (typeof window.SupabaseEngine.saveCategoryList === 'function') {
+                        await window.SupabaseEngine.saveCategoryList(updatedCatList);
+                    } else if (typeof window.SupabaseEngine.saveCategory === 'function') {
+                        await window.SupabaseEngine.saveCategory(newCat);
+                    }
+                }
+
+                // 2. Confirmed Success: Update local state & render
+                saveCategoryList(updatedCatList);
                 renderDashboard();
                 populateCategoryDropdowns();
                 if (btnState) btnState.success('ADDED ✓');
                 showToast(`Category "${rawName}" created!`);
 
-                // 2. INSTANT UNIVERSAL BROADCAST
+                // 3. Sync events
                 try { 
                     window.dispatchEvent(new Event('storage')); 
                     window.dispatchEvent(new Event('categoriesUpdated')); 
-                    broadcastCategoriesUpdate(catList);
+                    broadcastCategoriesUpdate(updatedCatList);
                 } catch(e) {}
-
-                // 3. NON-BLOCKING BACKGROUND CLOUD PERSISTENCE
-                if (window.SupabaseEngine) {
-                    if (typeof window.SupabaseEngine.saveCategoryList === 'function') {
-                        window.SupabaseEngine.saveCategoryList(catList).catch(e => console.warn("Notice: Cloud category sync:", e));
-                    } else if (typeof window.SupabaseEngine.saveCategory === 'function') {
-                        window.SupabaseEngine.saveCategory(newCat).catch(e => console.warn("Notice: Cloud category sync:", e));
-                    }
-                }
             } catch(err) {
+                console.error("Create category failed:", err);
                 if (btnState) btnState.reset();
-                showToast("Failed to create category", true);
+                showToast("Failed to create category: " + (err.message || "Network error"), true);
             } finally {
                 isCategoryCreating = false;
             }
@@ -4226,24 +4258,33 @@
             if (!newName || newName === currentName) return;
             const catList = getCategoryList();
             const target = catList.find(c => c.id === slug);
-            if (target) {
+            if (!target) return;
+
+            const updatedCat = { ...target, name: newName };
+            const updatedList = catList.map(c => c.id === slug ? updatedCat : c);
+
+            try {
+                if (window.SupabaseEngine) {
+                    if (typeof window.SupabaseEngine.saveCategoryList === 'function') {
+                        await window.SupabaseEngine.saveCategoryList(updatedList);
+                    } else if (typeof window.SupabaseEngine.saveCategory === 'function') {
+                        await window.SupabaseEngine.saveCategory(updatedCat);
+                    }
+                }
+
                 target.name = newName;
-                saveCategoryList(catList);
+                saveCategoryList(updatedList);
                 renderDashboard();
                 populateCategoryDropdowns();
                 showToast(`Renamed to "${newName}"`);
                 try { 
                     window.dispatchEvent(new Event('storage')); 
                     window.dispatchEvent(new Event('categoriesUpdated')); 
-                    broadcastCategoriesUpdate(catList);
+                    broadcastCategoriesUpdate(updatedList);
                 } catch(e) {}
-                if (window.SupabaseEngine) {
-                    if (typeof window.SupabaseEngine.saveCategoryList === 'function') {
-                        window.SupabaseEngine.saveCategoryList(catList).catch(e => console.warn("Notice: Cloud category rename sync:", e));
-                    } else if (typeof window.SupabaseEngine.saveCategory === 'function') {
-                        window.SupabaseEngine.saveCategory(target).catch(e => console.warn("Notice: Cloud category rename sync:", e));
-                    }
-                }
+            } catch(err) {
+                console.error("Rename category failed:", err);
+                showToast("Failed to rename category: " + (err.message || "Network error"), true);
             }
         };
 
@@ -4259,48 +4300,44 @@
                 confirmText: 'Delete Category',
                 isDanger: true,
                 onConfirm: async () => {
-                    // 1. Instantly remove category from local list
-                    let catList = getCategoryList().filter(c => String(c.id).toLowerCase() !== cleanSlug);
-                    saveCategoryList(catList);
-
-                    // 3. If any products were attached to this category, reassign them to 'all' (All Products)
-                    let productsModified = false;
-                    products = products.map(p => {
-                        if (p && String(p.category).trim().toLowerCase() === cleanSlug) {
-                            productsModified = true;
-                            return { ...p, category: 'all' };
-                        }
-                        return p;
-                    });
-                    if (productsModified) {
-                        window.gn_products = products;
-                    }
-
-                    // 4. Clear from open accordions
-                    if (openCategoryAccordions.has(cleanSlug)) {
-                        openCategoryAccordions.delete(cleanSlug);
-                    }
-
-                    // 5. INSTANT UI UPDATE (0ms)
-                    renderDashboard();
-                    populateCategoryDropdowns();
-                    showToast(`"${name}" deleted.`);
-
-                    // 6. Broadcast & sync in background without blocking UI
                     try {
-                        window.dispatchEvent(new Event('storage'));
-                        window.dispatchEvent(new Event('categoriesUpdated'));
-                        window.dispatchEvent(new Event('productsLoaded'));
-                        broadcastCategoriesUpdate(catList);
-                        if (productsModified) broadcastProductsUpdate(products);
-                    } catch(e) {}
-
-                    if (window.SupabaseEngine) {
-                        try {
+                        if (window.SupabaseEngine) {
                             await window.SupabaseEngine.deleteCategory(cleanSlug);
-                        } catch(err) {
-                            console.warn("Category delete background sync notice:", err);
                         }
+
+                        let catList = getCategoryList().filter(c => String(c.id).toLowerCase() !== cleanSlug);
+                        saveCategoryList(catList);
+
+                        let productsModified = false;
+                        products = products.map(p => {
+                            if (p && String(p.category).trim().toLowerCase() === cleanSlug) {
+                                productsModified = true;
+                                return { ...p, category: 'all' };
+                            }
+                            return p;
+                        });
+                        if (productsModified) {
+                            window.gn_products = products;
+                        }
+
+                        if (openCategoryAccordions.has(cleanSlug)) {
+                            openCategoryAccordions.delete(cleanSlug);
+                        }
+
+                        renderDashboard();
+                        populateCategoryDropdowns();
+                        showToast(`"${name}" deleted.`);
+
+                        try {
+                            window.dispatchEvent(new Event('storage'));
+                            window.dispatchEvent(new Event('categoriesUpdated'));
+                            window.dispatchEvent(new Event('productsLoaded'));
+                            broadcastCategoriesUpdate(catList);
+                            if (productsModified) broadcastProductsUpdate(products);
+                        } catch(e) {}
+                    } catch(err) {
+                        console.error("Category delete failed:", err);
+                        showToast("Failed to delete category: " + (err.message || "Network error"), true);
                     }
                 }
             });
@@ -4388,49 +4425,136 @@
             imgEl.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 24 24' fill='none' stroke='%238e8e93' stroke-width='1.5'><rect width='100%' height='100%' fill='%2314090f'/><polygon points='12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2'/></svg>";
         };
 
-        // --- STOCK ADJUSTMENT & RESTOCK (INSTANT OPTIMISTIC ZERO-LAG UI) ---
-        window.adjustCatalogStock = function(pid, delta) {
+        // --- STOCK ADJUSTMENT & RESTOCK (AUTHORITATIVE CONFIRMED DATABASE WRITES) ---
+        window.adjustCatalogStock = async function(arg1, arg2, arg3) {
+            let btn = null;
+            let pid, delta;
+            if (arg1 && typeof arg1 === 'object' && arg1.target) {
+                btn = arg1.target.closest('button');
+                pid = arg2;
+                delta = arg3;
+            } else if (arg1 && arg1 instanceof HTMLElement) {
+                btn = arg1;
+                pid = arg2;
+                delta = arg3;
+            } else {
+                pid = arg1;
+                delta = arg2;
+                if (window.event && window.event.target) {
+                    btn = window.event.target.closest('button');
+                }
+            }
+
             const idx = products.findIndex(p => String(p.id) === String(pid));
             if (idx === -1) return;
-            
+
             const currentStock = Number(products[idx].stock || 0);
             const newStock = Math.max(0, currentStock + delta);
-            products[idx].stock = newStock;
-            if (newStock > 0 && products[idx].active === false) {
-                products[idx].active = true;
+            if (newStock === currentStock) return;
+
+            if (btn) {
+                btn.disabled = true;
+                btn.style.opacity = '0.4';
+                btn.style.pointerEvents = 'none';
             }
 
-            // 1. Update manual stock input in Product Sheet if open
-            const sheetStockInput = document.getElementById('single-product-stock');
-            if (sheetStockInput && window.currentEditingProductId && String(window.currentEditingProductId) === String(pid)) {
-                sheetStockInput.value = newStock;
-            }
+            try {
+                // 1. Authoritative Cloud Sync First - No Fake Success!
+                if (window.SupabaseEngine && typeof window.SupabaseEngine.updateProductStock === 'function') {
+                    await window.SupabaseEngine.updateProductStock(pid, newStock);
+                } else if (window.SupabaseEngine) {
+                    const updatedProd = { ...products[idx], stock: newStock, active: newStock > 0 ? true : products[idx].active };
+                    await window.SupabaseEngine.saveProduct(updatedProd);
+                }
 
-            // 2. Persist immediately to memory
-            window.gn_products = products;
+                // 2. Confirmed Success: Update local state & UI
+                products[idx].stock = newStock;
+                if (newStock > 0 && products[idx].active === false) {
+                    products[idx].active = true;
+                }
+                window.gn_products = products;
 
-            // 3. Instant UI re-render (Updates Low Stock Alerts, Count Badges, Open Accordions, and Valuation)
-            renderDashboard();
+                const sheetStockInput = document.getElementById('single-product-stock');
+                if (sheetStockInput && window.currentEditingProductId && String(window.currentEditingProductId) === String(pid)) {
+                    sheetStockInput.value = newStock;
+                }
 
-            // 4. Sync with Storefront
-            try { 
-                window.dispatchEvent(new Event('storage'));
-                window.dispatchEvent(new Event('productsLoaded'));
-                window.dispatchEvent(new CustomEvent('gn:productsUpdated', { detail: { products } }));
-                broadcastProductsUpdate(products);
-            } catch(e) {}
+                renderDashboard();
 
-            // 5. Background save to Supabase
-            if (window.SupabaseEngine) {
-                window.SupabaseEngine.saveProduct(products[idx]).catch(err => {
-                    console.warn("Stock sync notice:", err);
-                });
+                try { 
+                    window.dispatchEvent(new Event('storage'));
+                    window.dispatchEvent(new Event('productsLoaded'));
+                    window.dispatchEvent(new CustomEvent('gn:productsUpdated', { detail: { products } }));
+                    broadcastProductsUpdate(products);
+                } catch(e) {}
+
+                showToast(`Stock updated: ${newStock}`);
+            } catch (err) {
+                console.error("Stock update failed:", err);
+                showToast("Stock update failed: " + (err.message || "Network error"), true);
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+                    btn.style.pointerEvents = '';
+                }
             }
         };
 
-        window.quickRestockProduct = function(pid, amount = 5) {
-            adjustCatalogStock(pid, amount);
-            showToast(`Restocked +${amount}!`);
+        window.quickRestockProduct = async function(pid, amount = 5) {
+            const btn = window.event && window.event.target ? window.event.target.closest('button') : null;
+            if (btn) {
+                btn.disabled = true;
+                btn.style.opacity = '0.4';
+                btn.style.pointerEvents = 'none';
+            }
+
+            const idx = products.findIndex(p => String(p.id) === String(pid));
+            if (idx === -1) {
+                if (btn) { btn.disabled = false; btn.style.opacity = '1'; btn.style.pointerEvents = ''; }
+                return;
+            }
+
+            const currentStock = Number(products[idx].stock || 0);
+            const newStock = currentStock + amount;
+
+            try {
+                if (window.SupabaseEngine && typeof window.SupabaseEngine.updateProductStock === 'function') {
+                    await window.SupabaseEngine.updateProductStock(pid, newStock);
+                } else if (window.SupabaseEngine) {
+                    const updatedProd = { ...products[idx], stock: newStock, active: true };
+                    await window.SupabaseEngine.saveProduct(updatedProd);
+                }
+
+                products[idx].stock = newStock;
+                if (products[idx].active === false) products[idx].active = true;
+                window.gn_products = products;
+
+                const sheetStockInput = document.getElementById('single-product-stock');
+                if (sheetStockInput && window.currentEditingProductId && String(window.currentEditingProductId) === String(pid)) {
+                    sheetStockInput.value = newStock;
+                }
+
+                renderDashboard();
+
+                try { 
+                    window.dispatchEvent(new Event('storage'));
+                    window.dispatchEvent(new Event('productsLoaded'));
+                    window.dispatchEvent(new CustomEvent('gn:productsUpdated', { detail: { products } }));
+                    broadcastProductsUpdate(products);
+                } catch(e) {}
+
+                showToast(`Restocked +${amount}! (Current: ${newStock})`);
+            } catch (err) {
+                console.error("Quick restock failed:", err);
+                showToast("Restock failed: " + (err.message || "Network error"), true);
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+                    btn.style.pointerEvents = '';
+                }
+            }
         };
 
         window.quickDeleteProductCard = function(e, pid, name) {
@@ -4459,26 +4583,34 @@
             const product = products.find(p => String(p.id) === String(pid));
             if (!product) return;
 
-            // Remove all matching cards from DOM instantly
-            document.querySelectorAll(`.catalog-card[data-pid="${pid}"]`).forEach(c => {
-                c.style.display = 'none';
-                c.remove();
-            });
+            const cards = document.querySelectorAll(`.catalog-card[data-pid="${pid}"]`);
+            cards.forEach(c => c.style.opacity = '0.4');
 
-            products = products.filter(p => String(p.id) !== String(pid));
-            window.gn_products = products;
-            
-            // Update stats badge immediately
-            const totalCountEl = document.getElementById('statTotalProducts');
-            if (totalCountEl) totalCountEl.textContent = String(products.length);
-
-            showToast(`"${product.name}" deleted.`);
             try {
-                if (window.SupabaseEngine) await window.SupabaseEngine.deleteProduct(pid);
-                window.dispatchEvent(new Event('productsLoaded'));
-                window.dispatchEvent(new Event('storage'));
-                broadcastProductsUpdate(products);
-            } catch(e) {}
+                if (window.SupabaseEngine) {
+                    await window.SupabaseEngine.deleteProduct(pid);
+                }
+
+                cards.forEach(c => c.remove());
+                products = products.filter(p => String(p.id) !== String(pid));
+                window.gn_products = products;
+                
+                const totalCountEl = document.getElementById('statTotalProducts');
+                if (totalCountEl) totalCountEl.textContent = String(products.length);
+
+                renderDashboard();
+                showToast(`"${product.name}" deleted.`);
+
+                try {
+                    window.dispatchEvent(new Event('productsLoaded'));
+                    window.dispatchEvent(new Event('storage'));
+                    broadcastProductsUpdate(products);
+                } catch(e) {}
+            } catch (err) {
+                console.error("Product deletion failed:", err);
+                cards.forEach(c => c.style.opacity = '1');
+                showToast("Failed to delete product: " + (err.message || "Network error"), true);
+            }
         };
 
         // --- CATEGORY FILTER STATE & CARD RENDERER ---
@@ -4560,6 +4692,11 @@
             if (alertEl) alertEl.textContent = lowStockCount;
             const badge = document.getElementById('catCountBadge');
             if (badge) badge.textContent = totalCount;
+
+            const defStockInput = document.getElementById('storeDefaultStockInput');
+            if (defStockInput && document.activeElement !== defStockInput) {
+                defStockInput.value = getAppDefaultStock();
+            }
 
             // RENDER ALERTS LIST (LOW STOCK / SOLD OUT)
             const alertsBadge = document.getElementById('alertsCountBadge');
@@ -5622,6 +5759,11 @@
                     is_verified: true
                 };
 
+                // Authoritative cloud persistence first - No Fake Success
+                if (window.SupabaseEngine) {
+                    await window.SupabaseEngine.saveReview(revObj);
+                }
+
                 adminReviews.unshift(revObj);
                 try {
                     window.dispatchEvent(new Event('reviewsUpdated'));
@@ -5639,15 +5781,10 @@
                     toggleAddReviewForm(false);
                     renderReviewsAdmin();
                 }, 350);
-
-                if (window.SupabaseEngine) {
-                    try {
-                        await window.SupabaseEngine.saveReview(revObj);
-                    } catch(e) {}
-                }
             } catch(e) {
+                console.error("Save review failed:", e);
                 if (btnState) btnState.reset();
-                showToast('Failed to save review', true);
+                showToast('Failed to save review: ' + (e.message || 'Network error'), true);
             } finally {
                 setTimeout(() => {
                     isSavingReviewInlineForm = false;
@@ -5774,13 +5911,23 @@
 
             isSavingReviewInline = true;
             try {
-                rev.author = author;
-                rev.customer_name = author;
-                rev.location = loc || 'Pakistan';
-                rev.rating = rating;
-                rev.product_name = prod || 'Gothic Artifact';
-                rev.comment = comment;
-                rev.review_text = comment;
+                const updatedRev = {
+                    ...rev,
+                    author,
+                    customer_name: author,
+                    location: loc || 'Pakistan',
+                    rating,
+                    product_name: prod || 'Gothic Artifact',
+                    comment,
+                    review_text: comment
+                };
+
+                // Authoritative cloud write first - No Fake Success
+                if (window.SupabaseEngine) {
+                    await window.SupabaseEngine.saveReview(updatedRev);
+                }
+
+                Object.assign(rev, updatedRev);
 
                 try {
                     window.dispatchEvent(new Event('reviewsUpdated'));
@@ -5789,10 +5936,9 @@
                 openReviewId = null;
                 renderReviewsAdmin();
                 showToast('Review saved!');
-
-                if (window.SupabaseEngine) {
-                    try { await window.SupabaseEngine.saveReview(rev); } catch(e) {}
-                }
+            } catch(e) {
+                console.error("Save inline review failed:", e);
+                showToast("Failed to save review: " + (e.message || "Network error"), true);
             } finally {
                 setTimeout(() => { isSavingReviewInline = false; }, 300);
             }
@@ -5867,6 +6013,11 @@
                     is_verified: true
                 };
 
+                // Authoritative cloud write first - No Fake Success
+                if (window.SupabaseEngine) {
+                    await window.SupabaseEngine.saveReview(revObj);
+                }
+
                 if (editId) {
                     const idx = adminReviews.findIndex(r => String(r.id) === String(editId));
                     if (idx !== -1) adminReviews[idx] = revObj;
@@ -5884,15 +6035,10 @@
                     closeAllModals();
                     renderReviewsAdmin();
                 }, 350);
-
-                if (window.SupabaseEngine) {
-                    try {
-                        await window.SupabaseEngine.saveReview(revObj);
-                    } catch(e) {}
-                }
             } catch(e) {
+                console.error("Save modal review failed:", e);
                 if (btnState) btnState.reset();
-                showToast("Failed to save review", true);
+                showToast("Failed to save review: " + (e.message || "Network error"), true);
             } finally {
                 setTimeout(() => { isSavingReviewModal = false; }, 400);
             }
@@ -5906,15 +6052,19 @@
                 confirmText: 'Delete',
                 isDanger: true,
                 onConfirm: async () => {
-                    adminReviews = adminReviews.filter(r => String(r.id) !== String(id));
                     try {
-                        window.dispatchEvent(new Event('reviewsUpdated'));
-                    } catch(e) {}
-                    renderReviewsAdmin();
-                    showToast('Review removed.');
-
-                    if (window.SupabaseEngine) {
-                        try { await window.SupabaseEngine.deleteReview(id); } catch(e) {}
+                        if (window.SupabaseEngine) {
+                            await window.SupabaseEngine.deleteReview(id);
+                        }
+                        adminReviews = adminReviews.filter(r => String(r.id) !== String(id));
+                        try {
+                            window.dispatchEvent(new Event('reviewsUpdated'));
+                        } catch(e) {}
+                        renderReviewsAdmin();
+                        showToast('Review removed.');
+                    } catch(err) {
+                        console.error("Delete review failed:", err);
+                        showToast("Failed to delete review: " + (err.message || "Network error"), true);
                     }
                 }
             });
@@ -6012,6 +6162,7 @@
         window.openProductModal = function() {
             window.currentEditingProductId = null;
             singleProductStockImages = [];
+            singleSelectedImg = '';
             document.getElementById('singleSheetTitle').textContent = 'Add Product';
             const saveBtn = document.getElementById('saveSingleProductBtn');
             if (saveBtn) {
@@ -6027,6 +6178,21 @@
             const catTrigger = document.getElementById('singleCatTrigger');
             if (catHidden) catHidden.value = defaultCat.id;
             if (catTrigger) catTrigger.textContent = defaultCat.name.toUpperCase();
+
+            // Clear and initialize form fields with editable default stock
+            const defaultStock = getAppDefaultStock();
+            document.getElementById('single-product-name').value = '';
+            document.getElementById('single-product-price').value = '';
+            document.getElementById('single-product-sale-price').value = '';
+            document.getElementById('single-product-stock').value = defaultStock;
+            document.getElementById('single-product-threshold').value = 3;
+            document.getElementById('single-product-desc').value = '';
+
+            const chosenPreview = document.getElementById('chosen-img-preview');
+            const uploadPlaceholder = document.getElementById('upload-placeholder');
+            if (chosenPreview) { chosenPreview.src = ''; chosenPreview.style.display = 'none'; }
+            if (uploadPlaceholder) uploadPlaceholder.style.display = 'flex';
+
             renderSingleStockImages();
             openModal(productSheet);
         };
@@ -6067,7 +6233,7 @@
 
             document.getElementById('single-product-price').value = product.price || '';
             document.getElementById('single-product-sale-price').value = (product.salePrice !== null && product.salePrice !== undefined) ? product.salePrice : '';
-            document.getElementById('single-product-stock').value = product.stock !== undefined ? product.stock : 10;
+            document.getElementById('single-product-stock').value = product.stock !== undefined ? product.stock : getAppDefaultStock();
             document.getElementById('single-product-threshold').value = product.threshold !== undefined ? product.threshold : 3;
             document.getElementById('single-product-desc').value = product.description || product.desc || '';
 
@@ -6106,21 +6272,19 @@
                         existing.img = singleSelectedImg;
                         existing.price = price; 
                         existing.salePrice = salePriceVal ? parseFloat(salePriceVal) : null;
-                        existing.stock = isNaN(stock) ? 10 : stock; 
+                        existing.stock = isNaN(stock) ? getAppDefaultStock() : stock; 
                         existing.threshold = isNaN(threshold) ? 3 : threshold;
                         existing.desc = desc;
                         existing.description = desc;
                         existing.stock_images = [...singleProductStockImages];
                         existing.stockImages = [...singleProductStockImages];
-                        saveProducts();
+
+                        // Authoritative write to Supabase FIRST - No Fake Success
                         if (window.SupabaseEngine) { 
-                            try { 
-                                await window.SupabaseEngine.saveProduct(existing); 
-                            } catch(e) {
-                                console.warn("Cloud save notice for single product:", e);
-                                showToast("Saved locally. Cloud sync pending.", true);
-                            } 
+                            await window.SupabaseEngine.saveProduct(existing); 
                         }
+
+                        saveProducts();
                         toggleCategoriesSection(true);
                         openCategoryAccordions.add('all');
                         if (existing.category) openCategoryAccordions.add(existing.category);
@@ -6142,7 +6306,7 @@
                     img: singleSelectedImg, 
                     price,
                     salePrice: salePriceVal ? parseFloat(salePriceVal) : null, 
-                    stock: isNaN(stock) ? 10 : stock, 
+                    stock: isNaN(stock) ? getAppDefaultStock() : stock, 
                     threshold: isNaN(threshold) ? 3 : threshold, 
                     desc,
                     description: desc,
@@ -6157,8 +6321,9 @@
                     closeAllModals();
                 }, 400);
             } catch(e) { 
+                console.error("Save single product failed:", e);
                 if (btnState) btnState.reset();
-                showToast("Failed to save", true); 
+                showToast("Failed to save: " + (e.message || "Network error"), true); 
             } finally {
                 setTimeout(() => {
                     isSavingSingleProduct = false;
@@ -6184,25 +6349,24 @@
                     stockImages: Array.isArray(item.stock_images) ? item.stock_images : (Array.isArray(item.stockImages) ? item.stockImages : []),
                     price: parseFloat(item.price) || 0,
                     salePrice: (item.salePrice !== null && item.salePrice !== undefined && item.salePrice !== '') ? parseFloat(item.salePrice) : null,
-                    stock: (item.stock !== undefined && item.stock !== '') ? parseInt(item.stock, 10) : 10,
+                    stock: (item.stock !== undefined && item.stock !== '') ? parseInt(item.stock, 10) : getAppDefaultStock(),
                     threshold: (item.threshold !== undefined && item.threshold !== '') ? parseInt(item.threshold, 10) : 3,
                     desc: (item.description || item.desc || '').trim(),
                     description: (item.description || item.desc || '').trim(),
                     active: true
                 };
             });
-            products = [...products, ...newItems];
-            window.gn_products = products;
-            try {
-                if (window.SupabaseEngine && typeof window.SupabaseEngine.saveProductsBulk === 'function') {
-                    await window.SupabaseEngine.saveProductsBulk(products);
-                } else if (window.SupabaseEngine) {
-                    for (const p of newItems) await window.SupabaseEngine.saveProduct(p);
-                }
-            } catch(e) {
-                console.warn("Bulk product save cloud notice:", e);
-                showToast("Cloud sync pending.", true);
+            const updatedProducts = [...products, ...newItems];
+
+            // Authoritative Cloud Persistence First - No Fake Success
+            if (window.SupabaseEngine && typeof window.SupabaseEngine.saveProductsBulk === 'function') {
+                await window.SupabaseEngine.saveProductsBulk(updatedProducts);
+            } else if (window.SupabaseEngine) {
+                for (const p of newItems) await window.SupabaseEngine.saveProduct(p);
             }
+
+            products = updatedProducts;
+            window.gn_products = products;
             toggleCategoriesSection(true);
             openCategoryAccordions.add('all');
             newItems.forEach(p => { if (p && p.category) openCategoryAccordions.add(p.category); });
@@ -6237,7 +6401,7 @@
                     const items = [];
                     for (const file of files) {
                         const compressed = await compressImageFile(file);
-                        items.push({ img: compressed, name: '', category: '', price: '', salePrice: '', stock: 10, threshold: 3, desc: '', stock_images: [] });
+                        items.push({ img: compressed, name: '', category: '', price: '', salePrice: '', stock: getAppDefaultStock(), threshold: 3, desc: '', stock_images: [] });
                     }
                     openBulkWizardWithItems(items);
                 } catch(e) { showToast("Failed to process batch", true); }
@@ -6268,7 +6432,7 @@
                 category: (item.category || '').toLowerCase(),
                 price: item.price || '',
                 salePrice: item.salePrice || '',
-                stock: item.stock !== undefined ? item.stock : 10,
+                stock: item.stock !== undefined ? item.stock : getAppDefaultStock(),
                 threshold: item.threshold !== undefined ? item.threshold : 3,
                 desc: item.desc || '',
                 stock_images: Array.isArray(item.stock_images) ? [...item.stock_images] : (Array.isArray(item.stockImages) ? [...item.stockImages] : [])
@@ -6325,7 +6489,7 @@
                             <div class="wizard-stock-compact-wrap" id="wizardStockWrap_${idx}" style="display: flex; flex-direction: column; gap: 4px; width: 100%;">
                                 ${stockList.length > 0 ? `
                                     <div class="stock-thumbs-row-compact" style="display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 2px;">
-                                        ${stockList.map((src, imgIdx) => `
+                                         ${stockList.map((src, imgIdx) => `
                                             <div class="stock-thumb-card-mini" style="width: 28px; height: 28px; border-radius: 3px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.2); background: #000; flex-shrink: 0;">
                                                 <img src="${src}" alt="Angle ${imgIdx + 1}" style="width: 100%; height: 100%; object-fit: cover;">
                                                 <button type="button" class="stock-thumb-remove-btn-mini" onclick="removeWizardStockImage(${idx}, ${imgIdx})" title="Remove" style="position: absolute; top: 0; right: 0; background: rgba(255,59,48,0.9); color: #fff; border: none; width: 12px; height: 12px; font-size: 9px; line-height: 1; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0;">×</button>
@@ -6373,7 +6537,7 @@
                             <div class="wizard-grid-2col" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                                 <div class="input-group">
                                     <label style="font-size: 0.70rem; color: var(--text-secondary); font-weight: 600; text-transform: uppercase;">Stock Amount *</label>
-                                    <input type="number" class="input-field" placeholder="10" value="${item.stock !== undefined ? item.stock : 10}" id="wizardItemStock_${idx}" min="0" oninput="updateBulkItemField(${idx}, 'stock', this.value)">
+                                    <input type="number" class="input-field" placeholder="${getAppDefaultStock()}" value="${item.stock !== undefined ? item.stock : getAppDefaultStock()}" id="wizardItemStock_${idx}" min="0" oninput="updateBulkItemField(${idx}, 'stock', this.value)">
                                 </div>
                                 <div class="input-group">
                                     <label style="font-size: 0.70rem; color: var(--text-secondary); font-weight: 600; text-transform: uppercase;">Low Alert</label>
@@ -6566,7 +6730,7 @@
                         category: '',
                         price: '',
                         salePrice: '',
-                        stock: 10,
+                        stock: getAppDefaultStock(),
                         threshold: 3,
                         desc: '',
                         stock_images: []
@@ -6599,7 +6763,7 @@
                         category: '',
                         price: '',
                         salePrice: '',
-                        stock: 10,
+                        stock: getAppDefaultStock(),
                         threshold: 3,
                         desc: '',
                         stock_images: []
@@ -7507,6 +7671,12 @@
                         offers.push(input.value.trim());
                     }
                 }
+
+                // Authoritative cloud persistence first - No Fake Success
+                if (window.SupabaseEngine && typeof window.SupabaseEngine.saveAnnouncements === 'function') {
+                    await window.SupabaseEngine.saveAnnouncements(offers);
+                }
+
                 adminAnnouncements = offers;
                 renderAnnouncementInputs(offers);
                 updateAnnouncementsBadge(offers.length);
@@ -7519,19 +7689,12 @@
                     }
                 } catch(e) {}
 
-                if (window.SupabaseEngine && typeof window.SupabaseEngine.saveAnnouncements === 'function') {
-                    try {
-                        await window.SupabaseEngine.saveAnnouncements(offers);
-                    } catch(e) {
-                        console.warn("Supabase announcement save notice:", e);
-                    }
-                }
-
                 if (btnState) btnState.success('SAVED ✓');
                 showToast('Top announcements saved successfully!');
             } catch(e) {
+                console.error("Save announcements failed:", e);
                 if (btnState) btnState.reset();
-                showToast('Failed to save announcements', true);
+                showToast('Failed to save announcements: ' + (e.message || 'Network error'), true);
             } finally {
                 setTimeout(() => { isSavingAnnouncements = false; }, 400);
             }
