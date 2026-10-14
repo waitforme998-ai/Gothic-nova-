@@ -4585,10 +4585,6 @@
                     const card = document.querySelector(`.product-card[data-product-id="${productId}"]`);
                     if (card) {
                         card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        card.classList.remove('product-search-highlight');
-                        void card.offsetWidth;
-                        card.classList.add('product-search-highlight');
-                        setTimeout(() => card.classList.remove('product-search-highlight'), 3600);
                     } else {
                         const activeDrop = document.getElementById('active-drop') || document.getElementById('main-drop-grid');
                         if (activeDrop) activeDrop.scrollIntoView({ behavior: 'smooth', block: 'start' });
