@@ -2760,6 +2760,8 @@
                     }
                 };
 
+                let _lastCatalogKey = '';
+
                 window.renderMainCatalog = function(isAppending = false) {
                     const grid = document.getElementById('main-drop-grid');
                     const loadMoreWrap = document.getElementById('catalogLoadMoreWrap');
@@ -2803,6 +2805,7 @@
                     const totalCount = list.length;
 
                     if (totalCount === 0) {
+                        _lastCatalogKey = '';
                         if (!window.gn_products_loaded) {
                             grid.innerHTML = `
                                 <div class="product-card skeleton-card">
@@ -2857,10 +2860,18 @@
                     const visibleCount = Math.min(window.catalogVisibleCount, totalCount);
                     const visibleList = list.slice(0, visibleCount);
 
-                    grid.innerHTML = visibleList.map((p, idx) => {
-                        const isNew = isAppending && idx >= (window.prevCatalogVisibleCount || 0);
-                        return buildProductCardHTML(p, isNew);
-                    }).join('');
+                    // Content Fingerprinting: Avoid wiping and rebuilding innerHTML if the content hasn't changed
+                    const currentCatalogKey = `${window.currentCategory || 'all'}|${window.searchQuery || ''}|${visibleCount}|${visibleList.map(p => `${p.id}:${p.stock}:${p.price}:${p.salePrice}:${p.badge || ''}:${p.name}`).join(';')}`;
+
+                    if (!isAppending && _lastCatalogKey === currentCatalogKey && grid.children.length === visibleList.length && !grid.querySelector('.skeleton-card')) {
+                        // DOM is already in sync; skip DOM wiping and layout thrashing
+                    } else {
+                        _lastCatalogKey = currentCatalogKey;
+                        grid.innerHTML = visibleList.map((p, idx) => {
+                            const isNew = isAppending && idx >= (window.prevCatalogVisibleCount || 0);
+                            return buildProductCardHTML(p, isNew);
+                        }).join('');
+                    }
 
                     // Manage Load More controller display and status
                     if (loadMoreWrap) {
@@ -2894,7 +2905,7 @@
                 };
 
                 // Dynamic Customer Reviews Renderer (Synced with Admin Panel & Supabase Stale-While-Revalidate)
-                // Dynamic Customer Reviews Renderer (Synced with Admin Panel & Supabase Stale-While-Revalidate)
+                let _lastReviewsKey = '';
                 function renderReviewsToDOM(revs) {
                     const track = document.getElementById('customer-reviews-track');
                     const section = document.getElementById('customerReviewsSection');
@@ -2905,8 +2916,15 @@
                     if (validRevs.length === 0) {
                         if (section) section.style.display = 'none';
                         track.innerHTML = '';
+                        _lastReviewsKey = '__EMPTY__';
                         return;
                     }
+
+                    const currentKey = validRevs.map(r => `${r.id || ''}:${r.rating || r.stars || 5}:${r.comment || r.review_text || r.text || ''}:${r.author || r.name || ''}`).join('|');
+                    if (_lastReviewsKey === currentKey && track.children.length > 0) {
+                        return;
+                    }
+                    _lastReviewsKey = currentKey;
 
                     if (section) section.style.display = '';
 
@@ -2937,22 +2955,9 @@
                     }).join('');
                 }
 
-                window.renderCustomerReviews = async function() {
+                window.renderCustomerReviews = function() {
                     let cached = Array.isArray(window.gn_reviews) ? window.gn_reviews : [];
                     renderReviewsToDOM(cached);
-
-                    // 2. Asynchronously revalidate from Supabase Cloud
-                    if (window.SupabaseEngine && typeof window.SupabaseEngine.getReviews === 'function') {
-                        try {
-                            const supaRevs = await window.SupabaseEngine.getReviews();
-                            if (Array.isArray(supaRevs)) {
-                                window.gn_reviews = supaRevs;
-                                renderReviewsToDOM(supaRevs);
-                            }
-                        } catch(err) {
-                            console.warn("Reviews cloud sync notice:", err);
-                        }
-                    }
                 };
 
                 function initCatalogControls() {
@@ -3063,7 +3068,18 @@
                     if (typeof window.renderNewArrivals === 'function') window.renderNewArrivals();
                     window.renderCustomerReviews();
                 });
+                let _catalogRefreshRaf = null;
                 function refreshStorefrontCatalog() {
+                    if (_catalogRefreshRaf) {
+                        cancelAnimationFrame(_catalogRefreshRaf);
+                    }
+                    _catalogRefreshRaf = requestAnimationFrame(() => {
+                        _catalogRefreshRaf = null;
+                        _executeStorefrontCatalogRefresh();
+                    });
+                }
+
+                function _executeStorefrontCatalogRefresh() {
                     if (typeof renderCategoryTabs === 'function') renderCategoryTabs();
                     if (typeof window.renderSaleTicker === 'function') window.renderSaleTicker();
                     if (typeof window.renderFooterCollections === 'function') window.renderFooterCollections();

@@ -18,6 +18,9 @@
 8. [ADR-008: Tarot Gamification Ritual Containment & Cooldown Persistence](#adr-008-tarot-gamification-ritual-containment--cooldown-persistence)
 9. [ADR-009: Background Floating Save Pill & Repeated Action Duplicate Confirmation](#adr-009-background-floating-save-pill--repeated-action-duplicate-confirmation)
 10. [ADR-010: Offline Network vs Supabase Cloud Failure Differentiation](#adr-010-offline-network-vs-supabase-cloud-failure-differentiation)
+11. [ADR-011: Sequential Order Numbering Starting at #1 & System Sync Row Negative Integer Isolation](#adr-011-sequential-order-numbering-starting-at-1--system-sync-row-negative-integer-isolation)
+12. [ADR-012: Zero Over-Engineering Rule, Unhindered Catalog Deletion, & Anti-Redundancy Guarantee](#adr-012-zero-over-engineering-rule-unhindered-catalog-deletion--anti-redundancy-guarantee)
+13. [ADR-013: Mobile Viewport Fluid Topology, Single-Line Category Locking & Render-Thrash Coalescing](#adr-013-mobile-viewport-fluid-topology-single-line-category-locking--render-thrash-coalescing)
 
 ---
 
@@ -249,6 +252,34 @@ Internal system state records (`__GN_SYNC_PRODUCTS__`, `__GN_SYNC_ANNOUNCEMENTS_
 * The merchant can always delete any or all products without being blocked by safety guards.
 * Never display two concurrent feedback loaders, pills, or toast alerts on the screen simultaneously.
 * Keep `scripts/` clean of obsolete one-off scripts.
+
+---
+
+## ADR-013: Mobile Viewport Fluid Topology, Single-Line Category Locking & Render-Thrash Coalescing
+
+### Context & Problem
+1. **Layout Thrashing & Flashing on Mobile:** On initial page load, `refreshStorefrontCatalog()` triggered 5–6 times within ~600ms across competing asynchronous events (`DOMContentLoaded`, `productsLoaded`, `reviewsUpdated`, `categoriesUpdated`, and `BroadcastChannel`). Every invocation completely wiped and rebuilt `innerHTML` on `#customer-reviews-track` and `#main-drop-grid`. On mid-range mobile chips (e.g. Realme C75), this caused continuous DOM reflow thrashing, visual flashing, and erratic horizontal scroll snapping.
+2. **Double Asynchronous Fetch Race:** `window.renderCustomerReviews()` initiated an independent `SupabaseEngine.getReviews()` network request even after `hydrateStorefrontFromCloud()` had already fetched reviews, causing two overlapping asynchronous paints that collided and glitched on screen.
+3. **Mobile Layout Spills & Shifts:**
+   - Hero title `"GOTHIC NOVA"` was hardcoded to `font-size: 4.3rem` with `white-space: nowrap !important`. On phones with 360px–375px viewports or with enlarged Android OS Display/Font scaling, this expanded to >450px, clipping outside both screen edges.
+   - Hero statue vertical translation was a static `-180px` pixel offset, shooting too high into the navbar on taller modern 20:9 screens.
+   - Flanking description had a static `82px` center gap and static font size, spilling off narrow mobile screens.
+   - Category filter bar specified `flex-wrap: wrap !important` with fixed button paddings (`0 10px`). When 5 buttons (`ALL`, `RINGS`, `CHAINS`, `BRACELETS`, and `MORE ▾`) rendered on 360px screens, `MORE ▾` dropped to a second line.
+
+### Decision
+1. **Idempotent Content Fingerprinting:** Added fingerprint checking (`_lastReviewsKey` and `_lastCatalogKey`) matching `renderNewArrivals` (`_lastArrivalsKey`). If the serialized content signature matches the existing DOM state, `innerHTML` is never wiped, eliminating visual flashing and horizontal scroll reset.
+2. **Animation Frame Debounce & Coalescing:** Catalog refresh triggers are debounced and coalesced into a single `requestAnimationFrame` callback. Rapid successive events coalesce into exactly one clean paint on the next frame.
+3. **Single Fetch Source for Reviews:** Removed the redundant secondary network call from `renderCustomerReviews()`. Reviews hydrate synchronously from in-memory state populated by `hydrateStorefrontFromCloud()` and reactive `reviewsUpdated` events.
+4. **Fluid Viewport Clamping (Hero Title, Statue, Flanking Subtext):**
+   - Hero title: `clamp(2.3rem, 11.2vw, 3.8rem)` with `max-width: 92vw !important` and `box-sizing: border-box`.
+   - Statue vertical position: `clamp(-16vh, -130px, -70px)` fluidly anchors the statue across standard 16:9 and tall 20:9 viewports.
+   - Flanking description: Center gap clamped to `clamp(16px, 5.5vw, 54px)` and font size clamped to `clamp(6.0px, 2.0vw, 7.5px)` with `max-width: 94vw !important`, strictly guaranteeing a single line without wrapping.
+5. **Single-Line Category Bar Invariant:** `.category-filter-container` set to `flex-wrap: nowrap !important` with `justify-content: space-between !important` and `overflow-x: hidden !important`. Tab buttons use `flex: 1 1 0 !important; min-width: 0 !important; padding: 0 clamp(4px, 1.5vw, 10px) !important; font-size: clamp(0.64rem, 2.1vw, 0.74rem) !important; white-space: nowrap !important; text-overflow: ellipsis !important;`, guaranteeing all 5 buttons (`ALL`, `RINGS`, `CHAINS`, `BRACELETS`, `MORE ▾`) are locked to a single line across all mobile devices (320px–430px+).
+
+### Invariants
+* All 5 category filter tabs must remain strictly on a single row without wrapping on all screen sizes.
+* Storefront catalog and reviews rendering must be idempotent; never wipe `innerHTML` if data has not mutated.
+* Core backend and upload logic in `supabase-engine.js` and `admin.html` remain strictly untouched.
 
 ---
 

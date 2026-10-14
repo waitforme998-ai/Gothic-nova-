@@ -395,3 +395,24 @@ High-priority assets are preloaded in `<head>` to minimize Largest Contentful Pa
 * `<link rel="preload" as="image" href="assets/hero_gothic_bg.png" fetchpriority="high">`
 * `<link rel="preconnect" href="https://fonts.googleapis.com">`
 * `<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>`
+
+---
+
+## 8. Mobile Viewport Fluid Topology & DOM Performance Architecture
+
+### 8.1 Mobile Fluid Clamping Strategy
+To account for varied aspect ratios (such as modern 20:9 displays) and device OS font accessibility scaling (where Android Display Size sets `1rem = 18px–20px`), critical hero elements utilize fluid responsive clamping tied directly to `vw`/`vh`:
+* **Hero Title ("GOTHIC NOVA"):** `font-size: clamp(2.3rem, 11.2vw, 3.8rem)` constrained with `max-width: 92vw !important` and `box-sizing: border-box`. Prevents horizontal clipping on 360px–375px screens while maintaining grandeur on larger devices.
+* **Statue Vertical Alignment:** `transform` clamped to `clamp(-16vh, -130px, -70px)` so the statue remains anchored between the title and action buttons across both 16:9 and tall 20:9 screens.
+* **Flanking Subtext Single-Line Guarantee:** Description center gap clamped to `clamp(16px, 5.5vw, 54px)` with font clamped to `clamp(6.0px, 2.0vw, 7.5px)` and `max-width: 94vw !important`, ensuring both flanks stay strictly on a single line without wrapping.
+
+### 8.2 Category Filter Bar Single-Line Topology
+The storefront category filter bar (`.category-filter-container`) is locked to a single horizontal row across all phone viewports (320px–430px+):
+* `flex-wrap: nowrap !important; justify-content: space-between !important; overflow-x: hidden !important;`
+* Tab elements (`.filter-tab`, `.cat-more-btn`, `.cat-more-toggle-btn`) utilize `flex: 1 1 0 !important; min-width: 0 !important; padding: 0 clamp(4px, 1.5vw, 10px) !important; font-size: clamp(0.64rem, 2.1vw, 0.74rem) !important; white-space: nowrap !important; text-overflow: ellipsis !important;`
+* Ensures all 5 primary tabs (`ALL`, `RINGS`, `CHAINS`, `BRACELETS`, `MORE ▾`) never drop onto a second line on any device.
+
+### 8.3 Idempotent DOM Fingerprinting & RAF Coalescing
+* **Content Signatures (`_lastReviewsKey`, `_lastCatalogKey`, `_lastArrivalsKey`):** Before updating DOM container `innerHTML`, the engine computes a serialized signature of the data items. If signatures match and child nodes exist, DOM rebuilds are skipped.
+* **Refresh Coalescing:** Multiple asynchronous hydration events (`DOMContentLoaded`, `productsLoaded`, `reviewsUpdated`, `BroadcastChannel`) are batched into a single `requestAnimationFrame` pass via `refreshStorefrontCatalog()`, eliminating visual flashes and scroll jumping on mid-range mobile chips.
+
