@@ -1896,7 +1896,7 @@ body.no-ticker .hero-section {
         --hero-desc-gap: clamp(48px, 14vw, 82px);
         --hero-desc-size: clamp(6.6px, 2.1vw, 7.5px);
 
-        --statue-y: clamp(-16vh, -130px, -70px);
+        --statue-y: clamp(-180px, -21.3vh, -155px);
         --statue-x: -6px;
         --statue-scale: 0.80;
     }
@@ -2133,10 +2133,10 @@ body.no-ticker .hero-section {
 
     @keyframes silhouetteFloatMobile {
         0%, 100% {
-            transform: scale(var(--statue-scale, 0.80)) translate3d(var(--statue-x, -6px), var(--statue-y, -100px), 0);
+            transform: scale(var(--statue-scale, 0.80)) translate3d(var(--statue-x, -6px), var(--statue-y, -180px), 0);
         }
         50% {
-            transform: scale(var(--statue-scale, 0.80)) translate3d(var(--statue-x, -6px), calc(var(--statue-y, -100px) - 8px), 0);
+            transform: scale(var(--statue-scale, 0.80)) translate3d(var(--statue-x, -6px), calc(var(--statue-y, -180px) - 8px), 0);
         }
     }
 
