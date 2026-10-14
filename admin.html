@@ -1451,46 +1451,57 @@
         .ios-toast-indicator.error { background: #ff3b30; box-shadow: 0 0 8px #ff3b30; }
         .ios-toast-text { font-size: 0.88rem; font-weight: 600; color: var(--text-primary); }
 
-        /* --- FLOATING BACKGROUND SAVE / SYNC STATUS PILL --- */
+        /* --- FLOATING BACKGROUND SAVE / SYNC STATUS PILL (LUXURY OBSIDIAN CENTERING) --- */
         .admin-floating-status-pill {
             position: fixed;
             bottom: 28px;
-            right: 28px;
-            z-index: 999999;
-            background: rgba(20, 9, 15, 0.95);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(212, 175, 55, 0.45);
+            left: 50%;
+            transform: translate3d(-50%, 18px, 0);
+            margin: 0;
+            z-index: 9999999;
+            background: rgba(10, 10, 12, 0.95);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
             border-radius: 999px;
-            padding: 10px 18px;
-            box-shadow: 0 10px 32px rgba(0, 0, 0, 0.85), 0 0 16px rgba(212, 175, 55, 0.25);
+            padding: 9px 20px;
+            box-shadow: 0 16px 40px -4px rgba(0, 0, 0, 0.85), 0 2px 6px rgba(0, 0, 0, 0.6);
             display: inline-flex;
             align-items: center;
-            gap: 10px;
-            font-family: 'Fira Code', monospace;
-            font-size: 0.78rem;
-            font-weight: 500;
-            color: #f2ede9;
-            transform: translateY(20px);
+            justify-content: center;
+            gap: 9px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: #ececee;
             opacity: 0;
             pointer-events: none;
-            transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.28s ease, border-color 0.28s ease, box-shadow 0.28s ease;
+            transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease, border-color 0.25s ease;
+            box-sizing: border-box;
+            max-width: calc(100vw - 32px);
+            white-space: nowrap;
         }
         .admin-floating-status-pill.active {
-            transform: translateY(0);
+            transform: translate3d(-50%, 0, 0);
             opacity: 1;
             pointer-events: auto;
         }
         .admin-floating-status-pill.success {
-            border-color: rgba(48, 209, 88, 0.75);
-            box-shadow: 0 10px 32px rgba(0, 0, 0, 0.85), 0 0 18px rgba(48, 209, 88, 0.35);
+            border-color: rgba(52, 211, 153, 0.4);
+            color: #f0fdf4;
+            box-shadow: 0 16px 40px -4px rgba(0, 0, 0, 0.85);
         }
         .admin-floating-status-pill.error {
-            border-color: rgba(255, 59, 48, 0.75);
-            box-shadow: 0 10px 32px rgba(0, 0, 0, 0.85), 0 0 18px rgba(255, 59, 48, 0.35);
+            border-color: rgba(248, 113, 113, 0.4);
+            color: #fef2f2;
+            box-shadow: 0 16px 40px -4px rgba(0, 0, 0, 0.85);
         }
         .admin-floating-status-pill .pill-icon-spin {
             animation: adminSpin 0.75s linear infinite;
             display: inline-flex;
+            flex-shrink: 0;
         }
 
         /* ==========================================================================
@@ -3715,12 +3726,12 @@
         <div class="ios-toast-text" id="ios-toast-text">Success</div>
     </div>
 
-    <!-- Floating Background Operation / Save Status Pill -->
+    <!-- Floating Background Operation / Save Status Pill (Shown Only When Modal Closed Before Completion) -->
     <div class="admin-floating-status-pill" id="admin-floating-status-pill">
         <span class="pill-icon-container" id="pill-icon-container">
-            <svg class="pill-icon-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d4af37" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+            <svg class="pill-icon-spin" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255, 255, 255, 0.9)" stroke-width="2.2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
         </span>
-        <span id="pill-status-text">Saving changes...</span>
+        <span id="pill-status-text">SAVING TO CLOUD...</span>
     </div>
 
     <!-- ─────────────────────────────────────────────────────────────
@@ -3920,7 +3931,7 @@
         }
         window.showToast = showToast;
 
-        // --- FLOATING BACKGROUND STATUS PILL ENGINE ---
+        // --- FLOATING BACKGROUND STATUS PILL ENGINE (PREMIUM OBSIDIAN CENTERING) ---
         let _floatingPillTimer = null;
         function showFloatingStatus(text, type = 'loading') {
             const pill = document.getElementById('admin-floating-status-pill');
@@ -3940,25 +3951,25 @@
                 return;
             }
 
-            textEl.textContent = text || (type === 'loading' ? 'Saving to cloud...' : 'Complete');
+            textEl.textContent = text || (type === 'loading' ? 'SAVING TO CLOUD...' : 'COMPLETE');
 
             if (type === 'loading') {
-                iconContainer.innerHTML = `<svg class="pill-icon-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d4af37" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>`;
+                iconContainer.innerHTML = `<svg class="pill-icon-spin" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255, 255, 255, 0.9)" stroke-width="2.2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>`;
                 pill.classList.add('active');
             } else if (type === 'success') {
                 pill.classList.add('success');
-                iconContainer.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#30d158" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`;
+                iconContainer.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
                 pill.classList.add('active');
                 _floatingPillTimer = setTimeout(() => {
                     pill.classList.remove('active');
-                }, 2800);
+                }, 2400);
             } else if (type === 'error') {
                 pill.classList.add('error');
-                iconContainer.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ff3b30" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+                iconContainer.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
                 pill.classList.add('active');
                 _floatingPillTimer = setTimeout(() => {
                     pill.classList.remove('active');
-                }, 3800);
+                }, 3400);
             }
         }
         window.showFloatingStatus = showFloatingStatus;
@@ -4031,19 +4042,59 @@
             });
         }
 
-        // --- BUTTON STATE FEEDBACK HELPER (GUARANTEED LIFECYCLE & ANTI-DOUBLE-CLICK) ---
+        // --- BUTTON STATE FEEDBACK HELPER (GUARANTEED SINGLE-LOADER & MODAL LIFECYCLE) ---
+        let _activeBackgroundOperation = null;
+
         function setButtonLoading(btn, loadingText) {
-            showFloatingStatus(loadingText || 'Saving changes...', 'loading');
-            if (!btn) return {
-                success: (txt, cb) => {
-                    showFloatingStatus(txt || 'SAVED ✓', 'success');
-                    if (typeof cb === 'function') cb();
-                },
-                reset: (err) => {
-                    if (err) showFloatingStatus(getAdminErrorMessage(err), 'error');
-                    else showFloatingStatus('', 'hide');
-                }
+            const opId = Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+            
+            // Check if any modal or bottom sheet is open
+            const isModalOpen = !!(
+                document.querySelector('.bottom-sheet.active') ||
+                document.querySelector('.modal-backdrop.active') ||
+                (btn && btn.closest && btn.closest('.bottom-sheet, .modal-backdrop, .modal, [class*="modal"]'))
+            );
+
+            _activeBackgroundOperation = {
+                id: opId,
+                loadingText: loadingText || 'SAVING CHANGES...',
+                btn: btn,
+                isInsideModal: isModalOpen,
+                closedPrematurely: false,
+                isFinished: false
             };
+
+            // STRICT SINGLE-LOADER RULE:
+            // If the action is initiated inside a modal/sheet or button, the button itself displays
+            // the spinner and text. The floating pill must NEVER show at the same time!
+            // It will ONLY appear if the user closes/dismisses the modal before completion.
+
+            if (!btn) {
+                return {
+                    success: (txt, cb) => {
+                        if (_activeBackgroundOperation && _activeBackgroundOperation.id === opId) {
+                            _activeBackgroundOperation.isFinished = true;
+                            if (_activeBackgroundOperation.closedPrematurely) {
+                                showFloatingStatus(txt || 'SAVED ✓', 'success');
+                            } else {
+                                showFloatingStatus('', 'hide');
+                            }
+                        }
+                        if (typeof cb === 'function') cb();
+                    },
+                    reset: (err) => {
+                        if (_activeBackgroundOperation && _activeBackgroundOperation.id === opId) {
+                            _activeBackgroundOperation.isFinished = true;
+                            if (_activeBackgroundOperation.closedPrematurely && err) {
+                                showFloatingStatus(getAdminErrorMessage(err), 'error');
+                            } else {
+                                showFloatingStatus('', 'hide');
+                            }
+                        }
+                    }
+                };
+            }
+
             const originalHtml = btn.dataset.originalHtml || btn.innerHTML;
             const originalBg = btn.dataset.originalBg || btn.style.background || '';
             const originalOpacity = btn.dataset.originalOpacity || btn.style.opacity || '1';
@@ -4055,36 +4106,57 @@
             btn.style.pointerEvents = 'none';
             btn.style.cursor = 'not-allowed';
             btn.style.opacity = '0.75';
-            btn.innerHTML = `<span style="display:inline-flex;align-items:center;gap:6px;"><svg style="animation:adminSpin 0.75s linear infinite;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> ${loadingText || 'SAVING...'}</span>`;
+            btn.innerHTML = `<span style="display:inline-flex;align-items:center;gap:6px;"><svg style="animation:adminSpin 0.75s linear infinite;" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> ${loadingText || 'SAVING...'}</span>`;
 
             let isFinished = false;
             const resetBtn = (errMsg) => {
                 if (isFinished) return;
                 isFinished = true;
+                const wasClosedEarly = _activeBackgroundOperation && _activeBackgroundOperation.id === opId && _activeBackgroundOperation.closedPrematurely;
+                if (_activeBackgroundOperation && _activeBackgroundOperation.id === opId) {
+                    _activeBackgroundOperation.isFinished = true;
+                }
                 btn.disabled = false;
                 btn.style.pointerEvents = '';
                 btn.style.cursor = '';
                 btn.innerHTML = btn.dataset.originalHtml || originalHtml;
                 btn.style.background = btn.dataset.originalBg !== undefined ? btn.dataset.originalBg : originalBg;
                 btn.style.opacity = btn.dataset.originalOpacity !== undefined ? btn.dataset.originalOpacity : originalOpacity;
-                if (errMsg) showFloatingStatus(getAdminErrorMessage(errMsg), 'error');
-                else showFloatingStatus('', 'hide');
+
+                if (wasClosedEarly) {
+                    if (errMsg) showFloatingStatus(getAdminErrorMessage(errMsg), 'error');
+                    else showFloatingStatus('', 'hide');
+                } else {
+                    showFloatingStatus('', 'hide');
+                }
             };
 
-            const safetyTimer = setTimeout(() => resetBtn(), 8000);
+            const safetyTimer = setTimeout(() => resetBtn(), 15000);
 
             return {
                 success(successText = 'SAVED ✓', cb) {
                     if (isFinished) return;
                     isFinished = true;
                     clearTimeout(safetyTimer);
-                    btn.disabled = true;
-                    btn.style.pointerEvents = 'none';
-                    btn.style.cursor = 'default';
-                    btn.style.opacity = '1';
-                    btn.style.background = '#28a745';
-                    btn.innerHTML = successText;
-                    showFloatingStatus(successText, 'success');
+                    const wasClosedEarly = _activeBackgroundOperation && _activeBackgroundOperation.id === opId && _activeBackgroundOperation.closedPrematurely;
+                    if (_activeBackgroundOperation && _activeBackgroundOperation.id === opId) {
+                        _activeBackgroundOperation.isFinished = true;
+                    }
+
+                    if (wasClosedEarly) {
+                        // Modal was closed early: show the centered luxury floating pill with success!
+                        showFloatingStatus(successText, 'success');
+                    } else {
+                        // Modal is still open: button shows success directly, pill remains hidden!
+                        showFloatingStatus('', 'hide');
+                        btn.disabled = true;
+                        btn.style.pointerEvents = 'none';
+                        btn.style.cursor = 'default';
+                        btn.style.opacity = '1';
+                        btn.style.background = '#28a745';
+                        btn.innerHTML = successText;
+                    }
+
                     setTimeout(() => {
                         btn.disabled = false;
                         btn.style.pointerEvents = '';
@@ -4093,7 +4165,7 @@
                         btn.style.background = btn.dataset.originalBg !== undefined ? btn.dataset.originalBg : originalBg;
                         btn.style.opacity = btn.dataset.originalOpacity !== undefined ? btn.dataset.originalOpacity : originalOpacity;
                         if (typeof cb === 'function') cb();
-                    }, 1800);
+                    }, 1200);
                 },
                 reset(errMsg) {
                     clearTimeout(safetyTimer);
@@ -6119,7 +6191,6 @@
 
             isSavingReviewInline = true;
             const btnState = setButtonLoading(saveBtn, 'SAVING...');
-            showFloatingStatus(`Saving review from "${author}"...`, 'loading');
 
             try {
                 const updatedRev = {
@@ -6146,7 +6217,6 @@
 
                 if (saveBtn) saveBtn.dataset.lastSavedFingerprint = payloadFingerprint;
                 if (btnState) btnState.success('SAVED ✓');
-                showFloatingStatus(`Review from "${author}" saved ✓`, 'success');
                 showToast('Review saved!');
                 setTimeout(() => {
                     openReviewId = null;
@@ -6156,7 +6226,6 @@
                 console.error("Save inline review failed:", e);
                 const friendlyErr = getAdminErrorMessage(e, "Failed to save review");
                 if (btnState) btnState.reset(friendlyErr);
-                showFloatingStatus(friendlyErr, 'error');
                 showToast("Failed to save review: " + friendlyErr, true);
             } finally {
                 setTimeout(() => { isSavingReviewInline = false; }, 300);
@@ -6235,7 +6304,6 @@
 
             isSavingReviewModal = true;
             const btnState = setButtonLoading(saveBtn, 'SAVING...');
-            showFloatingStatus(`Saving review from "${author}"...`, 'loading');
 
             try {
                 const revObj = {
@@ -6268,7 +6336,6 @@
 
                 if (saveBtn) saveBtn.dataset.lastSavedFingerprint = payloadFingerprint;
                 if (btnState) btnState.success('SAVED ✓');
-                showFloatingStatus(`Review saved ✓`, 'success');
                 showToast("Review saved!");
                 setTimeout(() => {
                     closeAllModals();
@@ -6278,7 +6345,6 @@
                 console.error("Save modal review failed:", e);
                 const friendlyErr = getAdminErrorMessage(e, "Failed to save review");
                 if (btnState) btnState.reset(friendlyErr);
-                showFloatingStatus(friendlyErr, 'error');
                 showToast("Failed to save review: " + friendlyErr, true);
             } finally {
                 setTimeout(() => { isSavingReviewModal = false; }, 400);
@@ -6328,11 +6394,21 @@
         window.openModal = openModal;
 
         function closeAllModals() {
+            // If an operation is currently saving in the background and the modal is dismissed early:
+            if (_activeBackgroundOperation && !_activeBackgroundOperation.isFinished) {
+                _activeBackgroundOperation.closedPrematurely = true;
+                showFloatingStatus(_activeBackgroundOperation.loadingText, 'loading');
+            }
+
             if (backdrop) backdrop.classList.remove('active');
             document.querySelectorAll('.bottom-sheet').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.modal-backdrop').forEach(b => b.classList.remove('active'));
             document.body.style.overflow = '';
             document.querySelectorAll('[data-original-html]').forEach(btn => {
+                // Do not prematurely reset button state if it is currently executing an active background operation
+                if (_activeBackgroundOperation && !_activeBackgroundOperation.isFinished && _activeBackgroundOperation.btn === btn) {
+                    return;
+                }
                 btn.disabled = false;
                 if (btn.dataset.originalHtml) btn.innerHTML = btn.dataset.originalHtml;
                 if (btn.dataset.originalBg) btn.style.background = btn.dataset.originalBg;
@@ -7183,7 +7259,6 @@
 
             isBulkCommitting = true;
             const btnState = setButtonLoading(commitBtn, 'PUBLISHING BATCH...');
-            showFloatingStatus(`Publishing batch of ${bulkQueue.length} artifact(s)...`, 'loading');
             const allButtons = document.querySelectorAll('#bulkStageReview button');
             allButtons.forEach(b => { if (b !== commitBtn) { b.disabled = true; b.style.opacity = '0.5'; } });
 
@@ -7194,7 +7269,6 @@
                 window.bulkQueue = bulkQueue;
                 if (commitBtn) commitBtn.dataset.lastSavedFingerprint = batchFingerprint;
                 if (btnState) btnState.success('PUBLISHED ✓');
-                showFloatingStatus(`${saved.length} artifacts published ✓`, 'success');
                 showToast(`${saved.length} items published!`);
                 setTimeout(() => {
                     closeAllModals();
@@ -7203,7 +7277,6 @@
                 console.error("Bulk commit failed:", e);
                 const friendlyErr = getAdminErrorMessage(e, "Failed to publish batch");
                 if (btnState) btnState.reset(friendlyErr);
-                showFloatingStatus(friendlyErr, 'error');
                 showToast("Failed to publish batch: " + friendlyErr, true);
             } finally {
                 isBulkCommitting = false;
