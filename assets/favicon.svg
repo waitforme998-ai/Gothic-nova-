@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <rect width="512" height="512" fill="#000000"/>
+  <style>
+    @font-face {
+      font-family: 'Antonio';
+      src: url('fonts/Antonio-Bold.woff2') format('woff2');
+      font-weight: 700;
+    }
+    .text-gothic {
+      font-family: 'Antonio', 'Arial Black', sans-serif;
+      font-size: 110px;
+      font-weight: 700;
+      fill: #ffffff;
+      letter-spacing: 6px;
+      text-anchor: middle;
+    }
+    .text-nova {
+      font-family: 'Antonio', 'Arial Black', sans-serif;
+      font-size: 122px;
+      font-weight: 700;
+      fill: #ffffff;
+      letter-spacing: 14px;
+      text-anchor: middle;
+    }
+  </style>
+  <text x="256" y="235" class="text-gothic">GOTHIC</text>
+  <text x="260" y="345" class="text-nova">NOVA</text>
+</svg>

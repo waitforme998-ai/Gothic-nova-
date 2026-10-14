@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="format-detection" content="telephone=no, date=no, address=no, email=no">
     <title>Gothic Nova - Cloud Admin & Store Management</title>
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+    <link rel="icon" type="image/png" sizes="512x512" href="assets/gothic_nova_favicon.png">
+    <link rel="apple-touch-icon" href="assets/gothic_nova_favicon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Antonio:wght@700&family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
@@ -1447,6 +1450,48 @@
         .ios-toast-indicator { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; background: #34c759; box-shadow: 0 0 8px #34c759; }
         .ios-toast-indicator.error { background: #ff3b30; box-shadow: 0 0 8px #ff3b30; }
         .ios-toast-text { font-size: 0.88rem; font-weight: 600; color: var(--text-primary); }
+
+        /* --- FLOATING BACKGROUND SAVE / SYNC STATUS PILL --- */
+        .admin-floating-status-pill {
+            position: fixed;
+            bottom: 28px;
+            right: 28px;
+            z-index: 999999;
+            background: rgba(20, 9, 15, 0.95);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(212, 175, 55, 0.45);
+            border-radius: 999px;
+            padding: 10px 18px;
+            box-shadow: 0 10px 32px rgba(0, 0, 0, 0.85), 0 0 16px rgba(212, 175, 55, 0.25);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.78rem;
+            font-weight: 500;
+            color: #f2ede9;
+            transform: translateY(20px);
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.28s ease, border-color 0.28s ease, box-shadow 0.28s ease;
+        }
+        .admin-floating-status-pill.active {
+            transform: translateY(0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .admin-floating-status-pill.success {
+            border-color: rgba(48, 209, 88, 0.75);
+            box-shadow: 0 10px 32px rgba(0, 0, 0, 0.85), 0 0 18px rgba(48, 209, 88, 0.35);
+        }
+        .admin-floating-status-pill.error {
+            border-color: rgba(255, 59, 48, 0.75);
+            box-shadow: 0 10px 32px rgba(0, 0, 0, 0.85), 0 0 18px rgba(255, 59, 48, 0.35);
+        }
+        .admin-floating-status-pill .pill-icon-spin {
+            animation: adminSpin 0.75s linear infinite;
+            display: inline-flex;
+        }
 
         /* ==========================================================================
            ADMIN EXPANDING SEARCH OVERLAY (MONOCHROME THEME)
@@ -3670,6 +3715,14 @@
         <div class="ios-toast-text" id="ios-toast-text">Success</div>
     </div>
 
+    <!-- Floating Background Operation / Save Status Pill -->
+    <div class="admin-floating-status-pill" id="admin-floating-status-pill">
+        <span class="pill-icon-container" id="pill-icon-container">
+            <svg class="pill-icon-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d4af37" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+        </span>
+        <span id="pill-status-text">Saving changes...</span>
+    </div>
+
     <!-- ─────────────────────────────────────────────────────────────
          ADMIN ENGINE JAVASCRIPT & SUPABASE INTEGRATION
     ───────────────────────────────────────────────────────────── -->
@@ -3867,6 +3920,82 @@
         }
         window.showToast = showToast;
 
+        // --- FLOATING BACKGROUND STATUS PILL ENGINE ---
+        let _floatingPillTimer = null;
+        function showFloatingStatus(text, type = 'loading') {
+            const pill = document.getElementById('admin-floating-status-pill');
+            const iconContainer = document.getElementById('pill-icon-container');
+            const textEl = document.getElementById('pill-status-text');
+            if (!pill || !iconContainer || !textEl) return;
+
+            if (_floatingPillTimer) {
+                clearTimeout(_floatingPillTimer);
+                _floatingPillTimer = null;
+            }
+
+            pill.classList.remove('success', 'error');
+
+            if (type === 'hide') {
+                pill.classList.remove('active');
+                return;
+            }
+
+            textEl.textContent = text || (type === 'loading' ? 'Saving to cloud...' : 'Complete');
+
+            if (type === 'loading') {
+                iconContainer.innerHTML = `<svg class="pill-icon-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d4af37" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>`;
+                pill.classList.add('active');
+            } else if (type === 'success') {
+                pill.classList.add('success');
+                iconContainer.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#30d158" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`;
+                pill.classList.add('active');
+                _floatingPillTimer = setTimeout(() => {
+                    pill.classList.remove('active');
+                }, 2800);
+            } else if (type === 'error') {
+                pill.classList.add('error');
+                iconContainer.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ff3b30" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+                pill.classList.add('active');
+                _floatingPillTimer = setTimeout(() => {
+                    pill.classList.remove('active');
+                }, 3800);
+            }
+        }
+        window.showFloatingStatus = showFloatingStatus;
+
+        // --- ACCURATE NETWORK & DATABASE ERROR FORMATTER ---
+        function getAdminErrorMessage(err, fallback = "Operation failed") {
+            if (typeof navigator !== 'undefined' && !navigator.onLine) {
+                return "No internet connection. Please check your network.";
+            }
+            if (window.SupabaseEngine && typeof window.SupabaseEngine.formatError === 'function') {
+                return window.SupabaseEngine.formatError(err, fallback);
+            }
+            if (err && typeof err.message === 'string') {
+                const m = err.message.toLowerCase();
+                if (m.includes('no_internet') || m.includes('no internet') || m.includes('failed to fetch') || m.includes('offline')) {
+                    return "No internet connection. Please check your network.";
+                }
+                if (m.includes('supabase') || m.includes('database') || m.includes('timeout') || m.includes('persist')) {
+                    return "Cloud database temporarily unreachable. Please retry.";
+                }
+                return err.message;
+            }
+            return fallback;
+        }
+        window.getAdminErrorMessage = getAdminErrorMessage;
+
+        // Realtime Online/Offline Connectivity Event Listeners
+        window.addEventListener('online', () => {
+            showToast("Internet reconnected! Cloud active.");
+            showFloatingStatus("Internet reconnected ✓", "success");
+            if (typeof loadProducts === 'function') loadProducts();
+        });
+        window.addEventListener('offline', () => {
+            showToast("No internet connection. Offline mode.", true);
+            showFloatingStatus("No internet connection", "error");
+        });
+
         // --- IMAGE COMPRESSION HELPER (WEBP HIGH-DENSITY WITH JPEG FALLBACK) ---
         async function compressImageFile(file, maxWidth = 1200, quality = 0.82) {
             return new Promise((resolve) => {
@@ -3904,7 +4033,17 @@
 
         // --- BUTTON STATE FEEDBACK HELPER (GUARANTEED LIFECYCLE & ANTI-DOUBLE-CLICK) ---
         function setButtonLoading(btn, loadingText) {
-            if (!btn) return { success: (txt, cb) => { if (typeof cb === 'function') cb(); }, reset: () => {} };
+            showFloatingStatus(loadingText || 'Saving changes...', 'loading');
+            if (!btn) return {
+                success: (txt, cb) => {
+                    showFloatingStatus(txt || 'SAVED ✓', 'success');
+                    if (typeof cb === 'function') cb();
+                },
+                reset: (err) => {
+                    if (err) showFloatingStatus(getAdminErrorMessage(err), 'error');
+                    else showFloatingStatus('', 'hide');
+                }
+            };
             const originalHtml = btn.dataset.originalHtml || btn.innerHTML;
             const originalBg = btn.dataset.originalBg || btn.style.background || '';
             const originalOpacity = btn.dataset.originalOpacity || btn.style.opacity || '1';
@@ -3919,7 +4058,7 @@
             btn.innerHTML = `<span style="display:inline-flex;align-items:center;gap:6px;"><svg style="animation:adminSpin 0.75s linear infinite;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> ${loadingText || 'SAVING...'}</span>`;
 
             let isFinished = false;
-            const resetBtn = () => {
+            const resetBtn = (errMsg) => {
                 if (isFinished) return;
                 isFinished = true;
                 btn.disabled = false;
@@ -3928,10 +4067,11 @@
                 btn.innerHTML = btn.dataset.originalHtml || originalHtml;
                 btn.style.background = btn.dataset.originalBg !== undefined ? btn.dataset.originalBg : originalBg;
                 btn.style.opacity = btn.dataset.originalOpacity !== undefined ? btn.dataset.originalOpacity : originalOpacity;
+                if (errMsg) showFloatingStatus(getAdminErrorMessage(errMsg), 'error');
+                else showFloatingStatus('', 'hide');
             };
 
-            // Safety timeout: Re-enable if no response within 5 seconds
-            const safetyTimer = setTimeout(resetBtn, 5000);
+            const safetyTimer = setTimeout(() => resetBtn(), 8000);
 
             return {
                 success(successText = 'SAVED ✓', cb) {
@@ -3944,6 +4084,7 @@
                     btn.style.opacity = '1';
                     btn.style.background = '#28a745';
                     btn.innerHTML = successText;
+                    showFloatingStatus(successText, 'success');
                     setTimeout(() => {
                         btn.disabled = false;
                         btn.style.pointerEvents = '';
@@ -3952,11 +4093,11 @@
                         btn.style.background = btn.dataset.originalBg !== undefined ? btn.dataset.originalBg : originalBg;
                         btn.style.opacity = btn.dataset.originalOpacity !== undefined ? btn.dataset.originalOpacity : originalOpacity;
                         if (typeof cb === 'function') cb();
-                    }, 450);
+                    }, 1800);
                 },
-                reset() {
+                reset(errMsg) {
                     clearTimeout(safetyTimer);
-                    resetBtn();
+                    resetBtn(errMsg);
                 }
             };
         }
@@ -4244,8 +4385,10 @@
                 } catch(e) {}
             } catch(err) {
                 console.error("Create category failed:", err);
-                if (btnState) btnState.reset();
-                showToast("Failed to create category: " + (err.message || "Network error"), true);
+                const friendlyErr = getAdminErrorMessage(err, "Failed to create category");
+                if (btnState) btnState.reset(friendlyErr);
+                showFloatingStatus(friendlyErr, 'error');
+                showToast("Failed to create category: " + friendlyErr, true);
             } finally {
                 isCategoryCreating = false;
             }
@@ -4264,6 +4407,7 @@
             const updatedList = catList.map(c => c.id === slug ? updatedCat : c);
 
             try {
+                showFloatingStatus(`Renaming category "${currentName}"...`, 'loading');
                 if (window.SupabaseEngine) {
                     if (typeof window.SupabaseEngine.saveCategoryList === 'function') {
                         await window.SupabaseEngine.saveCategoryList(updatedList);
@@ -4276,6 +4420,7 @@
                 saveCategoryList(updatedList);
                 renderDashboard();
                 populateCategoryDropdowns();
+                showFloatingStatus(`Category renamed to "${newName}" ✓`, 'success');
                 showToast(`Renamed to "${newName}"`);
                 try { 
                     window.dispatchEvent(new Event('storage')); 
@@ -4284,7 +4429,9 @@
                 } catch(e) {}
             } catch(err) {
                 console.error("Rename category failed:", err);
-                showToast("Failed to rename category: " + (err.message || "Network error"), true);
+                const friendlyErr = getAdminErrorMessage(err, "Failed to rename category");
+                showFloatingStatus(friendlyErr, 'error');
+                showToast("Failed to rename category: " + friendlyErr, true);
             }
         };
 
@@ -4301,6 +4448,7 @@
                 isDanger: true,
                 onConfirm: async () => {
                     try {
+                        showFloatingStatus(`Deleting category "${name}"...`, 'loading');
                         if (window.SupabaseEngine) {
                             await window.SupabaseEngine.deleteCategory(cleanSlug);
                         }
@@ -4326,6 +4474,7 @@
 
                         renderDashboard();
                         populateCategoryDropdowns();
+                        showFloatingStatus(`Category "${name}" deleted ✓`, 'success');
                         showToast(`"${name}" deleted.`);
 
                         try {
@@ -4337,7 +4486,9 @@
                         } catch(e) {}
                     } catch(err) {
                         console.error("Category delete failed:", err);
-                        showToast("Failed to delete category: " + (err.message || "Network error"), true);
+                        const friendlyErr = getAdminErrorMessage(err, "Failed to delete category");
+                        showFloatingStatus(friendlyErr, 'error');
+                        showToast("Failed to delete category: " + friendlyErr, true);
                     }
                 }
             });
@@ -4403,7 +4554,7 @@
             const isSubdir = window.location.pathname.includes('/admin/') || window.location.pathname.endsWith('/admin');
             let cleanSrc = src;
             if (cleanSrc.includes('banner.png') || cleanSrc.includes('images/')) {
-                cleanSrc = 'assets/obsidian_helix_chain.png';
+                cleanSrc = '';
             } else if (!cleanSrc.startsWith('assets/') && !cleanSrc.startsWith('../assets/') && !cleanSrc.startsWith('./assets/') && !cleanSrc.startsWith('/')) {
                 cleanSrc = 'assets/' + cleanSrc;
             }
@@ -4460,6 +4611,7 @@
 
             try {
                 // 1. Authoritative Cloud Sync First - No Fake Success!
+                showFloatingStatus(`Updating stock for "${products[idx].name}"...`, 'loading');
                 if (window.SupabaseEngine && typeof window.SupabaseEngine.updateProductStock === 'function') {
                     await window.SupabaseEngine.updateProductStock(pid, newStock);
                 } else if (window.SupabaseEngine) {
@@ -4488,10 +4640,13 @@
                     broadcastProductsUpdate(products);
                 } catch(e) {}
 
+                showFloatingStatus(`Stock: ${newStock} units ✓`, 'success');
                 showToast(`Stock updated: ${newStock}`);
             } catch (err) {
                 console.error("Stock update failed:", err);
-                showToast("Stock update failed: " + (err.message || "Network error"), true);
+                const friendlyErr = getAdminErrorMessage(err, "Failed to update stock");
+                showFloatingStatus(friendlyErr, 'error');
+                showToast("Stock update failed: " + friendlyErr, true);
             } finally {
                 if (btn) {
                     btn.disabled = false;
@@ -4503,22 +4658,37 @@
 
         window.quickRestockProduct = async function(pid, amount = 5) {
             const btn = window.event && window.event.target ? window.event.target.closest('button') : null;
+            const idx = products.findIndex(p => String(p.id) === String(pid));
+            if (idx === -1) return;
+
+            const restockFingerprint = `${pid}_${amount}`;
+            if (btn && btn.dataset.lastRestockFingerprint === restockFingerprint) {
+                if (typeof window.showLuxuryConfirm === 'function') {
+                    window.showLuxuryConfirm({
+                        title: "CONFIRM REPEAT RESTOCK",
+                        message: `"${products[idx]?.name || 'Item'}" was just restocked by +${amount}. Are you sure you want to add another +${amount}?`,
+                        confirmText: "YES, RESTOCK AGAIN",
+                        isDanger: false,
+                        onConfirm: () => {
+                            btn.dataset.lastRestockFingerprint = '';
+                            quickRestockProduct(pid, amount);
+                        }
+                    });
+                    return;
+                }
+            }
+
             if (btn) {
                 btn.disabled = true;
                 btn.style.opacity = '0.4';
                 btn.style.pointerEvents = 'none';
             }
 
-            const idx = products.findIndex(p => String(p.id) === String(pid));
-            if (idx === -1) {
-                if (btn) { btn.disabled = false; btn.style.opacity = '1'; btn.style.pointerEvents = ''; }
-                return;
-            }
-
             const currentStock = Number(products[idx].stock || 0);
             const newStock = currentStock + amount;
 
             try {
+                showFloatingStatus(`Restocking "${products[idx].name}" (+${amount})...`, 'loading');
                 if (window.SupabaseEngine && typeof window.SupabaseEngine.updateProductStock === 'function') {
                     await window.SupabaseEngine.updateProductStock(pid, newStock);
                 } else if (window.SupabaseEngine) {
@@ -4544,10 +4714,14 @@
                     broadcastProductsUpdate(products);
                 } catch(e) {}
 
+                if (btn) btn.dataset.lastRestockFingerprint = restockFingerprint;
+                showFloatingStatus(`Restocked +${amount}! Total: ${newStock} ✓`, 'success');
                 showToast(`Restocked +${amount}! (Current: ${newStock})`);
             } catch (err) {
                 console.error("Quick restock failed:", err);
-                showToast("Restock failed: " + (err.message || "Network error"), true);
+                const friendlyErr = getAdminErrorMessage(err, "Failed to restock");
+                showFloatingStatus(friendlyErr, 'error');
+                showToast("Restock failed: " + friendlyErr, true);
             } finally {
                 if (btn) {
                     btn.disabled = false;
@@ -4587,6 +4761,7 @@
             cards.forEach(c => c.style.opacity = '0.4');
 
             try {
+                showFloatingStatus(`Deleting "${product.name}"...`, 'loading');
                 if (window.SupabaseEngine) {
                     await window.SupabaseEngine.deleteProduct(pid);
                 }
@@ -4599,6 +4774,7 @@
                 if (totalCountEl) totalCountEl.textContent = String(products.length);
 
                 renderDashboard();
+                showFloatingStatus(`"${product.name}" deleted ✓`, 'success');
                 showToast(`"${product.name}" deleted.`);
 
                 try {
@@ -4609,7 +4785,9 @@
             } catch (err) {
                 console.error("Product deletion failed:", err);
                 cards.forEach(c => c.style.opacity = '1');
-                showToast("Failed to delete product: " + (err.message || "Network error"), true);
+                const friendlyErr = getAdminErrorMessage(err, "Failed to delete product");
+                showFloatingStatus(friendlyErr, 'error');
+                showToast("Failed to delete product: " + friendlyErr, true);
             }
         };
 
@@ -4948,20 +5126,20 @@
                 const currentAnn = getStoredAnnouncements();
 
                 // 2. FORCE PERSIST TO CLOUD (SUPABASE)
+                // SAFETY: Never push products if array is empty (protects against unhydrated mobile refreshes)
+                const syncPayload = {
+                    categories: currentCats,
+                    reviews: currentRevs,
+                    announcements: currentAnn
+                };
+                if (Array.isArray(currentProds) && currentProds.length > 0) {
+                    syncPayload.products = currentProds;
+                }
+
                 if (window.SupabaseEngine && typeof window.SupabaseEngine.pushAllToCloud === 'function') {
-                    await window.SupabaseEngine.pushAllToCloud({
-                        products: currentProds,
-                        categories: currentCats,
-                        reviews: currentRevs,
-                        announcements: currentAnn
-                    });
+                    await window.SupabaseEngine.pushAllToCloud(syncPayload);
                 } else if (window.SupabaseEngine && typeof window.SupabaseEngine._saveCloudSyncState === 'function') {
-                    await window.SupabaseEngine._saveCloudSyncState({
-                        products: currentProds,
-                        categories: currentCats,
-                        reviews: currentRevs,
-                        announcements: currentAnn
-                    });
+                    await window.SupabaseEngine._saveCloudSyncState(syncPayload);
                 }
 
                 // 3. PULL INCOMING CUSTOMER ORDERS
@@ -5534,28 +5712,34 @@
                 confirmText: 'Delete Order',
                 isDanger: true,
                 onConfirm: async () => {
-                    if (targetOrder.status === 'Delivered') {
-                        replenishOrderStock(targetOrder);
-                    }
-
-                    targetOrder.is_deleted = true;
-                    targetOrder.deleted_at = new Date().toISOString();
-                    targetOrder.status = 'Cancelled';
-
-                    adminOrders = adminOrders.filter(o => String(o.id) !== String(orderId) && String(o.order_number) !== String(orderId));
-                    window.adminOrders = adminOrders;
-                    
-                    updateOrdersHeaderMetrics();
-                    renderOrdersAdmin();
-                    renderDashboard();
-                    showToast(`Order #${orderNum} deleted`);
-
-                    if (window.SupabaseEngine) {
-                        try {
-                            await window.SupabaseEngine.deleteOrder(orderId);
-                        } catch(e) {
-                            console.warn("Supabase deleteOrder error:", e);
+                    try {
+                        showFloatingStatus(`Deleting Order #${orderNum}...`, 'loading');
+                        if (targetOrder.status !== 'Cancelled') {
+                            replenishOrderStock(targetOrder);
                         }
+
+                        targetOrder.is_deleted = true;
+                        targetOrder.deleted_at = new Date().toISOString();
+                        targetOrder.status = 'Cancelled';
+
+                        adminOrders = adminOrders.filter(o => String(o.id) !== String(orderId) && String(o.order_number) !== String(orderId));
+                        window.adminOrders = adminOrders;
+                        
+                        updateOrdersHeaderMetrics();
+                        renderOrdersAdmin();
+                        renderDashboard();
+
+                        if (window.SupabaseEngine) {
+                            await window.SupabaseEngine.deleteOrder(orderId);
+                        }
+
+                        showFloatingStatus(`Order #${orderNum} deleted ✓`, 'success');
+                        showToast(`Order #${orderNum} deleted`);
+                    } catch(e) {
+                        console.error("Delete order failed:", e);
+                        const friendlyErr = getAdminErrorMessage(e, "Failed to delete order");
+                        showFloatingStatus(friendlyErr, 'error');
+                        showToast("Failed to delete order: " + friendlyErr, true);
                     }
                 }
             });
@@ -5594,20 +5778,21 @@
             if (oldStatus === newStatus) return;
 
             const targetOrder = adminOrders[idx];
+            const orderNum = targetOrder.order_number || orderId;
+
+            showFloatingStatus(`Setting Order #${orderNum} status to ${newStatus}...`, 'loading');
+
+            // Inventory state machine: Stock is reserved upon order creation.
+            // If order is marked Cancelled, replenish stock.
+            // If revived from Cancelled back to active, deduct stock again.
+            if (oldStatus !== 'Cancelled' && newStatus === 'Cancelled') {
+                replenishOrderStock(targetOrder);
+            } else if (oldStatus === 'Cancelled' && newStatus !== 'Cancelled') {
+                deductOrderStock(targetOrder);
+            }
+
             adminOrders[idx].status = newStatus;
             adminOrders[idx].updated_at = new Date().toISOString();
-
-            // Stock state machine: Stock is ONLY deducted when status transitions TO 'Delivered'.
-            // If an already 'Delivered' order transitions AWAY from 'Delivered', stock is replenished.
-            if (oldStatus !== 'Delivered' && newStatus === 'Delivered') {
-                deductOrderStock(targetOrder);
-                showToast(`Order #${targetOrder.order_number || orderId} marked Delivered — inventory stock deducted`);
-            } else if (oldStatus === 'Delivered' && newStatus !== 'Delivered') {
-                replenishOrderStock(targetOrder);
-                showToast(`Order #${targetOrder.order_number || orderId} changed from Delivered to ${newStatus} — inventory stock replenished`);
-            } else {
-                showToast(`Order #${targetOrder.order_number || orderId} status updated to: ${newStatus}`);
-            }
 
             window.adminOrders = adminOrders;
             updateOrdersHeaderMetrics();
@@ -5618,13 +5803,17 @@
                 window.dispatchEvent(new Event('ordersUpdated'));
             } catch(e) {}
 
-            if (window.SupabaseEngine) {
-                try {
+            try {
+                if (window.SupabaseEngine) {
                     await window.SupabaseEngine.updateOrderStatus(orderId, newStatus);
-                } catch(e) {
-                    console.warn("Supabase updateOrderStatus notice:", e);
-                    showToast("Order status saved locally (cloud sync queued)", true);
                 }
+                showFloatingStatus(`Order #${orderNum} set to ${newStatus} ✓`, 'success');
+                showToast(`Order #${orderNum} status updated to: ${newStatus}`);
+            } catch(e) {
+                console.error("Order status update failed:", e);
+                const friendlyErr = getAdminErrorMessage(e, "Failed to update order status");
+                showFloatingStatus(friendlyErr, 'error');
+                showToast("Failed to update status: " + friendlyErr, true);
             }
         }
         window.changeOrderStatusAdmin = changeOrderStatusAdmin;
@@ -5909,7 +6098,29 @@
             if (!author) { showToast("Enter customer name", true); return; }
             if (!comment) { showToast("Enter review comment", true); return; }
 
+            const saveBtn = document.querySelector(`button[onclick*="saveReviewInline('${revId}')"]`);
+            const payloadFingerprint = JSON.stringify({ revId, author, loc, rating, prod, comment });
+
+            if (saveBtn && saveBtn.dataset.lastSavedFingerprint === payloadFingerprint) {
+                if (typeof window.showLuxuryConfirm === 'function') {
+                    window.showLuxuryConfirm({
+                        title: "CONFIRM DUPLICATE SAVE",
+                        message: `Review for "${author}" was just saved with the exact same details. Do you wish to save it again?`,
+                        confirmText: "YES, SAVE AGAIN",
+                        isDanger: false,
+                        onConfirm: () => {
+                            saveBtn.dataset.lastSavedFingerprint = '';
+                            saveReviewInline(revId);
+                        }
+                    });
+                    return;
+                }
+            }
+
             isSavingReviewInline = true;
+            const btnState = setButtonLoading(saveBtn, 'SAVING...');
+            showFloatingStatus(`Saving review from "${author}"...`, 'loading');
+
             try {
                 const updatedRev = {
                     ...rev,
@@ -5933,12 +6144,20 @@
                     window.dispatchEvent(new Event('reviewsUpdated'));
                 } catch(e) {}
 
-                openReviewId = null;
-                renderReviewsAdmin();
+                if (saveBtn) saveBtn.dataset.lastSavedFingerprint = payloadFingerprint;
+                if (btnState) btnState.success('SAVED ✓');
+                showFloatingStatus(`Review from "${author}" saved ✓`, 'success');
                 showToast('Review saved!');
+                setTimeout(() => {
+                    openReviewId = null;
+                    renderReviewsAdmin();
+                }, 400);
             } catch(e) {
                 console.error("Save inline review failed:", e);
-                showToast("Failed to save review: " + (e.message || "Network error"), true);
+                const friendlyErr = getAdminErrorMessage(e, "Failed to save review");
+                if (btnState) btnState.reset(friendlyErr);
+                showFloatingStatus(friendlyErr, 'error');
+                showToast("Failed to save review: " + friendlyErr, true);
             } finally {
                 setTimeout(() => { isSavingReviewInline = false; }, 300);
             }
@@ -5997,8 +6216,26 @@
             if (!author) { showToast("Enter author name", true); return; }
             if (!comment) { showToast("Enter review comment", true); return; }
 
+            const payloadFingerprint = JSON.stringify({ editId, author, location, product_name, rating, comment });
+            if (saveBtn && saveBtn.dataset.lastSavedFingerprint === payloadFingerprint) {
+                if (typeof window.showLuxuryConfirm === 'function') {
+                    window.showLuxuryConfirm({
+                        title: "CONFIRM DUPLICATE SAVE",
+                        message: `Review for "${author}" was just saved with the exact same details. Do you wish to save it again?`,
+                        confirmText: "YES, SAVE AGAIN",
+                        isDanger: false,
+                        onConfirm: () => {
+                            saveBtn.dataset.lastSavedFingerprint = '';
+                            saveReviewFromModal();
+                        }
+                    });
+                    return;
+                }
+            }
+
             isSavingReviewModal = true;
             const btnState = setButtonLoading(saveBtn, 'SAVING...');
+            showFloatingStatus(`Saving review from "${author}"...`, 'loading');
 
             try {
                 const revObj = {
@@ -6029,7 +6266,9 @@
                     window.dispatchEvent(new Event('reviewsUpdated'));
                 } catch(e) {}
 
+                if (saveBtn) saveBtn.dataset.lastSavedFingerprint = payloadFingerprint;
                 if (btnState) btnState.success('SAVED ✓');
+                showFloatingStatus(`Review saved ✓`, 'success');
                 showToast("Review saved!");
                 setTimeout(() => {
                     closeAllModals();
@@ -6037,8 +6276,10 @@
                 }, 350);
             } catch(e) {
                 console.error("Save modal review failed:", e);
-                if (btnState) btnState.reset();
-                showToast("Failed to save review: " + (e.message || "Network error"), true);
+                const friendlyErr = getAdminErrorMessage(e, "Failed to save review");
+                if (btnState) btnState.reset(friendlyErr);
+                showFloatingStatus(friendlyErr, 'error');
+                showToast("Failed to save review: " + friendlyErr, true);
             } finally {
                 setTimeout(() => { isSavingReviewModal = false; }, 400);
             }
@@ -6053,6 +6294,7 @@
                 isDanger: true,
                 onConfirm: async () => {
                     try {
+                        showFloatingStatus("Deleting review...", "loading");
                         if (window.SupabaseEngine) {
                             await window.SupabaseEngine.deleteReview(id);
                         }
@@ -6061,10 +6303,13 @@
                             window.dispatchEvent(new Event('reviewsUpdated'));
                         } catch(e) {}
                         renderReviewsAdmin();
+                        showFloatingStatus("Review deleted ✓", "success");
                         showToast('Review removed.');
                     } catch(err) {
                         console.error("Delete review failed:", err);
-                        showToast("Failed to delete review: " + (err.message || "Network error"), true);
+                        const friendlyErr = getAdminErrorMessage(err, "Failed to delete review");
+                        showFloatingStatus(friendlyErr, "error");
+                        showToast("Failed to delete review: " + friendlyErr, true);
                     }
                 }
             });
@@ -6159,10 +6404,10 @@
         }
         window.handleSingleStockUpload = handleSingleStockUpload;
 
-        window.openProductModal = function() {
+        window.openProductModal = function(initialImg = '') {
             window.currentEditingProductId = null;
             singleProductStockImages = [];
-            singleSelectedImg = '';
+            singleSelectedImg = (typeof initialImg === 'string') ? initialImg : '';
             document.getElementById('singleSheetTitle').textContent = 'Add Product';
             const saveBtn = document.getElementById('saveSingleProductBtn');
             if (saveBtn) {
@@ -6190,8 +6435,13 @@
 
             const chosenPreview = document.getElementById('chosen-img-preview');
             const uploadPlaceholder = document.getElementById('upload-placeholder');
-            if (chosenPreview) { chosenPreview.src = ''; chosenPreview.style.display = 'none'; }
-            if (uploadPlaceholder) uploadPlaceholder.style.display = 'flex';
+            if (singleSelectedImg) {
+                if (chosenPreview) { chosenPreview.src = singleSelectedImg; chosenPreview.style.display = 'block'; }
+                if (uploadPlaceholder) uploadPlaceholder.style.display = 'none';
+            } else {
+                if (chosenPreview) { chosenPreview.src = ''; chosenPreview.style.display = 'none'; }
+                if (uploadPlaceholder) uploadPlaceholder.style.display = 'flex';
+            }
 
             renderSingleStockImages();
             openModal(productSheet);
@@ -6260,6 +6510,35 @@
             if (!name) { showToast("Enter a product name", true); document.getElementById('single-product-name')?.focus(); return; }
             if (isNaN(price) || price < 0) { showToast("Enter a valid price", true); document.getElementById('single-product-price')?.focus(); return; }
 
+            const payloadFingerprint = JSON.stringify({
+                editId: window.currentEditingProductId || null,
+                name,
+                price,
+                salePriceVal,
+                stock: isNaN(stock) ? getAppDefaultStock() : stock,
+                threshold: isNaN(threshold) ? 3 : threshold,
+                category,
+                desc,
+                img: singleSelectedImg,
+                stock_images: singleProductStockImages
+            });
+
+            if (saveBtn && saveBtn.dataset.lastSavedFingerprint === payloadFingerprint) {
+                if (typeof window.showLuxuryConfirm === 'function') {
+                    window.showLuxuryConfirm({
+                        title: "CONFIRM DUPLICATE SAVE",
+                        message: `"${name}" was just saved with the exact same information and images. Are you sure you want to save it again?`,
+                        confirmText: "YES, SAVE AGAIN",
+                        isDanger: false,
+                        onConfirm: () => {
+                            saveBtn.dataset.lastSavedFingerprint = '';
+                            saveSingleProduct(saveBtn);
+                        }
+                    });
+                    return;
+                }
+            }
+
             isSavingSingleProduct = true;
             const btnState = setButtonLoading(saveBtn, 'SAVING PRODUCT...');
 
@@ -6289,6 +6568,7 @@
                         openCategoryAccordions.add('all');
                         if (existing.category) openCategoryAccordions.add(existing.category);
                         renderDashboard(); 
+                        if (saveBtn) saveBtn.dataset.lastSavedFingerprint = payloadFingerprint;
                         if (btnState) btnState.success('SAVED ✓');
                         showToast(`"${existing.name}" updated!`);
                         setTimeout(() => {
@@ -6315,6 +6595,7 @@
                 };
 
                 const saved = await commitProductsToStore([itemToSave]);
+                if (saveBtn) saveBtn.dataset.lastSavedFingerprint = payloadFingerprint;
                 if (btnState) btnState.success('ADDED ✓');
                 showToast(`"${saved[0].name}" saved!`);
                 setTimeout(() => {
@@ -6322,8 +6603,9 @@
                 }, 400);
             } catch(e) { 
                 console.error("Save single product failed:", e);
-                if (btnState) btnState.reset();
-                showToast("Failed to save: " + (e.message || "Network error"), true); 
+                const friendlyErr = getAdminErrorMessage(e, "Failed to save product");
+                if (btnState) btnState.reset(friendlyErr);
+                showToast("Failed to save: " + friendlyErr, true); 
             } finally {
                 setTimeout(() => {
                     isSavingSingleProduct = false;
@@ -6410,18 +6692,7 @@
         window.handleUnifiedProductFiles = handleUnifiedProductFiles;
 
         window.openProductWithImage = function(imgUrl) {
-            singleSelectedImg = imgUrl;
-            const chosenPreview = document.getElementById('chosen-img-preview');
-            const uploadPlaceholder = document.getElementById('upload-placeholder');
-            if (chosenPreview) { chosenPreview.src = singleSelectedImg; chosenPreview.style.display = 'block'; }
-            if (uploadPlaceholder) uploadPlaceholder.style.display = 'none';
-            document.getElementById('single-product-name').value = '';
-            document.getElementById('single-product-price').value = '';
-            document.getElementById('single-product-sale-price').value = '';
-            document.getElementById('single-product-category').value = '';
-            document.getElementById('singleCatTrigger').textContent = 'Select category...';
-            populateCategoryDropdowns();
-            openProductModal();
+            openProductModal(imgUrl);
             setTimeout(() => document.getElementById('single-product-name')?.focus(), 300);
         };
 
@@ -6890,27 +7161,50 @@
         async function commitBatchToStore() {
             if (isBulkCommitting) return;
             if (!bulkQueue.length) { showToast("No items to commit", true); return; }
-            
-            isBulkCommitting = true;
+
             const commitBtn = document.getElementById('bulkCommitBtn');
+            const batchFingerprint = JSON.stringify(bulkQueue.map(i => ({ name: i.name, price: i.price, category: i.category, img: i.img })));
+
+            if (commitBtn && commitBtn.dataset.lastSavedFingerprint === batchFingerprint) {
+                if (typeof window.showLuxuryConfirm === 'function') {
+                    window.showLuxuryConfirm({
+                        title: "CONFIRM DUPLICATE PUBLISH",
+                        message: `This exact batch of ${bulkQueue.length} artifact(s) was just published. Are you sure you wish to publish them again?`,
+                        confirmText: "YES, PUBLISH AGAIN",
+                        isDanger: false,
+                        onConfirm: () => {
+                            commitBtn.dataset.lastSavedFingerprint = '';
+                            commitBatchToStore();
+                        }
+                    });
+                    return;
+                }
+            }
+
+            isBulkCommitting = true;
             const btnState = setButtonLoading(commitBtn, 'PUBLISHING BATCH...');
+            showFloatingStatus(`Publishing batch of ${bulkQueue.length} artifact(s)...`, 'loading');
             const allButtons = document.querySelectorAll('#bulkStageReview button');
             allButtons.forEach(b => { if (b !== commitBtn) { b.disabled = true; b.style.opacity = '0.5'; } });
 
             try {
                 const batchToSave = [...bulkQueue];
+                const saved = await commitProductsToStore(batchToSave);
                 bulkQueue = [];
                 window.bulkQueue = bulkQueue;
-                const saved = await commitProductsToStore(batchToSave);
+                if (commitBtn) commitBtn.dataset.lastSavedFingerprint = batchFingerprint;
                 if (btnState) btnState.success('PUBLISHED ✓');
+                showFloatingStatus(`${saved.length} artifacts published ✓`, 'success');
                 showToast(`${saved.length} items published!`);
                 setTimeout(() => {
                     closeAllModals();
                 }, 400);
             } catch(e) { 
-                if (btnState) btnState.reset();
-                closeAllModals(); 
-                showToast("Committed locally"); 
+                console.error("Bulk commit failed:", e);
+                const friendlyErr = getAdminErrorMessage(e, "Failed to publish batch");
+                if (btnState) btnState.reset(friendlyErr);
+                showFloatingStatus(friendlyErr, 'error');
+                showToast("Failed to publish batch: " + friendlyErr, true);
             } finally {
                 isBulkCommitting = false;
                 allButtons.forEach(b => { b.disabled = false; b.style.opacity = '1'; });
@@ -6923,13 +7217,21 @@
             const file = event.target.files[0];
             if (!file) return;
             try {
-                singleSelectedImg = await compressImageFile(file);
-                const chosenPreview = document.getElementById('chosen-img-preview');
-                const uploadPlaceholder = document.getElementById('upload-placeholder');
-                chosenPreview.src = singleSelectedImg; chosenPreview.style.display = 'block';
-                uploadPlaceholder.style.display = 'none';
-                document.querySelectorAll('.preset-item').forEach(el => el.classList.remove('active'));
-            } catch(e) {}
+                const compressed = await compressImageFile(file);
+                if (compressed) {
+                    singleSelectedImg = compressed;
+                    const chosenPreview = document.getElementById('chosen-img-preview');
+                    const uploadPlaceholder = document.getElementById('upload-placeholder');
+                    if (chosenPreview) { chosenPreview.src = singleSelectedImg; chosenPreview.style.display = 'block'; }
+                    if (uploadPlaceholder) uploadPlaceholder.style.display = 'none';
+                    document.querySelectorAll('.preset-item').forEach(el => el.classList.remove('active'));
+                } else {
+                    showToast("Could not read image file", true);
+                }
+            } catch(e) {
+                showToast("Failed to process image", true);
+            }
+            if (event.target) event.target.value = '';
         }
 
         function selectPreset(el) {
@@ -7660,18 +7962,36 @@
         async function saveAnnouncementsFromAdmin() {
             if (isSavingAnnouncements) return;
             const saveBtn = document.getElementById('saveAnnouncementsBtn');
+
+            const offers = [];
+            for (let i = 1; i <= 5; i++) {
+                const input = document.getElementById(`announcementInput${i}`);
+                if (input && input.value.trim()) {
+                    offers.push(input.value.trim());
+                }
+            }
+            const currentOffersFingerprint = JSON.stringify(offers);
+
+            if (saveBtn && saveBtn.dataset.lastSavedFingerprint === currentOffersFingerprint) {
+                if (typeof window.showLuxuryConfirm === 'function') {
+                    window.showLuxuryConfirm({
+                        title: "CONFIRM DUPLICATE SAVE",
+                        message: "Top announcements are already saved with the exact same items. Do you wish to save them again?",
+                        confirmText: "YES, SAVE AGAIN",
+                        isDanger: false,
+                        onConfirm: () => {
+                            saveBtn.dataset.lastSavedFingerprint = '';
+                            saveAnnouncementsFromAdmin();
+                        }
+                    });
+                    return;
+                }
+            }
+
             isSavingAnnouncements = true;
             const btnState = setButtonLoading(saveBtn, 'SAVING...');
 
             try {
-                const offers = [];
-                for (let i = 1; i <= 5; i++) {
-                    const input = document.getElementById(`announcementInput${i}`);
-                    if (input && input.value.trim()) {
-                        offers.push(input.value.trim());
-                    }
-                }
-
                 // Authoritative cloud persistence first - No Fake Success
                 if (window.SupabaseEngine && typeof window.SupabaseEngine.saveAnnouncements === 'function') {
                     await window.SupabaseEngine.saveAnnouncements(offers);
@@ -7689,12 +8009,14 @@
                     }
                 } catch(e) {}
 
+                if (saveBtn) saveBtn.dataset.lastSavedFingerprint = currentOffersFingerprint;
                 if (btnState) btnState.success('SAVED ✓');
                 showToast('Top announcements saved successfully!');
             } catch(e) {
                 console.error("Save announcements failed:", e);
-                if (btnState) btnState.reset();
-                showToast('Failed to save announcements: ' + (e.message || 'Network error'), true);
+                const friendlyErr = getAdminErrorMessage(e, "Failed to save announcements");
+                if (btnState) btnState.reset(friendlyErr);
+                showToast('Failed to save announcements: ' + friendlyErr, true);
             } finally {
                 setTimeout(() => { isSavingAnnouncements = false; }, 400);
             }

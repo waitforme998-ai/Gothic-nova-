@@ -248,7 +248,7 @@
                 const safeId = escapeHtml(p.id);
                 const safeName = escapeHtml(p.name);
                 const safeCat = escapeHtml(p.category || 'artifact');
-                const safeImg = escapeHtml(p.img || 'assets/venom_spider_ring.png');
+                const safeImg = escapeHtml(p.img || '');
                 const price = Number(p.price || 0);
                 const salePrice = p.salePrice || p.saleprice;
                 const hasSale = salePrice && Number(salePrice) < price;
@@ -267,7 +267,7 @@
                 html += `
                     <div class="search-result-item" role="option" data-product-id="${safeId}" data-index="${index}" tabindex="-1">
                         <div class="search-item-thumb">
-                            <img src="${safeImg}" alt="${safeName}" loading="lazy" width="40" height="40" onerror="this.onerror=null;this.src='assets/venom_spider_ring.png';">
+                            ${safeImg ? `<img src="${safeImg}" alt="${safeName}" loading="lazy" width="40" height="40" onerror="this.onerror=null;this.style.display='none';">` : ''}
                         </div>
                         <div class="search-item-info">
                             <div class="search-item-header">

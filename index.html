@@ -15,20 +15,26 @@
     <meta name="theme-color" content="#0a0508">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="assets/reaper_pendant.png">
-    <link rel="icon" type="image/png" href="assets/reaper_pendant.png">
+    <!-- Official Gothic Nova Favicon & Tab Icons -->
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+    <link rel="icon" type="image/png" sizes="512x512" href="assets/gothic_nova_favicon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/gothic_nova_favicon.png">
+    <link rel="shortcut icon" href="assets/gothic_nova_favicon.png">
     
-    <!-- OpenGraph High-Fidelity Social Sharing Metadata (Vercel Link Previews) -->
+    <!-- OpenGraph High-Fidelity Social Sharing Metadata (Link Previews) -->
     <meta property="og:title" content="GOTHIC NOVA | Premium Cyber-Goth &amp; Japanese Jewelry Pakistan">
     <meta property="og:description" content="Shop limited-edition gothic rings, chains, chokers &amp; pendants. 100% premium dark aesthetic craftsmanship with Cash on Delivery nationwide.">
-    <meta property="og:image" content="https://gothic-nova.vercel.app/assets/hero_gothic_bg.png">
+    <meta property="og:image" content="https://gothic-nova.vercel.app/assets/gothic_nova_brand_og.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="GOTHIC NOVA — Cyber-Goth &amp; Alternative Jewelry Pakistan">
     <meta property="og:url" content="https://gothic-nova.vercel.app/">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Gothic Nova">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="GOTHIC NOVA | Cyber-Goth Jewelry Catalog Pakistan">
     <meta name="twitter:description" content="Explore gothic rings, chains, chokers &amp; pendants in Pakistan. Cash on Delivery available nationwide.">
-    <meta name="twitter:image" content="https://gothic-nova.vercel.app/assets/hero_gothic_bg.png">
+    <meta name="twitter:image" content="https://gothic-nova.vercel.app/assets/gothic_nova_brand_og.png">
 
     <!-- High-Performance Critical Image Preloads -->
     <link rel="preload" as="image" href="assets/gothic_card_back.jpg" fetchpriority="high">
@@ -1821,7 +1827,7 @@
                     "@id": `${baseUrl}/#organization`,
                     "name": "Gothic Nova",
                     "url": baseUrl,
-                    "logo": `${baseUrl}/assets/reaper_pendant.png`,
+                    "logo": `${baseUrl}/assets/gothic_nova_brand_og.png`,
                     "description": "Pakistan's premier cyber-goth & Japanese editorial jewelry brand offering artisanal rings, chains, chokers, and pendants with Cash on Delivery nationwide.",
                     "areaServed": "PK"
                 };
@@ -1842,7 +1848,7 @@
                 const productSchemas = activeProds.map(p => {
                     const priceVal = Number((p.salePrice && Number(p.salePrice) > 0) ? p.salePrice : p.price) || 0;
                     const isAvailable = Number(p.stock || 0) > 0;
-                    const imgUrl = (p.img && p.img.startsWith('http')) ? p.img : `${baseUrl}/${p.img || 'assets/reaper_pendant.png'}`;
+                    const imgUrl = (p.img && (p.img.startsWith('http') || p.img.startsWith('data:'))) ? p.img : (p.img ? `${baseUrl}/${p.img}` : `${baseUrl}/assets/hero_gothic_bg.png`);
                     const productDesc = p.description || p.desc || `${p.name} - Handcrafted gothic jewelry by Gothic Nova. Available with Cash on Delivery across Pakistan.`;
 
                     return {
@@ -4128,7 +4134,7 @@
                 const safeId = escapeHtml(p.id);
                 const safeName = escapeHtml(p.name);
                 const safeCat = escapeHtml(p.category || 'General');
-                const safeImg = escapeHtml(p.img || 'assets/venom_spider_ring.png');
+                const safeImg = escapeHtml(p.img || '');
                 const price = Number(p.price || 0);
                 const salePrice = p.salePrice || p.saleprice;
                 const hasSale = salePrice && Number(salePrice) < price;
@@ -4140,7 +4146,7 @@
 
                 html += `
                     <div class="search-overlay-item" onclick="window.navigateToProductCard('${safeId}');">
-                        <img src="${safeImg}" alt="${safeName}" class="search-overlay-item-thumb" onerror="this.src='assets/venom_spider_ring.png'">
+                        ${safeImg ? `<img src="${safeImg}" alt="${safeName}" class="search-overlay-item-thumb" onerror="this.style.display='none'">` : ''}
                         <div class="search-overlay-item-info">
                             <div class="search-overlay-item-title">${safeName}</div>
                             <div class="search-overlay-item-meta">
@@ -5560,6 +5566,13 @@
                 return;
             }
 
+            if (typeof navigator !== 'undefined' && !navigator.onLine) {
+                if (typeof showLuxuryAlert === 'function') {
+                    showLuxuryAlert("No internet connection detected. Please connect to the internet to complete your order.", "OFFLINE", "warning");
+                }
+                return;
+            }
+
             isSubmittingOrder = true;
 
             const submitBtn = document.getElementById('checkoutSubmitOrderBtn');
@@ -5650,8 +5663,32 @@
 
             } catch (err) {
                 console.error("Order submission error:", err);
+                let userMsg = "Please verify your connection and try again.";
+                let alertTitle = "SUBMISSION FAILED";
+                let alertType = "error";
+                const raw = (err && err.message) ? String(err.message) : '';
+
+                if (raw.includes('INSUFFICIENT_STOCK')) {
+                    userMsg = raw.replace(/^.*?INSUFFICIENT_STOCK:\s*/i, '').trim();
+                    alertTitle = "VAULT STOCK DEPLETED";
+                    alertType = "warning";
+                    if (window.SupabaseEngine && typeof window.SupabaseEngine.getProducts === 'function') {
+                        window.SupabaseEngine.getProducts().then(prods => {
+                            if (typeof window.renderMainCatalog === 'function') window.renderMainCatalog();
+                        }).catch(() => {});
+                    }
+                } else if (!navigator.onLine || raw.includes('NO_INTERNET') || raw.toLowerCase().includes('failed to fetch')) {
+                    userMsg = "No internet connection detected. Please check your network and retry.";
+                    alertTitle = "OFFLINE";
+                    alertType = "warning";
+                } else if (raw.includes('SUPABASE_UNAVAILABLE') || raw.toLowerCase().includes('database') || raw.toLowerCase().includes('service')) {
+                    userMsg = "Order service temporarily unavailable. Please retry shortly.";
+                } else if (raw) {
+                    userMsg = raw;
+                }
+
                 if (typeof showLuxuryAlert === 'function') {
-                    showLuxuryAlert('Error placing order: ' + (err.message || 'Please check connection and try again.'), 'SUBMISSION FAILED', 'error');
+                    showLuxuryAlert(userMsg, alertTitle, alertType);
                 }
             } finally {
                 isSubmittingOrder = false;
@@ -5687,7 +5724,7 @@
                             </div>
                             <div class="confirmed-receipt-items-list">
                                 ${items.map(it => {
-                                    const itImg = it.img || it.image_url || 'assets/obsidian_helix_chain.png';
+                                    const itImg = it.img || it.image_url || '';
                                     const itQty = it.quantity || it.qty || 1;
                                     const itPriceNum = Number(it.price || it.priceNum || 0);
                                     const itPrice = itPriceNum.toLocaleString('en-PK');

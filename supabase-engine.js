@@ -57,38 +57,8 @@
     // Attempt immediate init
     initSupabase();
 
-    // Outbox for offline resilience
-    function getOutbox() {
-        try {
-            return JSON.parse(localStorage.getItem('gn_outbox') || '[]');
-        } catch(e) { return []; }
-    }
-    function addToOutbox(item) {
-        try {
-            const outbox = getOutbox();
-            outbox.push({ ...item, timestamp: Date.now() });
-            safeLocalStorageSet('gn_outbox', outbox);
-        } catch(e) {}
-    }
-    async function flushOutbox() {
-        const client = initSupabase();
-        if (!client) return;
-        const outbox = getOutbox();
-        if (!outbox.length) return;
-        const remaining = [];
-        for (const op of outbox) {
-            try {
-                if (op.type === 'saveSection') {
-                    await window.SupabaseEngine._saveSection(op.sectionKey, op.data, { allowEmpty: true });
-                } else if (op.type === 'updateOrderStatus') {
-                    await client.from('gn_orders').update({ status: op.status, updated_at: new Date().toISOString() }).eq('id', op.orderId);
-                }
-            } catch(e) {
-                remaining.push(op);
-            }
-        }
-        safeLocalStorageSet('gn_outbox', remaining);
-    }
+    // Outbox disabled per ADR-010: No offline queuing, no auto-replay backlog.
+    // Merchants and customers must explicitly initiate submissions when online.
 
     // Clean schemas with zero seed data (Strict cloud-first single source of truth)
     const defaultCatalog = [];
@@ -176,6 +146,21 @@
         get isLive() {
             return !!initSupabase();
         },
+        formatError(err, fallback = "Operation failed") {
+            if (typeof navigator !== 'undefined' && !navigator.onLine) {
+                return "No internet connection. Please check your network.";
+            }
+            if (!err) return fallback;
+            const raw = (typeof err === 'string') ? err : (err.message || '');
+            const low = raw.toLowerCase();
+            if (low.includes('no_internet') || low.includes('no internet') || low.includes('failed to fetch') || low.includes('networkerror')) {
+                return "No internet connection. Please check your network.";
+            }
+            if (low.includes('supabase_unavailable') || low.includes('database') || low.includes('supabase') || low.includes('500') || low.includes('503') || low.includes('persist')) {
+                return "Cloud database temporarily unreachable. Changes saved locally.";
+            }
+            return raw || fallback;
+        },
 
         async _migrateFromMonolith() {
             _migrationDone = true;
@@ -251,6 +236,12 @@
             if (!Array.isArray(data)) data = [];
 
             const existingCount = Array.isArray(_sectionCache[sectionKey]) ? _sectionCache[sectionKey].length : 0;
+            // CRITICAL WIPE GUARD: Never allow an empty product list to overwrite existing products
+            // unless explicitly confirmed with adminExplicitDeleteAll flag.
+            if (sectionKey === 'products' && existingCount > 0 && data.length === 0 && !options.adminExplicitDeleteAll) {
+                console.warn(`[WIPE GUARD] Blocked attempt to wipe all ${existingCount} products.`);
+                throw new Error(`Wipe guard: refusing to overwrite ${existingCount} products with 0 items.`);
+            }
             if (existingCount > 0 && data.length === 0 && !options.allowEmpty) {
                 console.warn(`[WIPE GUARD] Blocked empty overwrite for ${sectionKey} (${existingCount} items exist).`);
                 throw new Error(`Wipe guard: cannot overwrite ${existingCount} items with empty list without allowEmpty.`);
@@ -263,6 +254,10 @@
             } catch(e) {}
             dispatchUniversalSyncEvents({ [sectionKey]: data });
 
+            if (typeof navigator !== 'undefined' && !navigator.onLine) {
+                throw new Error(`NO_INTERNET: No internet connection. Upload aborted. Please reconnect and re-upload.`);
+            }
+
             const client = this.client;
             if (client) {
                 _sectionSaveQueue[sectionKey] = Promise.resolve(_sectionSaveQueue[sectionKey]).catch(() => {}).then(async () => {
@@ -274,6 +269,9 @@
                     let success = false;
                     for (let attempt = 1; attempt <= 3; attempt++) {
                         try {
+                            if (typeof navigator !== 'undefined' && !navigator.onLine) {
+                                throw new Error("NO_INTERNET");
+                            }
                             const targetRowId = _sectionRowId[sectionKey];
                             let updateResult = null;
                             let updateErr = null;
@@ -305,10 +303,14 @@
                             }
 
                             if (updateErr || !updateResult || updateResult.length === 0) {
+                                // SYSTEM ROW ISOLATION: Use negative order_number space (-100000 to -999999)
+                                // so system rows NEVER increment or consume customer order numbers.
+                                const systemOrderNum = -Math.floor(Date.now() % 900000 + 10000);
                                 const insertRes = await client
                                     .from('gn_orders')
                                     .insert({
                                         customer_name: config.syncName,
+                                        order_number: systemOrderNum,
                                         phone_number: '00000000000',
                                         house_flat_no: 'SYSTEM',
                                         street_address: 'SYSTEM',
@@ -341,8 +343,11 @@
                     }
 
                     if (!success) {
-                        addToOutbox({ type: 'saveSection', sectionKey, data: payload[sectionKey] });
-                        throw new Error(`Failed to persist ${sectionKey} to cloud after 3 attempts.`);
+                        if (typeof navigator !== 'undefined' && !navigator.onLine) {
+                            throw new Error(`NO_INTERNET: Internet disconnected. Upload aborted. Please reconnect and re-upload.`);
+                        } else {
+                            throw new Error(`SUPABASE_UNAVAILABLE: Cloud database connection failed after 3 attempts. Please retry.`);
+                        }
                     }
                 }).catch(err => {
                     console.error(`Save queue error for ${sectionKey}:`, err);
@@ -350,7 +355,7 @@
                 });
                 await _sectionSaveQueue[sectionKey];
             } else {
-                addToOutbox({ type: 'saveSection', sectionKey, data });
+                throw new Error(`SUPABASE_UNAVAILABLE: Cloud database client unavailable.`);
             }
         },
 
@@ -367,6 +372,11 @@
 
             for (const [key, data] of Object.entries(sections)) {
                 if (data !== null) {
+                    // Do not allow empty products array to overwrite products in cloud via bulk sync
+                    if (key === 'products' && data.length === 0) {
+                        console.warn('[pushAllToCloud] Skipping empty products push to protect catalog.');
+                        continue;
+                    }
                     await this._saveSection(key, data, { allowEmpty: true });
                 }
             }
@@ -494,7 +504,7 @@
                 threshold: Number(product.threshold !== undefined ? product.threshold : 3),
                 description: product.description || product.desc || '',
                 desc: product.description || product.desc || '',
-                img: product.img || 'assets/reaper_pendant.png',
+                img: product.img || '',
                 delivery_charges: product.delivery_charges !== undefined ? Number(product.delivery_charges) : 0,
                 stock_images: stock_images,
                 stockImages: stock_images,
@@ -562,7 +572,7 @@
                     threshold: Number(product.threshold !== undefined ? product.threshold : 3),
                     description: product.description || product.desc || '',
                     desc: product.description || product.desc || '',
-                    img: product.img || 'assets/reaper_pendant.png',
+                    img: product.img || '',
                     delivery_charges: product.delivery_charges !== undefined ? Number(product.delivery_charges) : 0,
                     stock_images: stock_images,
                     stockImages: stock_images,
@@ -956,6 +966,20 @@
                 throw new Error("Advance payment requires a payment confirmation screenshot.");
             }
 
+            // Inventory Pre-Check: verify stock for all physical items
+            const allProducts = await this.getProducts();
+            for (const item of orderData.items) {
+                if (item.id === 'free_gift') continue;
+                const prod = allProducts.find(p => String(p.id) === String(item.id) || (p.name && item.name && p.name.trim().toLowerCase() === item.name.trim().toLowerCase()));
+                if (prod) {
+                    const available = Number(prod.stock !== undefined ? prod.stock : 999);
+                    const requested = Number(item.quantity !== undefined ? item.quantity : (item.qty !== undefined ? item.qty : 1));
+                    if (available < requested) {
+                        throw new Error(`INSUFFICIENT_STOCK: "${prod.name || item.name}" only has ${available} remaining in vault. Please adjust quantity.`);
+                    }
+                }
+            }
+
             const now = new Date().toISOString();
             const orderPayload = {
                 customer_name: String(orderData.customer_name).trim(),
@@ -997,6 +1021,24 @@
                         status: orderPayload.status
                     };
 
+                    // DYNAMIC SEQUENTIAL ORDER NUMBERING (Starting strictly from #1)
+                    let nextOrderNum = 1;
+                    try {
+                        const { data: maxRows } = await client
+                            .from('gn_orders')
+                            .select('order_number')
+                            .gt('order_number', 0)
+                            .order('order_number', { ascending: false })
+                            .limit(1);
+                        if (Array.isArray(maxRows) && maxRows.length > 0 && maxRows[0].order_number) {
+                            nextOrderNum = Number(maxRows[0].order_number) + 1;
+                        }
+                    } catch(e) {
+                        console.warn("Could not query max order_number, falling back to 1:", e);
+                    }
+
+                    cloudPayload.order_number = nextOrderNum;
+
                     const { data, error } = await client
                         .from('gn_orders')
                         .insert(cloudPayload)
@@ -1014,7 +1056,7 @@
             if (!createdOrder) {
                 createdOrder = {
                     id: 'ord_' + Date.now(),
-                    order_number: Math.floor(100000 + Math.random() * 900000),
+                    order_number: 1,
                     ...orderPayload
                 };
             }
@@ -1022,6 +1064,39 @@
             if (createdOrder) {
                 if (Array.isArray(_ordersCache)) {
                     _ordersCache.unshift(createdOrder);
+                }
+            }
+
+            // Atomically decrement catalog stock upon confirmed order
+            let stockUpdated = false;
+            for (const item of orderData.items) {
+                if (item.id === 'free_gift') continue;
+                const prod = allProducts.find(p => String(p.id) === String(item.id) || (p.name && item.name && p.name.trim().toLowerCase() === item.name.trim().toLowerCase()));
+                if (prod) {
+                    const available = Number(prod.stock !== undefined ? prod.stock : 10);
+                    const requested = Number(item.quantity !== undefined ? item.quantity : (item.qty !== undefined ? item.qty : 1));
+                    prod.stock = Math.max(0, available - requested);
+                    stockUpdated = true;
+                }
+            }
+            if (stockUpdated) {
+                try {
+                    await this._saveSection('products', allProducts);
+                    if (this.client) {
+                        for (const item of orderData.items) {
+                            if (item.id === 'free_gift') continue;
+                            const p = allProducts.find(x => String(x.id) === String(item.id) || (x.name && item.name && x.name.trim().toLowerCase() === item.name.trim().toLowerCase()));
+                            if (p && p.id) {
+                                try {
+                                    await this.client.from('gn_products').update({ stock: p.stock }).eq('id', String(p.id));
+                                } catch(e) {}
+                            }
+                        }
+                    }
+                    window.dispatchEvent(new CustomEvent('gn:productsUpdated', { detail: { products: allProducts } }));
+                    window.dispatchEvent(new Event('productsUpdated'));
+                } catch (err) {
+                    console.warn("Stock decrement persistence notice:", err);
                 }
             }
 
@@ -1122,7 +1197,6 @@
                     }
                     if (error) {
                         console.error("Order status update failed:", error);
-                        addToOutbox({ type: 'updateOrderStatus', orderId, status: newStatus });
                         throw error;
                     }
                 } catch (e) {
@@ -1227,10 +1301,6 @@
             } catch(e) {}
         },
 
-        async flushOutbox() {
-            await flushOutbox();
-        },
-
         _getMockProducts() { return []; },
         _getMockCategories() { return []; },
         _getMockReviews() { return []; },
@@ -1238,48 +1308,25 @@
         _getMockOrders() { return []; }
     };
 
-    // Auto-trigger immediate data load & lifecycle revalidation
+    // Auto-trigger immediate data load at boot time
     if (typeof window !== 'undefined') {
         const bootSync = async () => {
             try {
                 if (window.SupabaseEngine) {
                     window.SupabaseEngine.subscribeRealtime();
                     await window.SupabaseEngine._migrateFromMonolith();
-                    await window.SupabaseEngine.refreshAll(true);
+                    await window.SupabaseEngine.refreshAll(false);
                     window.dispatchEvent(new Event('productsLoaded'));
                 }
             } catch (e) {}
         };
 
-        // Fire immediately at script parse time for zero-latency network launch
+        // Fire once at startup
         bootSync();
 
         if (document.readyState === 'loading') {
             window.addEventListener('DOMContentLoaded', bootSync);
         }
-
-        window.addEventListener('focus', () => {
-            if (window.SupabaseEngine) window.SupabaseEngine.refreshAll(true);
-        });
-        document.addEventListener('visibilitychange', () => {
-            if (!document.hidden && window.SupabaseEngine) {
-                window.SupabaseEngine.refreshAll(true);
-            }
-        });
-        window.addEventListener('online', () => {
-            if (window.SupabaseEngine) {
-                window.SupabaseEngine.flushOutbox();
-                window.SupabaseEngine.refreshAll(true);
-            }
-        });
-        window.addEventListener('pageshow', () => {
-            if (window.SupabaseEngine) window.SupabaseEngine.refreshAll(true);
-        });
-        setInterval(() => {
-            if (typeof document !== 'undefined' && !document.hidden && window.SupabaseEngine) {
-                window.SupabaseEngine.refreshAll(true);
-            }
-        }, 45000);
     }
 
     // =========================================================================
@@ -1410,5 +1457,13 @@
         window.alert = function(msg) {
             window.showLuxuryAlert(msg);
         };
+
+        // Realtime Online/Offline Connectivity Event Dispatcher (No auto-refetch, no auto-replay)
+        window.addEventListener('online', function() {
+            window.dispatchEvent(new CustomEvent('gn:networkOnline'));
+        });
+        window.addEventListener('offline', function() {
+            window.dispatchEvent(new CustomEvent('gn:networkOffline'));
+        });
     }
 })();
