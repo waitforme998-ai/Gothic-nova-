@@ -271,9 +271,9 @@ Internal system state records (`__GN_SYNC_PRODUCTS__`, `__GN_SYNC_ANNOUNCEMENTS_
 2. **Animation Frame Debounce & Coalescing:** Catalog refresh triggers are debounced and coalesced into a single `requestAnimationFrame` callback. Rapid successive events coalesce into exactly one clean paint on the next frame.
 3. **Single Fetch Source for Reviews:** Removed the redundant secondary network call from `renderCustomerReviews()`. Reviews hydrate synchronously from in-memory state populated by `hydrateStorefrontFromCloud()` and reactive `reviewsUpdated` events.
 4. **Fluid Viewport Clamping (Hero Title, Statue, Flanking Subtext):**
-   - Hero title: `clamp(2.3rem, 11.2vw, 3.8rem)` with `max-width: 92vw !important` and `box-sizing: border-box`.
+   - Hero title: `clamp(4.0rem, 18.2vw, 4.3rem)` with `max-width: 98vw !important` and `box-sizing: border-box`. Preserves the exact majestic 4.3rem scale on standard phones (390px, 412px+) while gracefully adapting down to 65.5px (88% width) on narrow 360px phones without shrinking, clipping, or causing horizontal overflow.
    - Statue vertical position: `clamp(-16vh, -130px, -70px)` fluidly anchors the statue across standard 16:9 and tall 20:9 viewports.
-   - Flanking description: Center gap clamped to `clamp(16px, 5.5vw, 54px)` and font size clamped to `clamp(6.0px, 2.0vw, 7.5px)` with `max-width: 94vw !important`, strictly guaranteeing a single line without wrapping.
+   - Flanking description: Center gap clamped to `clamp(48px, 14vw, 82px)` and font size clamped to `clamp(6.6px, 2.1vw, 7.5px)` with `max-width: 94vw !important`, strictly guaranteeing a single line without wrapping.
 5. **Single-Line Category Bar Invariant:** `.category-filter-container` set to `flex-wrap: nowrap !important` with `justify-content: space-between !important` and `overflow-x: hidden !important`. Tab buttons use `flex: 1 1 0 !important; min-width: 0 !important; padding: 0 clamp(4px, 1.5vw, 10px) !important; font-size: clamp(0.64rem, 2.1vw, 0.74rem) !important; white-space: nowrap !important; text-overflow: ellipsis !important;`, guaranteeing all 5 buttons (`ALL`, `RINGS`, `CHAINS`, `BRACELETS`, `MORE ▾`) are locked to a single line across all mobile devices (320px–430px+).
 
 ### Invariants

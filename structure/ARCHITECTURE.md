@@ -402,9 +402,9 @@ High-priority assets are preloaded in `<head>` to minimize Largest Contentful Pa
 
 ### 8.1 Mobile Fluid Clamping Strategy
 To account for varied aspect ratios (such as modern 20:9 displays) and device OS font accessibility scaling (where Android Display Size sets `1rem = 18px–20px`), critical hero elements utilize fluid responsive clamping tied directly to `vw`/`vh`:
-* **Hero Title ("GOTHIC NOVA"):** `font-size: clamp(2.3rem, 11.2vw, 3.8rem)` constrained with `max-width: 92vw !important` and `box-sizing: border-box`. Prevents horizontal clipping on 360px–375px screens while maintaining grandeur on larger devices.
+* **Hero Title ("GOTHIC NOVA"):** `font-size: clamp(4.0rem, 18.2vw, 4.3rem)` constrained with `max-width: 98vw !important` and `box-sizing: border-box`. Preserves the exact majestic 4.3rem scale on standard phones (390px, 412px+) while gracefully adapting down to 65.5px (88% width) on narrow 360px phones without shrinking, clipping, or causing horizontal overflow.
 * **Statue Vertical Alignment:** `transform` clamped to `clamp(-16vh, -130px, -70px)` so the statue remains anchored between the title and action buttons across both 16:9 and tall 20:9 screens.
-* **Flanking Subtext Single-Line Guarantee:** Description center gap clamped to `clamp(16px, 5.5vw, 54px)` with font clamped to `clamp(6.0px, 2.0vw, 7.5px)` and `max-width: 94vw !important`, ensuring both flanks stay strictly on a single line without wrapping.
+* **Flanking Subtext Single-Line Guarantee:** Description center gap clamped to `clamp(48px, 14vw, 82px)` with font clamped to `clamp(6.6px, 2.1vw, 7.5px)` and `max-width: 94vw !important`, ensuring both flanks stay strictly on a single line without wrapping.
 
 ### 8.2 Category Filter Bar Single-Line Topology
 The storefront category filter bar (`.category-filter-container`) is locked to a single horizontal row across all phone viewports (320px–430px+):

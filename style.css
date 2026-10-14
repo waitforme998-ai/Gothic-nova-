@@ -1887,14 +1887,14 @@ body.no-ticker .hero-section {
     :root {
         --hero-title-y: 9px;
         --hero-title-x: 0px;
-        --hero-title-size: clamp(2.3rem, 11.2vw, 3.8rem);
-        --hero-title-word-gap: clamp(8px, 2.5vw, 14px);
+        --hero-title-size: clamp(4.0rem, 18.2vw, 4.3rem);
+        --hero-title-word-gap: 14px;
         --hero-title-ls: 0.02em;
 
         --hero-desc-y: 5px;
         --hero-desc-x: 0px;
-        --hero-desc-gap: clamp(16px, 5.5vw, 54px);
-        --hero-desc-size: clamp(6.0px, 2.0vw, 7.5px);
+        --hero-desc-gap: clamp(48px, 14vw, 82px);
+        --hero-desc-size: clamp(6.6px, 2.1vw, 7.5px);
 
         --statue-y: clamp(-16vh, -130px, -70px);
         --statue-x: -6px;
@@ -1947,7 +1947,7 @@ body.no-ticker .hero-section {
         white-space: nowrap !important;
     }
     .hero-title h1, .hero-title .metallic-text {
-        font-size: var(--hero-title-size, clamp(2.3rem, 11.2vw, 3.8rem)) !important;
+        font-size: var(--hero-title-size, clamp(4.0rem, 18.2vw, 4.3rem)) !important;
         line-height: 1.0 !important;
         letter-spacing: var(--hero-title-ls, 0.02em) !important;
         padding-bottom: 2px !important;
@@ -1955,7 +1955,7 @@ body.no-ticker .hero-section {
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
-        max-width: 92vw !important;
+        max-width: 98vw !important;
         box-sizing: border-box !important;
         filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.95)) drop-shadow(0 0 25px rgba(138, 26, 46, 0.35)) !important;
     }
@@ -1966,7 +1966,7 @@ body.no-ticker .hero-section {
         white-space: nowrap !important;
     }
     .hero-word-gothic, .hero-word-nova {
-        font-size: var(--hero-title-size, clamp(2.3rem, 11.2vw, 3.8rem)) !important;
+        font-size: var(--hero-title-size, clamp(4.0rem, 18.2vw, 4.3rem)) !important;
         line-height: 1.0 !important;
         letter-spacing: var(--hero-title-ls, 0.02em) !important;
         margin: 0 !important;
