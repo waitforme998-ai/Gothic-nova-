@@ -2428,6 +2428,7 @@
                 }
                 window.getCategoryDisplayName = getCategoryDisplayName;
 
+                let _lastCategoryKey = null;
                 function renderCategoryTabs() {
                     const container = document.getElementById('categoryFilterContainer');
                     if (!container) return;
@@ -2521,6 +2522,28 @@
                     const primaryLimit = 3;
                     const primaryCats = ordered.slice(0, primaryLimit);
                     const overflowCats = ordered.slice(primaryLimit);
+
+                    const catStructureKey = ordered.join('|') + '::' + primaryLimit;
+                    if (_lastCategoryKey === catStructureKey && container.children.length > 0) {
+                        const activeCat = (window.currentCategory || 'all').toLowerCase();
+                        container.querySelectorAll('.filter-tab:not(.cat-more-toggle-btn)').forEach(tab => {
+                            const val = (tab.getAttribute('data-filter') || 'all').toLowerCase();
+                            tab.classList.toggle('active', val === activeCat);
+                        });
+                        const moreBtn = document.getElementById('catMoreToggleBtn');
+                        if (moreBtn) {
+                            moreBtn.classList.toggle('active', overflowCats.includes(activeCat));
+                        }
+                        if (drawer) {
+                            drawer.querySelectorAll('.filter-tab').forEach(tab => {
+                                const val = (tab.getAttribute('data-filter') || 'all').toLowerCase();
+                                tab.classList.toggle('active', val === activeCat);
+                            });
+                        }
+                        updateCatFades();
+                        return;
+                    }
+                    _lastCategoryKey = catStructureKey;
 
                     let primaryHtml = `<button type="button" class="filter-tab ${window.currentCategory === 'all' ? 'active' : ''}" data-filter="all">ALL</button>`;
                     
@@ -2976,21 +2999,28 @@
                     }
                 }
 
+                let _lastTickerKey = null;
                 function renderSaleTicker() {
                     const band = document.getElementById('saleTickerBand');
                     const track = document.getElementById('saleTickerTrack');
                     if (!band || !track) return;
 
                     let offers = Array.isArray(window.gn_announcements) ? window.gn_announcements : [];
-
                     offers = offers.filter(o => o && String(o).trim());
 
                     if (offers.length === 0) {
                         band.style.display = 'none';
                         document.body.classList.add('no-ticker');
-                        track.innerHTML = '';
+                        if (track.children.length > 0) track.innerHTML = '';
+                        _lastTickerKey = '__EMPTY__';
                         return;
                     }
+
+                    const currentTickerKey = offers.join('|||');
+                    if (_lastTickerKey === currentTickerKey && track.children.length > 0) {
+                        return;
+                    }
+                    _lastTickerKey = currentTickerKey;
 
                     band.style.display = 'flex';
                     document.body.classList.remove('no-ticker');
@@ -3010,6 +3040,7 @@
                 }
                 window.renderSaleTicker = renderSaleTicker;
 
+                let _lastFooterKey = null;
                 function renderFooterCollections() {
                     const container = document.getElementById('footerCollectionsList');
                     if (!container) return;
@@ -3052,8 +3083,15 @@
                         map.set('pendants', 'Pendants');
                     }
 
+                    const footerEntries = Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+                    const footerKey = footerEntries.map(([s, n]) => `${s}:${n}`).join('|');
+                    if (_lastFooterKey === footerKey && container.children.length > 0) {
+                        return;
+                    }
+                    _lastFooterKey = footerKey;
+
                     let html = '';
-                    map.forEach((name, slug) => {
+                    footerEntries.forEach(([slug, name]) => {
                         html += `<li><a href="javascript:void(0)" onclick="selectCategoryAndScroll('${escapeHtml(slug)}')" style="color: var(--color-text-muted); text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='#ffffff'" onmouseout="this.style.color='var(--color-text-muted)'">${escapeHtml(name)}</a></li>`;
                     });
                     container.innerHTML = html;
@@ -4365,12 +4403,44 @@
                 addToCartBtn.innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="stroke-width:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg> ADD TO CART`;
             }
 
+            function safeSwapPdpImage(newSrc, fallbackSrc) {
+                if (!mainImg || !newSrc) return;
+                const currentSrc = mainImg.getAttribute('src');
+                if (currentSrc === newSrc) return;
+
+                const preloader = new Image();
+                preloader.src = newSrc;
+                if (typeof preloader.decode === 'function') {
+                    preloader.decode().then(() => {
+                        if (activeModalProduct && mainImg) {
+                            mainImg.src = newSrc;
+                        }
+                    }).catch(() => {
+                        if (activeModalProduct && mainImg) {
+                            mainImg.src = fallbackSrc || newSrc;
+                        }
+                    });
+                } else {
+                    preloader.onload = () => {
+                        if (activeModalProduct && mainImg) mainImg.src = newSrc;
+                    };
+                    preloader.onerror = () => {
+                        if (activeModalProduct && mainImg && fallbackSrc) mainImg.src = fallbackSrc;
+                    };
+                }
+            }
+
             window.openPdpModal = function(productId) {
                 const p = getProduct(productId);
                 if (!p) return;
+
+                const isAlreadyOpenForProduct = activeModalProduct && String(activeModalProduct.id) === String(p.id) && modalBox.classList.contains('active');
                 activeModalProduct = p;
-                currentModalQty = 1;
-                qtyVal.textContent = '1';
+                
+                if (!isAlreadyOpenForProduct) {
+                    currentModalQty = 1;
+                    qtyVal.textContent = '1';
+                }
 
                 const isSoldOut = Number(p.stock || 0) <= 0;
                 const saleVal = p.salePrice !== undefined && p.salePrice !== null ? p.salePrice : p.saleprice;
@@ -4379,26 +4449,38 @@
 
                 const catTag = document.getElementById('pdpModalCategoryTag');
                 if (catTag) {
-                    catTag.textContent = (typeof getCategoryDisplayName === 'function' ? getCategoryDisplayName(p.category) : (p.category || 'JEWELRY')).toUpperCase();
+                    const catName = (typeof getCategoryDisplayName === 'function' ? getCategoryDisplayName(p.category) : (p.category || 'JEWELRY')).toUpperCase();
+                    if (catTag.textContent !== catName) catTag.textContent = catName;
                 }
 
-                titleEl.textContent = p.name || 'Artifact';
-                mainImg.src = p.img || '';
+                if (titleEl.textContent !== (p.name || 'Artifact')) {
+                    titleEl.textContent = p.name || 'Artifact';
+                }
+
+                if (!mainImg.getAttribute('src') || !isAlreadyOpenForProduct) {
+                    safeSwapPdpImage(p.img || '', '');
+                    if (!mainImg.src && p.img) mainImg.src = p.img;
+                }
 
                 const descEl = document.getElementById('pdpModalDesc');
                 if (descEl) {
                     const rawDesc = (p.description || p.desc || '').trim();
-                    descEl.textContent = rawDesc;
+                    if (descEl.textContent !== rawDesc) descEl.textContent = rawDesc;
                     descEl.style.display = rawDesc ? 'block' : 'none';
                 }
 
-                if (isSale) {
-                    priceRow.innerHTML = `
-                        <span class="pdp-modal-sale-price font-mono">Rs. ${Number(saleVal).toLocaleString('en-PK')}</span>
-                        <span class="pdp-modal-orig-price font-mono">Rs. ${priceVal.toLocaleString('en-PK')}</span>
-                    `;
-                } else {
-                    priceRow.innerHTML = `<span class="pdp-modal-price font-mono">Rs. ${priceVal.toLocaleString('en-PK')}</span>`;
+                // Idempotent Price Update
+                const priceKey = `${priceVal}:${saleVal || ''}:${isSale ? '1' : '0'}`;
+                if (priceRow.getAttribute('data-price-key') !== priceKey) {
+                    priceRow.setAttribute('data-price-key', priceKey);
+                    if (isSale) {
+                        priceRow.innerHTML = `
+                            <span class="pdp-modal-sale-price font-mono">Rs. ${Number(saleVal).toLocaleString('en-PK')}</span>
+                            <span class="pdp-modal-orig-price font-mono">Rs. ${priceVal.toLocaleString('en-PK')}</span>
+                        `;
+                    } else {
+                        priceRow.innerHTML = `<span class="pdp-modal-price font-mono">Rs. ${priceVal.toLocaleString('en-PK')}</span>`;
+                    }
                 }
 
                 if (isSoldOut) {
@@ -4423,30 +4505,35 @@
                     }
                 }
 
-                // Render gallery thumbnails if distinct images exist (Main + Stock Angles)
-                thumbsContainer.innerHTML = '';
+                // Render gallery thumbnails if distinct images exist (Idempotent signature check)
                 const stockAngles = Array.isArray(p.stock_images) ? p.stock_images : (Array.isArray(p.stockImages) ? p.stockImages : (Array.isArray(p.images) ? p.images : []));
                 const distinctImages = [];
                 if (p.img) distinctImages.push(p.img);
                 stockAngles.forEach(src => {
                     if (src && !distinctImages.includes(src)) distinctImages.push(src);
                 });
-                
-                if (distinctImages.length > 1) {
-                    thumbsContainer.style.display = 'flex';
-                    distinctImages.forEach((imgSrc, idx) => {
-                        const thumb = document.createElement('div');
-                        thumb.className = `pdp-modal-thumb ${idx === 0 ? 'active' : ''}`;
-                        thumb.innerHTML = `<img src="${imgSrc}" alt="view ${idx + 1}" onerror="this.src='${p.img}'">`;
-                        thumb.onclick = () => {
-                            thumbsContainer.querySelectorAll('.pdp-modal-thumb').forEach(t => t.classList.remove('active'));
-                            thumb.classList.add('active');
-                            mainImg.src = imgSrc;
-                        };
-                        thumbsContainer.appendChild(thumb);
-                    });
-                } else {
-                    thumbsContainer.style.display = 'none';
+                const thumbKey = distinctImages.join('|||');
+
+                if (thumbsContainer.getAttribute('data-thumb-key') !== thumbKey) {
+                    thumbsContainer.setAttribute('data-thumb-key', thumbKey);
+                    thumbsContainer.innerHTML = '';
+                    
+                    if (distinctImages.length > 1) {
+                        thumbsContainer.style.display = 'flex';
+                        distinctImages.forEach((imgSrc, idx) => {
+                            const thumb = document.createElement('div');
+                            thumb.className = `pdp-modal-thumb ${idx === 0 ? 'active' : ''}`;
+                            thumb.innerHTML = `<img src="${imgSrc}" alt="view ${idx + 1}" onerror="this.src='${p.img}'">`;
+                            thumb.onclick = () => {
+                                thumbsContainer.querySelectorAll('.pdp-modal-thumb').forEach(t => t.classList.remove('active'));
+                                thumb.classList.add('active');
+                                safeSwapPdpImage(imgSrc, p.img);
+                            };
+                            thumbsContainer.appendChild(thumb);
+                        });
+                    } else {
+                        thumbsContainer.style.display = 'none';
+                    }
                 }
 
                 // Show modal
@@ -4457,8 +4544,10 @@
                 // Update URL parameter without reload
                 try {
                     const url = new URL(window.location);
-                    url.searchParams.set('product', p.id);
-                    window.history.pushState({ modalOpen: true, productId: p.id }, '', url);
+                    if (url.searchParams.get('product') !== String(p.id)) {
+                        url.searchParams.set('product', p.id);
+                        window.history.pushState({ modalOpen: true, productId: p.id }, '', url);
+                    }
                 } catch(e) {}
             };
 
@@ -4513,6 +4602,8 @@
                 modalBox.classList.remove('active');
                 modalBox.setAttribute('aria-hidden', 'true');
                 activeModalProduct = null;
+                if (thumbsContainer) thumbsContainer.removeAttribute('data-thumb-key');
+                if (priceRow) priceRow.removeAttribute('data-price-key');
 
                 try {
                     const url = new URL(window.location);

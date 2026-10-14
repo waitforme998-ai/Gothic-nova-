@@ -295,6 +295,11 @@
                 `;
             }
 
+            if (dropdown.getAttribute('data-last-render') === html) {
+                openDropdown();
+                return;
+            }
+            dropdown.setAttribute('data-last-render', html);
             dropdown.innerHTML = html;
             openDropdown();
             activeIndex = -1;

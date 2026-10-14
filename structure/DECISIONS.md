@@ -283,6 +283,29 @@ Internal system state records (`__GN_SYNC_PRODUCTS__`, `__GN_SYNC_ANNOUNCEMENTS_
 
 ---
 
+## ADR-014: Universal Non-Destructive Hydration, Pre-Decoded PDP Images & Top-Anchored Mobile Topology
+
+### Context & Problem
+1. **Device-Specific GPU Texture Invalidation (Mid-range Androids / Realme C75):** On budget and mid-range devices with Mali GPUs and aggressive Skia memory management, setting `innerHTML = ''` or directly changing `img.src` triggers instantaneous GPU texture backing store eviction. For 16ms–50ms during CPU layout recalculations and WebP decode stalls, the screen paints a raw blank/white flash. Flagships (Apple Silicon / high-RAM Snapdragon) mask this by holding stale raster layers in memory.
+2. **Product Detail Page (PDP Modal) Flashing:** Changing thumbnails or opening PDP modals caused image decode flickers, and thumbs and price rows were rebuilt from scratch on every catalog SWR refresh.
+3. **Announcement & Category Bar Layout Thrashing:** `renderSaleTicker()` wiped `track.innerHTML` on every catalog sync, resetting active CSS marquee translation to 0px. `renderCategoryTabs()` destroyed and rebuilt tab buttons on every sync pass.
+4. **Android OS Font Scaling Overflow:** `--hero-title-size: clamp(4.0rem, 18.2vw, 4.3rem)` used a rigid `4.0rem` floor. When Android OS "Display Size" or "Font Size" was set to Large, `1rem` scaled up to 18px–20px+, forcing `"GOTHIC NOVA"` to 76px+ (>375px wide), clipping outside 360px viewports.
+5. **Statue Aspect-Ratio Drift on Modern 20:9 Screens:** The statue was anchored from the bottom (`transform-origin: center bottom` inside `100dvh`). On modern tall screens (Realme C75, 880px–915px height) vs shorter screens (667px), the bottom anchor point shifted by up to 200px, moving the statue's head and wings out of alignment with the top-anchored hero title.
+
+### Decision
+1. **Pre-Decoded PDP Image Swapping (`safeSwapPdpImage`):** When opening PDP modals or changing thumbnails, images are preloaded and decoded off-screen via `img.decode()` before updating the visible element. If an active modal is refreshed for the same product, thumbnails and price rows are preserved in-place.
+2. **Universal Content Signatures (`_lastTickerKey`, `_lastFooterKey`, `_lastCategoryKey`, `data-last-render`):** All storefront renderers fingerprint their data signatures. Unchanged data returns immediately, eliminating marquee skips, layout reflows, and search dropdown flashing.
+3. **Viewport-Bounded Fluid Title (`min(4.3rem, 16.5vw)`):** Replaced the rigid `rem` floor with a viewport-bounded ceiling. Preserves the majestic 4.3rem scale on standard displays while strictly capping the text to 16.5vw (under 90% screen width) on narrow screens or under extreme Android font scaling.
+4. **Top-Anchored Statue Framing (`transform-origin: center top`):** Re-anchored the statue to `center top` with `--statue-y: clamp(4px, 1.5vh, 14px)`. Distance between the statue's wings/head and the "GOTHIC NOVA" title is mathematically locked and identical across every mobile screen height (600px to 1000px).
+
+### Invariants
+* All storefront renders must be idempotent; never wipe `innerHTML` if data signature matches existing DOM.
+* PDP modal image transitions must never swap `.src` on a visible element without pre-decoding.
+* Statue and hero title must remain anchored from the top reference frame on mobile.
+* Backend logic in `supabase-engine.js` and `admin.html` remains strictly untouched.
+
+---
+
 ## Diagnostic Checklist for Future AI Agents
 
 Before troubleshooting any reported issue, execute this verification protocol:
