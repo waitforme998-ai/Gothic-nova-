@@ -236,13 +236,12 @@
             if (!Array.isArray(data)) data = [];
 
             const existingCount = Array.isArray(_sectionCache[sectionKey]) ? _sectionCache[sectionKey].length : 0;
-            // CRITICAL WIPE GUARD: Never allow an empty product list to overwrite existing products
-            // unless explicitly confirmed with adminExplicitDeleteAll flag.
-            if (sectionKey === 'products' && existingCount > 0 && data.length === 0 && !options.adminExplicitDeleteAll) {
+            // WIPE GUARD: Only block unintentional empty overwrites (never block explicit deletions)
+            if (sectionKey === 'products' && existingCount > 0 && data.length === 0 && !options.adminExplicitDeleteAll && !options.allowEmpty) {
                 console.warn(`[WIPE GUARD] Blocked attempt to wipe all ${existingCount} products.`);
                 throw new Error(`Wipe guard: refusing to overwrite ${existingCount} products with 0 items.`);
             }
-            if (existingCount > 0 && data.length === 0 && !options.allowEmpty) {
+            if (existingCount > 0 && data.length === 0 && !options.allowEmpty && !options.adminExplicitDeleteAll) {
                 console.warn(`[WIPE GUARD] Blocked empty overwrite for ${sectionKey} (${existingCount} items exist).`);
                 throw new Error(`Wipe guard: cannot overwrite ${existingCount} items with empty list without allowEmpty.`);
             }
@@ -276,31 +275,16 @@
                             let updateResult = null;
                             let updateErr = null;
 
-                            if (targetRowId) {
-                                const res = await client
-                                    .from('gn_orders')
-                                    .update({
-                                        items: payload,
-                                        updated_at: new Date().toISOString()
-                                    })
-                                    .eq('id', targetRowId)
-                                    .select();
-                                updateResult = res.data;
-                                updateErr = res.error;
-                            }
-
-                            if (updateErr || !updateResult || updateResult.length === 0) {
-                                const res2 = await client
-                                    .from('gn_orders')
-                                    .update({
-                                        items: payload,
-                                        updated_at: new Date().toISOString()
-                                    })
-                                    .eq('customer_name', config.syncName)
-                                    .select();
-                                updateResult = res2.data;
-                                updateErr = res2.error;
-                            }
+                            const res = await client
+                                .from('gn_orders')
+                                .update({
+                                    items: payload,
+                                    updated_at: new Date().toISOString()
+                                })
+                                .eq('customer_name', config.syncName)
+                                .select();
+                            updateResult = res.data;
+                            updateErr = res.error;
 
                             if (updateErr || !updateResult || updateResult.length === 0) {
                                 // SYSTEM ROW ISOLATION: Use negative order_number space (-100000 to -999999)
@@ -548,7 +532,7 @@
             let list = await this._getSection('products', true);
             if (!Array.isArray(list)) list = [];
             list = list.filter(p => String(p.id) !== cleanId);
-            await this._saveSection('products', list, { allowEmpty: true });
+            await this._saveSection('products', list, { allowEmpty: true, adminExplicitDeleteAll: true });
 
             const client = this.client;
             if (client) {

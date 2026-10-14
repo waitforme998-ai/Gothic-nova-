@@ -3918,8 +3918,12 @@
         }
         window.togglePasswordVisibility = togglePasswordVisibility;
 
-        // --- TOAST ---
+        // --- TOAST (MUTUALLY EXCLUSIVE WITH FLOATING STATUS PILL) ---
         function showToast(msg, isError = false) {
+            // Anti-redundancy rule: Never show toast if the floating status pill is active!
+            const pill = document.getElementById('admin-floating-status-pill');
+            if (pill && pill.classList.contains('active')) return;
+
             const toast = document.getElementById('ios-toast');
             const indicator = document.getElementById('ios-toast-indicator');
             const text = document.getElementById('ios-toast-text');
@@ -3938,6 +3942,10 @@
             const iconContainer = document.getElementById('pill-icon-container');
             const textEl = document.getElementById('pill-status-text');
             if (!pill || !iconContainer || !textEl) return;
+
+            // Immediately dismiss toast so two notifications never collide
+            const toast = document.getElementById('ios-toast');
+            if (toast) toast.classList.remove('active');
 
             if (_floatingPillTimer) {
                 clearTimeout(_floatingPillTimer);
@@ -4493,7 +4501,6 @@
                 renderDashboard();
                 populateCategoryDropdowns();
                 showFloatingStatus(`Category renamed to "${newName}" ✓`, 'success');
-                showToast(`Renamed to "${newName}"`);
                 try { 
                     window.dispatchEvent(new Event('storage')); 
                     window.dispatchEvent(new Event('categoriesUpdated')); 
@@ -4503,7 +4510,6 @@
                 console.error("Rename category failed:", err);
                 const friendlyErr = getAdminErrorMessage(err, "Failed to rename category");
                 showFloatingStatus(friendlyErr, 'error');
-                showToast("Failed to rename category: " + friendlyErr, true);
             }
         };
 
@@ -4547,7 +4553,6 @@
                         renderDashboard();
                         populateCategoryDropdowns();
                         showFloatingStatus(`Category "${name}" deleted ✓`, 'success');
-                        showToast(`"${name}" deleted.`);
 
                         try {
                             window.dispatchEvent(new Event('storage'));
@@ -4560,7 +4565,6 @@
                         console.error("Category delete failed:", err);
                         const friendlyErr = getAdminErrorMessage(err, "Failed to delete category");
                         showFloatingStatus(friendlyErr, 'error');
-                        showToast("Failed to delete category: " + friendlyErr, true);
                     }
                 }
             });
@@ -4713,12 +4717,10 @@
                 } catch(e) {}
 
                 showFloatingStatus(`Stock: ${newStock} units ✓`, 'success');
-                showToast(`Stock updated: ${newStock}`);
             } catch (err) {
                 console.error("Stock update failed:", err);
                 const friendlyErr = getAdminErrorMessage(err, "Failed to update stock");
                 showFloatingStatus(friendlyErr, 'error');
-                showToast("Stock update failed: " + friendlyErr, true);
             } finally {
                 if (btn) {
                     btn.disabled = false;
@@ -4788,12 +4790,10 @@
 
                 if (btn) btn.dataset.lastRestockFingerprint = restockFingerprint;
                 showFloatingStatus(`Restocked +${amount}! Total: ${newStock} ✓`, 'success');
-                showToast(`Restocked +${amount}! (Current: ${newStock})`);
             } catch (err) {
                 console.error("Quick restock failed:", err);
                 const friendlyErr = getAdminErrorMessage(err, "Failed to restock");
                 showFloatingStatus(friendlyErr, 'error');
-                showToast("Restock failed: " + friendlyErr, true);
             } finally {
                 if (btn) {
                     btn.disabled = false;
@@ -4847,7 +4847,6 @@
 
                 renderDashboard();
                 showFloatingStatus(`"${product.name}" deleted ✓`, 'success');
-                showToast(`"${product.name}" deleted.`);
 
                 try {
                     window.dispatchEvent(new Event('productsLoaded'));
@@ -4859,7 +4858,6 @@
                 cards.forEach(c => c.style.opacity = '1');
                 const friendlyErr = getAdminErrorMessage(err, "Failed to delete product");
                 showFloatingStatus(friendlyErr, 'error');
-                showToast("Failed to delete product: " + friendlyErr, true);
             }
         };
 
@@ -5806,12 +5804,10 @@
                         }
 
                         showFloatingStatus(`Order #${orderNum} deleted ✓`, 'success');
-                        showToast(`Order #${orderNum} deleted`);
                     } catch(e) {
                         console.error("Delete order failed:", e);
                         const friendlyErr = getAdminErrorMessage(e, "Failed to delete order");
                         showFloatingStatus(friendlyErr, 'error');
-                        showToast("Failed to delete order: " + friendlyErr, true);
                     }
                 }
             });
@@ -5880,12 +5876,10 @@
                     await window.SupabaseEngine.updateOrderStatus(orderId, newStatus);
                 }
                 showFloatingStatus(`Order #${orderNum} set to ${newStatus} ✓`, 'success');
-                showToast(`Order #${orderNum} status updated to: ${newStatus}`);
             } catch(e) {
                 console.error("Order status update failed:", e);
                 const friendlyErr = getAdminErrorMessage(e, "Failed to update order status");
                 showFloatingStatus(friendlyErr, 'error');
-                showToast("Failed to update status: " + friendlyErr, true);
             }
         }
         window.changeOrderStatusAdmin = changeOrderStatusAdmin;
@@ -6370,12 +6364,10 @@
                         } catch(e) {}
                         renderReviewsAdmin();
                         showFloatingStatus("Review deleted ✓", "success");
-                        showToast('Review removed.');
                     } catch(err) {
                         console.error("Delete review failed:", err);
                         const friendlyErr = getAdminErrorMessage(err, "Failed to delete review");
                         showFloatingStatus(friendlyErr, "error");
-                        showToast("Failed to delete review: " + friendlyErr, true);
                     }
                 }
             });
