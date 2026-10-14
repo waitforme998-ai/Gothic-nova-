@@ -13,6 +13,4 @@ __pycache__/
 
 # Scratch and temp dumps
 *.tmp
-*.bak
 scratch/
-structure/
