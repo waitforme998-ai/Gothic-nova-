@@ -1847,7 +1847,7 @@
 
                 const productSchemas = activeProds.map(p => {
                     const priceVal = Number((p.salePrice && Number(p.salePrice) > 0) ? p.salePrice : p.price) || 0;
-                    const isAvailable = Number(p.stock || 0) > 0;
+                    const isAvailable = (p.stock !== undefined && p.stock !== null && p.stock !== '') ? Number(p.stock) > 0 : true;
                     const imgUrl = (p.img && (p.img.startsWith('http') || p.img.startsWith('data:'))) ? p.img : (p.img ? `${baseUrl}/${p.img}` : `${baseUrl}/assets/hero_gothic_bg.png`);
                     const productDesc = p.description || p.desc || `${p.name} - Handcrafted gothic jewelry by Gothic Nova. Available with Cash on Delivery across Pakistan.`;
 
@@ -2724,7 +2724,8 @@
                 }
 
                 function buildProductCardHTML(p, isNewlyLoaded = false) {
-                    const isSoldOut = Number(p.stock || 0) === 0;
+                    const rawStock = (p.stock !== undefined && p.stock !== null && p.stock !== '') ? Number(p.stock) : 999;
+                    const isSoldOut = rawStock <= 0;
                     const saleVal = p.salePrice !== undefined && p.salePrice !== null ? p.salePrice : p.saleprice;
                     const priceVal = Number(p.price || 0);
                     const isSale = saleVal !== null && saleVal !== undefined && saleVal !== '' && Number(saleVal) < priceVal;
@@ -3139,7 +3140,7 @@
                         Object.keys(window.gn_cart).forEach(cId => {
                             const p = prods.find(item => String(item.id) === String(cId));
                             if (p) {
-                                const availStock = Math.max(0, Number(p.stock !== undefined ? p.stock : 0));
+                                const availStock = (p.stock !== undefined && p.stock !== null && p.stock !== '') ? Number(p.stock) : 999;
                                 if (availStock <= 0) {
                                     delete window.gn_cart[cId];
                                     cartMutated = true;
@@ -3164,7 +3165,8 @@
                             const prods = (typeof getAllProducts === 'function') ? getAllProducts() : (window.gn_products || []);
                             const p = prods.find(item => String(item.id) === String(pid));
                             if (p) {
-                                const isSoldOut = Number(p.stock || 0) <= 0;
+                                const pStock = (p.stock !== undefined && p.stock !== null && p.stock !== '') ? Number(p.stock) : 999;
+                                const isSoldOut = pStock <= 0;
                                 const buyNowBtn = document.getElementById('pdpModalBuyNowBtn');
                                 const addToCartBtn = document.getElementById('pdpModalAddToCartBtn');
                                 const qtyMinus = document.getElementById('pdpModalQtyMinus');
@@ -3182,7 +3184,7 @@
                                         addToCartBtn.disabled = false;
                                         if (qtyMinus) qtyMinus.disabled = false;
                                         if (qtyPlus) qtyPlus.disabled = false;
-                                        const maxStock = Math.max(0, Number(p.stock !== undefined ? p.stock : 0));
+                                        const maxStock = Math.max(1, pStock);
                                         const existingInCart = (window.gn_cart && window.gn_cart[p.id]) ? Number(window.gn_cart[p.id].qty || 0) : 0;
                                         if (existingInCart >= maxStock) {
                                             addToCartBtn.classList.add('view-cart-mode');
@@ -4207,7 +4209,7 @@
                 const price = Number(p.price || 0);
                 const salePrice = p.salePrice || p.saleprice;
                 const hasSale = salePrice && Number(salePrice) < price;
-                const isSoldOut = Number(p.stock || 0) <= 0;
+                const isSoldOut = (p.stock !== undefined && p.stock !== null && p.stock !== '') ? Number(p.stock) <= 0 : false;
 
                 let priceHtml = hasSale 
                     ? `<span class="orig font-mono">Rs. ${price.toLocaleString('en-PK')}</span><span class="font-mono">Rs. ${Number(salePrice).toLocaleString('en-PK')}</span>`
@@ -4261,7 +4263,7 @@
             items.forEach(([pid, item]) => {
                 const prods = (typeof getAllProducts === 'function') ? getAllProducts() : (window.gn_products || []);
                 const product = prods.find(p => String(p.id) === String(pid));
-                const availStock = product ? Math.max(0, Number(product.stock !== undefined ? product.stock : 0)) : 999;
+                const availStock = product ? ((product.stock !== undefined && product.stock !== null && product.stock !== '') ? Number(product.stock) : 999) : 999;
                 const isAtMax = item.qty >= availStock;
                 const isSoldOut = availStock <= 0;
 
@@ -4305,7 +4307,7 @@
             if (!cartMap[pid]) return;
             const prods = (typeof getAllProducts === 'function') ? getAllProducts() : (window.gn_products || []);
             const product = prods.find(p => String(p.id) === String(pid));
-            const stock = product ? Math.max(0, Number(product.stock !== undefined ? product.stock : 0)) : 999;
+            const stock = product ? ((product.stock !== undefined && product.stock !== null && product.stock !== '') ? Number(product.stock) : 999) : 999;
             
             const newQty = cartMap[pid].qty + delta;
             if (newQty < 1) {
@@ -4457,7 +4459,8 @@
                     qtyVal.textContent = '1';
                 }
 
-                const isSoldOut = Number(p.stock || 0) <= 0;
+                const pStock = (p.stock !== undefined && p.stock !== null && p.stock !== '') ? Number(p.stock) : 999;
+                const isSoldOut = pStock <= 0;
                 const saleVal = p.salePrice !== undefined && p.salePrice !== null ? p.salePrice : p.saleprice;
                 const priceVal = Number(p.price || 0);
                 const isSale = saleVal !== null && saleVal !== undefined && saleVal !== '' && Number(saleVal) < priceVal;
@@ -4531,7 +4534,7 @@
                     qtyMinus.disabled = false;
                     qtyPlus.disabled = false;
 
-                    const maxStock = Math.max(0, Number(p.stock !== undefined ? p.stock : 0));
+                    const maxStock = Math.max(1, pStock);
                     const existingInCart = (window.gn_cart && window.gn_cart[p.id]) ? Number(window.gn_cart[p.id].qty || 0) : 0;
                     if (existingInCart >= maxStock) {
                         addToCartBtn.classList.add('view-cart-mode');
@@ -4693,7 +4696,8 @@
             });
 
             qtyPlus.addEventListener('click', () => {
-                const maxStock = activeModalProduct ? Math.max(0, Number(activeModalProduct.stock !== undefined ? activeModalProduct.stock : 0)) : 0;
+                const pStock = (activeModalProduct && activeModalProduct.stock !== undefined && activeModalProduct.stock !== null && activeModalProduct.stock !== '') ? Number(activeModalProduct.stock) : 999;
+                const maxStock = Math.max(1, pStock);
                 const inCart = (activeModalProduct && window.gn_cart && window.gn_cart[activeModalProduct.id]) ? Number(window.gn_cart[activeModalProduct.id].qty || 0) : 0;
                 if (currentModalQty + inCart < maxStock) {
                     currentModalQty++;
@@ -4706,9 +4710,11 @@
             });
 
             buyNowBtn.addEventListener('click', () => {
-                if (!activeModalProduct || Number(activeModalProduct.stock !== undefined ? activeModalProduct.stock : 0) <= 0) return;
+                if (!activeModalProduct) return;
+                const pStock = (activeModalProduct.stock !== undefined && activeModalProduct.stock !== null && activeModalProduct.stock !== '') ? Number(activeModalProduct.stock) : 999;
+                if (pStock <= 0) return;
                 const pid = activeModalProduct.id;
-                const maxStock = Math.max(0, Number(activeModalProduct.stock !== undefined ? activeModalProduct.stock : 0));
+                const maxStock = Math.max(1, pStock);
                 const purchaseQty = Math.max(1, Math.min(currentModalQty, maxStock));
 
                 const saleVal = activeModalProduct.salePrice !== undefined && activeModalProduct.salePrice !== null ? activeModalProduct.salePrice : activeModalProduct.saleprice;
@@ -4735,7 +4741,7 @@
             });
 
             addToCartBtn.addEventListener('click', () => {
-                if (!activeModalProduct || Number(activeModalProduct.stock !== undefined ? activeModalProduct.stock : 0) <= 0) return;
+                if (!activeModalProduct) return;
                 
                 // If button is already in VIEW CART state, open cart
                 if (addToCartBtn.classList.contains('view-cart-mode')) {
@@ -4744,9 +4750,13 @@
                     return;
                 }
 
+                const pStock = (activeModalProduct.stock !== undefined && activeModalProduct.stock !== null && activeModalProduct.stock !== '') ? Number(activeModalProduct.stock) : 999;
+                if (pStock <= 0) return;
+
                 const pid = activeModalProduct.id;
-                const maxStock = Math.max(0, Number(activeModalProduct.stock !== undefined ? activeModalProduct.stock : 0));
-                const existingInCart = (window.gn_cart && window.gn_cart[pid]) ? Number(window.gn_cart[pid].qty || 0) : 0;
+                const maxStock = Math.max(1, pStock);
+                const currentCart = window.gn_cart || cartMap || {};
+                const existingInCart = (currentCart && currentCart[pid]) ? Number(currentCart[pid].qty || 0) : 0;
 
                 if (existingInCart >= maxStock) {
                     showLuxuryAlert(`Maximum available stock (${maxStock} unit${maxStock === 1 ? '' : 's'}) already in cart.`);
@@ -4760,7 +4770,9 @@
                 const priceVal = Number(activeModalProduct.price || 0);
                 const isSale = saleVal !== null && saleVal !== undefined && saleVal !== '' && Number(saleVal) < priceVal;
                 const activePrice = isSale ? Number(saleVal) : priceVal;
+                const priceText = `Rs. ${activePrice.toLocaleString('en-PK')}`;
                 const newTotalQty = existingInCart + addable;
+
                 cartMap[pid] = {
                     id: pid,
                     name: activeModalProduct.name,

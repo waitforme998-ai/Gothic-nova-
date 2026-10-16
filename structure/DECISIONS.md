@@ -373,6 +373,26 @@ Internal system state records (`__GN_SYNC_PRODUCTS__`, `__GN_SYNC_ANNOUNCEMENTS_
 
 ---
 
+## ADR-018: Add-to-Cart Scope Hardening & Undefined Stock Fallback Normalization
+
+### Context & Problem
+1. **Uncaught ReferenceError on Add to Cart:** During an earlier refactor of button feedback state, `const priceText = ...` was inadvertently removed from the `addToCartBtn` event handler while remaining in the item payload object assignment. When clicked, JavaScript threw an uncaught `ReferenceError: priceText is not defined`, blocking all cart additions completely across all products.
+2. **Undefined Stock Clamp to Zero:** In several places (`openPdpModal`, `refreshStorefrontCatalog`, `renderCart`, and `buildProductCardHTML`), stock checks used `Number(p.stock || 0) <= 0` or defaulted undefined stock to `0`. For products loaded without explicit stock attributes (or in catalogs where inventory tracking was optional), this falsely marked items as `SOLD OUT`, locked `maxStock` to `0`, and caused `refreshStorefrontCatalog` to purge newly added items from `gn_cart`.
+
+### Decision
+1. **Restored Formatted Price Definition:** Reintroduced `const priceText = \`Rs. ${activePrice.toLocaleString('en-PK')}\`;` within `addToCartBtn` before item persistence.
+2. **Normalized Stock Fallback Invariant (999 Default):** All catalog, PDP, and cart routines now check:
+   `const pStock = (p.stock !== undefined && p.stock !== null && p.stock !== '') ? Number(p.stock) : 999;`
+   Only products explicitly configured with stock $\le 0$ are treated as out-of-stock. Products without explicit stock remain freely purchasable.
+3. **Safe Addable & MaxStock Clamping:** `maxStock` is normalized via `Math.max(1, pStock)` preventing `0 >= 0` false locks.
+
+### Invariants
+* Any product without an explicit numeric stock attribute defaults to in-stock (`999`).
+* `addToCartBtn` handler must define `priceText` locally before writing to cart state.
+* `refreshStorefrontCatalog` must never delete cart items unless authoritative stock is explicitly $\le 0$.
+
+---
+
 ## Diagnostic Checklist for Future AI Agents
 
 Before troubleshooting any reported issue, execute this verification protocol:
