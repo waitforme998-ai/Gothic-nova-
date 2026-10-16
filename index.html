@@ -3470,7 +3470,13 @@
                 <div class="pdp-modal-price-row" id="pdpModalPriceRow">
                     <span class="pdp-modal-price" id="pdpModalPrice">Rs. 0</span>
                 </div>
-                <p class="pdp-modal-desc" id="pdpModalDesc"></p>
+                <div class="pdp-modal-desc-wrap" id="pdpModalDescWrap" style="display: none;">
+                    <button type="button" class="pdp-details-toggle-btn" id="pdpDetailsToggleBtn" style="display: none;" aria-label="Toggle product details">
+                        <span>DETAILS</span>
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+                    </button>
+                    <p class="pdp-modal-desc" id="pdpModalDesc"></p>
+                </div>
                 <div class="pdp-modal-qty-row">
                     <span style="font-family:var(--font-mono);font-size:0.75rem;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:0.06em;">QTY:</span>
                     <div class="pdp-modal-qty-stepper">
@@ -4469,11 +4475,31 @@
                     if (!mainImg.src && p.img) mainImg.src = p.img;
                 }
 
+                const descWrap = document.getElementById('pdpModalDescWrap');
                 const descEl = document.getElementById('pdpModalDesc');
+                const toggleBtn = document.getElementById('pdpDetailsToggleBtn');
                 if (descEl) {
                     const rawDesc = (p.description || p.desc || '').trim();
-                    if (descEl.textContent !== rawDesc) descEl.textContent = rawDesc;
-                    descEl.style.display = rawDesc ? 'block' : 'none';
+                    if (!rawDesc) {
+                        if (descWrap) descWrap.style.display = 'none';
+                        descEl.style.display = 'none';
+                        descEl.textContent = '';
+                        if (toggleBtn) toggleBtn.style.display = 'none';
+                    } else {
+                        if (descWrap) descWrap.style.display = 'block';
+                        descEl.textContent = rawDesc;
+                        const wordCount = rawDesc.split(/\s+/).filter(Boolean).length;
+                        if (wordCount > 20) {
+                            if (toggleBtn) {
+                                toggleBtn.style.display = 'inline-flex';
+                                toggleBtn.classList.remove('open');
+                            }
+                            descEl.style.display = 'none';
+                        } else {
+                            if (toggleBtn) toggleBtn.style.display = 'none';
+                            descEl.style.display = 'block';
+                        }
+                    }
                 }
 
                 // Idempotent Price Update
@@ -4620,6 +4646,18 @@
             // Event Listeners
             closeBtn.addEventListener('click', window.closePdpModal);
             overlay.addEventListener('click', window.closePdpModal);
+
+            const detailsToggleBtn = document.getElementById('pdpDetailsToggleBtn');
+            if (detailsToggleBtn) {
+                detailsToggleBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const descEl = document.getElementById('pdpModalDesc');
+                    if (!descEl) return;
+                    const isOpen = descEl.style.display !== 'none';
+                    descEl.style.display = isOpen ? 'none' : 'block';
+                    detailsToggleBtn.classList.toggle('open', !isOpen);
+                });
+            }
 
             if (mainImg) {
                 mainImg.parentElement.addEventListener('click', () => {

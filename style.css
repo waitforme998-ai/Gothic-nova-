@@ -3803,8 +3803,38 @@ body.no-ticker .hero-section {
     white-space: pre-wrap;
     word-break: break-word;
 }
-.pdp-modal-desc:empty {
-    display: none;
+.pdp-modal-desc-wrap {
+    margin: 4px 0 6px 0;
+}
+.pdp-details-toggle-btn {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #8e828a;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    padding: 3px 8px;
+    border-radius: 3px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    margin-bottom: 6px;
+    transition: color 0.15s ease, border-color 0.15s ease;
+}
+.pdp-details-toggle-btn:hover {
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.05);
+}
+.pdp-details-toggle-btn svg {
+    transition: transform 0.2s ease;
+    stroke: currentColor;
+}
+.pdp-details-toggle-btn.open svg {
+    transform: rotate(180deg);
 }
 
 

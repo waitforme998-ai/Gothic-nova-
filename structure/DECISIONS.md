@@ -332,6 +332,28 @@ Internal system state records (`__GN_SYNC_PRODUCTS__`, `__GN_SYNC_ANNOUNCEMENTS_
 
 ---
 
+## ADR-016: Non-Intrusive PDP Description Presentation via Length-Gated Toggle
+
+### Context & Problem
+1. **Catalog Density & Aesthetic Cleanliness:** Product cards in the main catalog must remain compact, minimal, and aligned to Gothic Nova aesthetics without cramming long descriptive text onto card surfaces.
+2. **Admin-Customer Data Pipeline Gap:** The admin panel accepts multi-line product descriptions, but previously the PDP quick-view modal had unstyled description handling, risking layout stretching or empty text blocks.
+3. **Short vs. Long Description Ergonomics:** Short descriptions (e.g. `"ADJUSTABLE RING"` or brief materials, $\le 20$ words) look clean rendered directly under the price row. Long multi-paragraph descriptions create visual clutter if displayed fully open by default.
+
+### Decision
+1. **Length-Gated Collapsible Toggle (> 20 words):** In `openPdpModal()`, word count of the description is evaluated:
+   - If empty: both wrapper and toggle button are set to `display: none;`.
+   - If $\le 20$ words: toggle button is hidden (`display: none;`) and the description text renders directly (`display: block;`).
+   - If $> 20$ words: a muted, dull toggle button (`DETAILS ▾`) is shown (`display: inline-flex;`), keeping the body text collapsed (`display: none;`) until explicitly tapped.
+2. **Zero-Glow Minimalist Styling:** The `.pdp-details-toggle-btn` uses understated typography (`var(--font-mono)`, 0.65rem), low contrast border (`rgba(255, 255, 255, 0.12)`), dull muted grey text (`#8e828a`), and zero glowing box-shadows or heavy keyframe animations.
+3. **No Regression on Main Cards:** Product cards in the main catalog grid remain completely untouched, ensuring zero visual or performance regression.
+
+### Invariants
+* The details button must only appear when description length strictly exceeds 20 words.
+* Short descriptions ($\le 20$ words) must render directly without requiring button clicks.
+* The details button must remain understated and dull (no neon glows, no pulsating animations).
+
+---
+
 ## Diagnostic Checklist for Future AI Agents
 
 Before troubleshooting any reported issue, execute this verification protocol:
