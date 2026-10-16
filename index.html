@@ -2888,11 +2888,18 @@
 
                     if (!isAppending && _lastCatalogKey === currentCatalogKey && grid.children.length === visibleList.length && !grid.querySelector('.skeleton-card')) {
                         // DOM is already in sync; skip DOM wiping and layout thrashing
+                    } else if (isAppending && grid.children.length > 0 && !grid.querySelector('.skeleton-card')) {
+                        _lastCatalogKey = currentCatalogKey;
+                        const prevCount = window.prevCatalogVisibleCount || 0;
+                        const newCards = visibleList.slice(prevCount);
+                        if (newCards.length > 0) {
+                            const newHtml = newCards.map(p => buildProductCardHTML(p, true)).join('');
+                            grid.insertAdjacentHTML('beforeend', newHtml);
+                        }
                     } else {
                         _lastCatalogKey = currentCatalogKey;
-                        grid.innerHTML = visibleList.map((p, idx) => {
-                            const isNew = isAppending && idx >= (window.prevCatalogVisibleCount || 0);
-                            return buildProductCardHTML(p, isNew);
+                        grid.innerHTML = visibleList.map((p) => {
+                            return buildProductCardHTML(p, false);
                         }).join('');
                     }
 

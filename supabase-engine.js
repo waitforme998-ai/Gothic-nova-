@@ -16,16 +16,32 @@
             localStorage.setItem(key, typeof val === 'string' ? val : JSON.stringify(val));
             return true;
         } catch (e) {
-            if (e && (e.name === 'QuotaExceededError' || e.code === 22)) {
-                console.warn("Storage quota exceeded for key: " + key);
+            if (e && (e.name === 'QuotaExceededError' || e.code === 22 || e.number === -2147024882)) {
+                console.warn("Storage quota exceeded for key: " + key + ". Cleaning caches...");
                 try {
-                    const nonEssential = ['gn_search_cache', 'gn_recent_views', 'gn_order_counter_backup'];
+                    const nonEssential = [
+                        'gn_search_cache', 'gn_recent_views', 'gn_order_counter_backup',
+                        'gn_swr_hero_slides', 'gn_admin_search_idx'
+                    ];
                     nonEssential.forEach(k => { try { localStorage.removeItem(k); } catch(_) {} });
                     localStorage.setItem(key, typeof val === 'string' ? val : JSON.stringify(val));
                     return true;
                 } catch(inner) {
+                    // If still exceeding quota with 80+ products, store lightweight metadata in local SWR cache
+                    if (key === 'gn_swr_products' && typeof val !== 'string' && Array.isArray(val)) {
+                        try {
+                            const lightweight = val.map(p => ({
+                                ...p,
+                                img: (p.img && p.img.length > 500) ? '' : p.img,
+                                stock_images: [],
+                                stockImages: []
+                            }));
+                            localStorage.setItem(key, JSON.stringify(lightweight));
+                            return true;
+                        } catch(_) {}
+                    }
                     if (typeof window !== 'undefined' && typeof window.showToast === 'function') {
-                        window.showToast("Device storage full. Syncing directly via Cloud.", true);
+                        window.showToast("Local cache full. Cloud sync active.", true);
                     }
                 }
             }
@@ -218,9 +234,7 @@
 
                     _sectionCache[sectionKey] = sectionData;
                     _sectionConfirmedAt[sectionKey] = Date.now();
-                    try {
-                        localStorage.setItem('gn_swr_' + sectionKey, JSON.stringify(sectionData));
-                    } catch(e) {}
+                    safeLocalStorageSet('gn_swr_' + sectionKey, sectionData);
                     return sectionData;
                 }
             } catch (e) {
@@ -248,9 +262,7 @@
 
             _sectionCache[sectionKey] = data;
             _sectionConfirmedAt[sectionKey] = Date.now(); // _confirmed_at
-            try {
-                localStorage.setItem('gn_swr_' + sectionKey, JSON.stringify(data));
-            } catch(e) {}
+            safeLocalStorageSet('gn_swr_' + sectionKey, data);
             dispatchUniversalSyncEvents({ [sectionKey]: data });
 
             if (typeof navigator !== 'undefined' && !navigator.onLine) {
@@ -271,45 +283,87 @@
                             if (typeof navigator !== 'undefined' && !navigator.onLine) {
                                 throw new Error("NO_INTERNET");
                             }
+
+                            // 1. Resolve canonical row ID if not cached
+                            if (!_sectionRowId[sectionKey]) {
+                                const { data: existingRows } = await client
+                                    .from('gn_orders')
+                                    .select('id')
+                                    .eq('customer_name', config.syncName)
+                                    .order('updated_at', { ascending: false })
+                                    .limit(1);
+                                if (existingRows && existingRows.length > 0) {
+                                    _sectionRowId[sectionKey] = existingRows[0].id;
+                                }
+                            }
+
                             const targetRowId = _sectionRowId[sectionKey];
                             let updateResult = null;
                             let updateErr = null;
 
-                            const res = await client
-                                .from('gn_orders')
-                                .update({
-                                    items: payload,
-                                    updated_at: new Date().toISOString()
-                                })
-                                .eq('customer_name', config.syncName)
-                                .select();
-                            updateResult = res.data;
-                            updateErr = res.error;
-
-                            if (updateErr || !updateResult || updateResult.length === 0) {
-                                // SYSTEM ROW ISOLATION: Use negative order_number space (-100000 to -999999)
-                                // so system rows NEVER increment or consume customer order numbers.
-                                const systemOrderNum = -Math.floor(Date.now() % 900000 + 10000);
-                                const insertRes = await client
+                            // 2. Primary-Key Targeted Update (Index-optimized, never hits multiple rows)
+                            if (targetRowId) {
+                                const res = await client
                                     .from('gn_orders')
-                                    .insert({
-                                        customer_name: config.syncName,
-                                        order_number: systemOrderNum,
-                                        phone_number: '00000000000',
-                                        house_flat_no: 'SYSTEM',
-                                        street_address: 'SYSTEM',
-                                        city: 'SYSTEM',
-                                        province: 'SYSTEM',
-                                        nearest_landmark: 'SYSTEM',
-                                        payment_method: 'cod',
+                                    .update({
                                         items: payload,
-                                        total_amount: 0,
-                                        status: 'Cancelled'
+                                        updated_at: new Date().toISOString()
                                     })
-                                    .select();
-                                if (insertRes.error) throw insertRes.error;
-                                if (insertRes.data && insertRes.data[0]) {
-                                    _sectionRowId[sectionKey] = insertRes.data[0].id;
+                                    .eq('id', targetRowId)
+                                    .select('id');
+                                updateResult = res.data;
+                                updateErr = res.error;
+                            } else {
+                                const res = await client
+                                    .from('gn_orders')
+                                    .update({
+                                        items: payload,
+                                        updated_at: new Date().toISOString()
+                                    })
+                                    .eq('customer_name', config.syncName)
+                                    .select('id');
+                                updateResult = res.data;
+                                updateErr = res.error;
+                                if (updateResult && updateResult[0]) {
+                                    _sectionRowId[sectionKey] = updateResult[0].id;
+                                }
+                            }
+
+                            // 3. Strict Anti-Duplication Guard: Only insert if verified 0 rows exist
+                            if (!updateResult || updateResult.length === 0) {
+                                const { data: checkRows } = await client
+                                    .from('gn_orders')
+                                    .select('id')
+                                    .eq('customer_name', config.syncName)
+                                    .limit(1);
+
+                                if (!checkRows || checkRows.length === 0) {
+                                    const systemOrderNum = -Math.floor(Date.now() % 900000 + 10000);
+                                    const insertRes = await client
+                                        .from('gn_orders')
+                                        .insert({
+                                            customer_name: config.syncName,
+                                            order_number: systemOrderNum,
+                                            phone_number: '00000000000',
+                                            house_flat_no: 'SYSTEM',
+                                            street_address: 'SYSTEM',
+                                            city: 'SYSTEM',
+                                            province: 'SYSTEM',
+                                            nearest_landmark: 'SYSTEM',
+                                            payment_method: 'cod',
+                                            items: payload,
+                                            total_amount: 0,
+                                            status: 'Cancelled'
+                                        })
+                                        .select('id');
+                                    if (insertRes.error) throw insertRes.error;
+                                    if (insertRes.data && insertRes.data[0]) {
+                                        _sectionRowId[sectionKey] = insertRes.data[0].id;
+                                    }
+                                } else {
+                                    // Row exists, update failed temporarily. Cache the ID and retry update
+                                    _sectionRowId[sectionKey] = checkRows[0].id;
+                                    throw (updateErr || new Error("Failed to update existing sync row."));
                                 }
                             } else if (updateResult && updateResult[0]) {
                                 _sectionRowId[sectionKey] = updateResult[0].id;
@@ -752,8 +806,8 @@
         async signIn(email, password) {
             const client = this.client;
             if (!client) {
-                if (password === 'gothicnova51214' || password === 'admin') {
-                    const mockSession = { user: { email: email || 'admin@gothicnova.com' }, token: 'mock-jwt-token' };
+                if (password === 'gothicnova51214') {
+                    const mockSession = { user: { role: 'admin' }, token: 'gn-master-auth' };
                     try { sessionStorage.setItem('gn_admin_session', JSON.stringify(mockSession)); } catch(e) {}
                     return { data: { session: mockSession, user: mockSession.user }, error: null };
                 }
@@ -852,33 +906,55 @@
             }
         },
 
-        async uploadProductImage(file, path) {
+        async uploadProductImage(fileOrBlob, path = 'products') {
+            if (!fileOrBlob) return '';
+            if (typeof fileOrBlob === 'string' && (fileOrBlob.startsWith('http://') || fileOrBlob.startsWith('https://'))) {
+                return fileOrBlob;
+            }
+
             const client = this.client;
-            if (client) {
+            if (client && client.storage) {
                 try {
-                    const fileExt = file && file.name ? file.name.split('.').pop() : 'png';
-                    const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
+                    let uploadBlob = fileOrBlob;
+                    let fileExt = 'webp';
+
+                    if (typeof fileOrBlob === 'string' && fileOrBlob.startsWith('data:')) {
+                        const mime = fileOrBlob.split(',')[0].split(':')[1].split(';')[0];
+                        fileExt = mime.includes('png') ? 'png' : (mime.includes('jpeg') || mime.includes('jpg') ? 'jpg' : 'webp');
+                        const byteString = atob(fileOrBlob.split(',')[1]);
+                        const ab = new ArrayBuffer(byteString.length);
+                        const ia = new Uint8Array(ab);
+                        for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+                        uploadBlob = new Blob([ab], { type: mime });
+                    } else if (fileOrBlob && fileOrBlob.name) {
+                        fileExt = fileOrBlob.name.split('.').pop() || 'webp';
+                    }
+
+                    const fileName = `prod_${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
                     const filePath = path ? `${path}/${fileName}` : fileName;
 
                     const { error } = await client.storage
                         .from('product-media')
-                        .upload(filePath, file, {
-                            cacheControl: '3600',
+                        .upload(filePath, uploadBlob, {
+                            cacheControl: '31536000',
                             upsert: true
                         });
 
-                    if (error) throw error;
+                    if (!error) {
+                        const { data: publicUrlData } = client.storage
+                            .from('product-media')
+                            .getPublicUrl(filePath);
 
-                    const { data: publicUrlData } = client.storage
-                        .from('product-media')
-                        .getPublicUrl(filePath);
-
-                    return publicUrlData.publicUrl;
+                        if (publicUrlData && publicUrlData.publicUrl) {
+                            return publicUrlData.publicUrl;
+                        }
+                    }
                 } catch (err) {
-                    return await this._fileToDataUrl(file);
+                    console.warn("Storage upload notice (using optimized fallback):", err);
                 }
             }
-            return await this._fileToDataUrl(file);
+            if (typeof fileOrBlob === 'string') return fileOrBlob;
+            return await this._fileToDataUrl(fileOrBlob);
         },
 
         async uploadPaymentScreenshot(fileOrBlob) {

@@ -4016,7 +4016,7 @@
         });
 
         // --- IMAGE COMPRESSION HELPER (WEBP HIGH-DENSITY WITH JPEG FALLBACK) ---
-        async function compressImageFile(file, maxWidth = 1200, quality = 0.82) {
+        async function compressImageFile(file, maxWidth = 640, quality = 0.72) {
             return new Promise((resolve) => {
                 if (!file) return resolve('');
                 const reader = new FileReader();
@@ -6611,6 +6611,26 @@
             const btnState = setButtonLoading(saveBtn, 'SAVING PRODUCT...');
 
             try {
+                // Cloud Storage Decoupling: Upload images to bucket if available
+                if (window.SupabaseEngine && typeof window.SupabaseEngine.uploadProductImage === 'function') {
+                    if (singleSelectedImg && singleSelectedImg.startsWith('data:')) {
+                        try {
+                            const upUrl = await window.SupabaseEngine.uploadProductImage(singleSelectedImg, 'products');
+                            if (upUrl) singleSelectedImg = upUrl;
+                        } catch(e) {}
+                    }
+                    if (Array.isArray(singleProductStockImages) && singleProductStockImages.length > 0) {
+                        for (let i = 0; i < singleProductStockImages.length; i++) {
+                            if (singleProductStockImages[i] && singleProductStockImages[i].startsWith('data:')) {
+                                try {
+                                    const upSec = await window.SupabaseEngine.uploadProductImage(singleProductStockImages[i], 'products');
+                                    if (upSec) singleProductStockImages[i] = upSec;
+                                } catch(e) {}
+                            }
+                        }
+                    }
+                }
+
                 if (window.currentEditingProductId) {
                     const existing = products.find(p => String(p.id) === String(window.currentEditingProductId));
                     if (existing) {
@@ -6706,6 +6726,29 @@
                     active: true
                 };
             });
+            // Cloud Storage Pre-Upload for new batch
+            if (window.SupabaseEngine && typeof window.SupabaseEngine.uploadProductImage === 'function') {
+                for (const item of newItems) {
+                    if (item.img && item.img.startsWith('data:')) {
+                        try {
+                            const up = await window.SupabaseEngine.uploadProductImage(item.img, 'products');
+                            if (up) item.img = up;
+                        } catch(e) {}
+                    }
+                    if (Array.isArray(item.stock_images)) {
+                        for (let s = 0; s < item.stock_images.length; s++) {
+                            if (item.stock_images[s] && item.stock_images[s].startsWith('data:')) {
+                                try {
+                                    const upSec = await window.SupabaseEngine.uploadProductImage(item.stock_images[s], 'products');
+                                    if (upSec) item.stock_images[s] = upSec;
+                                } catch(e) {}
+                            }
+                        }
+                        item.stockImages = [...item.stock_images];
+                    }
+                }
+            }
+
             const updatedProducts = [...products, ...newItems];
 
             // Authoritative Cloud Persistence First - No Fake Success
