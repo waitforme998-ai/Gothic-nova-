@@ -354,6 +354,25 @@ Internal system state records (`__GN_SYNC_PRODUCTS__`, `__GN_SYNC_ANNOUNCEMENTS_
 
 ---
 
+## ADR-017: Cart Drawer Viewport Scrolling & PDP Add-to-Cart State Hardening
+
+### Context & Problem
+1. **Flexbox Item List Viewport Overflow:** In `#cart-drawer`, the item list `#cart-items-list` had `flex: 1; overflow-y: auto;` without explicit `min-height: 0;`. By default flex items have `min-height: auto`, which caused the container to expand downwards past the screen fold on mobile when 4+ items were added, pushing the checkout footer off-screen and breaking touch-scrolling. Users perceived items as "not adding" until top items were deleted, which caused the list to contract and reveal the hidden items.
+2. **Button State Deadlock on PDP Modal:** If a product was already present in the cart, opening the PDP modal defaulted the CTA to `VIEW CART` even when available inventory remained. This prevented customers from increasing quantity from the modal and caused confusion when clicking other products.
+3. **Cart Storage Synchronization:** Cart state relied on split references (`cartMap` vs `window.gn_cart`), and `window.saveCart` was not exposed, preventing real-time inventory clamping in `refreshStorefrontCatalog`.
+
+### Decision
+1. **Hardened Flex Scrolling on Cart Drawer:** Enforced `flex: 1 1 0% !important; min-height: 0 !important; overflow-y: auto !important; -webkit-overflow-scrolling: touch !important; overscroll-behavior-y: contain !important;` on `#cart-items-list`, with `flex-shrink: 0 !important;` on `#cart-drawer-header` and `#cart-footer`. The footer and header remain anchored, and any number of items can be smoothly scrolled through.
+2. **Dynamic Stock-Aware PDP Button:** The modal CTA only switches to `VIEW CART` when `existingInCart >= maxStock`. If remaining stock exists, the button remains `ADD TO CART`, allowing continuous item additions with clear `ADDED TO CART ✓` feedback.
+3. **Unified Global Cart Authority:** Exported `window.saveCart` and ensured `cartMap` and `window.gn_cart` stay synchronized, including explicit `id` assignments across all cart items.
+
+### Invariants
+* `#cart-items-list` must retain `min-height: 0` and `flex: 1 1 0%` to ensure scrollability on all mobile screens.
+* Cart footer and drawer header must never be pushed out of viewport by list contents (`flex-shrink: 0`).
+* `window.saveCart` must remain globally accessible for realtime stock reconciliation.
+
+---
+
 ## Diagnostic Checklist for Future AI Agents
 
 Before troubleshooting any reported issue, execute this verification protocol:
