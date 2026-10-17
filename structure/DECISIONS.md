@@ -27,6 +27,7 @@
 17. [ADR-017: Cart Drawer Viewport Scrolling & PDP Add-to-Cart State Hardening](#adr-017-cart-drawer-viewport-scrolling--pdp-add-to-cart-state-hardening)
 18. [ADR-018: Add-to-Cart Scope Hardening & Undefined Stock Fallback Normalization](#adr-018-add-to-cart-scope-hardening--undefined-stock-fallback-normalization)
 19. [ADR-019: SafeStorage Layer Abstraction & Instagram In-App Browser Sandbox Immunity](#adr-019-safestorage-layer-abstraction--instagram-in-app-browser-sandbox-immunity)
+20. [ADR-020: Mobile Viewport In-Flow Normalization & Zero-Stamping Curtain Topology](#adr-020-mobile-viewport-in-flow-normalization--zero-stamping-curtain-topology)
 
 ---
 
@@ -423,6 +424,34 @@ Internal system state records (`__GN_SYNC_PRODUCTS__`, `__GN_SYNC_ANNOUNCEMENTS_
 * All client-side storage access across storefront and dual-mode engine must use `SafeStorage` or be wrapped in `try/catch`.
 * `SafeStorage` must remain 100% synchronous; it must never return promises or throw uncaught exceptions.
 * In restricted or private browsing sandboxes, cart additions and product browsing must proceed in memory without blocking customer checkout.
+
+---
+
+## ADR-020: Mobile Viewport In-Flow Normalization & Zero-Stamping Curtain Topology
+
+### Context & Problem
+1. **Mobile Fixed Hero Stamping over Catalog Glass:**
+   On mobile viewports ($\le 768\text{px}$), `.hero-section` had `position: fixed` with `.active-drop-section` having `margin-top: 100vh`. During iOS Safari momentum scrolling and Chrome Android gesture dragging, the fixed statue silhouette and metallic letters frequently detached from the scroll container and stamped over product card surfaces.
+2. **Backdrop Bleed on Mobile Cards:**
+   Because `.active-drop-section` lacked a solid backing color, high-contrast imagery from the fixed hero background shone through card gaps on mobile.
+3. **Catalog Height Collapse During Hydration:**
+   When visitors arrived on cellular connections, `.drop-grid` initially rendered with 0px height until products were fetched, causing the footer and category bars to jump erratically.
+
+### Decision
+1. **In-Flow Document Topology for Mobile Hero:**
+   Within `@media (max-width: 768px)`, transitioned `.hero-section` to `position: relative !important;`, `top: auto;`, `left: auto;`, `height: auto;`, `min-height: calc(100dvh - 60px);`, and `margin: 0 !important;`.
+   Mobile hero naturally scrolls up and out of view with native document flow.
+2. **Mobile `.active-drop-section` Margin Reset & Solid Backing:**
+   Set `margin-top: 0 !important;` and enforced `background-color: #0a0508 !important;` with `z-index: 2 !important;`. The catalog starts immediately below the hero without an artificial 100vh gap or visual bleed.
+3. **Hardened Desktop Curtain Parallax Invariant:**
+   Maintained `position: fixed` for desktop hero ($> 768\text{px}$) with `margin-top: 100vh` on desktop `.active-drop-section` and explicit `background-color: #0a0508 !important;`, preserving the signature gothic curtain reveal.
+4. **Catalog Grid Footprint Floor:**
+   Added `min-height: 480px;` to `.drop-grid` across desktop and mobile, guaranteeing stable layout geometry during cloud hydration.
+
+### Invariants
+* Converting mobile hero to `position: relative` MUST NOT alter the internal translation variables or coordinate clamps restored in commit `2454ae2`.
+* Desktop ($> 768\text{px}$) curtain reveal must remain strictly preserved with `position: fixed` and `#0a0508` backing.
+* Mobile in-flow rules must be strictly encapsulated inside `@media (max-width: 768px)`.
 
 ---
 
