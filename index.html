@@ -2193,7 +2193,7 @@
                     let lastX = 0;
                     let velocityX = 0;
                     let isHovered = false;
-                    const baseSpeed = 0.6; // ~36px/sec smooth marquee
+                    const baseSpeed = 0.48; // ~29px/sec smooth marquee (slowed down by 20% from 0.6)
 
                     function getGroupWidth() {
                         const w = group1.getBoundingClientRect().width || group1.offsetWidth;

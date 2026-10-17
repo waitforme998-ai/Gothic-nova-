@@ -1903,14 +1903,14 @@ body.no-ticker .hero-section {
         --statue-scale: 0.80;
     }
 
-    /* Kinetic Hero Section Mobile Layout (In-Flow Document Topology / Anti-Stamping) */
+    /* Kinetic Hero Section Mobile Layout (Static Wall Backdrop) */
     .hero-section {
-        position: relative !important;
-        top: auto !important;
-        left: auto !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
         width: 100% !important;
-        height: auto !important;
-        min-height: calc(100dvh - 60px) !important;
+        height: 100vh !important;
+        height: 100dvh !important;
         padding-top: 84px !important;
         padding-bottom: 24px !important;
         padding-left: 16px !important;
@@ -1918,7 +1918,7 @@ body.no-ticker .hero-section {
         margin: 0 !important;
         justify-content: flex-start !important;
         align-items: center !important;
-        overflow: visible !important;
+        overflow: hidden !important;
         display: flex !important;
         flex-direction: column !important;
         gap: 0 !important;
@@ -2143,7 +2143,8 @@ body.no-ticker .hero-section {
     .active-drop-section {
         padding-top: 28px !important;
         padding-bottom: 0 !important;
-        margin-top: 0 !important;
+        margin-top: 100vh !important;
+        margin-top: 100dvh !important;
         margin-bottom: 0 !important;
         scroll-margin-top: 70px !important;
         border-top-left-radius: 16px !important;
@@ -2153,7 +2154,7 @@ body.no-ticker .hero-section {
         background: radial-gradient(ellipse at 50% 15%, rgba(92, 15, 31, 0.30) 0%, rgba(18, 8, 14, 0.65) 45%, rgba(10, 5, 8, 0.88) 100%), url('assets/gothic_cathedral_bg.jpg') center top / cover no-repeat, #0a0508 !important;
         background-color: #0a0508 !important;
         position: relative !important;
-        z-index: 2 !important;
+        z-index: 10 !important;
         overflow: hidden !important;
     }
 
@@ -2198,7 +2199,7 @@ body.no-ticker .hero-section {
         align-items: stretch !important;
         gap: 16px !important;
         flex-shrink: 0 !important;
-        animation: marqueeScrollGroupMobile 28s linear infinite !important;
+        animation: marqueeScrollGroupMobile 35s linear infinite !important;
         will-change: transform !important;
         transform: translate3d(0, 0, 0);
         -webkit-transform: translate3d(0, 0, 0);
@@ -2206,7 +2207,7 @@ body.no-ticker .hero-section {
         -webkit-backface-visibility: hidden;
     }
     .marquee-track.marquee-reverse .marquee-group {
-        animation: marqueeScrollGroupMobileReverse 28s linear infinite !important;
+        animation: marqueeScrollGroupMobileReverse 35s linear infinite !important;
         will-change: transform !important;
         transform: translate3d(0, 0, 0);
         -webkit-transform: translate3d(0, 0, 0);

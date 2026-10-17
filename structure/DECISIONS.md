@@ -427,31 +427,34 @@ Internal system state records (`__GN_SYNC_PRODUCTS__`, `__GN_SYNC_ANNOUNCEMENTS_
 
 ---
 
-## ADR-020: Mobile Viewport In-Flow Normalization & Zero-Stamping Curtain Topology
+## ADR-020: Static Wall Hero Backdrop, Crawling Curtain Topology & Marquee Speed Calibration
 
 ### Context & Problem
-1. **Mobile Fixed Hero Stamping over Catalog Glass:**
-   On mobile viewports ($\le 768\text{px}$), `.hero-section` had `position: fixed` with `.active-drop-section` having `margin-top: 100vh`. During iOS Safari momentum scrolling and Chrome Android gesture dragging, the fixed statue silhouette and metallic letters frequently detached from the scroll container and stamped over product card surfaces.
-2. **Backdrop Bleed on Mobile Cards:**
-   Because `.active-drop-section` lacked a solid backing color, high-contrast imagery from the fixed hero background shone through card gaps on mobile.
-3. **Catalog Height Collapse During Hydration:**
-   When visitors arrived on cellular connections, `.drop-grid` initially rendered with 0px height until products were fetched, causing the footer and category bars to jump erratically.
+1. **Curtain Parallax Invariant:**
+   The signature Gothic Nova aesthetic requires the hero section to stand static like an immovable gothic wall (`position: fixed`). As the user scrolls, the active drop section (`.active-drop-section`) must crawl/override smoothly over the hero rather than the hero scrolling away in normal document flow.
+2. **Viewport Spacing & Hero Visibility Defect:**
+   When visitors are at scroll position 0 (`scrollY = 0`) to view the hero section fully, no portion of `.active-drop-section` (e.g. its curved crimson border, shadow, or "NEW ARRIVALS" header) should peek onto the screen. Under in-flow or truncated height topologies (`calc(100dvh - 60px)` with `margin-top: 0`), 60px of the product catalog persistently remained on screen.
+3. **Marquee Speed Calibration:**
+   The New Arrivals marquee scrolled too aggressively for luxury editorial browsing, requiring a 20% speed reduction for both JS `requestAnimationFrame` auto-scrolling and CSS keyframe animations.
 
 ### Decision
-1. **In-Flow Document Topology for Mobile Hero:**
-   Within `@media (max-width: 768px)`, transitioned `.hero-section` to `position: relative !important;`, `top: auto;`, `left: auto;`, `height: auto;`, `min-height: calc(100dvh - 60px);`, and `margin: 0 !important;`.
-   Mobile hero naturally scrolls up and out of view with native document flow.
-2. **Mobile `.active-drop-section` Margin Reset & Solid Backing:**
-   Set `margin-top: 0 !important;` and enforced `background-color: #0a0508 !important;` with `z-index: 2 !important;`. The catalog starts immediately below the hero without an artificial 100vh gap or visual bleed.
-3. **Hardened Desktop Curtain Parallax Invariant:**
-   Maintained `position: fixed` for desktop hero ($> 768\text{px}$) with `margin-top: 100vh` on desktop `.active-drop-section` and explicit `background-color: #0a0508 !important;`, preserving the signature gothic curtain reveal.
-4. **Catalog Grid Footprint Floor:**
-   Added `min-height: 480px;` to `.drop-grid` across desktop and mobile, guaranteeing stable layout geometry during cloud hydration.
+1. **Static Wall Hero Topology:**
+   Enforced `position: fixed !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100vh !important; height: 100dvh !important; z-index: 1 !important; overflow: hidden !important;` across desktop and mobile. The hero section remains completely static during scrolling.
+2. **Crawling Curtain Product Section with 100vh/100dvh Offset:**
+   Set `.active-drop-section` to `margin-top: 100vh !important; margin-top: 100dvh !important; position: relative !important; z-index: 10 !important; background-color: #0a0508 !important;`.
+   - At `scrollY = 0`, the product section begins strictly below the visible viewport, allowing the hero section to be viewed 100% cleanly without spacing peeking defects.
+   - Upon scroll, the opaque `#0a0508` product section crawls smoothly over the hero with an elevated `z-index: 10`.
+3. **New Arrivals Marquee 20% Speed Reduction:**
+   - In `index.html`: Reduced `baseSpeed` from `0.6` to `0.48` (~29px/sec).
+   - In `style.css`: Increased mobile animation duration from `28s` to `35s`.
+4. **Stable Catalog Footprint:**
+   Preserved `min-height: 480px;` on `.drop-grid` across desktop and mobile to ensure layout stability during initial catalog hydration.
 
 ### Invariants
-* Converting mobile hero to `position: relative` MUST NOT alter the internal translation variables or coordinate clamps restored in commit `2454ae2`.
-* Desktop ($> 768\text{px}$) curtain reveal must remain strictly preserved with `position: fixed` and `#0a0508` backing.
-* Mobile in-flow rules must be strictly encapsulated inside `@media (max-width: 768px)`.
+* `.hero-section` must always remain static (`position: fixed`) with `z-index: 1`.
+* `.active-drop-section` must maintain `margin-top: 100vh !important; margin-top: 100dvh !important;`, `z-index: 10 !important;`, and `background-color: #0a0508 !important;`.
+* At scroll position 0, zero pixels of the product section may peek onto the screen over the hero section.
+* The marquee auto-scroll speed must remain calibrated at `baseSpeed = 0.48`.
 
 ---
 
