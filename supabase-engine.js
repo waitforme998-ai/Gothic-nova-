@@ -11,9 +11,61 @@
 
     let supabase = null;
 
+    // Resilient SafeStorage fallback adapter (reuses window.SafeStorage if present, else self-contained)
+    const SafeStorage = (typeof window !== 'undefined' && window.SafeStorage) ? window.SafeStorage : (function() {
+        var mem = {};
+        var isSupported = (function() {
+            try {
+                if (typeof window === 'undefined' || !window.localStorage) return false;
+                var testKey = '__gn_sandbox_test__';
+                window.localStorage.setItem(testKey, '1');
+                window.localStorage.removeItem(testKey);
+                return true;
+            } catch(e) {
+                return false;
+            }
+        })();
+
+        return {
+            getItem: function(key) {
+                try {
+                    if (isSupported) {
+                        var val = window.localStorage.getItem(key);
+                        if (val !== null) return val;
+                    }
+                    return mem[key] !== undefined ? mem[key] : null;
+                } catch(e) {
+                    return mem[key] !== undefined ? mem[key] : null;
+                }
+            },
+            setItem: function(key, val) {
+                var strVal = String(val);
+                try {
+                    if (isSupported) window.localStorage.setItem(key, strVal);
+                } catch(e) {}
+                mem[key] = strVal;
+            },
+            removeItem: function(key) {
+                try {
+                    if (isSupported) window.localStorage.removeItem(key);
+                } catch(e) {}
+                delete mem[key];
+            },
+            clear: function() {
+                try {
+                    if (isSupported) window.localStorage.clear();
+                } catch(e) {}
+                mem = {};
+            }
+        };
+    })();
+    if (typeof window !== 'undefined' && !window.SafeStorage) {
+        window.SafeStorage = SafeStorage;
+    }
+
     function safeLocalStorageSet(key, val) {
         try {
-            localStorage.setItem(key, typeof val === 'string' ? val : JSON.stringify(val));
+            SafeStorage.setItem(key, typeof val === 'string' ? val : JSON.stringify(val));
             return true;
         } catch (e) {
             if (e && (e.name === 'QuotaExceededError' || e.code === 22 || e.number === -2147024882)) {
@@ -23,8 +75,8 @@
                         'gn_search_cache', 'gn_recent_views', 'gn_order_counter_backup',
                         'gn_swr_hero_slides', 'gn_admin_search_idx'
                     ];
-                    nonEssential.forEach(k => { try { localStorage.removeItem(k); } catch(_) {} });
-                    localStorage.setItem(key, typeof val === 'string' ? val : JSON.stringify(val));
+                    nonEssential.forEach(k => { try { SafeStorage.removeItem(k); } catch(_) {} });
+                    SafeStorage.setItem(key, typeof val === 'string' ? val : JSON.stringify(val));
                     return true;
                 } catch(inner) {
                     // If still exceeding quota with 80+ products, store lightweight metadata in local SWR cache
@@ -36,7 +88,7 @@
                                 stock_images: [],
                                 stockImages: []
                             }));
-                            localStorage.setItem(key, JSON.stringify(lightweight));
+                            SafeStorage.setItem(key, JSON.stringify(lightweight));
                             return true;
                         } catch(_) {}
                     }
@@ -51,8 +103,8 @@
 
     function initSupabase() {
         if (supabase) return supabase;
-        const url = (typeof localStorage !== 'undefined' && localStorage.getItem('gn_supabase_url')) || DEFAULT_SUPABASE_URL; 
-        const key = (typeof localStorage !== 'undefined' && localStorage.getItem('gn_supabase_anon_key')) || DEFAULT_SUPABASE_ANON_KEY; 
+        const url = SafeStorage.getItem('gn_supabase_url') || DEFAULT_SUPABASE_URL; 
+        const key = SafeStorage.getItem('gn_supabase_anon_key') || DEFAULT_SUPABASE_ANON_KEY; 
         if (url && key && typeof window !== 'undefined' && window.supabase && typeof window.supabase.createClient === 'function') {
             try {
                 supabase = window.supabase.createClient(url, key, {
@@ -194,7 +246,7 @@
             // SWR Local Storage instant cache hit (0ms offline/refresh guarantee)
             if (!forceFresh && _sectionCache[sectionKey] === null) {
                 try {
-                    const cachedRaw = localStorage.getItem('gn_swr_' + sectionKey);
+                    const cachedRaw = SafeStorage.getItem('gn_swr_' + sectionKey);
                     if (cachedRaw) {
                         const parsed = JSON.parse(cachedRaw);
                         if (Array.isArray(parsed) && parsed.length > 0) {
@@ -463,7 +515,7 @@
         // =========================================================================
         getDefaultStock() {
             try {
-                const stored = localStorage.getItem('gn_default_stock');
+                const stored = SafeStorage.getItem('gn_default_stock');
                 if (stored !== null && !isNaN(parseInt(stored, 10))) {
                     return Math.max(0, parseInt(stored, 10));
                 }
@@ -474,7 +526,7 @@
         setDefaultStock(val) {
             const num = Math.max(0, parseInt(val, 10) || 0);
             try {
-                localStorage.setItem('gn_default_stock', String(num));
+                SafeStorage.setItem('gn_default_stock', String(num));
             } catch(e) {}
             return num;
         },

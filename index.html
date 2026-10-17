@@ -50,6 +50,57 @@
     <!-- Tailored Design System Style Sheets -->
     <link rel="stylesheet" href="style.css?v=7.0">
     
+    <!-- Resilient SafeStorage Engine (Instagram IAB & Sandbox Immunity) -->
+    <script>
+        window.SafeStorage = (function() {
+            var mem = {};
+            var isSupported = (function() {
+                try {
+                    if (typeof window === 'undefined' || !window.localStorage) return false;
+                    var testKey = '__gn_sandbox_test__';
+                    window.localStorage.setItem(testKey, '1');
+                    window.localStorage.removeItem(testKey);
+                    return true;
+                } catch(e) {
+                    return false;
+                }
+            })();
+
+            return {
+                getItem: function(key) {
+                    try {
+                        if (isSupported) {
+                            var val = window.localStorage.getItem(key);
+                            if (val !== null) return val;
+                        }
+                        return mem[key] !== undefined ? mem[key] : null;
+                    } catch(e) {
+                        return mem[key] !== undefined ? mem[key] : null;
+                    }
+                },
+                setItem: function(key, val) {
+                    var strVal = String(val);
+                    try {
+                        if (isSupported) window.localStorage.setItem(key, strVal);
+                    } catch(e) {}
+                    mem[key] = strVal;
+                },
+                removeItem: function(key) {
+                    try {
+                        if (isSupported) window.localStorage.removeItem(key);
+                    } catch(e) {}
+                    delete mem[key];
+                },
+                clear: function() {
+                    try {
+                        if (isSupported) window.localStorage.clear();
+                    } catch(e) {}
+                    mem = {};
+                }
+            };
+        })();
+    </script>
+
     <!-- Custom Scroll & Interaction Engine -->
     <script src="scroll-engine.js" defer></script>
     
@@ -61,15 +112,16 @@
     <script>
         (function() {
             try {
+                var storage = window.SafeStorage;
                 if (window.location.search.includes('reset=1') || window.location.search.includes('tarot=reset') || window.location.search.includes('test=1')) {
-                    try { localStorage.removeItem('gn_tarot_ritual_v14'); localStorage.removeItem('gn_tarot_ritual_v13'); localStorage.removeItem('gn_tarot_ritual_v12'); } catch(e) {}
+                    try { storage.removeItem('gn_tarot_ritual_v14'); storage.removeItem('gn_tarot_ritual_v13'); storage.removeItem('gn_tarot_ritual_v12'); } catch(e) {}
                 }
                 // Purge all legacy storage keys
                 ['gn_tarot_ritual_v13', 'gn_tarot_ritual_v12', 'gn_daily_card_v11', 'gn_daily_card_v10', 'gn_daily_card_v9', 'gn_daily_card_v8', 'gn_daily_card_v7', 'gn_daily_card_v6', 'gn_daily_card_v5', 'gn_daily_card_v4', 'gn_daily_card_v3', 'gn_daily_card_state'].forEach(function(k) {
-                    try { localStorage.removeItem(k); } catch(e) {}
+                    try { storage.removeItem(k); } catch(e) {}
                 });
                 var TAROT_KEY = 'gn_tarot_ritual_v14';
-                var raw = localStorage.getItem(TAROT_KEY);
+                var raw = storage.getItem(TAROT_KEY);
                 var isClaimedAndValid = false;
                 if (raw) {
                     var parsed = JSON.parse(raw);
@@ -536,16 +588,16 @@
         (function cleanupLegacyStorage() {
             const legacyKeys = ['gn_tarot_ritual_v13', 'gn_tarot_ritual_v12', 'gn_daily_card_v11', 'gn_daily_card_v10', 'gn_daily_card_v9', 'gn_daily_card_v8', 'gn_daily_card_v7', 'gn_daily_card_v6', 'gn_daily_card_v5', 'gn_daily_card_v4', 'gn_daily_card_state'];
             legacyKeys.forEach(k => {
-                try { localStorage.removeItem(k); } catch(e) {}
+                try { window.SafeStorage.removeItem(k); } catch(e) {}
             });
         })();
 
         // Global Testing Helper to reset Tarot Ritual on demand
         window.resetTarotRitual = function() {
             try {
-                localStorage.removeItem(TAROT_STORAGE_KEY);
+                window.SafeStorage.removeItem(TAROT_STORAGE_KEY);
                 ['gn_tarot_ritual_v14', 'gn_tarot_ritual_v13', 'gn_tarot_ritual_v12', 'gn_daily_card_v11', 'gn_daily_card_v10'].forEach(k => {
-                    try { localStorage.removeItem(k); } catch(e) {}
+                    try { window.SafeStorage.removeItem(k); } catch(e) {}
                 });
             } catch(e) {}
             window.activeDailyReward = null;
@@ -563,7 +615,7 @@
 
         function getStoredDailyReward() {
             try {
-                const raw = localStorage.getItem(TAROT_STORAGE_KEY);
+                const raw = window.SafeStorage.getItem(TAROT_STORAGE_KEY);
                 if (!raw) return null;
                 const parsed = JSON.parse(raw);
                 if (!parsed) return null;
@@ -575,7 +627,7 @@
 
                 // If 48 hours passed: purge completely and allow fresh shuffle
                 if ((parsed.step === 'claimed' || parsed.step === 'revealed' || parsed.reward || parsed.selectedReward) && shuffleUnlockAt > 0 && now >= shuffleUnlockAt) {
-                    localStorage.removeItem(TAROT_STORAGE_KEY);
+                    window.SafeStorage.removeItem(TAROT_STORAGE_KEY);
                     window.activeDailyReward = null;
                     return null;
                 }
@@ -613,7 +665,7 @@
 
             let existing = {};
             try {
-                const raw = localStorage.getItem(TAROT_STORAGE_KEY);
+                const raw = window.SafeStorage.getItem(TAROT_STORAGE_KEY);
                 if (raw) existing = JSON.parse(raw) || {};
             } catch(e) {}
 
@@ -660,7 +712,7 @@
             }
 
             try {
-                localStorage.setItem(TAROT_STORAGE_KEY, JSON.stringify(dataToSave));
+                window.SafeStorage.setItem(TAROT_STORAGE_KEY, JSON.stringify(dataToSave));
             } catch(e) {}
         }
 
@@ -1057,7 +1109,7 @@
                         countdownTimerInterval = null;
                     }
                     try {
-                        localStorage.removeItem(TAROT_STORAGE_KEY);
+                        window.SafeStorage.removeItem(TAROT_STORAGE_KEY);
                     } catch(e) {}
                     window.activeDailyReward = null;
 
@@ -1657,7 +1709,7 @@
     <script>
         // 0ms SWR Local Authority Fast Hydration (Zero Blank Flash & Instant Offline/Refresh Continuity)
         try {
-            const cachedProds = localStorage.getItem('gn_swr_products');
+            const cachedProds = window.SafeStorage.getItem('gn_swr_products');
             if (cachedProds) {
                 const parsed = JSON.parse(cachedProds);
                 if (Array.isArray(parsed) && parsed.length > 0) {
@@ -1665,7 +1717,7 @@
                     window.gn_products_loaded = true;
                 }
             }
-            const cachedAnns = localStorage.getItem('gn_swr_announcements');
+            const cachedAnns = window.SafeStorage.getItem('gn_swr_announcements');
             if (cachedAnns) {
                 const parsed = JSON.parse(cachedAnns);
                 if (Array.isArray(parsed) && parsed.length > 0) {
@@ -2697,19 +2749,30 @@
                 };
                 window.renderNavMenuCategories = renderNavMenuCategories;
 
-                // Handle URL search/cat query params on load (e.g. ?cat=rings or ?q=reaper)
+                // Handle URL search/cat/product query params on load (e.g. ?product=123, ?cat=rings, or ?q=reaper)
                 function handleUrlQueryParams() {
                     try {
                         const params = new URLSearchParams(window.location.search);
+                        const pid = params.get('product') || params.get('p');
                         const cat = params.get('cat') || params.get('category');
                         const q = params.get('q') || params.get('search');
-                        if (cat) {
+                        if (pid) {
                             setTimeout(() => {
-                                window.selectCategoryAndScroll(cat);
+                                if (typeof window.openPdpModal === 'function') {
+                                    window.openPdpModal(pid);
+                                }
+                            }, 150);
+                        } else if (cat) {
+                            setTimeout(() => {
+                                if (typeof window.selectCategoryAndScroll === 'function') {
+                                    window.selectCategoryAndScroll(cat);
+                                }
                             }, 120);
                         } else if (q) {
                             setTimeout(() => {
-                                window.applySearchQueryAndScroll(q);
+                                if (typeof window.applySearchQueryAndScroll === 'function') {
+                                    window.applySearchQueryAndScroll(q);
+                                }
                             }, 120);
                         }
                     } catch(e) {}
@@ -3945,9 +4008,9 @@
     <script>
     (function() {
 
-        // --- CART STATE (localStorage-backed, quantity-aware, keyed by product id) ---
+        // --- CART STATE (SafeStorage-backed, quantity-aware, keyed by product id) ---
         let cartMap = {};
-        const storedCart = localStorage.getItem('gn_cart');
+        const storedCart = window.SafeStorage.getItem('gn_cart');
         if (storedCart) {
             try {
                 cartMap = JSON.parse(storedCart);
@@ -3958,7 +4021,7 @@
         window.gn_cart = cartMap;
 
         function saveCart() {
-            localStorage.setItem('gn_cart', JSON.stringify(cartMap));
+            window.SafeStorage.setItem('gn_cart', JSON.stringify(cartMap));
             window.gn_cart = cartMap;
         }
         window.saveCart = saveCart;
@@ -4888,7 +4951,7 @@
                 }
             }
             try {
-                const raw = localStorage.getItem('gn_tarot_ritual_v14');
+                const raw = window.SafeStorage.getItem('gn_tarot_ritual_v14');
                 if (!raw) return null;
                 const parsed = JSON.parse(raw);
                 const reward = parsed && (parsed.reward || parsed.selectedReward || parsed.claimedReward);
@@ -5803,13 +5866,13 @@
                     } : null
                 };
 
-                // Mark reward redeemed in localStorage
+                // Mark reward redeemed in SafeStorage
                 try {
-                    const rawState = localStorage.getItem('gn_tarot_ritual_v14');
+                    const rawState = window.SafeStorage.getItem('gn_tarot_ritual_v14');
                     if (rawState) {
                         const parsed = JSON.parse(rawState);
                         parsed.redeemed = true;
-                        localStorage.setItem('gn_tarot_ritual_v14', JSON.stringify(parsed));
+                        window.SafeStorage.setItem('gn_tarot_ritual_v14', JSON.stringify(parsed));
                     }
                 } catch(e) {}
 

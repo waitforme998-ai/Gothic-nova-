@@ -23,6 +23,10 @@
 13. [ADR-013: Mobile Viewport Fluid Topology, Single-Line Category Locking & Render-Thrash Coalescing](#adr-013-mobile-viewport-fluid-topology-single-line-category-locking--render-thrash-coalescing)
 14. [ADR-014: Universal Non-Destructive Hydration, Pre-Decoded PDP Images & Top-Anchored Mobile Topology](#adr-014-universal-non-destructive-hydration-pre-decoded-pdp-images--top-anchored-mobile-topology)
 15. [ADR-015: Low-Tier Mobile Tile Rasterization, Button Anti-Flicker & Single Master Password Invariant](#adr-015-low-tier-mobile-tile-rasterization-button-anti-flicker--single-master-password-invariant)
+16. [ADR-016: Non-Intrusive PDP Description Presentation via Length-Gated Toggle](#adr-016-non-intrusive-pdp-description-presentation-via-length-gated-toggle)
+17. [ADR-017: Cart Drawer Viewport Scrolling & PDP Add-to-Cart State Hardening](#adr-017-cart-drawer-viewport-scrolling--pdp-add-to-cart-state-hardening)
+18. [ADR-018: Add-to-Cart Scope Hardening & Undefined Stock Fallback Normalization](#adr-018-add-to-cart-scope-hardening--undefined-stock-fallback-normalization)
+19. [ADR-019: SafeStorage Layer Abstraction & Instagram In-App Browser Sandbox Immunity](#adr-019-safestorage-layer-abstraction--instagram-in-app-browser-sandbox-immunity)
 
 ---
 
@@ -390,6 +394,35 @@ Internal system state records (`__GN_SYNC_PRODUCTS__`, `__GN_SYNC_ANNOUNCEMENTS_
 * Any product without an explicit numeric stock attribute defaults to in-stock (`999`).
 * `addToCartBtn` handler must define `priceText` locally before writing to cart state.
 * `refreshStorefrontCatalog` must never delete cart items unless authoritative stock is explicitly $\le 0$.
+
+---
+
+## ADR-019: SafeStorage Layer Abstraction & Instagram In-App Browser Sandbox Immunity
+
+### Context & Problem
+1. **Instagram & WebKit In-App Browser (IAB) DOMExceptions:**
+   When visitors open gothicnova.com links through Instagram, Facebook, TikTok, or iOS Safari Private Browsing mode, sandboxed webviews enforce strict privacy barriers. Accessing or modifying `window.localStorage` throws an unhandled:
+   `DOMException: SecurityError: Access is denied for this document`.
+2. **Catalog Blank Flash & Fatal JS Halts:**
+   Because `supabase-engine.js` (lines 54–55) and `index.html` (Tarot check, SWR reads, cart state) invoked `localStorage` directly at 0ms, the thrown SecurityError abruptly halted JavaScript parsing. The catalog collapsed to 0px height, product cards were never hydrated, and customers could not add items to the cart.
+3. **Instagram Query Clutter & History API Locks:**
+   Instagram ads and bio links append extensive tracking query strings (`?igshid=...`, `?fbclid=...`, `?utm_...`). In restricted webviews, attempting unhandled `history.pushState` on modal interactions caused secondary errors.
+
+### Decision
+1. **Synchronous `window.SafeStorage` Polyfill:**
+   Placed an inline SafeStorage engine at the very top of `<head>` in `index.html` before any other script. It mimics `Storage.prototype` with synchronous `.getItem()`, `.setItem()`, `.removeItem()`, and `.clear()`.
+   If `localStorage` is blocked or throws any SecurityError, it seamlessly transparents to an internal in-memory dictionary (`mem`).
+2. **Dual-Mode Engine Migration (`supabase-engine.js`):**
+   Integrated `SafeStorage` into `safeLocalStorageSet()`, `initSupabase()`, `_getSection()`, and stock helpers. If running headless or in tests without `window.SafeStorage`, it transparently instantiates its own isolated safe storage.
+3. **Storefront Decoupling from Raw `localStorage`:**
+   Migrated all storage touchpoints in `index.html` (Tarot ritual gate, 0ms SWR catalog hydration, cart persistence, active reward getters) to `SafeStorage`.
+4. **URL Parameter Isolation & History API Guards:**
+   Updated `handleUrlQueryParams()` to parse `pid = params.get('product') || params.get('p')` cleanly and open PDP modals without being derailed by trailing social tracking parameters. Wrapped all `history.pushState` calls in `try/catch`.
+
+### Invariants
+* All client-side storage access across storefront and dual-mode engine must use `SafeStorage` or be wrapped in `try/catch`.
+* `SafeStorage` must remain 100% synchronous; it must never return promises or throw uncaught exceptions.
+* In restricted or private browsing sandboxes, cart additions and product browsing must proceed in memory without blocking customer checkout.
 
 ---
 
