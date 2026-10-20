@@ -8311,8 +8311,8 @@
                     if (ev.data.type === 'ANNOUNCEMENTS_UPDATED') {
                         loadAnnouncementsIntoAdmin();
                     }
-                    if (ev.data.type === 'ORDER_CREATED' || ev.data.type === 'ORDER_UPDATED' || ev.data.type === 'ORDER_DELETED') {
-                        loadOrdersAdmin();
+                    if (ev.data.type === 'ORDER_CREATED' || ev.data.type === 'ORDER_PLACED' || ev.data.type === 'ORDER_STATUS_CHANGED' || ev.data.type === 'ORDER_UPDATED' || ev.data.type === 'ORDER_DELETED') {
+                        loadOrdersAdmin(false);
                     }
                 };
             }
@@ -8348,7 +8348,7 @@
                 await Promise.all([
                     loadProducts(),
                     loadReviewsAdmin(),
-                    loadOrdersAdmin(),
+                    loadOrdersAdmin(false),
                     loadCategoriesIntoAdmin(),
                     loadAnnouncementsIntoAdmin()
                 ]);
@@ -8360,6 +8360,26 @@
                 renderDashboard();
             }
         })();
+
+        // =========================================================================
+        // SHIELD 3: LIFECYCLE AUTO-WAKE & 30-SECOND SILENT HEARTBEAT
+        // =========================================================================
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                loadOrdersAdmin(false);
+            }
+        });
+
+        window.addEventListener('focus', () => {
+            loadOrdersAdmin(false);
+        });
+
+        // 30-Second Silent Heartbeat for guaranteed zero-click ingestion
+        setInterval(() => {
+            if (document.visibilityState === 'visible' && !isSavingProduct && !isSavingAnnouncements) {
+                loadOrdersAdmin(false);
+            }
+        }, 30000);
     </script>
 </body>
 </html>

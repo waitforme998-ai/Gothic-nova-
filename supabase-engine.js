@@ -155,6 +155,20 @@
     }
     let _migrationDone = false;
     let _realtimeChannel = null;
+    let _realtimeReconnectAttempts = 0;
+    let _realtimeReconnectTimer = null;
+
+    function scheduleRealtimeReconnect(engine, callback) {
+        if (_realtimeReconnectTimer) return;
+        _realtimeReconnectAttempts++;
+        const delay = Math.min(30000, Math.pow(2, Math.min(_realtimeReconnectAttempts, 5)) * 1000);
+        _realtimeReconnectTimer = setTimeout(() => {
+            _realtimeReconnectTimer = null;
+            if (!_realtimeChannel && engine && engine.client) {
+                engine.subscribeRealtime(callback);
+            }
+        }, delay);
+    }
 
     function getStoreSyncBroadcastChannel() {
         if (typeof BroadcastChannel !== 'undefined') {
@@ -1213,9 +1227,13 @@
             }
 
             try {
+                _ordersCache = null;
                 window.dispatchEvent(new Event('ordersUpdated'));
                 const bc = getStoreSyncBroadcastChannel();
-                if (bc) bc.postMessage({ type: 'ORDER_CREATED', order: createdOrder });
+                if (bc) {
+                    bc.postMessage({ type: 'ORDER_PLACED', order: createdOrder });
+                    bc.postMessage({ type: 'ORDER_CREATED', order: createdOrder });
+                }
             } catch(e) {}
 
             return createdOrder;
@@ -1354,7 +1372,14 @@
                             if (name === '__GN_STORE_SYNC__' || name.startsWith('__GN_')) {
                                 return;
                             }
-                            window.dispatchEvent(new Event('ordersUpdated'));
+                        }
+                        // Zero-Click Admin Ingestion: Invalidate cache and broadcast to all tabs
+                        _ordersCache = null;
+                        window.dispatchEvent(new Event('ordersUpdated'));
+                        const bc = getStoreSyncBroadcastChannel();
+                        if (bc) {
+                            bc.postMessage({ type: 'ORDER_CREATED', payload });
+                            bc.postMessage({ type: 'ORDER_PLACED', payload });
                         }
                         if (callback) callback({ type: 'order', payload });
                     })
@@ -1382,7 +1407,18 @@
                         });
                         if (callback) callback({ type: 'hero_slide', payload });
                     })
-                    .subscribe();
+                    .subscribe((status, err) => {
+                        if (status === 'SUBSCRIBED') {
+                            _realtimeReconnectAttempts = 0;
+                            if (_realtimeReconnectTimer) {
+                                clearTimeout(_realtimeReconnectTimer);
+                                _realtimeReconnectTimer = null;
+                            }
+                        } else if (status === 'CHANNEL_ERROR' || status === 'CLOSED' || status === 'TIMED_OUT') {
+                            _realtimeChannel = null;
+                            scheduleRealtimeReconnect(self, callback);
+                        }
+                    });
 
                 _realtimeChannel = channel;
                 return channel;
