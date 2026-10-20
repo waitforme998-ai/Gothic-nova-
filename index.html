@@ -8,7 +8,7 @@
     
     <!-- Search Engine & Live Presentation Optimization Meta Tags -->
     <!-- UPDATE: Replace https://gothic-nova.vercel.app with your live domain if customized -->
-    <link rel="canonical" href="https://gothic-nova.vercel.app/">
+    <link rel="canonical" href="https://gothicnova.com/">
     <meta name="description" content="Shop GOTHIC NOVA — Pakistan's premier cyber-goth &amp; Japanese alternative jewelry brand. Handcrafted rings, chains, chokers &amp; pendants with Cash on Delivery (COD) nationwide across Pakistan.">
     <meta name="keywords" content="gothic jewelry pakistan, cyber goth jewelry, buy rings online pakistan, gothic pendant, cash on delivery jewelry pakistan, gothic nova, dark aesthetic jewelry">
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
@@ -24,23 +24,23 @@
     <!-- OpenGraph High-Fidelity Social Sharing Metadata (Link Previews) -->
     <meta property="og:title" content="GOTHIC NOVA | Premium Cyber-Goth &amp; Japanese Jewelry Pakistan">
     <meta property="og:description" content="Shop limited-edition gothic rings, chains, chokers &amp; pendants. 100% premium dark aesthetic craftsmanship with Cash on Delivery nationwide.">
-    <meta property="og:image" content="https://gothic-nova.vercel.app/assets/gothic_nova_brand_og.png">
+    <meta property="og:image" content="https://gothicnova.com/assets/gothic_nova_brand_og.png">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta property="og:image:alt" content="GOTHIC NOVA — Cyber-Goth &amp; Alternative Jewelry Pakistan">
-    <meta property="og:url" content="https://gothic-nova.vercel.app/">
+    <meta property="og:url" content="https://gothicnova.com/">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Gothic Nova">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="GOTHIC NOVA | Cyber-Goth Jewelry Catalog Pakistan">
     <meta name="twitter:description" content="Explore gothic rings, chains, chokers &amp; pendants in Pakistan. Cash on Delivery available nationwide.">
-    <meta name="twitter:image" content="https://gothic-nova.vercel.app/assets/gothic_nova_brand_og.png">
+    <meta name="twitter:image" content="https://gothicnova.com/assets/gothic_nova_brand_og.png">
 
-    <!-- High-Performance Critical Image Preloads -->
-    <link rel="preload" as="image" href="assets/gothic_card_back.jpg" fetchpriority="high">
-    <link rel="preload" as="image" href="assets/hero_gothic_bg.png" fetchpriority="high">
-    <link rel="preload" as="image" href="assets/website_bg.png">
-    <link rel="preload" as="image" href="assets/subject_silhouette.png">
+    <!-- High-Performance Critical Image Preloads (Responsive Mobile First) -->
+    <link rel="preload" as="image" href="assets/website_bg_mobile.jpg" media="(max-width: 768px)" fetchpriority="high">
+    <link rel="preload" as="image" href="assets/website_bg.png" media="(min-width: 769px)" fetchpriority="high">
+    <link rel="preload" as="image" href="assets/hero_gothic_bg.png" media="(min-width: 769px)">
+    <link rel="preload" as="image" href="assets/subject_silhouette.png" media="(min-width: 769px)">
 
     <!-- Design System Typography Links -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -104,9 +104,9 @@
     <!-- Custom Scroll & Interaction Engine -->
     <script src="scroll-engine.js" defer></script>
     
-    <!-- Supabase SDK & Dual-Mode Engine -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase-engine.js?v=3.1.0"></script>
+    <!-- Supabase SDK & Dual-Mode Engine (Non-blocking Deferred Loading) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+    <script src="supabase-engine.js?v=3.1.0" defer></script>
     <script src="search-engine.js" defer></script>
     <!-- Instant 0ms Tarot Ritual Gate Check (Strict 48-Hour Restriction) -->
     <script>
@@ -1833,7 +1833,7 @@
                 if (!activeProds.length) return;
 
                 const topNames = activeProds.slice(0, 4).map(p => p.name).filter(Boolean);
-                const baseUrl = (window.location.origin && window.location.origin.startsWith('http')) ? window.location.origin : 'https://gothic-nova.vercel.app';
+                const baseUrl = (window.location.origin && window.location.origin.startsWith('http')) ? window.location.origin : 'https://gothicnova.com';
 
                 // 1. Dynamic Document Title
                 if (topNames.length > 0) {

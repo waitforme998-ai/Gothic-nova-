@@ -13,5 +13,5 @@ Disallow: /admin
 Disallow: /dashboard.html
 Disallow: /dashboard
 
-# UPDATE: Replace with custom domain if attached to Vercel
-Sitemap: https://gothic-nova.vercel.app/sitemap.xml
+# Canonical authoritative sitemap
+Sitemap: https://gothicnova.com/sitemap.xml
