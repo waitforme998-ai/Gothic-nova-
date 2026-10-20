@@ -3555,6 +3555,7 @@
                     <button class="pdp-modal-btn-buy" id="pdpModalBuyNowBtn">BUY NOW</button>
                     <button class="pdp-modal-btn-cart" id="pdpModalAddToCartBtn">ADD TO CART</button>
                 </div>
+                <button type="button" class="pdp-add-more-link" id="pdpAddMoreBtn" style="display:none;" onclick="window.enablePdpAddMore()">+ Add another unit</button>
             </div>
         </div>
     </div>
@@ -4367,30 +4368,32 @@
         }
 
         window.adjustQty = function(pid, delta) {
-            if (!cartMap[pid]) return;
+            const cleanPid = String(pid).trim();
+            if (!cartMap[cleanPid]) return;
             const prods = (typeof getAllProducts === 'function') ? getAllProducts() : (window.gn_products || []);
-            const product = prods.find(p => String(p.id) === String(pid));
+            const product = prods.find(p => String(p.id) === cleanPid);
             const stock = product ? ((product.stock !== undefined && product.stock !== null && product.stock !== '') ? Number(product.stock) : 999) : 999;
             
-            const newQty = cartMap[pid].qty + delta;
+            const newQty = cartMap[cleanPid].qty + delta;
             if (newQty < 1) {
-                window.removeFromCart(pid);
+                window.removeFromCart(cleanPid);
             } else if (newQty > stock) {
                 if (typeof showLuxuryAlert === 'function') {
                     showLuxuryAlert(`Only ${stock} unit${stock === 1 ? '' : 's'} available in stock.`, 'STOCK LIMIT', 'info');
                 }
-                cartMap[pid].qty = Math.max(1, stock);
+                cartMap[cleanPid].qty = Math.max(1, stock);
                 saveCart();
                 renderCart();
             } else {
-                cartMap[pid].qty = newQty;
+                cartMap[cleanPid].qty = newQty;
                 saveCart();
                 renderCart();
             }
         };
 
         window.removeFromCart = function(pid) {
-            delete cartMap[pid];
+            const cleanPid = String(pid).trim();
+            delete cartMap[cleanPid];
             saveCart();
             renderCart();
         };
@@ -4469,6 +4472,7 @@
             const qtyPlus = document.getElementById('pdpModalQtyPlus');
             const buyNowBtn = document.getElementById('pdpModalBuyNowBtn');
             const addToCartBtn = document.getElementById('pdpModalAddToCartBtn');
+            const pdpAddMoreBtn = document.getElementById('pdpAddMoreBtn');
 
             if (!overlay || !modalBox) return;
 
@@ -4481,7 +4485,28 @@
                 if (!addToCartBtn) return;
                 addToCartBtn.classList.remove('view-cart-mode');
                 addToCartBtn.innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="stroke-width:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg> ADD TO CART`;
+                if (pdpAddMoreBtn) pdpAddMoreBtn.style.display = 'none';
             }
+
+            window.enablePdpAddMore = function() {
+                if (!activeModalProduct) return;
+                const cleanPid = String(activeModalProduct.id).trim();
+                const pStock = (activeModalProduct.stock !== undefined && activeModalProduct.stock !== null && activeModalProduct.stock !== '') ? Number(activeModalProduct.stock) : 999;
+                const maxStock = Math.max(1, pStock);
+                const currentCart = window.gn_cart || cartMap || {};
+                const existingInCart = (currentCart && currentCart[cleanPid]) ? Number(currentCart[cleanPid].qty || 0) : 0;
+                if (existingInCart >= maxStock) {
+                    if (typeof showLuxuryAlert === 'function') {
+                        showLuxuryAlert(`Maximum available stock (${maxStock} unit${maxStock === 1 ? '' : 's'}) already in cart.`, 'STOCK LIMIT', 'info');
+                    }
+                    return;
+                }
+                currentModalQty = 1;
+                qtyVal.textContent = '1';
+                addToCartBtn.classList.remove('view-cart-mode');
+                addToCartBtn.innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="stroke-width:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg> ADD (+1) TO CART`;
+                if (pdpAddMoreBtn) pdpAddMoreBtn.style.display = 'none';
+            };
 
             function safeSwapPdpImage(newSrc, fallbackSrc) {
                 if (!mainImg || !newSrc) return;
@@ -4598,10 +4623,16 @@
                     qtyPlus.disabled = false;
 
                     const maxStock = Math.max(1, pStock);
-                    const existingInCart = (window.gn_cart && window.gn_cart[p.id]) ? Number(window.gn_cart[p.id].qty || 0) : 0;
+                    const cleanId = String(p.id).trim();
+                    const existingInCart = (window.gn_cart && window.gn_cart[cleanId]) ? Number(window.gn_cart[cleanId].qty || 0) : 0;
                     if (existingInCart >= maxStock) {
                         addToCartBtn.classList.add('view-cart-mode');
-                        addToCartBtn.innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="stroke-width:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg> VIEW CART`;
+                        addToCartBtn.innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="stroke-width:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg> VIEW CART (${existingInCart})`;
+                        if (pdpAddMoreBtn) pdpAddMoreBtn.style.display = 'none';
+                    } else if (existingInCart > 0) {
+                        addToCartBtn.classList.add('view-cart-mode');
+                        addToCartBtn.innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="stroke-width:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg> VIEW CART (${existingInCart})`;
+                        if (pdpAddMoreBtn) pdpAddMoreBtn.style.display = 'block';
                     } else {
                         resetAddToCartBtn();
                     }
@@ -4700,6 +4731,7 @@
                 modalBox.classList.remove('active');
                 modalBox.setAttribute('aria-hidden', 'true');
                 activeModalProduct = null;
+                if (pdpAddMoreBtn) pdpAddMoreBtn.style.display = 'none';
                 if (thumbsContainer) thumbsContainer.removeAttribute('data-thumb-key');
                 if (priceRow) priceRow.removeAttribute('data-price-key');
 
@@ -4755,16 +4787,38 @@
                 if (currentModalQty > 1) {
                     currentModalQty--;
                     qtyVal.textContent = currentModalQty;
+                    if (!addToCartBtn.classList.contains('view-cart-mode')) {
+                        addToCartBtn.innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="stroke-width:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg> ADD (+${currentModalQty}) TO CART`;
+                    }
                 }
             });
 
             qtyPlus.addEventListener('click', () => {
                 const pStock = (activeModalProduct && activeModalProduct.stock !== undefined && activeModalProduct.stock !== null && activeModalProduct.stock !== '') ? Number(activeModalProduct.stock) : 999;
                 const maxStock = Math.max(1, pStock);
-                const inCart = (activeModalProduct && window.gn_cart && window.gn_cart[activeModalProduct.id]) ? Number(window.gn_cart[activeModalProduct.id].qty || 0) : 0;
+                const cleanPid = activeModalProduct ? String(activeModalProduct.id).trim() : '';
+                const inCart = (activeModalProduct && window.gn_cart && window.gn_cart[cleanPid]) ? Number(window.gn_cart[cleanPid].qty || 0) : 0;
+
+                // If button was in view-cart-mode, pressing '+' reactivates add-to-cart state
+                if (addToCartBtn.classList.contains('view-cart-mode')) {
+                    if (inCart >= maxStock) {
+                        if (typeof showLuxuryAlert === 'function') {
+                            showLuxuryAlert(`Maximum available stock for this artifact is ${maxStock} unit${maxStock === 1 ? '' : 's'}.`, 'STOCK LIMIT', 'info');
+                        }
+                        return;
+                    }
+                    currentModalQty = 1;
+                    qtyVal.textContent = '1';
+                    addToCartBtn.classList.remove('view-cart-mode');
+                    addToCartBtn.innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="stroke-width:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg> ADD (+1) TO CART`;
+                    if (pdpAddMoreBtn) pdpAddMoreBtn.style.display = 'none';
+                    return;
+                }
+
                 if (currentModalQty + inCart < maxStock) {
                     currentModalQty++;
                     qtyVal.textContent = currentModalQty;
+                    addToCartBtn.innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="stroke-width:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg> ADD (+${currentModalQty}) TO CART`;
                 } else {
                     if (typeof showLuxuryAlert === 'function') {
                         showLuxuryAlert(`Maximum available stock for this artifact is ${maxStock} unit${maxStock === 1 ? '' : 's'}.`, 'STOCK LIMIT', 'info');
@@ -4776,7 +4830,7 @@
                 if (!activeModalProduct) return;
                 const pStock = (activeModalProduct.stock !== undefined && activeModalProduct.stock !== null && activeModalProduct.stock !== '') ? Number(activeModalProduct.stock) : 999;
                 if (pStock <= 0) return;
-                const pid = activeModalProduct.id;
+                const pid = String(activeModalProduct.id).trim();
                 const maxStock = Math.max(1, pStock);
                 const purchaseQty = Math.max(1, Math.min(currentModalQty, maxStock));
 
@@ -4816,7 +4870,7 @@
                 const pStock = (activeModalProduct.stock !== undefined && activeModalProduct.stock !== null && activeModalProduct.stock !== '') ? Number(activeModalProduct.stock) : 999;
                 if (pStock <= 0) return;
 
-                const pid = activeModalProduct.id;
+                const pid = String(activeModalProduct.id).trim();
                 const maxStock = Math.max(1, pStock);
                 const currentCart = window.gn_cart || cartMap || {};
                 const existingInCart = (currentCart && currentCart[pid]) ? Number(currentCart[pid].qty || 0) : 0;
@@ -4824,7 +4878,8 @@
                 if (existingInCart >= maxStock) {
                     showLuxuryAlert(`Maximum available stock (${maxStock} unit${maxStock === 1 ? '' : 's'}) already in cart.`);
                     addToCartBtn.classList.add('view-cart-mode');
-                    addToCartBtn.innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="stroke-width:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg> VIEW CART`;
+                    addToCartBtn.innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="stroke-width:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg> VIEW CART (${existingInCart})`;
+                    if (pdpAddMoreBtn) pdpAddMoreBtn.style.display = 'none';
                     return;
                 }
 
@@ -4848,16 +4903,15 @@
                 saveCart();
                 renderCart();
 
-                // Clear feedback on button
-                addToCartBtn.innerHTML = `ADDED TO CART ✓`;
-                setTimeout(() => {
-                    if (newTotalQty >= maxStock) {
-                        addToCartBtn.classList.add('view-cart-mode');
-                        addToCartBtn.innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="stroke-width:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg> VIEW CART`;
-                    } else {
-                        resetAddToCartBtn();
-                    }
-                }, 800);
+                // Persistent VIEW CART state on button
+                addToCartBtn.classList.add('view-cart-mode');
+                addToCartBtn.innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="stroke-width:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg> VIEW CART (${newTotalQty})`;
+                
+                if (newTotalQty < maxStock) {
+                    if (pdpAddMoreBtn) pdpAddMoreBtn.style.display = 'block';
+                } else {
+                    if (pdpAddMoreBtn) pdpAddMoreBtn.style.display = 'none';
+                }
 
                 const cartBadge = document.getElementById('cart-badge');
                 const cartIconLink = document.getElementById('cart-icon-link');

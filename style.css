@@ -3867,11 +3867,13 @@ body.no-ticker .hero-section {
     flex-shrink: 0;
 }
 #cart-items-list {
-    flex: 1 1 0%;
+    flex: 1 1 auto;
     min-height: 0;
+    max-height: calc(100dvh - 210px);
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: contain;
+    padding-bottom: 24px;
 }
 #cart-footer {
     flex-shrink: 0;
@@ -3979,6 +3981,26 @@ body.no-ticker .hero-section {
     background: linear-gradient(135deg, rgba(92, 15, 31, 0.9) 0%, rgba(30, 10, 20, 0.95) 100%) !important;
     border-color: var(--color-red-glow) !important;
     color: #ffe8be !important;
+}
+.pdp-add-more-link {
+    background: none;
+    border: none;
+    color: #ff3b5c;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    text-align: center;
+    padding: 8px 0 2px;
+    transition: color 0.2s ease;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    width: 100%;
+}
+.pdp-add-more-link:hover {
+    color: #ffe8be;
 }
 
 @media (max-width: 680px) {
