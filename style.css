@@ -8133,3 +8133,15 @@ html.tarot-pending body {
     border-radius: 4px;
 }
 
+/* ═══ CORE WEB VITALS & GOOGLE PAGESPEED RENDERING OPTIMIZATIONS ═══ */
+.reviews-section,
+.store-footer {
+    content-visibility: auto;
+    contain-intrinsic-size: 1px 500px;
+}
+
+.card-img-wrapper {
+    aspect-ratio: 1 / 1;
+}
+
+
