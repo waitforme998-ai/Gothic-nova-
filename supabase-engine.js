@@ -872,10 +872,17 @@
         async signIn(email, password) {
             const client = this.client;
             if (!client) {
-                if (password === 'gothicnova51214') {
-                    const mockSession = { user: { role: 'admin' }, token: 'gn-master-auth' };
-                    try { sessionStorage.setItem('gn_admin_session', JSON.stringify(mockSession)); } catch(e) {}
-                    return { data: { session: mockSession, user: mockSession.user }, error: null };
+                if (window.crypto && window.crypto.subtle) {
+                    try {
+                        const msgUint8 = new TextEncoder().encode(password || '');
+                        const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+                        const hashHex = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+                        if (hashHex === 'e41082dd946ee4436dea38b033a4aa2494788be193f97f021527ab3e02f72fb6') {
+                            const mockSession = { user: { role: 'admin' }, token: 'gn-master-auth' };
+                            try { sessionStorage.setItem('gn_admin_session', JSON.stringify(mockSession)); } catch(e) {}
+                            return { data: { session: mockSession, user: mockSession.user }, error: null };
+                        }
+                    } catch(e) {}
                 }
                 return { data: null, error: { message: 'Invalid admin credentials.' } };
             }

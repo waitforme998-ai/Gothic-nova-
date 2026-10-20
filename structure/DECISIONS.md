@@ -323,17 +323,17 @@ Internal system state records (`__GN_SYNC_PRODUCTS__`, `__GN_SYNC_ANNOUNCEMENTS_
    - Every `.product-card` had `transform: translate3d(0, 0, 0)` and `contain: paint layout`, promoting dozens of individual elements into independent hardware-accelerated GPU layers (`cc::PictureLayer`). Under Skia memory pressure, Chrome dropped tiles ("chunks"), which flashed/glitched when interacting with buttons.
 2. **Catalog Load More Grid Wiping:** Tapping "DISCOVER MORE ARTIFACTS" previously called `grid.innerHTML = ...` wiping all existing 12 cards, causing image texture eviction and re-decoding lag.
 3. **Touch-Triggered `:hover` Transforms:** Mobile touch events synthesized `:hover`, triggering `transform: translateY(...)` and expanding box shadows on buttons like BUY NOW and LOAD MORE, forcing layer bounds re-evaluation during touch.
-4. **Password Ambiguity:** Line 809 of `supabase-engine.js` had a legacy check `if (password === 'gothicnova51214' || password === 'admin')` in an unused auth helper, creating confusion over secondary passwords and email requirements.
+4. **Password Ambiguity:** Line 809 of `supabase-engine.js` had a legacy check `if (password === '[REDACTED_KEY]' || password === 'admin')` in an unused auth helper, creating confusion over secondary passwords and email requirements.
 
 ### Decision
 1. **Confine Shimmer Animation to Skeletons:** Normal mobile `.card-img-wrapper` elements have a static dark background with `animation: none !important;`. The infinite shimmer is strictly scoped to `.product-card.skeleton-card .card-img-wrapper` and `.skeleton-img-box`.
 2. **Flatten Mobile Cards to Normal Scroll Flow:** On mobile (`@media (max-width: 768px)`), `.product-card` uses `transform: none !important; backface-visibility: visible !important; contain: layout style !important;`, eliminating dozens of promoted GPU layers.
 3. **Non-Destructive Catalog Appends:** When `isAppending === true` in `renderMainCatalog()`, existing DOM cards and image decodes are untouched; only newly unveiled cards are inserted via `grid.insertAdjacentHTML('beforeend', newCards)`.
 4. **Mobile Button Touch Stabilization:** Disabled `:hover` translates and expanding shadows on mobile buttons (`.catalog-load-more-btn`, `.pdp-modal-btn-buy`, `.product-card:hover`). Replaced with non-transforming subtle `:active` opacity. Lowered overlay backdrop-filters to `blur(4px)` on mobile.
-5. **Strict Single Master Password Invariant:** Removed `'admin'` fallback from `supabase-engine.js`. The only authorized administrative key in the system is `gothicnova51214`. No email required.
+5. **Strict Single Master Password Invariant:** Removed `'admin'` fallback from `supabase-engine.js`. The only authorized administrative key in the system is verified cryptographically via SHA-256 hash. No email required.
 
 ### Invariants
-* The admin panel authentication is strictly single-password (`gothicnova51214`) without email.
+* The admin panel authentication is strictly single-password (SHA-256 verified) without email.
 * Normal loaded product cards must never run infinite CSS keyframe animations.
 * Catalog batch expansion must append via `insertAdjacentHTML` without wiping existing grid elements.
 
