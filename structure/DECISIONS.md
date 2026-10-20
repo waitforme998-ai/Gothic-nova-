@@ -27,7 +27,9 @@
 17. [ADR-017: Cart Drawer Viewport Scrolling & PDP Add-to-Cart State Hardening](#adr-017-cart-drawer-viewport-scrolling--pdp-add-to-cart-state-hardening)
 18. [ADR-018: Add-to-Cart Scope Hardening & Undefined Stock Fallback Normalization](#adr-018-add-to-cart-scope-hardening--undefined-stock-fallback-normalization)
 19. [ADR-019: SafeStorage Layer Abstraction & Instagram In-App Browser Sandbox Immunity](#adr-019-safestorage-layer-abstraction--instagram-in-app-browser-sandbox-immunity)
-20. [ADR-020: Mobile Viewport In-Flow Normalization & Zero-Stamping Curtain Topology](#adr-020-mobile-viewport-in-flow-normalization--zero-stamping-curtain-topology)
+20. [ADR-020: Static Wall Hero Backdrop, Crawling Curtain Topology & Marquee Speed Calibration](#adr-020-static-wall-hero-backdrop-crawling-curtain-topology--marquee-speed-calibration)
+21. [ADR-021: Add-to-Cart Persistent State, Secondary Stepper, & Cart Drawer Viewport Containment](#adr-021-add-to-cart-persistent-state-secondary-stepper--cart-drawer-viewport-containment)
+22. [ADR-022: Zero-Dependency Serverless Dynamic XML Sitemap, Canonical Domain Migration & Core Web Vitals Optimization](#adr-022-zero-dependency-serverless-dynamic-xml-sitemap-canonical-domain-migration--core-web-vitals-optimization)
 
 ---
 
@@ -458,15 +460,99 @@ Internal system state records (`__GN_SYNC_PRODUCTS__`, `__GN_SYNC_ANNOUNCEMENTS_
 
 ---
 
+## ADR-021: Add-to-Cart Persistent State, Secondary Stepper, & Cart Drawer Viewport Containment
+
+### Context & Problem
+1. **Ephemeral Button Reset & User Confusion:**
+   In `index.html`, clicking "Add to Cart" previously transitioned the CTA into `VIEW CART` for an arbitrary 800ms timer before automatically resetting back to `ADD TO CART`. Customers who paused to read or wanted to proceed to the cart were caught in a race condition where the button snapped back, creating confusion over whether their item had actually been added.
+2. **Missing In-Modal Multi-Unit Addition Flow:**
+   When an item was already present in the cart, opening the PDP modal or adding the first unit left customers without an obvious mechanism to increment quantity further from the modal itself without opening the full cart drawer.
+3. **Cart Key Inconsistency (String vs Numeric ID):**
+   Product IDs could be parsed or handled inconsistently as numbers or strings across different triggers (`addToCartBtn`, `renderCart`, stepper controls). Non-coerced IDs caused lookup mismatches where `cartMap[id]` could create duplicate item entries or fail to increment smoothly.
+4. **Mobile Cart Drawer Viewport Overflow:**
+   On mobile devices with short vertical viewports (or browsers with dynamic URL bars), `#cart-items-list` lacked a hard boundary relative to dynamic viewport units (`dvh`). When 3+ items were added, the list expanded down and pushed the checkout CTA and subtotal footer past the fold, preventing customers from finishing their purchase without closing and reopening.
+
+### Decision
+1. **Persistent `VIEW CART (${newTotalQty})` Modal State:**
+   Removed the arbitrary 800ms timeout on the Add-to-Cart button. Upon successful cart addition, the CTA transitions permanently to `VIEW CART (${newTotalQty})`. Clicking this button immediately opens the cart drawer.
+2. **Secondary Addition Stepper & Quick-Add Link:**
+   Introduced `#pdpAddMoreBtn` (`+ Add another unit`) directly below `.pdp-modal-actions`.
+   - When clicked (or when the PDP quantity stepper `+` is engaged), the button state smoothly transitions back to `ADD (+1) TO CART` with the updated quantity increment.
+   - Preserves complete flexibility: customers can either click `VIEW CART` to checkout or use the stepper / add-more link to stack additional units.
+3. **Strict ID String Coercion:**
+   All cart operations (lookups, insertions, deletions, clamp adjustments) strictly enforce `String(pid).trim()`. Prevents numeric vs string key collisions in `gn_cart`.
+4. **Mobile Cart Drawer Viewport Containment:**
+   Enforced strict boundary constraints in CSS:
+   ```css
+   #cart-items-list {
+       max-height: calc(100dvh - 210px);
+       overscroll-behavior-y: contain;
+       padding-bottom: 24px;
+   }
+   ```
+   Ensures that `#cart-footer` with the total amount and checkout CTA remains permanently docked and visible in the mobile viewport regardless of how many items are added to the cart.
+
+### Invariants
+* The PDP modal Add-to-Cart button must never use arbitrary `setTimeout` resets that falsely snap back to `ADD TO CART` while units exist in the cart.
+* Cart item keys must always be strictly coerced via `String(id).trim()`.
+* The cart drawer footer (`#cart-footer`) must remain permanently visible and docked in viewport; `#cart-items-list` must strictly scroll within its `calc(100dvh - 210px)` max-height boundary.
+
+---
+
+## ADR-022: Zero-Dependency Serverless Dynamic XML Sitemap, Canonical Domain Migration & Core Web Vitals Optimization
+
+### Context & Problem
+1. **Static Sitemap Staleness:**
+   The storefront relied on a hardcoded root `sitemap.xml` containing only `/` and `/category.html`. As the merchant added products via `admin.html`, new items were completely invisible to search engine crawlers (Googlebot, Bingbot) unless those bots executed client-side JavaScript.
+2. **Staging URL Canonical Leakage:**
+   Canonical tags, OpenGraph URLs, JSON-LD schemas, and `robots.txt` referenced the temporary Vercel staging deployment (`https://gothic-nova.vercel.app/`) rather than the official production domain (`https://gothicnova.com/`), fragmenting domain authority and search ranking.
+3. **Mobile Largest Contentful Paint (LCP) Delay:**
+   Mobile browsers downloaded desktop-sized hero images (`hero_gothic_bg.png`) due to non-responsive `<link rel="preload">` tags in `<head>`. Additionally, synchronous script parsing blocked initial rendering on mid-tier cellular devices.
+4. **Missing Edge Cache-Control Directives:**
+   Vercel served assets with default non-immutable cache headers, forcing redundant re-validations of static JS, CSS, and optimized WebP images on repeated user visits.
+
+### Decision
+1. **Zero-Dependency Serverless XML Sitemap (`api/sitemap.js`):**
+   - Created a standalone Vercel Serverless Function running on Node.js using native `https` (zero npm dependencies).
+   - Queries Supabase REST API directly for `customer_name = '__GN_SYNC_PRODUCTS__'`, dynamically enumerating all active catalog items.
+   - Generates compliant XML (`<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`) with `<loc>`, `<lastmod>`, `<changefreq>`, and `<priority>` for root, category, and every individual product (`https://gothicnova.com/?product=<id>`).
+   - Serves edge caching header: `Cache-Control: s-maxage=3600, stale-while-revalidate=86400` (cached at edge for 1 hour, background revalidated up to 24 hours).
+   - Configured rewrite in `vercel.json`: `/sitemap.xml` -> `/api/sitemap.js`.
+   - Retired static root `sitemap.xml`.
+2. **Production Domain Canonicalization (`https://gothicnova.com`):**
+   - Updated `robots.txt` to `Sitemap: https://gothicnova.com/sitemap.xml`.
+   - Standardized all canonical `<link rel="canonical" href="https://gothicnova.com/">`, OpenGraph (`og:url`, `og:image`), and Schema.org JSON-LD references to `https://gothicnova.com/`.
+3. **Core Web Vitals (CWV) & Performance Tuning:**
+   - **Responsive Hero Preloading:** Replaced monolithic image preload with media-query-conditioned preloads:
+     `<link rel="preload" as="image" href="assets/website_bg_mobile.jpg" media="(max-width: 768px)" fetchpriority="high">`
+     `<link rel="preload" as="image" href="assets/hero_gothic_bg.png" media="(min-width: 769px)" fetchpriority="high">`
+   - **Deferred Script Execution:** Added `defer` to Supabase SDK and `supabase-engine.js` to eliminate DOM parser blocking.
+   - **Connection Warming:** Injected `dns-prefetch` and `preconnect` directives for `cdn.jsdelivr.net` and Supabase API origins.
+   - **Edge Caching Rules (`vercel.json`):**
+     - Static JS/CSS: `public, max-age=86400, stale-while-revalidate=604800`.
+     - Static Images & Fonts: `public, max-age=31536000, immutable`.
+   - **Rendering & Layout Shift Optimization:**
+     - Added `aspect-ratio: 1 / 1` to `.card-img-wrapper` to prevent Cumulative Layout Shift (CLS).
+     - Added `content-visibility: auto; contain-intrinsic-size: 1px 500px;` to `.reviews-section` and `.store-footer` to defer off-screen rendering until user scrolls.
+
+### Invariants
+* `api/sitemap.js` must remain zero-dependency (native Node.js `https`) to ensure rapid cold starts and zero maintenance overhead.
+* All canonical references, OpenGraph URLs, JSON-LD schemas, and sitemap entries must strictly target `https://gothicnova.com/`.
+* Never wipe or modify live database rows in Supabase table `gn_orders`.
+
+---
+
 ## Diagnostic Checklist for Future AI Agents
 
 Before troubleshooting any reported issue, execute this verification protocol:
 
-- [ ] **Check Deployment:** Confirm latest commit is on `main` and deployed to `https://gothic-nova.vercel.app`.
-- [ ] **Inspect Supabase Row:** Query `gn_orders` where `customer_name = '__GN_SYNC_PRODUCTS__'`. Ensure `count === 1` and `items` is populated.
+- [ ] **Check Deployment:** Confirm latest commit is on `main` and deployed to `https://gothicnova.com` (and `https://gothic-nova.vercel.app`).
+- [ ] **Verify Dynamic Sitemap:** Confirm `https://gothicnova.com/sitemap.xml` returns valid XML (`HTTP 200`) containing dynamic product URLs.
+- [ ] **Inspect Supabase Row:** Query `gn_orders` where `customer_name = '__GN_SYNC_PRODUCTS__'`. Ensure `count === 1` and `items` is populated with active catalog products.
 - [ ] **Check Realtime Logs:** Open DevTools console and verify WebSocket connection (`gn_realtime_sync`) without `cannot add postgres_changes callbacks` errors.
-- [ ] **Verify Storage Keys:** Inspect `localStorage.getItem('gn_swr_products')`. Ensure no startup script is clearing it.
+- [ ] **Verify Storage Keys:** Inspect `localStorage.getItem('gn_swr_products')` or `SafeStorage`. Ensure no startup script is clearing it.
 - [ ] **Verify Element Display:** Ensure target elements are not hidden by CSS (`display: none;`, zero-height accordions, or parent overflow).
+- [ ] **Verify Cart Viewport:** Confirm `#cart-items-list` scrolls cleanly and `#cart-footer` remains docked on mobile screen sizes.
 
 
 

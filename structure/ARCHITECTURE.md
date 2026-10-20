@@ -1,8 +1,9 @@
 # GOTHIC NOVA — System Architecture & Code Connections Map
 
 > **Audience:** Core Engineers & AI Coding Agents.  
-> **Scope:** Complete structural topology, component connections, data flow pipelines, schema contracts, event busses, function cross-references, and full SEO architecture.  
-> **Maintenance Rule:** Keep this document modular, authoritative, and concise. When new features, schemas, or connections are introduced, update the respective section without adding duplicate narrative.
+> **Scope & Purpose (The "What" & "How"):** Living technical specification of the active system — structural topology, component responsibilities, data flow pipelines, schema contracts, event busses, function cross-references, SEO & Edge architecture, and mobile layout specifications.  
+> **Architectural Decisions (The "Why"):** For historical context, problem statements, rejected hypotheses, and non-negotiable invariants, refer directly to [`structure/DECISIONS.md`](file:///c:/Users/tasaw/Desktop/gothic-nova-store/structure/DECISIONS.md).  
+> **Maintenance Rule:** Keep this document modular, authoritative, and concise. Update active contracts and topologies when features change without repeating historical ADR narrative.
 
 ---
 
@@ -16,28 +17,35 @@
                                   |  - Realtime WebSocket CDC Engine           |
                                   +---------------------+----------------------+
                                                         ^
-                                                        | HTTPS REST / WebSocket
-                                                        v
-                                         +------------------------------+
-                                         |      supabase-engine.js      |
-                                         |  - Singleton Supabase Client |
-                                         |  - SWR LocalStorage Cache    |
-                                         |  - Serialized Save Queue     |
-                                         |  - Realtime Subscription Bus |
-                                         +--------------+---------------+
-                                                        |
-                        +-------------------------------+-------------------------------+
-                        | BroadcastChannel ('gn_store_sync') / Window Custom Events     |
-                        v                                                               v
-      +-----------------------------------+                           +-----------------------------------+
-      |      STOREFRONT (index.html)      |                           |        ADMIN (admin.html)         |
-      |  - Catalog Grid & Detail Modals   |                           |  - Catalog Manager & Stock Stepper|
-      |  - Cart & Checkout Order Engine   |                           |  - Categories & Hierarchy Editor  |
-      |  - 48h Tarot Gamification Ritual  |                           |  - Announcement Band Live Form    |
-      |  - Dynamic SEO & Schema.org Graph |                           |  - Reviews & Ratings Moderation   |
-      |  - search-engine.js Integration   |                           |  - Live Orders Feed & Status Mod  |
-      |  - scroll-engine.js Animations    |                           |  - Client-side WebP Image Uploader|
-      +-----------------------------------+                           +-----------------------------------+
+                         +------------------------------+------------------------------+
+                         | HTTPS REST (Serverless / SWR)|                              | Realtime WebSocket
+                         v                              v                              v
+        +--------------------------------+   +------------------------------+   +------------------------------+
+        |   VERCEL SERVERLESS EDGE API   |   |      supabase-engine.js      |   |  Realtime Subscription Bus   |
+        |      (api/sitemap.js)          |   |  - Singleton Supabase Client |   |  - CDC 'gn_realtime_sync'    |
+        |  - Zero-dependency Node.js     |   |  - SafeStorage SWR Cache     |   |  - Remote Tab Realtime Push  |
+        |  - Live products sitemap query |   |  - Serialized Save Queue     |   +--------------+---------------+
+        |  - Edge cache (s-maxage=3600)  |   +--------------+---------------+                  |
+        +---------------+----------------+                  |                                  |
+                        |                                   +-----------------+----------------+
+                        | Rewrite: /sitemap.xml                               |
+                        v                                                     v
+        +--------------------------------+          +---------------------------------------------------+
+        |      SEARCH ENGINE CRAWLERS    |          | BroadcastChannel ('gn_store_sync') / Window Events|
+        |  - Googlebot / Bingbot         |          +-------------------------+-------------------------+
+        |  - Canonical: gothicnova.com   |                                    |
+        +--------------------------------+                    +---------------+---------------+
+                                                              v                               v
+                                            +-----------------------------------+   +-----------------------------------+
+                                            |      STOREFRONT (index.html)      |   |        ADMIN (admin.html)         |
+                                            |  - SafeStorage Sandbox Immunity   |   |  - Catalog Manager & Stock Stepper|
+                                            |  - Responsive Hero Preloads (CWV) |   |  - Categories & Hierarchy Editor  |
+                                            |  - Persistent Cart & Viewport Lock|   |  - Announcement Band Live Form    |
+                                            |  - Static Hero & Crawling Curtain |   |  - Reviews & Ratings Moderation   |
+                                            |  - 48h Tarot Gamification Ritual  |   |  - Live Orders Feed & Status Mod  |
+                                            |  - Dynamic SEO & JSON-LD Graph    |   |  - Client-side WebP Image Uploader|
+                                            |  - search-engine.js Integration   |   |  - Single-Loader Mutation Queue   |
+                                            +-----------------------------------+   +-----------------------------------+
 ```
 
 ---
@@ -46,9 +54,10 @@
 
 | Component | Primary File(s) | Role & Dependencies |
 | :--- | :--- | :--- |
-| **Data Engine Layer** | `supabase-engine.js` | Authoritative persistence bridge. Connects to Supabase JS SDK (`@supabase/supabase-js@2`), manages SWR caching, serializes writes to `gn_orders`, manages storage uploads to `product-media`, and broadcasts updates. |
-| **Storefront App** | `index.html`, `style.css` | Customer interface. Consumes `window.SupabaseEngine`, renders catalog, handles search filtering, cart state, checkout modal, tarot ritual, and injects dynamic SEO structured data. |
-| **Admin Operations** | `admin.html`, `style.css` | Merchant console. Consumes `window.SupabaseEngine`, performs authenticated catalog CRUD, adjusts inventory with awaited writes, uploads images, edits announcements, and manages customer orders. |
+| **Data Engine Layer** | `supabase-engine.js` | Authoritative persistence bridge. Connects to Supabase JS SDK (`@supabase/supabase-js@2`), manages `SafeStorage` SWR caching, serializes writes to `gn_orders`, handles storage uploads to `product-media`, and broadcasts updates. |
+| **Dynamic Sitemap Engine** | `api/sitemap.js` | Zero-dependency native Node.js serverless endpoint. Queries Supabase directly for active catalog products, dynamically generates standard XML sitemap for crawlers, and serves Edge caching headers (`s-maxage=3600`). |
+| **Storefront App** | `index.html`, `style.css` | Customer interface. Consumes `window.SupabaseEngine` with `SafeStorage`, renders responsive catalog with static hero backdrop and crawling curtain, handles search filtering, persistent cart state, checkout modal, tarot ritual, and injects dynamic SEO structured data. |
+| **Admin Operations** | `admin.html`, `style.css` | Merchant console. Consumes `window.SupabaseEngine`, performs authenticated catalog CRUD, adjusts inventory with awaited writes, uploads WebP images, edits announcements, and manages customer orders. |
 | **Search Engine** | `search-engine.js` | Fast client-side catalog indexing. Tokens, fuzzy matching, search dropdown, scroll-to-target highlighting (`.product-search-highlight`). |
 | **Scroll Engine** | `scroll-engine.js` | Viewport effects, header shrink, ambient lighting tracking, smooth scroll interactions. |
 | **Styling System** | `style.css` | Obsidian-gold-crimson luxury cyberpunk gothic design system, typography tokens, responsive layouts, modals, keyframe animations. |
@@ -292,21 +301,30 @@ Every capability supported in `admin.html` is indexed below:
 4. **Atomic Checkout Reservation:** When `createOrder(orderData)` executes, it verifies `product.stock >= item.qty` for all items. If insufficient, it throws `INSUFFICIENT_STOCK: ...`. Upon successful insert, it decrements `product.stock` and dispatches `gn:productsUpdated`.
 5. **Replenishment on Cancellation:** When an order transitions to `Cancelled` or is deleted in `admin.html`, its reserved units are replenished back into active inventory.
 
+### 7.4 Add-to-Cart & Checkout Execution Pipeline
+1. **Persistent Cart CTA Transition:** When a customer clicks `ADD TO CART` in the PDP modal, the item is added to `window.gn_cart` (using coerced string IDs). The CTA button transitions permanently to `VIEW CART (${newTotalQty})`. It does not revert via arbitrary timeouts. Clicking it directly invokes `openCart()`.
+2. **Secondary Add-More Units Stepper:** Below modal actions, `#pdpAddMoreBtn` (`+ Add another unit`) allows adding incremental units. Clicking it or clicking the modal quantity stepper `+` button changes the button state back to `ADD (+1) TO CART`, giving patrons an intuitive mechanism to stack quantity without drawer toggling.
+3. **String ID Coercion:** All lookups, insertions, deletions, and clamp reconciliations coerce `String(pid).trim()` to eliminate numeric vs string key collisions.
+4. **Mobile Cart Drawer Viewport Containment:** `#cart-items-list` enforces `max-height: calc(100dvh - 210px)` and `overscroll-behavior-y: contain`. This guarantees that `#cart-footer` (with total PKR amount and checkout button) remains pinned and completely visible on all mobile viewports.
+
 ---
 
 ## 8. Key Functions Cross-Reference
 
 | Module / File | Function / Symbol | Callers | Purpose |
 | :--- | :--- | :--- | :--- |
-| `supabase-engine.js` | `_getSection(sectionKey, forceFresh)` | `getProducts`, `getAnnouncements`, etc. | Reads SWR cache first, then fetches authoritative single row from Supabase. |
+| `supabase-engine.js` | `_getSection(sectionKey, forceFresh)` | `getProducts`, `getAnnouncements`, etc. | Reads `SafeStorage` SWR cache first, then fetches authoritative single row from Supabase. |
 | `supabase-engine.js` | `_saveSection(sectionKey, data)` | `saveProductsBulk`, `saveAnnouncements`, etc. | Serializes writes, awaits database response, updates SWR key. |
 | `supabase-engine.js` | `uploadProductImage(fileOrDataUrl)` | `commitProductsToStore`, `saveSingleProduct` | Uploads WebP blob to `product-media` bucket, returns public URL. |
 | `supabase-engine.js` | `updateProductStock(id, newStock)` | Admin stock `+`/`-` buttons | Atomically updates product stock in the database with awaited confirmation. |
 | `supabase-engine.js` | `subscribeRealtime()` | Boot scripts in `index.html`, `admin.html` | Initializes singleton Supabase WebSocket channel (`gn_realtime_sync`). |
+| `api/sitemap.js` | `handler(req, res)` | Vercel `/sitemap.xml` rewrite | Serverless edge function dynamically generating XML sitemap from Supabase active products with 1h edge cache. |
+| `index.html` | `SafeStorage` polyfill | Storage operations across storefront | In-memory fallback layer preventing SecurityError crashes in sandboxed webviews (Instagram, Facebook IAB). |
 | `index.html` | `hydrateStorefrontFromCloud()` | DOMContentLoaded | Orchestrates initial parallel fetch of products, announcements, categories. |
 | `index.html` | `renderMainCatalog()` | Hydration, filter changes, search queries | Renders catalog product cards into `#main-drop-grid`. |
 | `index.html` | `renderSaleTicker()` | Hydration, realtime events | Updates ticker text and controls visibility of `#saleTickerBand`. |
-| `index.html` | `injectDynamicSEO()` | Post-catalog hydration | Builds and injects dynamic Title, Meta Description, OG tags, and Schema.org. |
+| `index.html` | `injectDynamicSEO()` | Post-catalog hydration | Builds and injects dynamic Title, Meta Description, OG tags, and Schema.org graph. |
+| `index.html` | `#pdpAddMoreBtn` click listener | PDP modal interaction | Smoothly sets button back to `ADD (+1) TO CART` for multi-unit cart stacking. |
 | `admin.html` | `loadProducts()` | Admin boot & refresh | Loads products into memory and renders admin catalog table/accordions. |
 | `admin.html` | `adjustCatalogStock(id, delta)` | Stock `+`/`-` buttons | Calls `updateProductStock` with spinner and error handling (zero fake success). |
 | `search-engine.js` | `performSearch(query)` | Search modal input | Filters catalog and pulses target element on storefront. |
@@ -317,17 +335,21 @@ Every capability supported in `admin.html` is indexed below:
 
 Gothic Nova features a dual-layer SEO architecture combining static crawl foundations with a dynamic runtime metadata engine:
 
-### 7.1 Crawl & Indexing Infrastructure
+### 9.1 Crawl & Dynamic Sitemap Infrastructure
 1. **Robots Policy (`robots.txt`):**
    - Publicly indexable: `/`, `/category.html`, `/assets/*`.
    - Disallowed from crawling: `/admin.html`, `/admin`, `/dashboard.html`, `/dashboard`.
-   - Sitemap reference: `Sitemap: https://gothic-nova.vercel.app/sitemap.xml`.
-2. **Canonical Mapping (`sitemap.xml`):**
-   - Canonical root: `https://gothic-nova.vercel.app/` (`priority: 1.0`, `changefreq: daily`).
-   - Category route: `https://gothic-nova.vercel.app/category.html` (`priority: 0.8`, `changefreq: weekly`).
-   - Canonical link tag in `<head>`: `<link rel="canonical" href="https://gothic-nova.vercel.app/">`.
+   - Sitemap reference: `Sitemap: https://gothicnova.com/sitemap.xml`.
+2. **Serverless Dynamic Sitemap (`api/sitemap.js`):**
+   - Clean route rewrite via `vercel.json`: `/sitemap.xml` -> `/api/sitemap.js`.
+   - Native Node.js execution (zero npm dependencies).
+   - Dynamically queries Supabase `gn_orders` (`__GN_SYNC_PRODUCTS__`) to enumerate all active products.
+   - Outputs valid XML `<urlset>` containing root (`priority: 1.0`), `/category.html` (`priority: 0.8`), and each active product URL `https://gothicnova.com/?product=<id>` (`priority: 0.9`, `changefreq: weekly`).
+   - Serves edge caching header: `Cache-Control: s-maxage=3600, stale-while-revalidate=86400`.
+3. **Canonical Mapping:**
+   - Canonical link tag in `<head>`: `<link rel="canonical" href="https://gothicnova.com/">`.
 
-### 7.2 Dynamic Head & Social Graph Engine (`injectDynamicSEO()`)
+### 9.2 Dynamic Head & Social Graph Engine (`injectDynamicSEO()`)
 When catalog products load, `injectDynamicSEO()` in `index.html` dynamically optimizes head tags:
 * **Dynamic Document Title:** Injects top catalog items into the title:  
   `GOTHIC NOVA | Buy <Product1>, <Product2> Online in Pakistan — Gothic Jewelry`.
@@ -336,10 +358,10 @@ When catalog products load, `injectDynamicSEO()` in `index.html` dynamically opt
 * **OpenGraph & Twitter Card Meta:**
   - `og:title` & `twitter:title`: Product-tailored titles for high click-through rates.
   - `og:description`: Detailed social snippet mentioning Cash on Delivery across Pakistan.
-  - `og:image` & `twitter:image`: Canonical high-resolution preview (`assets/hero_gothic_bg.png`).
-  - `og:url`: Resolves dynamically to live host URL.
+  - `og:image` & `twitter:image`: Canonical high-resolution preview (`https://gothicnova.com/assets/hero_gothic_bg.png`).
+  - `og:url`: `https://gothicnova.com/`.
 
-### 7.3 Schema.org Dynamic JSON-LD Structured Data Graph
+### 9.3 Schema.org Dynamic JSON-LD Structured Data Graph
 Injected into `<head>` under `<script type="application/ld+json" id="gn-dynamic-jsonld">`:
 
 ```json
@@ -348,30 +370,30 @@ Injected into `<head>` under `<script type="application/ld+json" id="gn-dynamic-
   "@graph": [
     {
       "@type": "Organization",
-      "@id": "https://gothic-nova.vercel.app/#organization",
+      "@id": "https://gothicnova.com/#organization",
       "name": "Gothic Nova",
-      "url": "https://gothic-nova.vercel.app",
-      "logo": "https://gothic-nova.vercel.app/assets/reaper_pendant.png",
+      "url": "https://gothicnova.com",
+      "logo": "https://gothicnova.com/assets/reaper_pendant.png",
       "description": "Pakistan's premier cyber-goth & Japanese editorial jewelry brand offering artisanal rings, chains, chokers, and pendants with Cash on Delivery nationwide.",
       "areaServed": "PK"
     },
     {
       "@type": "WebSite",
-      "@id": "https://gothic-nova.vercel.app/#website",
+      "@id": "https://gothicnova.com/#website",
       "name": "Gothic Nova",
-      "url": "https://gothic-nova.vercel.app",
-      "publisher": { "@id": "https://gothic-nova.vercel.app/#organization" },
+      "url": "https://gothicnova.com",
+      "publisher": { "@id": "https://gothicnova.com/#organization" },
       "potentialAction": {
         "@type": "SearchAction",
-        "target": "https://gothic-nova.vercel.app/?q={search_term_string}",
+        "target": "https://gothicnova.com/?q={search_term_string}",
         "query-input": "required name=search_term_string"
       }
     },
     {
       "@type": "Product",
-      "@id": "https://gothic-nova.vercel.app/?product=1#product",
+      "@id": "https://gothicnova.com/?product=1#product",
       "name": "Dragon",
-      "image": "https://<supabase-url>/storage/v1/object/public/product-media/products/prod_1.webp",
+      "image": "https://ogjyubekshcxcirlboue.supabase.co/storage/v1/object/public/product-media/products/prod_1.webp",
       "description": "Dragon - Handcrafted gothic jewelry by Gothic Nova. Available with Cash on Delivery across Pakistan.",
       "sku": "GN-1",
       "brand": { "@type": "Brand", "name": "Gothic Nova" },
@@ -381,38 +403,63 @@ Injected into `<head>` under `<script type="application/ld+json" id="gn-dynamic-
         "priceCurrency": "PKR",
         "availability": "https://schema.org/InStock",
         "itemCondition": "https://schema.org/NewCondition",
-        "url": "https://gothic-nova.vercel.app/?product=1",
-        "seller": { "@id": "https://gothic-nova.vercel.app/#organization" }
+        "url": "https://gothicnova.com/?product=1",
+        "seller": { "@id": "https://gothicnova.com/#organization" }
       }
     }
   ]
 }
 ```
 
-### 7.4 Performance & SEO Preload Directives
-High-priority assets are preloaded in `<head>` to minimize Largest Contentful Paint (LCP) and First Contentful Paint (FCP):
-* `<link rel="preload" as="image" href="assets/gothic_card_back.jpg" fetchpriority="high">`
-* `<link rel="preload" as="image" href="assets/hero_gothic_bg.png" fetchpriority="high">`
-* `<link rel="preconnect" href="https://fonts.googleapis.com">`
-* `<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>`
+### 9.4 Core Web Vitals, Preload & Edge Caching Directives
+Optimized to ensure 95+ performance scores and minimal LCP/CLS:
+* **Responsive Mobile Hero Preloads:**
+  - `<link rel="preload" as="image" href="assets/website_bg_mobile.jpg" media="(max-width: 768px)" fetchpriority="high">`
+  - `<link rel="preload" as="image" href="assets/hero_gothic_bg.png" media="(min-width: 769px)" fetchpriority="high">`
+* **Connection Warming:**
+  - `<link rel="dns-prefetch" href="https://cdn.jsdelivr.net">`
+  - `<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>`
+  - `<link rel="dns-prefetch" href="https://ogjyubekshcxcirlboue.supabase.co">`
+  - `<link rel="preconnect" href="https://ogjyubekshcxcirlboue.supabase.co" crossorigin>`
+* **Script Optimization:**
+  - `@supabase/supabase-js@2` and `supabase-engine.js` execute with `defer` to prevent parser blocking.
+* **Vercel Edge Caching Headers (`vercel.json`):**
+  - JS/CSS: `public, max-age=86400, stale-while-revalidate=604800`
+  - Images/Fonts: `public, max-age=31536000, immutable`
+* **Rendering & Layout Shift Protection:**
+  - `.card-img-wrapper`: Enforces `aspect-ratio: 1 / 1` to prevent layout shifts during image decoding.
+  - `.reviews-section`, `.store-footer`: Utilize `content-visibility: auto; contain-intrinsic-size: 1px 500px;` to skip offscreen rendering costs.
 
 ---
 
-## 8. Mobile Viewport Fluid Topology & DOM Performance Architecture
+## 10. Mobile Viewport Fluid Topology & Layout Specifications
 
-### 8.1 Mobile Fluid Clamping Strategy
-To account for varied aspect ratios (such as modern 20:9 displays) and device OS font accessibility scaling (where Android Display Size sets `1rem = 18px–20px`), critical hero elements utilize fluid responsive clamping tied directly to `vw`/`vh`:
-* **Hero Title ("GOTHIC NOVA"):** `font-size: clamp(4.0rem, 18.2vw, 4.3rem)` constrained with `max-width: 98vw !important` and `box-sizing: border-box`. Preserves the exact majestic 4.3rem scale on standard phones (390px, 412px+) while gracefully adapting down to 65.5px (88% width) on narrow 360px phones without shrinking, clipping, or causing horizontal overflow.
-* **Statue Vertical Alignment:** `transform` clamped to `clamp(-180px, -21.3vh, -155px)` with fallback `var(--statue-y, -180px)`. Preserves the exact original -180px designer elevation on standard phones (390px, 412px+) framing the wings and shoulders behind the title, while adapting down to -155px on shorter viewports so the top stays strictly below the upper screen edge.
-* **Flanking Subtext Single-Line Guarantee:** Description center gap clamped to `clamp(48px, 14vw, 82px)` with font clamped to `clamp(6.6px, 2.1vw, 7.5px)` and `max-width: 94vw !important`, ensuring both flanks stay strictly on a single line without wrapping.
+> **Historical Rationale:** For detailed failure modes and design evolution, see [ADR-013](file:///c:/Users/tasaw/Desktop/gothic-nova-store/structure/DECISIONS.md#adr-013-mobile-viewport-fluid-topology-single-line-category-locking--render-thrash-coalescing) and [ADR-020](file:///c:/Users/tasaw/Desktop/gothic-nova-store/structure/DECISIONS.md#adr-020-static-wall-hero-backdrop-crawling-curtain-topology--marquee-speed-calibration).
 
-### 8.2 Category Filter Bar Single-Line Topology
-The storefront category filter bar (`.category-filter-container`) is locked to a single horizontal row across all phone viewports (320px–430px+):
-* `flex-wrap: nowrap !important; justify-content: space-between !important; overflow-x: hidden !important;`
-* Tab elements (`.filter-tab`, `.cat-more-btn`, `.cat-more-toggle-btn`) utilize `flex: 1 1 0 !important; min-width: 0 !important; padding: 0 clamp(4px, 1.5vw, 10px) !important; font-size: clamp(0.64rem, 2.1vw, 0.74rem) !important; white-space: nowrap !important; text-overflow: ellipsis !important;`
-* Ensures all 5 primary tabs (`ALL`, `RINGS`, `CHAINS`, `BRACELETS`, `MORE ▾`) never drop onto a second line on any device.
+### 10.1 Static Hero Backdrop & Crawling Curtain Specification
+* **Static Hero Section (`.hero-section`):**
+  - CSS Contract: `position: fixed !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100vh !important; height: 100dvh !important; z-index: 1 !important; overflow: hidden !important;`
+  - The hero backdrop remains fixed in place as a dramatic backdrop during initial page load and scrolling.
+* **Crawling Curtain Product Section (`.active-drop-section`):**
+  - CSS Contract: `margin-top: 100vh !important; margin-top: 100dvh !important; position: relative !important; z-index: 10 !important; background-color: #0a0508 !important;`
+  - Zero-peeking guarantee: At `scrollY = 0`, the product section begins strictly below the visible viewport fold.
+  - Upon user scroll, the opaque `#0a0508` section slides smoothly upwards over the hero backdrop.
+* **New Arrivals Marquee Calibration:**
+  - Storefront script (`index.html`): `baseSpeed = 0.48` (~29px/sec).
+  - Stylesheet (`style.css`): Keyframe duration set to `35s` for mobile devices.
 
-### 8.3 Idempotent DOM Fingerprinting & RAF Coalescing
-* **Content Signatures (`_lastReviewsKey`, `_lastCatalogKey`, `_lastArrivalsKey`):** Before updating DOM container `innerHTML`, the engine computes a serialized signature of the data items. If signatures match and child nodes exist, DOM rebuilds are skipped.
-* **Refresh Coalescing:** Multiple asynchronous hydration events (`DOMContentLoaded`, `productsLoaded`, `reviewsUpdated`, `BroadcastChannel`) are batched into a single `requestAnimationFrame` pass via `refreshStorefrontCatalog()`, eliminating visual flashes and scroll jumping on mid-range mobile chips.
+### 10.2 Mobile Fluid Clamping Rules
+Hero text and decorative statues adapt dynamically across display ratios (320px–430px+) using viewport-relative clamping:
+* **Hero Title ("GOTHIC NOVA"):** `font-size: clamp(4.0rem, 18.2vw, 4.3rem); max-width: 98vw !important; box-sizing: border-box;`
+* **Statue Vertical Elevation:** `transform: translateY(clamp(-180px, -21.3vh, -155px));` (with fallback to `var(--statue-y, -180px)`).
+* **Flanking Subtext Single-Line Guarantee:** Center spacing gap `clamp(48px, 14vw, 82px)`; typography `clamp(6.6px, 2.1vw, 7.5px)`; `max-width: 94vw !important`.
+
+### 10.3 Category Filter Bar Single-Line Contract
+The filter bar (`.category-filter-container`) is locked to a single horizontal row across all viewports:
+* Container: `flex-wrap: nowrap !important; justify-content: space-between !important; overflow-x: hidden !important;`
+* Tabs (`.filter-tab`, `.cat-more-btn`): `flex: 1 1 0 !important; min-width: 0 !important; padding: 0 clamp(4px, 1.5vw, 10px) !important; font-size: clamp(0.64rem, 2.1vw, 0.74rem) !important; white-space: nowrap !important; text-overflow: ellipsis !important;`
+
+### 10.4 Idempotent DOM Fingerprinting & RAF Coalescing
+* **Content Signatures (`_lastReviewsKey`, `_lastCatalogKey`, `_lastArrivalsKey`):** Serialized hash check before touching `innerHTML`. Identical signatures skip DOM rebuilds entirely.
+* **Refresh Coalescing:** Asynchronous events (`DOMContentLoaded`, `productsLoaded`, `reviewsUpdated`, `BroadcastChannel`) are batched into a single `requestAnimationFrame` pass via `refreshStorefrontCatalog()`, eliminating visual layout thrash.
 
