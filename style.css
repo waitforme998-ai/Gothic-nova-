@@ -2209,7 +2209,7 @@ body.no-ticker .hero-section {
         align-items: stretch !important;
         gap: 16px !important;
         flex-shrink: 0 !important;
-        animation: marqueeScrollGroupMobile 35s linear infinite !important;
+        animation: marqueeScrollGroupMobile 44s linear infinite !important;
         will-change: transform !important;
         transform: translate3d(0, 0, 0);
         -webkit-transform: translate3d(0, 0, 0);
@@ -2217,7 +2217,7 @@ body.no-ticker .hero-section {
         -webkit-backface-visibility: hidden;
     }
     .marquee-track.marquee-reverse .marquee-group {
-        animation: marqueeScrollGroupMobileReverse 35s linear infinite !important;
+        animation: marqueeScrollGroupMobileReverse 44s linear infinite !important;
         will-change: transform !important;
         transform: translate3d(0, 0, 0);
         -webkit-transform: translate3d(0, 0, 0);

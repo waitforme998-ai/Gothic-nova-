@@ -20,51 +20,71 @@ The following items are finished, tested, and active in the repository:
 
 ---
 
-## 2. Outstanding Problems & The 4 Clean Phases
-
-All remaining unimplemented or glitching issues are organized into 4 logical phases:
+## 2. Active Execution Tracks & Architectural Solutions
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ PHASE 1: Add-to-Cart & PDP Modal Stepper Overhaul (Fix the Glitch)                                │
-│ Fix button stacking glitch, integrate inline stepper, and sync modal quantity with catalog card. │
+│ TRACK 1: Pure Binary Add-to-Cart Overhaul (No Quantity Overcomplexification)                      │
+│ Delete fighting stepper states; implement clean binary toggle: ADD TO CART -> VIEW CART.          │
+│ All quantity (+/-) controls live strictly inside Cart Drawer where they cleanly sync to checkout.│
 ├──────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ PHASE 2: Order Delivery Fee (Rs. 300), Tarot Inversion & WhatsApp Receipt Breakdown               │
-│ Enforce flat Rs. 300 shipping, Tarot Free Delivery cut, COD deposit enforcement, Step 2/3        │
-│ itemization, and clear WhatsApp breakdown message.                                                │
+│ TRACK 2: Cross-Device Customer-to-Admin Order Stream (True Zero-Click Ingestion)                  │
+│ Bridge customer orders from external devices into admin.html using Supabase Broadcast Channel     │
+│ and a 3-second lightweight polling watchdog. Orders appear instantly with zero clicking.         │
 ├──────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ PHASE 3: Zero-Click Realtime Admin Order Ingestion (Triple-Shield)                                │
-│ Ensure incoming orders appear instantly in admin.html without clicking "SYNC DATA" or reloading. │
-├──────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ PHASE 4: Admin Double-Entry Financial Ledger, Verification & Live Vercel Deployment              │
-│ Itemize courier vs product funds in admin, test all cart permutations, and commit & push to live.│
+│ TRACK 3: Core Web Vitals & Performance Acceleration Sprint (<2.5s LCP & 90+ Score)               │
+│ Complete 5-phase asset modernization (WebP compression, async fonts, script scheduling, caching). │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-### 🟢 PHASE 1: Add-to-Cart & PDP Modal Stepper Overhaul
+### 🟢 TRACK 1: Pure Binary Add-to-Cart Overhaul (No Quantity Overcomplexification)
 
-**Problems Addressed:**
-- The "+ Add another unit" button currently renders as an awkward secondary block below the action buttons instead of replacing the button or providing an inline stepper.
-- Quantity adjusted inside the modal does not correspond cleanly with the catalog card or existing cart state.
-- Button state toggles between "ADD TO CART" and "VIEW CART" without an intuitive way to adjust quantity directly in place.
-- In categories containing only 1 product (e.g. niche category or single restock), the product card stretches vertically to fill the container's `min-height: 480px`, becoming disproportionately elongated compared to cards in full rows.
+**The Problem:**
+Previous attempts introduced inline stepper controls (`[ − ] [ X in Cart ] [ + ]`), "+1 More" secondary buttons, and competing state managers. When clicked, these states conflicted, flickered, and re-appeared unpredictably.
 
-**Tasks:**
-1. **Unify PDP Action Button Geometry:**
-   - Remove the detached `#pdpAddMoreBtn` from beneath `#pdpModalActions`.
-   - When an item is added to the cart, the "ADD TO CART" button transitions cleanly into an active dual state or inline stepper:
-     * Option A: Split button `[ VIEW CART (X) ]` alongside a compact `[ +1 More ]` button within the same flex row.
-     * Option B: In-place stepper `[ − ] [ X In Cart ] [ + ]` replacing the button, alongside a dominant `[ VIEW CART ]` CTA.
-2. **Catalog Card & PDP Modal Quantity Synchronization:**
-   - When a product is in cart, the product card badge and modal quantity display must reflect the exact units in `gn_cart`.
-   - Pressing `+` or `−` in the modal stepper must directly adjust the cart and respect stock limits (`maxStock`).
-3. **Single-Product Category Card Height & Aspect Ratio Lock:**
-   - In `style.css`, update `.drop-grid` with `align-content: start;` / `align-items: start;` and set `.product-card { height: auto; align-self: start; }`.
-   - Ensures that whether a category contains 1 product or 20 products, every product card preserves its exact standard dimensions, 1:1 image ratio, and balanced typography.
-4. **Animation & Visual Polish:**
-   - Smooth CSS transition without layout jump or popping elements below the modal viewport.
+**User Requirement & Exact Logic:**
+1. **Simple Binary State (Cards & PDP Modal):**
+   - **State A (Item NOT in cart):** Button displays standard text **`ADD TO CART`**.
+   - **Clicking `ADD TO CART`:**
+     * Adds the product with quantity **1** to `gn_cart`.
+     * Instantly updates the header cart badge count.
+     * The button immediately and permanently flips to **`VIEW CART`**.
+   - **State B (Item IS in cart):**
+     * Button displays clean **`VIEW CART`** (no "+1 More", no steppers, no quantity counts on the button).
+     * Clicking `VIEW CART` directly opens the Cart Drawer (`openCartDrawer()`).
+     * Button stays in `VIEW CART` state permanently as long as the product remains in `gn_cart`.
+2. **Quantity Management Exclusively Inside Cart Drawer:**
+   - Inside `#cart-drawer`, the user can increase (`+`) or decrease (`−`) quantity as needed.
+   - If the user decreases quantity to `0` or clicks remove (`✕`):
+     * The product is removed from `gn_cart`.
+     * The product button on the catalog card and PDP modal flips back to **`ADD TO CART`**.
+   - If the user increases quantity to `2` or `3` inside the drawer:
+     * The card button remains cleanly as **`VIEW CART`** without any glitching or changing text.
+3. **Flawless Synchronization:**
+   - Modifying cart contents anywhere (catalog card, PDP modal, or inside the drawer) instantly dispatches `gn:cartUpdated`, ensuring all visible buttons across the entire page update synchronously without DOM flicker.
+
+---
+
+### 🟢 TRACK 2: Cross-Device Customer-to-Admin Order Stream (True Zero-Click Ingestion)
+
+**The Problem:**
+Merchant changes to products and announcements in `admin.html` feel instant because they mutate in-memory state on the same device. However, customer orders originate on **external customer devices** (different smartphones, laptops, or incognito sessions). 
+`BroadcastChannel` only works across tabs on the **same browser instance**. Furthermore, Supabase table-level Postgres Changes (CDC) on `gn_orders` can fail silently if Postgres replication is restricted or dropped over cellular networks, forcing the merchant to click "SYNC DATA" manually.
+
+**The Solution (True Zero-Click Ingestion):**
+1. **Supabase Realtime Broadcast Channel (Cross-Device WebSocket):**
+   - When a customer submits an order in `index.html:proceedToStep2()`, send a broadcast event over a public channel:
+     `supabase.channel('gn_live_orders').send({ type: 'broadcast', event: 'NEW_ORDER', payload: createdOrder })`
+   - In `admin.html`, subscribe to `'gn_live_orders'` to receive instant (<500ms) cross-device push notifications without relying on PostgreSQL CDC permissions.
+2. **Active 3-Second Orders Watchdog (Zero-Click Fallback):**
+   - When the merchant is viewing the "Orders" tab in `admin.html`, run a silent, lightweight check every **3 seconds**:
+     `SELECT id, created_at FROM gn_orders ORDER BY created_at DESC LIMIT 1`
+   - If the returned `id` is newer than the highest ID in memory, immediately fetch and prepend the new order to the table.
+   - Requires zero clicks, zero page reloads, and works across any network, firewall, or device.
+3. **Visual Ingestion Flash:**
+   - When a new order lands, flash the row in amber/crimson and update the pending badge count, giving the merchant instant visual feedback.
 
 ---
 
