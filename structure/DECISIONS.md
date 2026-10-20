@@ -542,6 +542,43 @@ Internal system state records (`__GN_SYNC_PRODUCTS__`, `__GN_SYNC_ANNOUNCEMENTS_
 
 ---
 
+## ADR-023: Mobile Core Web Vitals (<2.5s LCP) & Asset Compression Architecture
+
+### Context & Problem
+1. **Mobile Performance Bottleneck (66 Score, 7.2s LCP):**
+   Google Lighthouse throttled mobile audits reported a 7.2-second Largest Contentful Paint (LCP) and 3.8-second First Contentful Paint (FCP). While CLS (0.015) was stable, heavy assets and render-blocking resources severely impaired mobile load times.
+2. **Blocking Fonts & Stylesheet Latency:**
+   Loading 4 Google Font families (16 weight combinations) synchronously in `<head>` stalled the DOM parser.
+3. **Monolithic Uncompressed Hero Images:**
+   Raw PNG/JPG backgrounds (`website_bg_mobile.jpg`, `hero_gothic_bg.png`, `gothic_card_back.jpg`) totaled over 800KB. Competing `<link rel="preload">` tags saturated cellular 4G bandwidth.
+4. **Main-Thread JavaScript Contention:**
+   Synchronous execution of Supabase Realtime CDC handshakes, review tickers, and search tokenizer generated 820ms of Total Blocking Time (TBT).
+
+### Decision
+1. **Asynchronous Non-Blocking Fonts & Critical CSS:**
+   - Asynchronously preload Google Fonts using `onload="this.rel='stylesheet'"` with `display=swap`.
+   - Restrict weights to `Antonio:700` and `Inter:400;600;700`.
+   - Inline core above-the-fold layout CSS (~4KB) in `<head>` for instantaneous FCP (<1.1s).
+2. **WebP Modernization & Strict Single-LCP Preload:**
+   - Convert all core hero and backdrop assets to WebP at quality 82 (70–80% byte reduction).
+   - Enforce a strict single-LCP preload rule: only `assets/website_bg_mobile.webp` carries `fetchpriority="high"` on mobile.
+3. **Offscreen Catalog Decoupling:**
+   - Decouple catalog cards below the first 4 with `loading="lazy" decoding="async" fetchpriority="low"`.
+   - Lock `aspect-ratio: 1 / 1` and `#12090d` background to guarantee zero Cumulative Layout Shift.
+4. **Merchant Ingestion Gateway:**
+   - Client-side Canvas 800x800 WebP compressor in `admin.html` ensures all future inventory uploads remain under 80KB.
+5. **Main-Thread Scheduling Ladder:**
+   - Defer search indexing and realtime subscriptions to `requestIdleCallback`, dropping TBT below 150ms.
+
+### Invariants
+* Never bypass or alter `window.SafeStorage`.
+* In-place quantity steppers (`[ − ] [ X In Cart ] [ + ]`) and cart-to-modal quantity sync must remain 100% intact.
+* Delivery fees (flat Rs. 300, Tarot Rs. 0 waiver) and mandatory Rs. 700 advance deposit verification must remain unchanged.
+* Zero-Click admin live order feed (Triple-Shield) must remain active.
+* Image compression must remain visually lossless (q=82 WebP) preserving the dark gothic luxury aesthetic.
+
+---
+
 ## Diagnostic Checklist for Future AI Agents
 
 Before troubleshooting any reported issue, execute this verification protocol:

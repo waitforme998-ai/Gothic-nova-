@@ -132,3 +132,146 @@ All remaining unimplemented or glitching issues are organized into 4 logical pha
 3. **Production Deployment:**
    - Commit all modified files with descriptive conventional commit messages.
    - Push to `origin/main` to trigger automatic live Vercel deployment.
+
+---
+
+## 3. CORE WEB VITALS & PERFORMANCE ACCELERATION PLAN (<2.5s Load Time & 90+ Score)
+
+### 3.1 Field & Lab Performance Reality
+* **Current Mobile Baseline:**
+  - Performance Score: **66 / 100**
+  - Largest Contentful Paint (LCP): **7.2s**
+  - First Contentful Paint (FCP): **3.8s**
+  - Total Blocking Time (TBT): **820ms**
+  - Cumulative Layout Shift (CLS): **0.015** (fully stable)
+* **Target Production Benchmark:**
+  - Performance Score: **90–98 / 100**
+  - Largest Contentful Paint (LCP): **< 2.4s** (Google "Good" zone)
+  - First Contentful Paint (FCP): **< 1.1s**
+  - Total Blocking Time (TBT): **< 150ms**
+  - Cumulative Layout Shift (CLS): **< 0.01**
+
+### 3.2 Non-Negotiable Guardrails (Zero-Regression Invariants)
+1. **SafeStorage Immunity:** Never alter `window.SafeStorage`. Instagram In-App Browser (IAB) and iOS Safari private window session safety must remain 100% crash-proof.
+2. **Synchronized Cart & PDP Steppers:** In-place quantity steppers (`[ − ] [ X In Cart ] [ + ]`), PDP modal `VIEW CART`, and catalog card mirroring must remain functionally identical.
+3. **Checkout Financial Rules:**
+   - Flat nationwide courier delivery: Rs. 300
+   - Tarot Free Delivery waiver: Rs. 0
+   - Mandatory Rs. 700 advance deposit verification screenshot requirement
+   - Itemized receipts sent directly to WhatsApp
+4. **Zero-Click Live Admin Orders:** The Triple-Shield (BroadcastChannel, auto-reconnecting WebSocket CDC, visibility/focus heartbeat) must remain untouched.
+5. **Visual Luxury Preservation:** The obsidian-crimson-gold dark aesthetic and 1:1 square card aspect ratios must remain visually flawless.
+
+```
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ PHASE 5: Render-Blocking Font & Critical CSS Decoupling (FCP: 3.8s -> <1.1s)                     │
+│ Eliminate blocking Google Fonts stylesheet; async-load non-critical font weights with swap;       │
+│ inline critical above-the-fold CSS tokens to eliminate initial stylesheet network round-trip.    │
+├──────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ PHASE 6: Hero Media Modernization & Single-LCP Prioritization (LCP: 7.2s -> <2.3s)                │
+│ Compress monolithic desktop/mobile backgrounds into modern WebP (<100KB); enforce single LCP     │
+│ fetchpriority="high" on mobile hero backdrop; eliminate competing preloads.                     │
+├──────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ PHASE 7: Dynamic Catalog Lazy-Loading & Native Image Decoupling                                  │
+│ Guarantee loading="lazy" decoding="async" with native browser-level IntersectionObserver;        │
+│ build automated client-side WebP compressor into admin.html for future inventory uploads.        │
+├──────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ PHASE 8: Main-Thread Script Scheduling & TBT Elimination (TBT: 820ms -> <150ms)                  │
+│ Defer non-critical analytics, search tokenizer, and Supabase CDC subscription to requestIdle;   │
+│ execute SafeStorage and cart restoration in zero-cost microtasks.                                │
+├──────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ PHASE 9: Vercel Edge Compression, Cache Tuning & Synthetic Benchmark Verification               │
+│ Configure Brotli/Gzip and immutable asset caching in vercel.json; run simulated Lighthouse       │
+│ throttled mobile runner; perform full end-to-end regression audit across mobile viewport.        │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### 🚀 PHASE 5: Render-Blocking Font & Critical CSS Decoupling
+
+**Root Cause:**
+In `<head>`, line 52 requests 4 distinct Google font families (`Antonio`, `Inter`, `Fira Code`, `League Spartan`) across 16 different weight variants via a render-blocking stylesheet. The browser halts painting entirely while resolving this external CSS. Additionally, `style.css` is a 240KB unminified file parsed synchronously before the First Contentful Paint.
+
+**Guarded Tasks:**
+1. **Font Weights Subsetting & Non-Blocking Asynchronous Loading:**
+   - Retain only the critical active font weights: `Antonio:wght@700`, `Inter:wght@400;600;700`.
+   - Convert the blocking `<link rel="stylesheet">` into an asynchronous non-blocking stylesheet with fallback:
+     ```html
+     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Antonio:wght@700&family=Inter:wght@400;600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Antonio:wght@700&family=Inter:wght@400;600;700&display=swap"></noscript>
+     ```
+   - Ensure `display=swap` is present on all font families to avoid any Flash of Invisible Text (FOIT).
+2. **Above-the-Fold Critical CSS Inlining:**
+   - Extract the core structural tokens, header layout, background colors, and hero container rules into a small, inline `<style id="critical-hero-css">` in `<head>` (~4KB).
+   - This allows mobile devices to render the dark luxury canvas immediately on the first TCP packet before `style.css` has even finished downloading.
+
+---
+
+### 🚀 PHASE 6: Hero Media Modernization & Single-LCP Prioritization
+
+**Root Cause:**
+On mobile devices, the Largest Contentful Paint (LCP) element is the hero backdrop (`website_bg_mobile.jpg`, 119KB) and desktop hero elements (`hero_gothic_bg.png`, 195KB; `website_bg.png`, 212KB; `gothic_card_back.jpg`, 282KB). The `<head>` currently preloads 4 different images simultaneously, forcing high-resolution images to compete for mobile bandwidth over 4G networks.
+
+**Guarded Tasks:**
+1. **Convert Core Hero Assets to WebP:**
+   - Convert `website_bg_mobile.jpg` -> `website_bg_mobile.webp` (target size: ~28KB, 76% reduction).
+   - Convert `hero_gothic_bg.png` -> `hero_gothic_bg.webp` (target size: ~45KB, 77% reduction).
+   - Convert `gothic_cathedral_bg.jpg` -> `gothic_cathedral_bg.webp` (target size: ~38KB).
+   - Convert `subject_silhouette.png` -> `subject_silhouette.webp` (target size: ~25KB).
+   - Convert `gothic_card_back.jpg` -> `gothic_card_back.webp` (target size: ~55KB).
+2. **Single-LCP Preload Rule:**
+   - On mobile (`max-width: 768px`), strictly preload **one single asset** with `fetchpriority="high"`: `assets/website_bg_mobile.webp`.
+   - On desktop (`min-width: 769px`), preload strictly `assets/hero_gothic_bg.webp`.
+   - Remove all secondary preloads (`subject_silhouette.png`, secondary backdrops) from `<head>`. Let secondary elements stream progressively after the LCP image renders.
+
+---
+
+### 🚀 PHASE 7: Dynamic Catalog Lazy-Loading & Native Image Decoupling
+
+**Root Cause:**
+While the catalog cards have `loading="lazy"` on their `<img>` tags, initial catalog rendering still downloads all product card images immediately if cards are rendered too early or if image dimensions cause layout reassessment.
+
+**Guarded Tasks:**
+1. **Catalog Off-Screen Lazy Decoupling:**
+   - Ensure only the first 4 product cards (above the mobile scroll fold) load with normal priority.
+   - All remaining cards (5 through 14+) use `loading="lazy" decoding="async" fetchpriority="low"`.
+   - Retain strict `aspect-ratio: 1 / 1` and dark obsidian placeholder color (`background: #12090d;`) so zero layout shifts occur while images stream into view.
+2. **Admin Media Uploader Auto-WebP Compression:**
+   - In `admin.html`, update the file upload handler before Supabase storage dispatch:
+     * Draw image onto an HTML5 Canvas capped at 800x800 resolution (maintaining aspect ratio).
+     * Export blob via `canvas.toBlob(blob, 'image/webp', 0.82)`.
+     * This guarantees that future product images uploaded by the merchant are under 80KB instead of raw 3MB smartphone photos.
+
+---
+
+### 🚀 PHASE 8: Main-Thread Script Scheduling & TBT Elimination
+
+**Root Cause:**
+Multiple JavaScript operations execute synchronously during DOM load:
+- `supabase-engine.js` starts Supabase client, connects to WebSocket CDC channel, and requests cached collections.
+- `search-engine.js` builds search index tokens.
+- Ticker animations and reviews carousel initialize timers.
+This blocks the main thread for over 800ms, delaying user touches and scrolling on mobile devices.
+
+**Guarded Tasks:**
+1. **Prioritized Execution Ladder:**
+   - **Tier 1 (Instant / 0ms):** `SafeStorage` init, basic hero paint, cart count badge from localStorage.
+   - **Tier 2 (Post-LCP / ~100ms):** Render catalog grid cards from SWR cache (`gn_swr_products`).
+   - **Tier 3 (Idle / `requestIdleCallback`):** Initialize `search-engine.js` indexing, establish Supabase Realtime WebSocket subscription, start reviews carousel, and load social proof widgets.
+2. **Eliminate Redundant Polling on Storefront:**
+   - Ensure background intervals run only when tab is visible (`document.visibilityState === 'visible'`).
+
+---
+
+### 🚀 PHASE 9: Vercel Edge Compression, Cache Tuning & Synthetic Verification
+
+**Guarded Tasks:**
+1. **Vercel Edge Asset Configuration (`vercel.json`):**
+   - Enforce Brotli/Gzip compression headers.
+   - Cache static WebP images and WOFF2 fonts with `public, max-age=31536000, immutable`.
+   - Serve HTML with `public, max-age=0, must-revalidate` to ensure customer devices always fetch fresh inventory.
+2. **Automated Synthetics & Verification Suite:**
+   - Run mobile emulation test suite.
+   - Verify cart steppers, flat Rs. 300 delivery, deposit screenshots, and zero-click admin live orders continue to function with 100% reliability.
+   - Confirm Google Lighthouse mobile score is 90+ and LCP is under 2.5s.

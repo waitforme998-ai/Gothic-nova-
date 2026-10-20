@@ -463,3 +463,61 @@ The filter bar (`.category-filter-container`) is locked to a single horizontal r
 * **Content Signatures (`_lastReviewsKey`, `_lastCatalogKey`, `_lastArrivalsKey`):** Serialized hash check before touching `innerHTML`. Identical signatures skip DOM rebuilds entirely.
 * **Refresh Coalescing:** Asynchronous events (`DOMContentLoaded`, `productsLoaded`, `reviewsUpdated`, `BroadcastChannel`) are batched into a single `requestAnimationFrame` pass via `refreshStorefrontCatalog()`, eliminating visual layout thrash.
 
+---
+
+## 11. Performance, Core Web Vitals (CWV) & Asset Acceleration Pipeline
+
+```
+                                  +---------------------------------------+
+                                  |     INITIAL HTML DOCUMENT LOAD        |
+                                  | - SafeStorage Bootstrap (Sync)        |
+                                  | - Inline Critical CSS Tokens (Head)   |
+                                  | - Single LCP Preload (fetchpriority)  |
+                                  +-------------------+-------------------+
+                                                      |
+                                                      v  (FCP < 1.1s)
+                                  +---------------------------------------+
+                                  |      FIRST CONTENTFUL PAINT (FCP)     |
+                                  | - Dark Canvas & Hero Geometry Paint   |
+                                  | - Cached Cart Badge Counter Display   |
+                                  | - Non-blocking Async Stylesheet Load  |
+                                  +-------------------+-------------------+
+                                                      |
+                                                      v  (LCP < 2.3s)
+                                  +---------------------------------------+
+                                  |    LARGEST CONTENTFUL PAINT (LCP)     |
+                                  | - Single Mobile WebP Hero Backdrop    |
+                                  | - Hero Title & Fluid Typography Renders|
+                                  | - Top 4 Catalog Cards Hydrated (SWR)  |
+                                  +-------------------+-------------------+
+                                                      |
+                                                      v  (requestIdleCallback / Post-Load)
+                                  +---------------------------------------+
+                                  |    DEFERRED BACKGROUND CAPABILITIES   |
+                                  | - Off-Screen Product Images (Lazy)    |
+                                  | - Search Tokenizer (search-engine.js) |
+                                  | - Supabase Realtime CDC WebSocket Bus |
+                                  | - Social Proof & Reviews Carousel     |
+                                  +---------------------------------------+
+```
+
+### 11.1 Render-Blocking Elimination (FCP Optimization)
+* **Font Delivery Strategy:** Google Fonts stylesheet is loaded asynchronously via `<link rel="preload" as="style" onload="this.rel='stylesheet'">` with `display=swap`, scoped strictly to active weights (`Antonio:700`, `Inter:400;600;700`). Zero Flash of Invisible Text (FOIT).
+* **Critical CSS Extraction:** Above-the-fold layout, dark body background `#0a0508`, and fixed hero constraints are inlined directly in `<head>` to paint on the very first TCP packet.
+
+### 11.2 Single-LCP Asset Protocol (LCP Optimization)
+* **Bandwidth Isolation:** Eliminates multiple competing preloads in `<head>`. On mobile viewports (`max-width: 768px`), strictly one single asset is tagged with `fetchpriority="high"` (`assets/website_bg_mobile.webp`). On desktop, `assets/hero_gothic_bg.webp` is prioritized.
+* **Modern WebP Compression Standard:** All monolithic hero assets (`website_bg_mobile`, `hero_gothic_bg`, `gothic_cathedral_bg`, `subject_silhouette`, `gothic_card_back`) are converted from raw PNG/JPG to WebP at quality 82, reducing asset payload from ~800KB to ~160KB.
+
+### 11.3 Catalog Off-Screen Image Decoupling
+* **Native Browser Intersection:** Cards 1–4 above the fold load immediately; cards 5–14+ are decoupled with `loading="lazy" decoding="async" fetchpriority="low"`.
+* **Zero CLS Guarantee:** Every product card preserves an explicit `aspect-ratio: 1 / 1` container with solid obsidian fallback color (`#12090d`), guaranteeing zero Cumulative Layout Shift while images stream into view.
+
+### 11.4 Merchant Client-Side WebP Gateway (`admin.html`)
+* **Automated Asset Ingestion:** When the merchant uploads raw product photography, `admin.html` draws the image to an offscreen HTML5 canvas capped at 800x800 resolution and exports `image/webp` (0.82 quality) before uploading to Supabase storage. Raw multi-megabyte smartphone uploads are permanently prevented from entering the catalog.
+
+### 11.5 Main-Thread Scheduling Ladder (TBT Optimization)
+* **Tier 1 (Synchronous / 0ms):** `SafeStorage` memory fallback, cart quantity badge count.
+* **Tier 2 (Post-LCP / ~100ms):** Render catalog grid from SWR cache (`gn_swr_products`).
+* **Tier 3 (Idle / `requestIdleCallback`):** Search token indexing (`search-engine.js`), Supabase Realtime WebSocket handshake, review tickers.
+
