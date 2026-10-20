@@ -2669,6 +2669,9 @@
 
                     updateCatFades();
                     renderNavMenuCategories(metaMap, ordered);
+                    if (typeof window.renderFooterCollections === 'function') {
+                        window.renderFooterCollections();
+                    }
                 }
                 window.renderCategoryTabs = renderCategoryTabs;
 
@@ -3136,36 +3139,43 @@
                     });
 
                     const metaList = window.gn_categories_meta || [];
-
                     const map = new Map();
+                    // Guarantee All Collections as primary anchor
+                    map.set('all', 'All Collections');
+
+                    // Add from Supabase categories metadata
                     if (Array.isArray(metaList)) {
                         metaList.forEach(m => {
                             if (m && m.id) {
                                 const slug = String(m.id).trim().toLowerCase();
-                                if (liveCatSlugs.has(slug) || liveCatSlugs.size === 0) {
+                                if (slug !== 'all' && slug !== 'general') {
                                     map.set(slug, m.name || (slug.charAt(0).toUpperCase() + slug.slice(1)));
                                 }
                             } else if (typeof m === 'string' && m.trim()) {
                                 const slug = m.trim().toLowerCase();
-                                if (liveCatSlugs.has(slug) || liveCatSlugs.size === 0) {
+                                if (slug !== 'all' && slug !== 'general') {
                                     map.set(slug, slug.charAt(0).toUpperCase() + slug.slice(1));
                                 }
                             }
                         });
                     }
+
+                    // Add any live categories present on active inventory
                     liveCatSlugs.forEach(slug => {
-                        if (!map.has(slug)) {
+                        if (slug !== 'all' && slug !== 'general' && !map.has(slug)) {
                             map.set(slug, slug.charAt(0).toUpperCase() + slug.slice(1));
                         }
                     });
 
-                    if (map.size === 0) {
+                    // Fallback to signature defaults if only 'all' exists
+                    if (map.size <= 1) {
                         map.set('rings', 'Rings');
                         map.set('chains', 'Chains');
+                        map.set('bracelets', 'Bracelets');
                         map.set('pendants', 'Pendants');
                     }
 
-                    const footerEntries = Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+                    const footerEntries = Array.from(map.entries());
                     const footerKey = footerEntries.map(([s, n]) => `${s}:${n}`).join('|');
                     if (_lastFooterKey === footerKey && container.children.length > 0) {
                         return;
@@ -3366,52 +3376,48 @@
         </script>
         <!-- ENTERPRISE DARK LUXURY GOTHIC FOOTER -->
         <footer class="store-footer" style="grid-column: 1 / -1; display: grid; grid-template-columns: repeat(12, 1fr); column-gap: 24px; row-gap: 32px; width: calc(100% + 2 * clamp(2rem, 5vw, 6rem)); margin-left: calc(-1 * clamp(2rem, 5vw, 6rem)); margin-right: calc(-1 * clamp(2rem, 5vw, 6rem)); border-top: 1px solid rgba(138, 26, 46, 0.45); padding-top: 48px; padding-bottom: 50px; padding-left: clamp(2rem, 5vw, 6rem); padding-right: clamp(2rem, 5vw, 6rem); margin-top: 48px; margin-bottom: 0; position: relative; z-index: 25; background: #0a0508 !important;">
-            <!-- Column 1: Brand Story & Emblem -->
-            <div class="footer-col" style="grid-column: span 3; display: flex; flex-direction: column; gap: 20px; text-align: left;">
+            <!-- Column 1: Brand Story & Direct Concierge -->
+            <div class="footer-col" style="grid-column: span 4; display: flex; flex-direction: column; gap: 18px; text-align: left;">
                 <div style="display:flex; align-items:center; gap:12px;">
                     <span class="font-serif" style="font-size: 1.3rem; font-weight: 900; letter-spacing: 0.12em; text-transform: uppercase; color: #ffffff;">GOTHIC NOVA</span>
                 </div>
-                <p class="font-sans" style="font-size: 0.82rem; color: var(--color-text-muted); line-height: 1.65; max-width: 280px;">
+                <p class="font-sans" style="font-size: 0.82rem; color: var(--color-text-muted); line-height: 1.65; max-width: 320px;">
                     Gothic × Japanese Jewelry. Limited. Dark. Eternal. Wear the darkness you feel. Crafted under absolute precision for the unapologetic.
                 </p>
-                <div style="display:flex; gap:14px; margin-top:4px;">
-                    <span style="font-size:0.7rem; font-family:var(--font-mono); color:var(--color-text-muted); letter-spacing:0.1em; background:rgba(255,255,255,0.04); padding:4px 10px; border-radius:2px; border:1px solid rgba(255,255,255,0.08);">PAKISTAN / PK</span>
+                <div style="display:flex; flex-direction:column; gap:10px; margin-top:4px;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span style="font-size:0.7rem; font-family:var(--font-mono); color:var(--color-text-muted); letter-spacing:0.1em; background:rgba(255,255,255,0.04); padding:4px 10px; border-radius:2px; border:1px solid rgba(255,255,255,0.08);">PAKISTAN / PK</span>
+                        <span style="font-size:0.7rem; font-family:var(--font-mono); color:#30d158; letter-spacing:0.08em; background:rgba(48,209,88,0.08); padding:4px 10px; border-radius:2px; border:1px solid rgba(48,209,88,0.2);">VERIFIED STORE</span>
+                    </div>
+                    <a href="https://wa.me/923001234567" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:8px; font-size:0.78rem; font-family:var(--font-mono); color:#25d366; text-decoration:none; transition:opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.664-.699c.971.53 1.776.814 2.796.814 3.181 0 5.768-2.587 5.768-5.766 0-3.181-2.587-5.766-5.768-5.766z"/></svg>
+                        Official WhatsApp Concierge
+                    </a>
                 </div>
             </div>
 
-            <!-- Column 2: Navigation Collections -->
-            <div class="footer-col" style="grid-column: span 3; display: flex; flex-direction: column; gap: 20px; text-align: left;">
+            <!-- Column 2: Synchronized Collections Navigation -->
+            <div class="footer-col" style="grid-column: span 4; display: flex; flex-direction: column; gap: 18px; text-align: left;">
                 <h5 class="t-utility" style="color: #ffffff; font-weight: 700; letter-spacing: 0.15em;">COLLECTIONS</h5>
                 <ul id="footerCollectionsList" class="font-sans" style="list-style: none; display: flex; flex-direction: column; gap: 12px; font-size: 0.85rem; padding: 0;">
-                    <!-- Populated dynamically from live categories -->
+                    <li><a href="javascript:void(0)" onclick="selectCategoryAndScroll('all')" style="color: var(--color-text-muted); text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='#ffffff'" onmouseout="this.style.color='var(--color-text-muted)'">All Collections</a></li>
+                    <li><a href="javascript:void(0)" onclick="selectCategoryAndScroll('rings')" style="color: var(--color-text-muted); text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='#ffffff'" onmouseout="this.style.color='var(--color-text-muted)'">Rings</a></li>
+                    <li><a href="javascript:void(0)" onclick="selectCategoryAndScroll('chains')" style="color: var(--color-text-muted); text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='#ffffff'" onmouseout="this.style.color='var(--color-text-muted)'">Chains</a></li>
+                    <li><a href="javascript:void(0)" onclick="selectCategoryAndScroll('bracelets')" style="color: var(--color-text-muted); text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='#ffffff'" onmouseout="this.style.color='var(--color-text-muted)'">Bracelets</a></li>
+                    <li><a href="javascript:void(0)" onclick="selectCategoryAndScroll('pendants')" style="color: var(--color-text-muted); text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='#ffffff'" onmouseout="this.style.color='var(--color-text-muted)'">Pendants</a></li>
                 </ul>
             </div>
 
-            <!-- Column 3: Parcel & Payment Policy -->
-            <div class="footer-col" style="grid-column: span 3; display: flex; flex-direction: column; gap: 20px; text-align: left;">
+            <!-- Column 3: Parcel & Logistics Policy -->
+            <div class="footer-col" style="grid-column: span 4; display: flex; flex-direction: column; gap: 18px; text-align: left;">
                 <h5 class="t-utility" style="color: #ffffff; font-weight: 700; letter-spacing: 0.15em;">PARCEL & LOGISTICS</h5>
                 <ul class="font-sans" style="list-style: none; display: flex; flex-direction: column; gap: 12px; font-size: 0.85rem; padding: 0;">
                     <li><a href="javascript:void(0)" onclick="openPolicyModal('cod')" style="color: var(--color-text-muted); text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='#ffffff'" onmouseout="this.style.color='var(--color-text-muted)'">COD Parcel (PostEx • 5–7 Days)</a></li>
-                    <li><a href="javascript:void(0)" onclick="openPolicyModal('advance')" style="color: var(--color-text-muted); text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='#ffffff'" onmouseout="this.style.color='var(--color-text-muted)'">Courier Advance Deposit</a></li>
+                    <li><a href="javascript:void(0)" onclick="openPolicyModal('advance')" style="color: var(--color-text-muted); text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='#ffffff'" onmouseout="this.style.color='var(--color-text-muted)'">Courier Advance Verification</a></li>
                     <li><a href="javascript:void(0)" onclick="openPolicyModal('express')" style="color: var(--color-text-muted); text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='#ffffff'" onmouseout="this.style.color='var(--color-text-muted)'">Express Advance (2–3 Days)</a></li>
-                    <li><a href="javascript:void(0)" onclick="openPolicyModal('tracking')" style="color: var(--color-text-muted); text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='#ffffff'" onmouseout="this.style.color='var(--color-text-muted)'">Tracked Dispatch via SMS/WhatsApp</a></li>
+                    <li><a href="javascript:void(0)" onclick="openPolicyModal('tracking')" style="color: var(--color-text-muted); text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='#ffffff'" onmouseout="this.style.color='var(--color-text-muted)'">Tracked Dispatch via WhatsApp</a></li>
+                    <li><a href="javascript:void(0)" onclick="openPolicyModal('exchange')" style="color: var(--color-text-muted); text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='#ffffff'" onmouseout="this.style.color='var(--color-text-muted)'">14-Day Exchange & 316L Guarantee</a></li>
                 </ul>
-            </div>
-
-            <!-- Column 4: Dark Newsletter Ledger -->
-            <div class="footer-col" style="grid-column: span 3; display: flex; flex-direction: column; gap: 20px; text-align: left;">
-                <h5 class="t-utility" style="color: #ffffff; font-weight: 700; letter-spacing: 0.15em;">PRIVATE DROP DISPATCH</h5>
-                <p class="font-sans" style="font-size: 0.82rem; color: var(--color-text-muted); line-height: 1.6;">
-                    Subscribe to receive limited drop notifications 1 hour before public launch.
-                </p>
-                <div style="display: flex; width: 100%;">
-                    <input type="email" placeholder="Enter email address..." style="background: rgba(10, 5, 8, 0.7); border: 1px solid rgba(138, 26, 46, 0.4); color: #ffffff; font-size: 0.8rem; padding: 12px 18px; border-radius: 4px 0 0 4px; width: 100%; outline: none;" onfocus="this.style.borderColor='#8a1a2e'" onblur="this.style.borderColor='rgba(138, 26, 46, 0.4)'">
-                    <button style="background: linear-gradient(135deg, var(--color-red-glow) 0%, var(--color-red-deep) 100%); border: 1px solid var(--color-red-glow); border-left: none; color: #ffffff; padding: 0 20px; border-radius: 0 4px 4px 0; cursor: pointer; transition: all 0.3s ease;" onmouseover="this.style.opacity='0.9';" onmouseout="this.style.opacity='1';">
-                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 16px; height: 16px;">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                        </svg>
-                    </button>
-                </div>
             </div>
 
             <!-- Footer Bottom Bar -->
@@ -3451,7 +3457,7 @@
                 <p style="margin-bottom: 8px;">• <strong>Delivery Timeline:</strong> 5–7 business days nationwide across Pakistan.</p>
                 <p style="margin-bottom: 8px;">• <strong>Advance Verification Deposit:</strong> A deposit of <strong>Rs. 700</strong> is required prior to dispatch to secure packing materials & courier logistics. The remaining order balance is paid upon doorstep delivery.</p>
                 <p style="margin-bottom: 8px;">• <strong>Courier Partner:</strong> Dispatched securely via <strong>PostEx</strong> logistics.</p>
-                <p style="margin: 0;">• <strong>Tracking:</strong> A real-time tracking code is sent via SMS & WhatsApp immediately upon courier booking.</p>
+                <p style="margin: 0;">• <strong>Tracking:</strong> A real-time tracking code & booking slip are shared directly to your WhatsApp upon courier dispatch.</p>
             </div>
 
             <div class="policy-card" id="policyCardExpress">
@@ -3460,8 +3466,8 @@
                     Advance Payment Parcel (Priority Express)
                 </div>
                 <p style="margin-bottom: 8px;">• <strong>Delivery Timeline:</strong> Express <strong>2–3 business days</strong> (Overnight priority dispatch where available in major cities).</p>
-                <p style="margin-bottom: 8px;">• <strong>Payment Methods:</strong> Direct Bank Transfer, EasyPaisa, or JazzCash.</p>
-                <p style="margin-bottom: 8px;">• <strong>Courier Partners:</strong> Dispatched via premier accepted couriers (TCS / Leopards / Trax).</p>
+                <p style="margin-bottom: 8px;">• <strong>Payment Methods:</strong> Direct Bank Transfer (Bank Alfalah) or JazzCash.</p>
+                <p style="margin-bottom: 8px;">• <strong>Courier Partners:</strong> Dispatched via premier courier networks (PostEx / Trax / Leopards).</p>
                 <p style="margin: 0;">• <strong>Zero Handling Fee:</strong> 100% waives courier COD collection surcharges.</p>
             </div>
 
@@ -3481,8 +3487,14 @@
                     Customer Support & Concierge
                 </div>
                 <p style="margin-bottom: 8px;">• <strong>WhatsApp Support:</strong> Dedicated assistance available Monday – Saturday (11 AM – 9 PM PKT).</p>
-                <p style="margin-bottom: 8px;">• <strong>Order Status & Tracking:</strong> Message us with your order number anytime for live dispatch status.</p>
-                <p style="margin: 0;">• <strong>Packaging:</strong> Every order arrives in custom Gothic Nova luxury matte jewelry boxes with tamper-evident seals.</p>
+                <p style="margin-bottom: 8px;">• <strong>Order Status & Tracking:</strong> Message us with your Order ID anytime on WhatsApp for instant dispatch status.</p>
+                <p style="margin-bottom: 12px;">• <strong>Packaging:</strong> Every order arrives in custom Gothic Nova luxury matte jewelry boxes with tamper-evident seals.</p>
+                <div>
+                    <a href="https://wa.me/923001234567" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:8px; background:rgba(37,211,102,0.12); border:1px solid rgba(37,211,102,0.3); color:#25d366; font-size:0.8rem; font-family:var(--font-mono); font-weight:700; padding:8px 14px; border-radius:4px; text-decoration:none;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.664-.699c.971.53 1.776.814 2.796.814 3.181 0 5.768-2.587 5.768-5.766 0-3.181-2.587-5.766-5.768-5.766z"/></svg>
+                        Chat with Concierge on WhatsApp
+                    </a>
+                </div>
             </div>
         </div>
     </div>
