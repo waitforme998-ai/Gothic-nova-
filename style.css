@@ -1334,12 +1334,16 @@ body.no-ticker .hero-section {
     grid-template-columns: repeat(3, 1fr);
     gap: 40px;
     min-height: 480px;
+    align-content: start;
+    align-items: start;
 }
 
 /* --- PRODUCT CARD UI (SIMPLIFIED GOTHIC ONYX SLAB) --- */
 .product-card {
     display: flex;
     flex-direction: column;
+    height: auto;
+    align-self: start;
     position: relative;
     border: 1px solid rgba(92, 15, 31, 0.35) !important;
     background: rgba(20, 9, 15, 0.96) !important;
@@ -1737,6 +1741,8 @@ body.no-ticker .hero-section {
     .drop-grid {
         grid-template-columns: repeat(2, 1fr);
         gap: 32px;
+        align-content: start;
+        align-items: start;
     }
 }
 
@@ -2395,7 +2401,8 @@ body.no-ticker .hero-section {
         max-width: 100% !important;
         margin: 0 auto !important;
         min-height: 480px !important;
-        align-items: stretch !important;
+        align-content: start !important;
+        align-items: start !important;
         box-sizing: border-box !important;
     }
 
@@ -2410,7 +2417,8 @@ body.no-ticker .hero-section {
         justify-content: space-between !important;
         position: relative !important;
         box-sizing: border-box !important;
-        height: 100% !important;
+        height: auto !important;
+        align-self: start !important;
         min-height: unset !important;
         overflow: hidden !important;
         cursor: pointer !important;
@@ -3982,25 +3990,17 @@ body.no-ticker .hero-section {
     border-color: var(--color-red-glow) !important;
     color: #ffe8be !important;
 }
-.pdp-add-more-link {
-    background: none;
-    border: none;
-    color: #ff3b5c;
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    cursor: pointer;
-    text-align: center;
-    padding: 8px 0 2px;
-    transition: color 0.2s ease;
-    text-decoration: underline;
-    text-underline-offset: 3px;
-    width: 100%;
+
+/* Product card in-cart state */
+.product-card.card-has-incart {
+    border-color: rgba(255, 232, 190, 0.4) !important;
 }
-.pdp-add-more-link:hover {
-    color: #ffe8be;
+.product-card.card-has-incart .view-options-btn {
+    border-color: rgba(255, 232, 190, 0.45) !important;
+    color: #ffe8be !important;
+}
+.product-card.card-has-incart .view-options-btn svg {
+    stroke: #ffe8be !important;
 }
 
 @media (max-width: 680px) {

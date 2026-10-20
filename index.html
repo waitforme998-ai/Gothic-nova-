@@ -2812,17 +2812,24 @@
                         priceHtml = `<span class="card-price font-mono">Rs. ${priceVal.toLocaleString('en-PK')}</span>`;
                     }
 
+                    const currentCart = (typeof cartMap !== 'undefined' ? cartMap : window.gn_cart) || {};
+                    const inCartItem = currentCart[String(p.id).trim()] || currentCart[safeId];
+                    const inCartQty = inCartItem ? Number(inCartItem.qty || 0) : 0;
+                    const inCartBadge = (!isSoldOut && inCartQty > 0) ? `<div class="card-incart-badge font-mono" style="position:absolute;top:10px;right:10px;background:rgba(20,9,15,0.94);border:1px solid rgba(255,232,190,0.5);color:#ffe8be;font-size:0.62rem;font-weight:700;padding:2px 7px;border-radius:3px;z-index:3;letter-spacing:0.04em;box-shadow:0 2px 8px rgba(0,0,0,0.75);backdrop-filter:blur(4px);">${inCartQty} IN CART</div>` : '';
+
                     const soldOutClass = isSoldOut ? ' card-sold-out' : '';
+                    const inCartClass = (!isSoldOut && inCartQty > 0) ? ' card-has-incart' : '';
                     const disabledAttr = isSoldOut ? ' disabled aria-disabled="true"' : '';
-                    const ctaText = isSoldOut ? 'SOLD OUT' : 'VIEW OPTIONS';
+                    const ctaText = isSoldOut ? 'SOLD OUT' : (inCartQty > 0 ? `IN CART (${inCartQty})` : 'VIEW OPTIONS');
                     const stampHtml = isSoldOut ? `<div class="sold-out-stamp font-mono">SOLD OUT</div>` : '';
                     const newlyLoadedClass = isNewlyLoaded ? ' card-newly-loaded' : '';
 
                     return `
-                        <div class="product-card${soldOutClass}${newlyLoadedClass}" data-product-id="${safeId}" data-category="${safeCat}" data-img="${escapeHtml(p.img)}" onclick="if(!${isSoldOut}) window.openPdpModal('${safeId}')">
+                        <div class="product-card${soldOutClass}${inCartClass}${newlyLoadedClass}" data-product-id="${safeId}" data-category="${safeCat}" data-img="${escapeHtml(p.img)}" onclick="if(!${isSoldOut}) window.openPdpModal('${safeId}')">
                             <div class="corner-flare flare-tl"></div><div class="corner-flare flare-tr"></div>
                             <div class="corner-flare flare-bl"></div><div class="corner-flare flare-br"></div>
                             <div class="card-img-wrapper">
+                                ${inCartBadge}
                                 <img class="card-img" src="${escapeHtml(p.img)}" alt="${safeName} - Gothic Jewelry by Gothic Nova" loading="lazy" decoding="async" fetchpriority="low" width="400" height="400" onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'400\\' height=\\'400\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'%23ff3b5c\\' stroke-width=\\'1\\'><circle cx=\\'12\\' cy=\\'12\\' r=\\'9\\'/><path d=\\'M12 3v18M3 12h18\\'/></svg>';">
                                 ${stampHtml}
                             </div>
@@ -3548,7 +3555,7 @@
                     <p class="pdp-modal-desc" id="pdpModalDesc"></p>
                 </div>
                 <div class="pdp-modal-qty-row">
-                    <span style="font-family:var(--font-mono);font-size:0.75rem;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:0.06em;">QTY:</span>
+                    <span id="pdpModalQtyLabel" style="font-family:var(--font-mono);font-size:0.75rem;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:0.06em;">QTY:</span>
                     <div class="pdp-modal-qty-stepper">
                         <button class="pdp-modal-qty-btn" id="pdpModalQtyMinus">−</button>
                         <span class="pdp-modal-qty-val" id="pdpModalQtyVal">1</span>
@@ -3559,7 +3566,6 @@
                     <button class="pdp-modal-btn-buy" id="pdpModalBuyNowBtn">BUY NOW</button>
                     <button class="pdp-modal-btn-cart" id="pdpModalAddToCartBtn">ADD TO CART</button>
                 </div>
-                <button type="button" class="pdp-add-more-link" id="pdpAddMoreBtn" style="display:none;" onclick="window.enablePdpAddMore()">+ Add another unit</button>
             </div>
         </div>
     </div>
@@ -3732,6 +3738,12 @@
                     <div id="checkoutDiscountRow" style="display: none; align-items: center; justify-content: space-between; gap: 8px; width: 100%; padding: 6px 10px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 232, 190, 0.16); border-radius: 6px; box-sizing: border-box; flex-wrap: wrap;">
                         <span class="font-mono" id="checkoutDiscountLabel" style="font-size: 0.68rem; color: #ff9999; font-weight: 700; letter-spacing: 0.06em; white-space: normal; word-break: break-word;">✦ REWARD:</span>
                         <span class="font-mono" id="checkoutDiscountValue" style="font-size: 0.88rem; color: #4ade80; font-weight: 800; text-align: right;">-Rs. 0</span>
+                    </div>
+
+                    <!-- Delivery Fee Line Item (Flat Rs. 300 or FREE with Tarot) -->
+                    <div id="checkoutDeliveryFeeRow" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; flex-wrap: wrap;">
+                        <span class="font-mono" style="font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.7); font-weight: 600;">COURIER DELIVERY FEE</span>
+                        <span class="font-mono" id="checkoutDeliveryFeeValue" style="font-size: 0.88rem; color: #ffe8be; font-weight: 700;">+Rs. 300</span>
                     </div>
 
                     <!-- Dominant Final Payable Total -->
@@ -4381,6 +4393,7 @@
             const newQty = cartMap[cleanPid].qty + delta;
             if (newQty < 1) {
                 window.removeFromCart(cleanPid);
+                return;
             } else if (newQty > stock) {
                 if (typeof showLuxuryAlert === 'function') {
                     showLuxuryAlert(`Only ${stock} unit${stock === 1 ? '' : 's'} available in stock.`, 'STOCK LIMIT', 'info');
@@ -4393,6 +4406,8 @@
                 saveCart();
                 renderCart();
             }
+            if (typeof syncPdpModalCartState === 'function') syncPdpModalCartState();
+            if (typeof window.renderMainCatalog === 'function') window.renderMainCatalog();
         };
 
         window.removeFromCart = function(pid) {
@@ -4400,12 +4415,16 @@
             delete cartMap[cleanPid];
             saveCart();
             renderCart();
+            if (typeof syncPdpModalCartState === 'function') syncPdpModalCartState();
+            if (typeof window.renderMainCatalog === 'function') window.renderMainCatalog();
         };
 
         window.clearCart = function() {
             Object.keys(cartMap).forEach(k => delete cartMap[k]);
             saveCart();
             renderCart();
+            if (typeof syncPdpModalCartState === 'function') syncPdpModalCartState();
+            if (typeof window.renderMainCatalog === 'function') window.renderMainCatalog();
         };
 
         // --- PURE WHITE SLOW FLYING ORB ANIMATION ---
@@ -4476,8 +4495,6 @@
             const qtyPlus = document.getElementById('pdpModalQtyPlus');
             const buyNowBtn = document.getElementById('pdpModalBuyNowBtn');
             const addToCartBtn = document.getElementById('pdpModalAddToCartBtn');
-            const pdpAddMoreBtn = document.getElementById('pdpAddMoreBtn');
-
             if (!overlay || !modalBox) return;
 
             function getProduct(id) {
@@ -4485,32 +4502,55 @@
                 return prods.find(p => String(p.id) === String(id));
             }
 
-            function resetAddToCartBtn() {
-                if (!addToCartBtn) return;
-                addToCartBtn.classList.remove('view-cart-mode');
-                addToCartBtn.innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="stroke-width:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg> ADD TO CART`;
-                if (pdpAddMoreBtn) pdpAddMoreBtn.style.display = 'none';
-            }
-
-            window.enablePdpAddMore = function() {
+            function syncPdpModalCartState() {
                 if (!activeModalProduct) return;
                 const cleanPid = String(activeModalProduct.id).trim();
                 const pStock = (activeModalProduct.stock !== undefined && activeModalProduct.stock !== null && activeModalProduct.stock !== '') ? Number(activeModalProduct.stock) : 999;
-                const maxStock = Math.max(1, pStock);
-                const currentCart = window.gn_cart || cartMap || {};
+                const isSoldOut = pStock <= 0;
+                const currentCart = (typeof cartMap !== 'undefined' ? cartMap : window.gn_cart) || {};
                 const existingInCart = (currentCart && currentCart[cleanPid]) ? Number(currentCart[cleanPid].qty || 0) : 0;
-                if (existingInCart >= maxStock) {
-                    if (typeof showLuxuryAlert === 'function') {
-                        showLuxuryAlert(`Maximum available stock (${maxStock} unit${maxStock === 1 ? '' : 's'}) already in cart.`, 'STOCK LIMIT', 'info');
+                const qtyLabel = document.getElementById('pdpModalQtyLabel');
+
+                if (isSoldOut) {
+                    currentModalQty = 0;
+                    if (qtyVal) qtyVal.textContent = '0';
+                    if (qtyLabel) qtyLabel.textContent = 'STOCK:';
+                    if (addToCartBtn) {
+                        addToCartBtn.disabled = true;
+                        addToCartBtn.classList.remove('view-cart-mode');
+                        addToCartBtn.textContent = 'SOLD OUT';
                     }
+                    if (qtyMinus) qtyMinus.disabled = true;
+                    if (qtyPlus) qtyPlus.disabled = true;
+                    if (buyNowBtn) buyNowBtn.disabled = true;
                     return;
                 }
-                currentModalQty = 1;
-                qtyVal.textContent = '1';
-                addToCartBtn.classList.remove('view-cart-mode');
-                addToCartBtn.innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="stroke-width:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg> ADD (+1) TO CART`;
-                if (pdpAddMoreBtn) pdpAddMoreBtn.style.display = 'none';
-            };
+
+                if (qtyMinus) qtyMinus.disabled = false;
+                if (qtyPlus) qtyPlus.disabled = false;
+                if (buyNowBtn) buyNowBtn.disabled = false;
+
+                if (existingInCart > 0) {
+                    currentModalQty = existingInCart;
+                    if (qtyVal) qtyVal.textContent = existingInCart;
+                    if (qtyLabel) qtyLabel.textContent = 'IN CART:';
+                    if (addToCartBtn) {
+                        addToCartBtn.disabled = false;
+                        addToCartBtn.classList.add('view-cart-mode');
+                        addToCartBtn.innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="stroke-width:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg> VIEW CART (${existingInCart})`;
+                    }
+                } else {
+                    if (currentModalQty < 1) currentModalQty = 1;
+                    if (qtyVal) qtyVal.textContent = currentModalQty;
+                    if (qtyLabel) qtyLabel.textContent = 'QTY:';
+                    if (addToCartBtn) {
+                        addToCartBtn.disabled = false;
+                        addToCartBtn.classList.remove('view-cart-mode');
+                        addToCartBtn.innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="stroke-width:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg> ADD (${currentModalQty}) TO CART`;
+                    }
+                }
+            }
+            window.syncPdpModalCartState = syncPdpModalCartState;
 
             function safeSwapPdpImage(newSrc, fallbackSrc) {
                 if (!mainImg || !newSrc) return;
@@ -4613,34 +4653,7 @@
                     }
                 }
 
-                if (isSoldOut) {
-                    buyNowBtn.disabled = true;
-                    addToCartBtn.disabled = true;
-                    addToCartBtn.classList.remove('view-cart-mode');
-                    addToCartBtn.textContent = 'SOLD OUT';
-                    qtyMinus.disabled = true;
-                    qtyPlus.disabled = true;
-                } else {
-                    buyNowBtn.disabled = false;
-                    addToCartBtn.disabled = false;
-                    qtyMinus.disabled = false;
-                    qtyPlus.disabled = false;
-
-                    const maxStock = Math.max(1, pStock);
-                    const cleanId = String(p.id).trim();
-                    const existingInCart = (window.gn_cart && window.gn_cart[cleanId]) ? Number(window.gn_cart[cleanId].qty || 0) : 0;
-                    if (existingInCart >= maxStock) {
-                        addToCartBtn.classList.add('view-cart-mode');
-                        addToCartBtn.innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="stroke-width:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg> VIEW CART (${existingInCart})`;
-                        if (pdpAddMoreBtn) pdpAddMoreBtn.style.display = 'none';
-                    } else if (existingInCart > 0) {
-                        addToCartBtn.classList.add('view-cart-mode');
-                        addToCartBtn.innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="stroke-width:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg> VIEW CART (${existingInCart})`;
-                        if (pdpAddMoreBtn) pdpAddMoreBtn.style.display = 'block';
-                    } else {
-                        resetAddToCartBtn();
-                    }
-                }
+                syncPdpModalCartState();
 
                 // Render gallery thumbnails if distinct images exist (Idempotent signature check)
                 const stockAngles = Array.isArray(p.stock_images) ? p.stock_images : (Array.isArray(p.stockImages) ? p.stockImages : (Array.isArray(p.images) ? p.images : []));
@@ -4735,7 +4748,6 @@
                 modalBox.classList.remove('active');
                 modalBox.setAttribute('aria-hidden', 'true');
                 activeModalProduct = null;
-                if (pdpAddMoreBtn) pdpAddMoreBtn.style.display = 'none';
                 if (thumbsContainer) thumbsContainer.removeAttribute('data-thumb-key');
                 if (priceRow) priceRow.removeAttribute('data-price-key');
 
@@ -4788,44 +4800,71 @@
             });
 
             qtyMinus.addEventListener('click', () => {
-                if (currentModalQty > 1) {
-                    currentModalQty--;
-                    qtyVal.textContent = currentModalQty;
-                    if (!addToCartBtn.classList.contains('view-cart-mode')) {
-                        addToCartBtn.innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="stroke-width:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg> ADD (+${currentModalQty}) TO CART`;
+                if (!activeModalProduct) return;
+                const cleanPid = String(activeModalProduct.id).trim();
+                const currentCart = (typeof cartMap !== 'undefined' ? cartMap : window.gn_cart) || {};
+                const existingInCart = (currentCart && currentCart[cleanPid]) ? Number(currentCart[cleanPid].qty || 0) : 0;
+
+                if (existingInCart > 0) {
+                    if (existingInCart > 1) {
+                        const newQty = existingInCart - 1;
+                        cartMap[cleanPid].qty = newQty;
+                        window.gn_cart = cartMap;
+                        saveCart();
+                        renderCart();
+                        syncPdpModalCartState();
+                    } else {
+                        delete cartMap[cleanPid];
+                        window.gn_cart = cartMap;
+                        saveCart();
+                        renderCart();
+                        currentModalQty = 1;
+                        syncPdpModalCartState();
+                        if (typeof showLuxuryToast === 'function') {
+                            showLuxuryToast('Artifact removed from cart');
+                        }
+                    }
+                    if (typeof window.renderMainCatalog === 'function') window.renderMainCatalog();
+                } else {
+                    if (currentModalQty > 1) {
+                        currentModalQty--;
+                        qtyVal.textContent = currentModalQty;
+                        addToCartBtn.innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="stroke-width:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg> ADD (${currentModalQty}) TO CART`;
                     }
                 }
             });
 
             qtyPlus.addEventListener('click', () => {
-                const pStock = (activeModalProduct && activeModalProduct.stock !== undefined && activeModalProduct.stock !== null && activeModalProduct.stock !== '') ? Number(activeModalProduct.stock) : 999;
+                if (!activeModalProduct) return;
+                const pStock = (activeModalProduct.stock !== undefined && activeModalProduct.stock !== null && activeModalProduct.stock !== '') ? Number(activeModalProduct.stock) : 999;
                 const maxStock = Math.max(1, pStock);
-                const cleanPid = activeModalProduct ? String(activeModalProduct.id).trim() : '';
-                const inCart = (activeModalProduct && window.gn_cart && window.gn_cart[cleanPid]) ? Number(window.gn_cart[cleanPid].qty || 0) : 0;
+                const cleanPid = String(activeModalProduct.id).trim();
+                const currentCart = (typeof cartMap !== 'undefined' ? cartMap : window.gn_cart) || {};
+                const existingInCart = (currentCart && currentCart[cleanPid]) ? Number(currentCart[cleanPid].qty || 0) : 0;
 
-                // If button was in view-cart-mode, pressing '+' reactivates add-to-cart state
-                if (addToCartBtn.classList.contains('view-cart-mode')) {
-                    if (inCart >= maxStock) {
+                if (existingInCart > 0) {
+                    if (existingInCart >= maxStock) {
                         if (typeof showLuxuryAlert === 'function') {
-                            showLuxuryAlert(`Maximum available stock for this artifact is ${maxStock} unit${maxStock === 1 ? '' : 's'}.`, 'STOCK LIMIT', 'info');
+                            showLuxuryAlert(`Maximum available stock (${maxStock} unit${maxStock === 1 ? '' : 's'}) already in cart.`, 'STOCK LIMIT', 'info');
                         }
                         return;
                     }
-                    currentModalQty = 1;
-                    qtyVal.textContent = '1';
-                    addToCartBtn.classList.remove('view-cart-mode');
-                    addToCartBtn.innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="stroke-width:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg> ADD (+1) TO CART`;
-                    if (pdpAddMoreBtn) pdpAddMoreBtn.style.display = 'none';
-                    return;
-                }
-
-                if (currentModalQty + inCart < maxStock) {
-                    currentModalQty++;
-                    qtyVal.textContent = currentModalQty;
-                    addToCartBtn.innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="stroke-width:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg> ADD (+${currentModalQty}) TO CART`;
+                    const newQty = existingInCart + 1;
+                    cartMap[cleanPid].qty = newQty;
+                    window.gn_cart = cartMap;
+                    saveCart();
+                    renderCart();
+                    syncPdpModalCartState();
+                    if (typeof window.renderMainCatalog === 'function') window.renderMainCatalog();
                 } else {
-                    if (typeof showLuxuryAlert === 'function') {
-                        showLuxuryAlert(`Maximum available stock for this artifact is ${maxStock} unit${maxStock === 1 ? '' : 's'}.`, 'STOCK LIMIT', 'info');
+                    if (currentModalQty < maxStock) {
+                        currentModalQty++;
+                        qtyVal.textContent = currentModalQty;
+                        addToCartBtn.innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="stroke-width:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg> ADD (${currentModalQty}) TO CART`;
+                    } else {
+                        if (typeof showLuxuryAlert === 'function') {
+                            showLuxuryAlert(`Maximum available stock is ${maxStock} unit${maxStock === 1 ? '' : 's'}.`, 'STOCK LIMIT', 'info');
+                        }
                     }
                 }
             });
@@ -4864,7 +4903,7 @@
             addToCartBtn.addEventListener('click', () => {
                 if (!activeModalProduct) return;
                 
-                // If button is already in VIEW CART state, open cart
+                // If button is already in VIEW CART state, open cart drawer
                 if (addToCartBtn.classList.contains('view-cart-mode')) {
                     window.closePdpModal();
                     window.openCart();
@@ -4876,14 +4915,14 @@
 
                 const pid = String(activeModalProduct.id).trim();
                 const maxStock = Math.max(1, pStock);
-                const currentCart = window.gn_cart || cartMap || {};
+                const currentCart = (typeof cartMap !== 'undefined' ? cartMap : window.gn_cart) || {};
                 const existingInCart = (currentCart && currentCart[pid]) ? Number(currentCart[pid].qty || 0) : 0;
 
                 if (existingInCart >= maxStock) {
-                    showLuxuryAlert(`Maximum available stock (${maxStock} unit${maxStock === 1 ? '' : 's'}) already in cart.`);
-                    addToCartBtn.classList.add('view-cart-mode');
-                    addToCartBtn.innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="stroke-width:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg> VIEW CART (${existingInCart})`;
-                    if (pdpAddMoreBtn) pdpAddMoreBtn.style.display = 'none';
+                    if (typeof showLuxuryAlert === 'function') {
+                        showLuxuryAlert(`Maximum available stock (${maxStock} unit${maxStock === 1 ? '' : 's'}) already in cart.`);
+                    }
+                    syncPdpModalCartState();
                     return;
                 }
 
@@ -4907,14 +4946,14 @@
                 saveCart();
                 renderCart();
 
-                // Persistent VIEW CART state on button
-                addToCartBtn.classList.add('view-cart-mode');
-                addToCartBtn.innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="stroke-width:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg> VIEW CART (${newTotalQty})`;
-                
-                if (newTotalQty < maxStock) {
-                    if (pdpAddMoreBtn) pdpAddMoreBtn.style.display = 'block';
-                } else {
-                    if (pdpAddMoreBtn) pdpAddMoreBtn.style.display = 'none';
+                // Synchronize modal state & catalog
+                syncPdpModalCartState();
+                if (typeof window.renderMainCatalog === 'function') {
+                    window.renderMainCatalog();
+                }
+
+                if (typeof showLuxuryToast === 'function') {
+                    showLuxuryToast(`${activeModalProduct.name} added to cart`);
                 }
 
                 const cartBadge = document.getElementById('cart-badge');
@@ -5294,6 +5333,7 @@
                 badgeBg = 'rgba(56, 189, 248, 0.12)';
                 borderColor = 'rgba(56, 189, 248, 0.35)';
                 titleText = 'Tarot Reward: Free Delivery';
+                valueHtml = `<span class="font-mono" style="font-size: 0.78rem; color: #4ade80; font-weight: 800;">-Rs. 300</span>`;
             } else if (activeReward.type === 'free_gift') {
                 accentColor = '#ff758f';
                 badgeBg = 'rgba(255, 117, 143, 0.12)';
@@ -5357,8 +5397,28 @@
                 if (discountRow) discountRow.style.display = 'none';
             }
 
-            // Final total payable is product subtotal minus percentage discount (if applicable)
-            const finalTotal = Math.max(0, rawSubtotal - discountAmount);
+            // Standard Nationwide Delivery Fee = Rs. 300 flat per order
+            const isFreeShipping = activeReward && activeReward.type === 'free_shipping';
+            const standardDeliveryFee = 300;
+            const effectiveDeliveryFee = (rawSubtotal <= 0 || isFreeShipping) ? 0 : standardDeliveryFee;
+
+            const elDeliveryRow = document.getElementById('checkoutDeliveryFeeRow');
+            const elDeliveryVal = document.getElementById('checkoutDeliveryFeeValue');
+            if (elDeliveryRow && elDeliveryVal) {
+                if (rawSubtotal <= 0) {
+                    elDeliveryRow.style.display = 'none';
+                } else {
+                    elDeliveryRow.style.display = 'flex';
+                    if (isFreeShipping) {
+                        elDeliveryVal.innerHTML = `<span style="text-decoration: line-through; opacity: 0.6; color: #a0a0a0; margin-right: 6px;">Rs. 300</span><span style="color: #4ade80; font-weight: 800;">FREE (Rs. 0)</span>`;
+                    } else {
+                        elDeliveryVal.innerHTML = `<span style="color: #ffe8be; font-weight: 700;">+Rs. ${standardDeliveryFee}</span>`;
+                    }
+                }
+            }
+
+            // Final total payable is (subtotal - discount) + effective delivery fee
+            const finalTotal = rawSubtotal > 0 ? (Math.max(0, rawSubtotal - discountAmount) + effectiveDeliveryFee) : 0;
             const formattedTotal = 'Rs.\u00A0' + finalTotal.toLocaleString('en-PK');
 
             // Original Subtotal display (only if discount is active)
@@ -5381,7 +5441,10 @@
             if (elSummaryCount) elSummaryCount.textContent = count;
 
             if (savingsBadge) {
-                if (activeReward && activeReward.type === 'percentage_discount' && savingsAmount > 0) {
+                if (isFreeShipping) {
+                    savingsBadge.style.display = 'inline-block';
+                    savingsBadge.textContent = '✦ YOU SAVED Rs. 300 (Tarot Free Delivery)';
+                } else if (activeReward && activeReward.type === 'percentage_discount' && savingsAmount > 0) {
                     savingsBadge.style.display = 'inline-block';
                     savingsBadge.textContent = `✦ YOU SAVED Rs. ${savingsAmount.toLocaleString('en-PK')}`;
                 } else {
@@ -5465,24 +5528,39 @@
                                 <span class="font-mono" style="color: #c084fc; font-weight: 800; font-size: 0.70rem;">ORDER UPGRADE</span>
                             </div>
                         `;
-                    } else if (activeReward.type === 'free_shipping') {
+                    } else if (activeReward.type === 'percentage_discount' && discountAmount > 0) {
                         itemsHtml += `
                             <div class="checkout-mini-item" style="border-top: 1px solid rgba(255, 232, 190, 0.1); margin-top: 4px; padding-top: 6px;">
                                 <div style="display: flex; align-items: center; gap: 8px;">
-                                    <span class="font-mono" style="font-size: 0.60rem; color: #38bdf8; background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.3); padding: 1px 4px; border-radius: 3px;">SHIP</span>
-                                    <span style="font-weight: 700; color: #ffe8be; font-size: 0.74rem;">✦ Free Nationwide Delivery</span>
+                                    <span class="font-mono" style="font-size: 0.60rem; color: #4ade80; background: rgba(74, 222, 128, 0.08); border: 1px solid rgba(74, 222, 128, 0.3); padding: 1px 4px; border-radius: 3px;">TAROT</span>
+                                    <span style="font-weight: 700; color: #ffe8be; font-size: 0.74rem;">✦ ${activeReward.offer || activeReward.title}</span>
                                 </div>
-                                <span class="font-mono" style="color: #38bdf8; font-weight: 800; font-size: 0.70rem;">FREE DELIVERY</span>
+                                <span class="font-mono" style="color: #4ade80; font-weight: 800; font-size: 0.70rem;">-Rs. ${discountAmount.toLocaleString('en-PK')}</span>
+                            </div>
+                        `;
+                    }
+                }
+
+                // Explicit itemization for Nationwide Courier Delivery (Flat Rs. 300 or FREE with Tarot)
+                if (rawSubtotal > 0) {
+                    if (isFreeShipping) {
+                        itemsHtml += `
+                            <div class="checkout-mini-item" style="border-top: 1px solid rgba(255, 232, 190, 0.1); margin-top: 4px; padding-top: 6px;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span class="font-mono" style="font-size: 0.60rem; color: #38bdf8; background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.3); padding: 1px 4px; border-radius: 3px;">DELIVERY</span>
+                                    <span style="font-weight: 700; color: #ffe8be; font-size: 0.74rem;">✦ Nationwide Courier Delivery</span>
+                                </div>
+                                <span class="font-mono" style="color: #4ade80; font-weight: 800; font-size: 0.70rem;"><span style="text-decoration: line-through; opacity: 0.6; color: #a0a0a0; margin-right: 4px;">Rs. 300</span>FREE</span>
                             </div>
                         `;
                     } else {
                         itemsHtml += `
                             <div class="checkout-mini-item" style="border-top: 1px solid rgba(255, 232, 190, 0.1); margin-top: 4px; padding-top: 6px;">
                                 <div style="display: flex; align-items: center; gap: 8px;">
-                                    <span style="color: #ff9999; font-size: 0.85rem;">✦</span>
-                                    <span style="font-weight: 700; color: #ffe8be; font-size: 0.74rem;">${activeReward.offer || activeReward.title}</span>
+                                    <span class="font-mono" style="font-size: 0.60rem; color: #ffe8be; background: rgba(255, 232, 190, 0.08); border: 1px solid rgba(255, 232, 190, 0.2); padding: 1px 4px; border-radius: 3px;">DELIVERY</span>
+                                    <span style="font-weight: 600; color: #c5b8ad; font-size: 0.74rem;">Nationwide Courier Delivery</span>
                                 </div>
-                                <span class="font-mono" style="color: #4ade80; font-weight: 800; font-size: 0.70rem;">APPLIED</span>
+                                <span class="font-mono" style="color: #ffe8be; font-weight: 700; font-size: 0.72rem;">+Rs. ${standardDeliveryFee}</span>
                             </div>
                         `;
                     }
@@ -5578,6 +5656,8 @@
             const rawSubtotal = checkoutTotalPrice();
             const activeReward = getActiveDailyReward();
             const isFreeShipping = activeReward && activeReward.type === 'free_shipping';
+            const standardDeliveryFee = 300;
+            const effectiveDeliveryFee = (rawSubtotal <= 0 || isFreeShipping) ? 0 : standardDeliveryFee;
 
             let discountAmount = 0;
             if (activeReward && activeReward.type === 'percentage_discount') {
@@ -5585,8 +5665,10 @@
                 discountAmount = Math.round(rawSubtotal * (pct / 100));
             }
 
-            const finalTotal = Math.max(0, rawSubtotal - discountAmount);
+            const finalTotal = rawSubtotal > 0 ? (Math.max(0, rawSubtotal - discountAmount) + effectiveDeliveryFee) : 0;
             const standardDeposit = 700;
+            const depositAmount = Math.min(finalTotal, standardDeposit);
+            const balanceAmount = Math.max(0, finalTotal - depositAmount);
             const breakdownBrackets = isFreeShipping 
                 ? '(Packaging Fee Rs. 400 + Order Dispatch Fee Rs. 300)' 
                 : '(Packaging & Processing Fee Rs. 400 + Delivery Fee Rs. 300)';
@@ -5594,10 +5676,8 @@
             if (advPaymentBox) advPaymentBox.style.display = 'flex';
 
             if (method === 'cod') {
-                const depositAmount = Math.min(finalTotal, standardDeposit);
-                const balanceAmount = Math.max(0, finalTotal - depositAmount);
                 if (codSubtextDeposit) {
-                    codSubtextDeposit.innerHTML = `Rs. 700 Advance Deposit <span style="font-size: 0.66rem; color: var(--color-text-muted); font-weight: 400;">${breakdownBrackets}</span>`;
+                    codSubtextDeposit.innerHTML = `Rs. ${depositAmount.toLocaleString('en-PK')} Advance Deposit <span style="font-size: 0.66rem; color: var(--color-text-muted); font-weight: 400;">${breakdownBrackets}</span>`;
                 }
                 if (subtag) {
                     subtag.textContent = `Verification Deposit (Rs. ${depositAmount.toLocaleString('en-PK')})`;
@@ -5747,9 +5827,7 @@
         window.setPaymentScreenshotDataUrl = function(data) { paymentScreenshotDataUrl = data; };
 
         function proceedToStep2() {
-            const activeReward = getActiveDailyReward();
-            const isFreeShippingCod = (selectedPaymentMethod === 'cod' && activeReward && activeReward.type === 'free_shipping');
-            if (!paymentScreenshotDataUrl && !isFreeShippingCod) {
+            if (!paymentScreenshotDataUrl) {
                 const isCod = (selectedPaymentMethod === 'cod');
                 const msg = isCod
                     ? 'Payment proof is strictly required! Please upload a screenshot of your Rs. 700 advance verification deposit transfer before proceeding.'
@@ -5820,7 +5898,10 @@
                 discountAmt = Math.round(rawSubtotal * (Number(activeReward.value || 10) / 100));
             }
 
-            const calculatedTotal = Math.max(0, rawSubtotal - discountAmt);
+            const isFreeShipping = activeReward && activeReward.type === 'free_shipping';
+            const standardDeliveryFee = 300;
+            const effectiveDeliveryFee = isFreeShipping ? 0 : standardDeliveryFee;
+            const calculatedTotal = Math.max(0, rawSubtotal - discountAmt) + effectiveDeliveryFee;
 
             const rewardMeta = activeReward ? {
                 code: activeReward.code,
@@ -5896,7 +5977,7 @@
                     payment_method: selectedPaymentMethod,
                     advance_amount: depositAmt,
                     deposit_paid: depositAmt,
-                    delivery_fee: 0,
+                    delivery_fee: effectiveDeliveryFee,
                     payment_screenshot_url: uploadedScreenshotUrl,
                     items: (function() {
                         const finalItems = [...itemsArray];
@@ -6059,6 +6140,10 @@
                     `;
                 }
 
+                const deliveryFee = (order.delivery_fee !== undefined && order.delivery_fee !== null) 
+                    ? Number(order.delivery_fee) 
+                    : ((order.deliveryFee !== undefined && order.deliveryFee !== null) ? Number(order.deliveryFee) : 300);
+                const isFreeDelivery = deliveryFee === 0;
                 const depositPaid = isAdvance ? total : (order.advance_amount !== undefined && order.advance_amount !== null ? order.advance_amount : (order.deposit_paid !== undefined && order.deposit_paid !== null ? order.deposit_paid : (order.delivery_fee !== undefined ? order.delivery_fee : 0)));
                 const isZeroDeposit = !isAdvance && Number(depositPaid) === 0;
                 const totalNum = Number(String(total).replace(/,/g, '')) || 0;
@@ -6080,13 +6165,17 @@
                             <span class="meta-val font-mono" style="color: #ffe8be; font-weight: 700;">${isAdvance ? 'Full Advance Transfer (Priority Express)' : 'Cash on Delivery (COD)'}</span>
                         </div>
                         <div class="confirmed-meta-row">
+                            <span class="meta-label font-mono">COURIER DELIVERY FEE</span>
+                            <span class="meta-val font-mono" style="color: ${isFreeDelivery ? '#4ade80' : '#ffe8be'}; font-weight: 700;">${isFreeDelivery ? '<span style="text-decoration: line-through; opacity: 0.6; color: #a0a0a0; margin-right: 5px;">Rs. 300</span>FREE (Tarot Reward)' : 'Rs. 300'}</span>
+                        </div>
+                        <div class="confirmed-meta-row">
                             <span class="meta-label font-mono">${isAdvance ? 'ADVANCE PAID (100%)' : 'ADVANCE DEPOSIT PAID'}</span>
-                            <span class="meta-val font-mono" style="color: #38bdf8; font-weight: 700;">Rs. ${isZeroDeposit ? '0 (Free Delivery Waived)' : (isAdvance ? total : Number(depositPaid).toLocaleString('en-PK'))}</span>
+                            <span class="meta-val font-mono" style="color: #38bdf8; font-weight: 700;">Rs. ${isAdvance ? total : Number(depositPaid).toLocaleString('en-PK')}</span>
                         </div>
                         ${!isAdvance ? `
                         <div class="confirmed-meta-row">
                             <span class="meta-label font-mono">PAYABLE ON DELIVERY</span>
-                            <span class="meta-val font-mono" style="color: #ffffff; font-weight: 700;">Rs. ${balanceOnDelivery.toLocaleString('en-PK')}</span>
+                            <span class="meta-val font-mono" style="color: #ffffff; font-weight: 700;">Rs. ${balanceOnDelivery.toLocaleString('en-PK')} <span style="font-size: 0.68rem; color: var(--color-text-muted); font-weight: 400;">(to rider)</span></span>
                         </div>
                         ` : ''}
                         <div class="confirmed-meta-row total-row">
@@ -6097,15 +6186,40 @@
                 `;
             }
 
-            // WhatsApp Share / Support Link with Product IDs
+            // WhatsApp Share / Support Link with Product IDs & itemized financials
             const waBtn = document.getElementById('confirmedWhatsAppBtn');
             if (waBtn) {
                 const productSummary = items.map(it => {
                     const itId = it.id || it.productId || it.product_id || 'prod';
-                    return `• ${it.name || 'Artifact'} (ID: #${itId}, Qty: ${it.quantity || it.qty || 1})`;
+                    const itPrice = (Number(it.price || it.priceNum || 0)).toLocaleString('en-PK');
+                    const itQty = it.quantity || it.qty || 1;
+                    return `• ${it.name || 'Artifact'} (ID: #${itId}, Qty: ${itQty}, Rs. ${itPrice})`;
                 }).join('\n');
 
-                const message = `Hi Gothic Nova! I just placed Order #${ordNum} for Rs. ${total} (${isAdvance ? 'Advance Payment' : 'COD'}).\n\nOrdered Products:\n${productSummary}\n\nCustomer: ${custName}\nCity: ${city}\n\nPlease confirm my order!`;
+                const deliveryFee = (order.delivery_fee !== undefined && order.delivery_fee !== null) 
+                    ? Number(order.delivery_fee) 
+                    : ((order.deliveryFee !== undefined && order.deliveryFee !== null) ? Number(order.deliveryFee) : 300);
+                const isFreeDelivery = deliveryFee === 0;
+                const depositPaid = isAdvance ? total : (order.advance_amount !== undefined && order.advance_amount !== null ? order.advance_amount : (order.deposit_paid !== undefined && order.deposit_paid !== null ? order.deposit_paid : (order.delivery_fee !== undefined ? order.delivery_fee : 0)));
+                const totalNum = Number(String(total).replace(/,/g, '')) || 0;
+                const balanceOnDelivery = isAdvance ? 0 : Math.max(0, totalNum - Number(depositPaid));
+
+                const deliveryFeeText = isFreeDelivery ? 'FREE (Tarot Reward)' : 'Rs. 300';
+                const advancePaidText = `Rs. ${Number(depositPaid).toLocaleString('en-PK')}`;
+                const balanceText = isAdvance ? 'Rs. 0 (Fully Paid)' : `Rs. ${balanceOnDelivery.toLocaleString('en-PK')} (Payable to courier rider)`;
+
+                const message = `Hi Gothic Nova! I just placed Order #${ordNum}.\n\n` +
+                    `📋 *ORDER SUMMARY:*\n` +
+                    `${productSummary}\n\n` +
+                    `🚚 *Courier Delivery:* ${deliveryFeeText}\n` +
+                    `💰 *Total Order Amount:* Rs. ${total}\n` +
+                    `💳 *Payment Method:* ${isAdvance ? 'Full Advance Transfer (Priority Express)' : 'Cash on Delivery (COD)'}\n` +
+                    `✅ *Advance Paid:* ${advancePaidText}\n` +
+                    `📦 *Due at Doorstep:* ${balanceText}\n\n` +
+                    `📍 *Delivery Details:*\n` +
+                    `• Name: ${custName}\n` +
+                    `• Address: ${houseNo}, ${street}, ${city}\n\n` +
+                    `Please confirm dispatch of my parcel!`;
                 waBtn.href = `https://wa.me/923001234567?text=${encodeURIComponent(message)}`;
             }
         }

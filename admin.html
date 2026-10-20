@@ -5131,8 +5131,43 @@
         function calculateOrderFinancials(order) {
             let total = Number(order.total_amount || order.total || 0);
             const items = Array.isArray(order.items) ? order.items : (typeof order.items === 'string' ? (()=>{ try { return JSON.parse(order.items); } catch(e){ return []; } })() : []);
+            
+            const subtotal = items.reduce((s, it) => {
+                const p = Number(it.price || it.priceNum || 0);
+                const q = Number(it.quantity || it.qty || 1);
+                return s + (p * q);
+            }, 0);
+
             if (!total && items.length > 0) {
-                total = items.reduce((s, it) => s + (Number(it.price || it.priceNum || 0) * Number(it.quantity || it.qty || 1)), 0);
+                total = subtotal;
+            }
+
+            const deliveryFee = (order.delivery_fee !== undefined && order.delivery_fee !== null)
+                ? Number(order.delivery_fee)
+                : ((order.deliveryFee !== undefined && order.deliveryFee !== null) ? Number(order.deliveryFee) : 300);
+
+            let cardReward = order.card_reward_applied;
+            if (typeof cardReward === 'string') {
+                try { cardReward = JSON.parse(cardReward); } catch(e) { cardReward = null; }
+            }
+            if (!cardReward && Array.isArray(items)) {
+                for (const it of items) {
+                    if (it && (it._card_reward || it.card_reward_applied)) {
+                        cardReward = it._card_reward || it.card_reward_applied;
+                        if (typeof cardReward === 'string') { try { cardReward = JSON.parse(cardReward); } catch(e){} }
+                        break;
+                    }
+                }
+            }
+
+            let discountAmount = 0;
+            if (cardReward && cardReward.discount_amount) {
+                discountAmount = Number(cardReward.discount_amount);
+            } else if (order.discount_amount) {
+                discountAmount = Number(order.discount_amount);
+            } else if (subtotal > 0 && total > 0) {
+                const diff = (subtotal + deliveryFee) - total;
+                if (diff > 0) discountAmount = diff;
             }
 
             const payMethod = (order.payment_method || 'cod').toLowerCase();
@@ -5156,9 +5191,19 @@
             const hasProof = !!(order.payment_screenshot_url || order.transaction_id);
             const isAwaitingProof = !hasProof;
 
+            // Net earnings after 300 courier shipping cost
+            const courierCost = 300;
+            const netEarnings = Math.max(0, total - courierCost);
+
             return {
                 total,
                 totalFormatted: total.toLocaleString('en-PK'),
+                subtotal,
+                subtotalFormatted: subtotal.toLocaleString('en-PK'),
+                deliveryFee,
+                deliveryFeeFormatted: deliveryFee.toLocaleString('en-PK'),
+                discountAmount,
+                discountAmountFormatted: discountAmount.toLocaleString('en-PK'),
                 payMethod,
                 isAdvance,
                 isFullAdvance,
@@ -5166,9 +5211,13 @@
                 advancePaidFormatted: advancePaid.toLocaleString('en-PK'),
                 codBalance,
                 codBalanceFormatted: codBalance.toLocaleString('en-PK'),
+                courierCost,
+                netEarnings,
+                netEarningsFormatted: netEarnings.toLocaleString('en-PK'),
                 hasProof,
                 isAwaitingProof,
-                items
+                items,
+                cardReward
             };
         }
 
@@ -5736,27 +5785,68 @@
                                         `;
                                     }
                                 })()}
-                                <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; background: rgba(255, 232, 190, 0.03); border: 1px solid rgba(255, 232, 190, 0.18); border-radius: var(--radius-sm); padding: 10px 14px;">
-                                    <div style="display: flex; flex-direction: column; gap: 2px;">
-                                        <span style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.04em;">Protocol</span>
-                                        <span style="font-weight: 700; color: #ffffff; font-size: 0.82rem;">
-                                            ${fin.isFullAdvance ? 'Priority Full Advance Payment' : (fin.isAdvance ? 'Standard Advance Deposit + COD' : 'Cash on Delivery (COD)')}
+                                <!-- SECTION E: DOUBLE-ENTRY FINANCIAL LEDGER -->
+                                <div class="admin-financial-ledger" style="background: rgba(14, 7, 11, 0.7); border: 1px solid rgba(255, 232, 190, 0.22); border-radius: var(--radius-sm); padding: 12px 14px; margin-top: 4px; box-sizing: border-box;">
+                                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid rgba(255, 232, 190, 0.12); padding-bottom: 6px; flex-wrap: wrap; gap: 6px;">
+                                        <span class="font-mono" style="font-size: 0.70rem; color: #ffe8be; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;">
+                                            ⚖ DOUBLE-ENTRY FINANCIAL LEDGER
+                                        </span>
+                                        <span class="font-mono" style="font-size: 0.65rem; color: var(--text-secondary); text-transform: uppercase;">
+                                            ${fin.isFullAdvance ? 'Full Advance Transfer' : 'COD (Advance Deposit + Doorstep Rider)'}
                                         </span>
                                     </div>
-                                    <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
-                                        ${fin.isAdvance ? `
-                                            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 1px;">
-                                                <span style="font-family: var(--font-mono); font-size: 0.62rem; color: #30d158; text-transform: uppercase; letter-spacing: 0.04em;">Advance Deposit</span>
-                                                <span style="font-family: var(--font-mono); font-size: 0.88rem; font-weight: 700; color: #30d158;">Rs. ${fin.advancePaidFormatted}</span>
+
+                                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px;">
+                                        <!-- Column 1: Inflow (Source of Funds) -->
+                                        <div style="display: flex; flex-direction: column; gap: 4px; background: rgba(255,255,255,0.02); padding: 8px 10px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">
+                                            <span class="font-mono" style="font-size: 0.62rem; color: #a0a0a0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 3px; margin-bottom: 2px;">
+                                                1. INFLOW (SOURCE OF FUNDS)
+                                            </span>
+                                            <div style="display: flex; justify-content: space-between; font-size: 0.72rem; font-family: var(--font-mono);">
+                                                <span style="color: #c5b8ad;">Products Subtotal:</span>
+                                                <span style="color: #ffffff; font-weight: 600;">Rs. ${fin.subtotalFormatted}</span>
                                             </div>
-                                            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 1px;">
-                                                <span style="font-family: var(--font-mono); font-size: 0.62rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.04em;">Payable on COD</span>
-                                                <span style="font-family: var(--font-mono); font-size: 0.88rem; font-weight: 700; color: #ffe8be;">Rs. ${fin.codBalanceFormatted}</span>
+                                            <div style="display: flex; justify-content: space-between; font-size: 0.72rem; font-family: var(--font-mono);">
+                                                <span style="color: #c5b8ad;">Courier Delivery Fee:</span>
+                                                <span style="color: ${fin.deliveryFee === 0 ? '#4ade80' : '#ffe8be'}; font-weight: 600;">
+                                                    ${fin.deliveryFee === 0 ? '<span style="text-decoration:line-through;opacity:0.6;margin-right:4px;">Rs. 300</span>FREE' : `+Rs. ${fin.deliveryFee}`}
+                                                </span>
                                             </div>
-                                        ` : ''}
-                                        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 1px;">
-                                            <span style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.04em;">Grand Total</span>
-                                            <span style="font-family: var(--font-mono); font-size: 1.10rem; font-weight: 800; color: #ffe8be;">Rs. ${fin.totalFormatted}</span>
+                                            ${fin.discountAmount > 0 ? `
+                                            <div style="display: flex; justify-content: space-between; font-size: 0.72rem; font-family: var(--font-mono);">
+                                                <span style="color: #4ade80;">Tarot Discount:</span>
+                                                <span style="color: #4ade80; font-weight: 700;">-Rs. ${fin.discountAmountFormatted}</span>
+                                            </div>
+                                            ` : ''}
+                                            <div style="display: flex; justify-content: space-between; font-size: 0.76rem; font-family: var(--font-mono); border-top: 1px solid rgba(255,232,190,0.14); padding-top: 4px; margin-top: 2px;">
+                                                <span style="color: #ffe8be; font-weight: 700;">Total Order Value:</span>
+                                                <span style="color: #ffe8be; font-weight: 800;">Rs. ${fin.totalFormatted}</span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Column 2: Settlement & Net Realized Revenue -->
+                                        <div style="display: flex; flex-direction: column; gap: 4px; background: rgba(255,255,255,0.02); padding: 8px 10px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">
+                                            <span class="font-mono" style="font-size: 0.62rem; color: #a0a0a0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 3px; margin-bottom: 2px;">
+                                                2. SETTLEMENT & NET REVENUE
+                                            </span>
+                                            <div style="display: flex; justify-content: space-between; font-size: 0.72rem; font-family: var(--font-mono);">
+                                                <span style="color: #38bdf8;">Advance Paid (In Hand):</span>
+                                                <span style="color: #38bdf8; font-weight: 700;">Rs. ${fin.advancePaidFormatted}</span>
+                                            </div>
+                                            <div style="display: flex; justify-content: space-between; font-size: 0.72rem; font-family: var(--font-mono);">
+                                                <span style="color: #c5b8ad;">Due at Doorstep (Courier):</span>
+                                                <span style="color: ${fin.codBalance > 0 ? '#ffe8be' : '#a0a0a0'}; font-weight: 600;">
+                                                    ${fin.codBalance > 0 ? `Rs. ${fin.codBalanceFormatted}` : 'Rs. 0 (Fully Paid)'}
+                                                </span>
+                                            </div>
+                                            <div style="display: flex; justify-content: space-between; font-size: 0.72rem; font-family: var(--font-mono);">
+                                                <span style="color: #ff9999;">Courier Shipping Cost:</span>
+                                                <span style="color: #ff9999; font-weight: 600;">-Rs. 300</span>
+                                            </div>
+                                            <div style="display: flex; justify-content: space-between; font-size: 0.76rem; font-family: var(--font-mono); border-top: 1px solid rgba(74, 222, 128, 0.25); padding-top: 4px; margin-top: 2px;">
+                                                <span style="color: #4ade80; font-weight: 700;">Net Product Earnings:</span>
+                                                <span style="color: #4ade80; font-weight: 800;">Rs. ${fin.netEarningsFormatted}</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
