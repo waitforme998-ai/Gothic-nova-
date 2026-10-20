@@ -1333,17 +1333,20 @@ body.no-ticker .hero-section {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 40px;
-    min-height: 480px;
-    align-content: start;
-    align-items: start;
+    min-height: unset !important;
+    align-content: start !important;
+    align-items: start !important;
 }
 
 /* --- PRODUCT CARD UI (SIMPLIFIED GOTHIC ONYX SLAB) --- */
 .product-card {
     display: flex;
     flex-direction: column;
-    height: auto;
-    align-self: start;
+    justify-content: flex-start !important;
+    height: auto !important;
+    max-height: fit-content !important;
+    align-self: start !important;
+    min-height: unset !important;
     position: relative;
     border: 1px solid rgba(92, 15, 31, 0.35) !important;
     background: rgba(20, 9, 15, 0.96) !important;
@@ -1741,8 +1744,9 @@ body.no-ticker .hero-section {
     .drop-grid {
         grid-template-columns: repeat(2, 1fr);
         gap: 32px;
-        align-content: start;
-        align-items: start;
+        min-height: unset !important;
+        align-content: start !important;
+        align-items: start !important;
     }
 }
 
@@ -2400,7 +2404,7 @@ body.no-ticker .hero-section {
         width: 100% !important;
         max-width: 100% !important;
         margin: 0 auto !important;
-        min-height: 480px !important;
+        min-height: unset !important;
         align-content: start !important;
         align-items: start !important;
         box-sizing: border-box !important;
@@ -2414,10 +2418,11 @@ body.no-ticker .hero-section {
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.75) !important;
         display: flex !important;
         flex-direction: column !important;
-        justify-content: space-between !important;
+        justify-content: flex-start !important;
         position: relative !important;
         box-sizing: border-box !important;
         height: auto !important;
+        max-height: fit-content !important;
         align-self: start !important;
         min-height: unset !important;
         overflow: hidden !important;
@@ -2436,7 +2441,7 @@ body.no-ticker .hero-section {
     }
 
     .card-img-wrapper {
-        aspect-ratio: 1 / 1.15 !important;
+        aspect-ratio: 1 / 1 !important;
         width: 100% !important;
         height: auto !important;
         max-height: none !important;
