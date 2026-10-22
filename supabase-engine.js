@@ -979,6 +979,46 @@
             }
         },
 
+        async _compressImageToWebp(fileOrBlob, maxDim = 800, quality = 0.82) {
+            try {
+                if (typeof window === 'undefined' || typeof document === 'undefined') return { blob: fileOrBlob, ext: 'webp' };
+                let dataUrl = '';
+                if (typeof fileOrBlob === 'string' && fileOrBlob.startsWith('data:')) {
+                    dataUrl = fileOrBlob;
+                } else if (fileOrBlob instanceof Blob || (fileOrBlob && fileOrBlob.size)) {
+                    dataUrl = await this._fileToDataUrl(fileOrBlob);
+                } else {
+                    return { blob: fileOrBlob, ext: 'webp' };
+                }
+
+                return await new Promise((resolve) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        let w = img.width, h = img.height;
+                        if (w > maxDim || h > maxDim) {
+                            if (w > h) { h = Math.round((h * maxDim) / w); w = maxDim; }
+                            else { w = Math.round((w * maxDim) / h); h = maxDim; }
+                        }
+                        const canvas = document.createElement('canvas');
+                        canvas.width = w; canvas.height = h;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, w, h);
+                        canvas.toBlob((blob) => {
+                            if (blob) {
+                                resolve({ blob, ext: 'webp' });
+                            } else {
+                                resolve({ blob: fileOrBlob, ext: 'webp' });
+                            }
+                        }, 'image/webp', quality);
+                    };
+                    img.onerror = () => resolve({ blob: fileOrBlob, ext: 'webp' });
+                    img.src = dataUrl;
+                });
+            } catch(e) {
+                return { blob: fileOrBlob, ext: 'webp' };
+            }
+        },
+
         async uploadProductImage(fileOrBlob, path = 'products') {
             if (!fileOrBlob) return '';
             if (typeof fileOrBlob === 'string' && (fileOrBlob.startsWith('http://') || fileOrBlob.startsWith('https://'))) {
@@ -988,20 +1028,9 @@
             const client = this.client;
             if (client && client.storage) {
                 try {
-                    let uploadBlob = fileOrBlob;
-                    let fileExt = 'webp';
-
-                    if (typeof fileOrBlob === 'string' && fileOrBlob.startsWith('data:')) {
-                        const mime = fileOrBlob.split(',')[0].split(':')[1].split(';')[0];
-                        fileExt = mime.includes('png') ? 'png' : (mime.includes('jpeg') || mime.includes('jpg') ? 'jpg' : 'webp');
-                        const byteString = atob(fileOrBlob.split(',')[1]);
-                        const ab = new ArrayBuffer(byteString.length);
-                        const ia = new Uint8Array(ab);
-                        for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
-                        uploadBlob = new Blob([ab], { type: mime });
-                    } else if (fileOrBlob && fileOrBlob.name) {
-                        fileExt = fileOrBlob.name.split('.').pop() || 'webp';
-                    }
+                    const compressed = await this._compressImageToWebp(fileOrBlob);
+                    const uploadBlob = compressed.blob || fileOrBlob;
+                    const fileExt = compressed.ext || 'webp';
 
                     const fileName = `prod_${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
                     const filePath = path ? `${path}/${fileName}` : fileName;
@@ -1009,6 +1038,7 @@
                     const { error } = await client.storage
                         .from('product-media')
                         .upload(filePath, uploadBlob, {
+                            contentType: 'image/webp',
                             cacheControl: '31536000',
                             upsert: true
                         });

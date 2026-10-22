@@ -523,7 +523,7 @@ body.no-ticker .hero-section {
     overflow: hidden;
     padding-left: 24px;
     padding-right: 24px;
-    background: linear-gradient(180deg, rgba(10, 5, 8, 0.30) 0%, rgba(18, 8, 14, 0.45) 45%, rgba(10, 5, 8, 0.85) 100%), url('assets/website_bg.png') center top / cover no-repeat !important;
+    background: linear-gradient(180deg, rgba(10, 5, 8, 0.30) 0%, rgba(18, 8, 14, 0.45) 45%, rgba(10, 5, 8, 0.85) 100%), url('assets/website_bg.webp') center top / cover no-repeat !important;
     background-size: cover !important;
     background-attachment: scroll !important;
     contain: strict;
@@ -886,7 +886,7 @@ body.no-ticker .hero-section {
     margin-top: 100vh;
     padding-top: calc(var(--space-section) + 40px);
     padding-bottom: 0 !important;
-    background: radial-gradient(ellipse at 50% 15%, rgba(92, 15, 31, 0.30) 0%, rgba(18, 8, 14, 0.65) 45%, rgba(10, 5, 8, 0.88) 100%), url('assets/gothic_cathedral_bg.jpg') center top / cover no-repeat, #0a0508 !important;
+    background: radial-gradient(ellipse at 50% 15%, rgba(92, 15, 31, 0.30) 0%, rgba(18, 8, 14, 0.65) 45%, rgba(10, 5, 8, 0.88) 100%), url('assets/gothic_cathedral_bg.webp') center top / cover no-repeat, #0a0508 !important;
     background-color: #0a0508 !important;
     border-top: 1.5px solid rgba(138, 26, 46, 0.55);
     box-shadow: 0 -25px 60px rgba(0, 0, 0, 0.95);
@@ -1934,7 +1934,7 @@ body.no-ticker .hero-section {
         gap: 0 !important;
         text-align: center !important;
         z-index: 1 !important;
-        background: linear-gradient(180deg, rgba(10, 5, 8, 0.20) 0%, rgba(18, 8, 14, 0.20) 40%, rgba(10, 5, 8, 0.85) 100%), url('assets/website_bg_mobile.jpg') center top/cover no-repeat !important;
+        background: linear-gradient(180deg, rgba(10, 5, 8, 0.20) 0%, rgba(18, 8, 14, 0.20) 40%, rgba(10, 5, 8, 0.85) 100%), url('assets/website_bg_mobile.webp') center top/cover no-repeat !important;
     }
     .hero-ghosts-container {
         display: none !important;
@@ -2161,7 +2161,7 @@ body.no-ticker .hero-section {
         border-top-right-radius: 16px !important;
         border-top: 1.5px solid rgba(138, 26, 46, 0.55) !important;
         box-shadow: 0 -20px 45px rgba(0, 0, 0, 0.8) !important;
-        background: radial-gradient(ellipse at 50% 15%, rgba(92, 15, 31, 0.30) 0%, rgba(18, 8, 14, 0.65) 45%, rgba(10, 5, 8, 0.88) 100%), url('assets/gothic_cathedral_bg.jpg') center top / cover no-repeat, #0a0508 !important;
+        background: radial-gradient(ellipse at 50% 15%, rgba(92, 15, 31, 0.30) 0%, rgba(18, 8, 14, 0.65) 45%, rgba(10, 5, 8, 0.88) 100%), url('assets/gothic_cathedral_bg.webp') center top / cover no-repeat, #0a0508 !important;
         background-color: #0a0508 !important;
         position: relative !important;
         z-index: 10 !important;
@@ -6798,7 +6798,7 @@ select option {
 .tarot-back {
     transform: rotateY(180deg);
     background-color: #060204;
-    background-image: url('assets/gothic_card_back.jpg');
+    background-image: url('assets/gothic_card_back.webp');
     background-size: cover;
     background-position: center;
     border: 1.2px solid rgba(212, 175, 55, 0.55);

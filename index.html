@@ -36,23 +36,36 @@
     <meta name="twitter:description" content="Explore gothic rings, chains, chokers &amp; pendants in Pakistan. Cash on Delivery available nationwide.">
     <meta name="twitter:image" content="https://gothicnova.com/assets/gothic_nova_brand_og.png">
 
-    <!-- High-Performance Critical Image Preloads (Responsive Mobile First) -->
-    <link rel="preload" as="image" href="assets/website_bg_mobile.jpg" media="(max-width: 768px)" fetchpriority="high">
-    <link rel="preload" as="image" href="assets/website_bg.png" media="(min-width: 769px)" fetchpriority="high">
-    <link rel="preload" as="image" href="assets/hero_gothic_bg.png" media="(min-width: 769px)">
-    <link rel="preload" as="image" href="assets/subject_silhouette.png" media="(min-width: 769px)">
+    <!-- High-Performance Critical Image Preloads (Single LCP Prioritization) -->
+    <link rel="preload" as="image" href="assets/website_bg_mobile.webp" type="image/webp" media="(max-width: 768px)" fetchpriority="high">
+    <link rel="preload" as="image" href="assets/website_bg.webp" type="image/webp" media="(min-width: 769px)" fetchpriority="high">
 
-    <!-- Design System Typography Links & Third-Party Connection Warming -->
+    <!-- Critical Brand Font (Zero Network Roundtrip) -->
+    <style id="critical-font-face">
+        @font-face {
+            font-family: 'Antonio';
+            font-style: normal;
+            font-weight: 700;
+            font-display: swap;
+            src: url('assets/fonts/Antonio-Bold.woff2') format('woff2');
+        }
+    </style>
+
+    <!-- Non-Blocking Typography Links & Third-Party Connection Warming -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link rel="dns-prefetch" href="https://ogjyubekshcxcirlboue.supabase.co">
     <link rel="preconnect" href="https://ogjyubekshcxcirlboue.supabase.co" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Antonio:wght@700&family=Inter:wght@200;300;400;500;600;700&family=Fira+Code:wght@300;400;500&family=League+Spartan:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" media="print" onload="this.media='all'">
+    <noscript>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap">
+    </noscript>
     
     <!-- Tailored Design System Style Sheets -->
-    <link rel="stylesheet" href="style.css?v=8.2">
+    <link rel="stylesheet" href="style.css?v=8.3">
     
     <!-- Resilient SafeStorage Engine (Instagram IAB & Sandbox Immunity) -->
     <script>
@@ -110,7 +123,7 @@
     
     <!-- Supabase SDK & Dual-Mode Engine (Non-blocking Deferred Loading) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-    <script src="supabase-engine.js?v=3.1.0" defer></script>
+    <script src="supabase-engine.js?v=3.2.0" defer></script>
     <script src="search-engine.js" defer></script>
     <!-- Instant 0ms Tarot Ritual Gate Check (Strict 48-Hour Restriction) -->
     <script>
@@ -268,7 +281,7 @@
         .tarot-back {
             transform: rotateY(180deg);
             background-color: #060204;
-            background-image: url('assets/gothic_card_back.jpg');
+            background-image: url('assets/gothic_card_back.webp');
             background-size: cover;
             background-position: center;
             border: 1.2px solid rgba(212, 175, 55, 0.55);
@@ -2047,7 +2060,7 @@
         <div class="hero-light-glow" aria-hidden="true"></div>
 
         <div class="hero-silhouette-wrapper hero-silhouette-active" aria-hidden="true">
-            <img src="assets/subject_silhouette.png" alt="Gothic Nova Silhouette" class="hero-silhouette-img">
+            <img src="assets/subject_silhouette.webp" alt="Gothic Nova Silhouette" class="hero-silhouette-img" width="500" height="600" decoding="async">
         </div>
         <div class="hero-ghosts-container" aria-hidden="true">
             <div class="hero-ghost ghost-1"></div>
@@ -2810,7 +2823,7 @@
                     window.addEventListener('resize', updateCatFades);
                 }
 
-                function buildProductCardHTML(p, isNewlyLoaded = false) {
+                function buildProductCardHTML(p, isNewlyLoaded = false, cardIndex = 999) {
                     const rawStock = (p.stock !== undefined && p.stock !== null && p.stock !== '') ? Number(p.stock) : 999;
                     const isSoldOut = rawStock <= 0;
                     const saleVal = p.salePrice !== undefined && p.salePrice !== null ? p.salePrice : p.saleprice;
@@ -2847,13 +2860,14 @@
                         : `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14" style="stroke-width:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>`;
                     const stampHtml = isSoldOut ? `<div class="sold-out-stamp font-mono">SOLD OUT</div>` : '';
                     const newlyLoadedClass = isNewlyLoaded ? ' card-newly-loaded' : '';
+                    const imgLoadingAttr = (cardIndex < 4) ? 'loading="eager" fetchpriority="auto"' : 'loading="lazy" fetchpriority="low"';
 
                     return `
                         <div class="product-card${soldOutClass}${newlyLoadedClass}" style="height: auto !important; max-height: fit-content !important; align-self: start !important; justify-content: flex-start !important;" data-product-id="${safeId}" data-category="${safeCat}" data-img="${escapeHtml(p.img)}" onclick="if(!${isSoldOut}) window.openPdpModal('${safeId}')">
                             <div class="corner-flare flare-tl"></div><div class="corner-flare flare-tr"></div>
                             <div class="corner-flare flare-bl"></div><div class="corner-flare flare-br"></div>
                             <div class="card-img-wrapper">
-                                <img class="card-img" src="${escapeHtml(p.img)}" alt="${safeName} - Gothic Jewelry by Gothic Nova" loading="lazy" decoding="async" fetchpriority="low" width="400" height="400" onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'400\\' height=\\'400\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'%23ff3b5c\\' stroke-width=\\'1\\'><circle cx=\\'12\\' cy=\\'12\\' r=\\'9\\'/><path d=\\'M12 3v18M3 12h18\\'/></svg>';">
+                                <img class="card-img" src="${escapeHtml(p.img)}" alt="${safeName} - Gothic Jewelry by Gothic Nova" ${imgLoadingAttr} decoding="async" width="400" height="400" onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'400\\' height=\\'400\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'%23ff3b5c\\' stroke-width=\\'1\\'><circle cx=\\'12\\' cy=\\'12\\' r=\\'9\\'/><path d=\\'M12 3v18M3 12h18\\'/></svg>';">
                                 ${stampHtml}
                             </div>
                             <div class="card-details">
@@ -3029,13 +3043,13 @@
                         const prevCount = window.prevCatalogVisibleCount || 0;
                         const newCards = visibleList.slice(prevCount);
                         if (newCards.length > 0) {
-                            const newHtml = newCards.map(p => buildProductCardHTML(p, true)).join('');
+                            const newHtml = newCards.map((p, idx) => buildProductCardHTML(p, true, prevCount + idx)).join('');
                             grid.insertAdjacentHTML('beforeend', newHtml);
                         }
                     } else {
                         _lastCatalogKey = currentCatalogKey;
-                        grid.innerHTML = visibleList.map((p) => {
-                            return buildProductCardHTML(p, false);
+                        grid.innerHTML = visibleList.map((p, idx) => {
+                            return buildProductCardHTML(p, false, idx);
                         }).join('');
                     }
 
