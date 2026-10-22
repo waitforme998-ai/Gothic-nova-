@@ -52,7 +52,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Antonio:wght@700&family=Inter:wght@200;300;400;500;600;700&family=Fira+Code:wght@300;400;500&family=League+Spartan:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Tailored Design System Style Sheets -->
-    <link rel="stylesheet" href="style.css?v=8.0">
+    <link rel="stylesheet" href="style.css?v=8.1">
     
     <!-- Resilient SafeStorage Engine (Instagram IAB & Sandbox Immunity) -->
     <script>
@@ -2818,21 +2818,24 @@
                     const currentCart = (typeof cartMap !== 'undefined' ? cartMap : window.gn_cart) || {};
                     const inCartItem = currentCart[String(p.id).trim()] || currentCart[safeId];
                     const inCartQty = inCartItem ? Number(inCartItem.qty || 0) : 0;
-                    const inCartBadge = (!isSoldOut && inCartQty > 0) ? `<div class="card-incart-badge font-mono" style="position:absolute;top:10px;right:10px;background:rgba(20,9,15,0.94);border:1px solid rgba(255,232,190,0.5);color:#ffe8be;font-size:0.62rem;font-weight:700;padding:2px 7px;border-radius:3px;z-index:3;letter-spacing:0.04em;box-shadow:0 2px 8px rgba(0,0,0,0.75);backdrop-filter:blur(4px);">${inCartQty} IN CART</div>` : '';
+                    const isInCart = !isSoldOut && inCartQty > 0;
 
                     const soldOutClass = isSoldOut ? ' card-sold-out' : '';
-                    const inCartClass = (!isSoldOut && inCartQty > 0) ? ' card-has-incart' : '';
                     const disabledAttr = isSoldOut ? ' disabled aria-disabled="true"' : '';
-                    const ctaText = isSoldOut ? 'SOLD OUT' : (inCartQty > 0 ? `IN CART (${inCartQty})` : 'VIEW OPTIONS');
+                    const ctaText = isSoldOut ? 'SOLD OUT' : (isInCart ? 'VIEW CART' : 'ADD TO CART');
+                    const ctaAction = isSoldOut ? '' : (isInCart ? "event.stopPropagation(); window.openCart();" : `event.stopPropagation(); window.quickAddToCart('${safeId}');`);
+                    const buttonClass = isInCart ? ' view-cart-mode' : '';
+                    const buttonSvg = isInCart 
+                        ? `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14" style="stroke-width:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>`
+                        : `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14" style="stroke-width:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>`;
                     const stampHtml = isSoldOut ? `<div class="sold-out-stamp font-mono">SOLD OUT</div>` : '';
                     const newlyLoadedClass = isNewlyLoaded ? ' card-newly-loaded' : '';
 
                     return `
-                        <div class="product-card${soldOutClass}${inCartClass}${newlyLoadedClass}" style="height: auto !important; max-height: fit-content !important; align-self: start !important; justify-content: flex-start !important;" data-product-id="${safeId}" data-category="${safeCat}" data-img="${escapeHtml(p.img)}" onclick="if(!${isSoldOut}) window.openPdpModal('${safeId}')">
+                        <div class="product-card${soldOutClass}${newlyLoadedClass}" style="height: auto !important; max-height: fit-content !important; align-self: start !important; justify-content: flex-start !important;" data-product-id="${safeId}" data-category="${safeCat}" data-img="${escapeHtml(p.img)}" onclick="if(!${isSoldOut}) window.openPdpModal('${safeId}')">
                             <div class="corner-flare flare-tl"></div><div class="corner-flare flare-tr"></div>
                             <div class="corner-flare flare-bl"></div><div class="corner-flare flare-br"></div>
                             <div class="card-img-wrapper">
-                                ${inCartBadge}
                                 <img class="card-img" src="${escapeHtml(p.img)}" alt="${safeName} - Gothic Jewelry by Gothic Nova" loading="lazy" decoding="async" fetchpriority="low" width="400" height="400" onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'400\\' height=\\'400\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'%23ff3b5c\\' stroke-width=\\'1\\'><circle cx=\\'12\\' cy=\\'12\\' r=\\'9\\'/><path d=\\'M12 3v18M3 12h18\\'/></svg>';">
                                 ${stampHtml}
                             </div>
@@ -2843,14 +2846,52 @@
                                 </div>
                             </div>
                             <div class="card-actions">
-                                <button class="view-options-btn" ${disabledAttr} data-product-id="${safeId}" onclick="event.stopPropagation(); if(!${isSoldOut} && !this.disabled) window.openPdpModal('${safeId}')">
-                                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14" style="stroke-width:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                <button class="view-options-btn${buttonClass}" ${disabledAttr} data-product-id="${safeId}" onclick="${ctaAction}">
+                                    ${buttonSvg}
                                     ${ctaText}
                                 </button>
                             </div>
                         </div>
                     `;
                 }
+
+                window.quickAddToCart = function(productId) {
+                    const prods = (typeof getAllProducts === 'function') ? getAllProducts() : (window.gn_products || []);
+                    const p = prods.find(item => String(item.id) === String(productId));
+                    if (!p) return;
+                    const pStock = (p.stock !== undefined && p.stock !== null && p.stock !== '') ? Number(p.stock) : 999;
+                    if (pStock <= 0) return;
+
+                    const pid = String(p.id).trim();
+                    const currentCart = (typeof cartMap !== 'undefined' ? cartMap : window.gn_cart) || {};
+                    if (currentCart[pid] && Number(currentCart[pid].qty) > 0) {
+                        window.openCart();
+                        return;
+                    }
+
+                    const saleVal = p.salePrice !== undefined && p.salePrice !== null ? p.salePrice : p.saleprice;
+                    const priceVal = Number(p.price || 0);
+                    const isSale = saleVal !== null && saleVal !== undefined && saleVal !== '' && Number(saleVal) < priceVal;
+                    const activePrice = isSale ? Number(saleVal) : priceVal;
+                    const priceText = `Rs. ${activePrice.toLocaleString('en-PK')}`;
+
+                    currentCart[pid] = {
+                        id: pid,
+                        name: p.name,
+                        price: priceText,
+                        priceNum: activePrice,
+                        qty: 1, // STRICTLY 1 UNIT
+                        img: p.img
+                    };
+                    window.gn_cart = currentCart;
+                    if (typeof cartMap !== 'undefined') cartMap = currentCart;
+                    if (typeof saveCart === 'function') saveCart();
+                    if (typeof renderCart === 'function') renderCart();
+                    if (typeof updateCartBadge === 'function') updateCartBadge();
+                    if (typeof window.renderMainCatalog === 'function') window.renderMainCatalog();
+                    if (typeof window.syncPdpModalCartState === 'function') window.syncPdpModalCartState();
+                    if (typeof showLuxuryToast === 'function') showLuxuryToast(`${p.name} added to cart`);
+                };
 
                 window.handleCatalogLoadMore = function() {
                     const prevCount = window.catalogVisibleCount || 12;
@@ -3243,43 +3284,8 @@
                     // Live update active centered PDP modal if open
                     const pdpOverlay = document.getElementById('pdpModalOverlay');
                     if (pdpOverlay && pdpOverlay.classList.contains('active')) {
-                        const urlParams = new URLSearchParams(window.location.search);
-                        const pid = urlParams.get('product');
-                        if (pid && typeof window.openPdpModal === 'function') {
-                            const prods = (typeof getAllProducts === 'function') ? getAllProducts() : (window.gn_products || []);
-                            const p = prods.find(item => String(item.id) === String(pid));
-                            if (p) {
-                                const pStock = (p.stock !== undefined && p.stock !== null && p.stock !== '') ? Number(p.stock) : 999;
-                                const isSoldOut = pStock <= 0;
-                                const buyNowBtn = document.getElementById('pdpModalBuyNowBtn');
-                                const addToCartBtn = document.getElementById('pdpModalAddToCartBtn');
-                                const qtyMinus = document.getElementById('pdpModalQtyMinus');
-                                const qtyPlus = document.getElementById('pdpModalQtyPlus');
-                                if (buyNowBtn && addToCartBtn) {
-                                    if (isSoldOut) {
-                                        buyNowBtn.disabled = true;
-                                        addToCartBtn.disabled = true;
-                                        addToCartBtn.classList.remove('view-cart-mode');
-                                        addToCartBtn.textContent = 'SOLD OUT';
-                                        if (qtyMinus) qtyMinus.disabled = true;
-                                        if (qtyPlus) qtyPlus.disabled = true;
-                                    } else {
-                                        buyNowBtn.disabled = false;
-                                        addToCartBtn.disabled = false;
-                                        if (qtyMinus) qtyMinus.disabled = false;
-                                        if (qtyPlus) qtyPlus.disabled = false;
-                                        const maxStock = Math.max(1, pStock);
-                                        const existingInCart = (window.gn_cart && window.gn_cart[p.id]) ? Number(window.gn_cart[p.id].qty || 0) : 0;
-                                        if (existingInCart >= maxStock) {
-                                            addToCartBtn.classList.add('view-cart-mode');
-                                            addToCartBtn.innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="stroke-width:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg> VIEW CART`;
-                                        } else {
-                                            addToCartBtn.classList.remove('view-cart-mode');
-                                            addToCartBtn.innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="stroke-width:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg> ADD TO CART`;
-                                        }
-                                    }
-                                }
-                            }
+                        if (typeof window.syncPdpModalCartState === 'function') {
+                            window.syncPdpModalCartState();
                         }
                     }
                 }
@@ -4542,23 +4548,23 @@
                 if (qtyPlus) qtyPlus.disabled = false;
                 if (buyNowBtn) buyNowBtn.disabled = false;
 
-                if (existingInCart > 0) {
-                    currentModalQty = existingInCart;
-                    if (qtyVal) qtyVal.textContent = existingInCart;
-                    if (qtyLabel) qtyLabel.textContent = 'IN CART:';
+                const isInCart = Boolean(existingInCart > 0);
+
+                if (currentModalQty < 1) currentModalQty = 1;
+                if (qtyVal) qtyVal.textContent = currentModalQty;
+                if (qtyLabel) qtyLabel.textContent = 'QTY:';
+
+                if (isInCart) {
                     if (addToCartBtn) {
                         addToCartBtn.disabled = false;
                         addToCartBtn.classList.add('view-cart-mode');
-                        addToCartBtn.innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="stroke-width:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg> VIEW CART (${existingInCart})`;
+                        addToCartBtn.innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="stroke-width:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg> VIEW CART`;
                     }
                 } else {
-                    if (currentModalQty < 1) currentModalQty = 1;
-                    if (qtyVal) qtyVal.textContent = currentModalQty;
-                    if (qtyLabel) qtyLabel.textContent = 'QTY:';
                     if (addToCartBtn) {
                         addToCartBtn.disabled = false;
                         addToCartBtn.classList.remove('view-cart-mode');
-                        addToCartBtn.innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="stroke-width:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg> ADD (${currentModalQty}) TO CART`;
+                        addToCartBtn.innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="stroke-width:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg> ADD TO CART`;
                     }
                 }
             }
@@ -4701,6 +4707,7 @@
                 // Show modal
                 overlay.classList.add('active');
                 modalBox.classList.add('active');
+                modalBox.style.display = 'flex';
                 modalBox.setAttribute('aria-hidden', 'false');
 
                 // Update URL parameter without reload
@@ -4758,6 +4765,7 @@
             window.closePdpModal = function() {
                 overlay.classList.remove('active');
                 modalBox.classList.remove('active');
+                modalBox.style.display = 'none';
                 modalBox.setAttribute('aria-hidden', 'true');
                 activeModalProduct = null;
                 if (thumbsContainer) thumbsContainer.removeAttribute('data-thumb-key');
@@ -4813,36 +4821,9 @@
 
             qtyMinus.addEventListener('click', () => {
                 if (!activeModalProduct) return;
-                const cleanPid = String(activeModalProduct.id).trim();
-                const currentCart = (typeof cartMap !== 'undefined' ? cartMap : window.gn_cart) || {};
-                const existingInCart = (currentCart && currentCart[cleanPid]) ? Number(currentCart[cleanPid].qty || 0) : 0;
-
-                if (existingInCart > 0) {
-                    if (existingInCart > 1) {
-                        const newQty = existingInCart - 1;
-                        cartMap[cleanPid].qty = newQty;
-                        window.gn_cart = cartMap;
-                        saveCart();
-                        renderCart();
-                        syncPdpModalCartState();
-                    } else {
-                        delete cartMap[cleanPid];
-                        window.gn_cart = cartMap;
-                        saveCart();
-                        renderCart();
-                        currentModalQty = 1;
-                        syncPdpModalCartState();
-                        if (typeof showLuxuryToast === 'function') {
-                            showLuxuryToast('Artifact removed from cart');
-                        }
-                    }
-                    if (typeof window.renderMainCatalog === 'function') window.renderMainCatalog();
-                } else {
-                    if (currentModalQty > 1) {
-                        currentModalQty--;
-                        qtyVal.textContent = currentModalQty;
-                        addToCartBtn.innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="stroke-width:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg> ADD (${currentModalQty}) TO CART`;
-                    }
+                if (currentModalQty > 1) {
+                    currentModalQty--;
+                    if (qtyVal) qtyVal.textContent = currentModalQty;
                 }
             });
 
@@ -4850,33 +4831,12 @@
                 if (!activeModalProduct) return;
                 const pStock = (activeModalProduct.stock !== undefined && activeModalProduct.stock !== null && activeModalProduct.stock !== '') ? Number(activeModalProduct.stock) : 999;
                 const maxStock = Math.max(1, pStock);
-                const cleanPid = String(activeModalProduct.id).trim();
-                const currentCart = (typeof cartMap !== 'undefined' ? cartMap : window.gn_cart) || {};
-                const existingInCart = (currentCart && currentCart[cleanPid]) ? Number(currentCart[cleanPid].qty || 0) : 0;
-
-                if (existingInCart > 0) {
-                    if (existingInCart >= maxStock) {
-                        if (typeof showLuxuryAlert === 'function') {
-                            showLuxuryAlert(`Maximum available stock (${maxStock} unit${maxStock === 1 ? '' : 's'}) already in cart.`, 'STOCK LIMIT', 'info');
-                        }
-                        return;
-                    }
-                    const newQty = existingInCart + 1;
-                    cartMap[cleanPid].qty = newQty;
-                    window.gn_cart = cartMap;
-                    saveCart();
-                    renderCart();
-                    syncPdpModalCartState();
-                    if (typeof window.renderMainCatalog === 'function') window.renderMainCatalog();
+                if (currentModalQty < maxStock) {
+                    currentModalQty++;
+                    if (qtyVal) qtyVal.textContent = currentModalQty;
                 } else {
-                    if (currentModalQty < maxStock) {
-                        currentModalQty++;
-                        qtyVal.textContent = currentModalQty;
-                        addToCartBtn.innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="stroke-width:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg> ADD (${currentModalQty}) TO CART`;
-                    } else {
-                        if (typeof showLuxuryAlert === 'function') {
-                            showLuxuryAlert(`Maximum available stock is ${maxStock} unit${maxStock === 1 ? '' : 's'}.`, 'STOCK LIMIT', 'info');
-                        }
+                    if (typeof showLuxuryAlert === 'function') {
+                        showLuxuryAlert(`Maximum available stock is ${maxStock} unit${maxStock === 1 ? '' : 's'}.`, 'STOCK LIMIT', 'info');
                     }
                 }
             });
@@ -4926,37 +4886,34 @@
                 if (pStock <= 0) return;
 
                 const pid = String(activeModalProduct.id).trim();
-                const maxStock = Math.max(1, pStock);
                 const currentCart = (typeof cartMap !== 'undefined' ? cartMap : window.gn_cart) || {};
                 const existingInCart = (currentCart && currentCart[pid]) ? Number(currentCart[pid].qty || 0) : 0;
-
-                if (existingInCart >= maxStock) {
-                    if (typeof showLuxuryAlert === 'function') {
-                        showLuxuryAlert(`Maximum available stock (${maxStock} unit${maxStock === 1 ? '' : 's'}) already in cart.`);
-                    }
-                    syncPdpModalCartState();
+                if (existingInCart > 0) {
+                    window.closePdpModal();
+                    window.openCart();
                     return;
                 }
 
-                const addable = Math.max(1, Math.min(currentModalQty, maxStock - existingInCart));
                 const saleVal = activeModalProduct.salePrice !== undefined && activeModalProduct.salePrice !== null ? activeModalProduct.salePrice : activeModalProduct.saleprice;
                 const priceVal = Number(activeModalProduct.price || 0);
                 const isSale = saleVal !== null && saleVal !== undefined && saleVal !== '' && Number(saleVal) < priceVal;
                 const activePrice = isSale ? Number(saleVal) : priceVal;
                 const priceText = `Rs. ${activePrice.toLocaleString('en-PK')}`;
-                const newTotalQty = existingInCart + addable;
 
-                cartMap[pid] = {
+                // STRICTLY ADD 1 UNIT TO CART
+                currentCart[pid] = {
                     id: pid,
                     name: activeModalProduct.name,
                     price: priceText,
                     priceNum: activePrice,
-                    qty: newTotalQty,
+                    qty: 1,
                     img: activeModalProduct.img
                 };
-                window.gn_cart = cartMap;
+                window.gn_cart = currentCart;
+                if (typeof cartMap !== 'undefined') cartMap = currentCart;
                 saveCart();
                 renderCart();
+                if (typeof updateCartBadge === 'function') updateCartBadge();
 
                 // Synchronize modal state & catalog
                 syncPdpModalCartState();
@@ -5096,6 +5053,11 @@
                     showLuxuryAlert('Your selection is empty. Please add artifacts to proceed.', 'EMPTY SELECTION', 'info');
                 }
                 return;
+            }
+
+            // Close PDP modal if open
+            if (typeof window.closePdpModal === 'function') {
+                window.closePdpModal();
             }
 
             // Close cart drawer
