@@ -623,5 +623,34 @@ Before troubleshooting any reported issue, execute this verification protocol:
 * Catalog cards beneath the modal must never register click events originating from the dismissal action.
 * Initial deep links (`?product=...`) must only open once on store boot and never resurrect after customer dismissal.
 
+---
+
+## ADR-025: Catalog Card Interaction Restoration, Hero Typography Reliability & PNG Asset Preservation
+
+### Context & Problem
+1. **Statue Silhouette Transparency Artifacts:**
+   The floating gothic statue (`assets/subject_silhouette`) features fine semi-transparent cutouts. Conversion to lossy WebP produced an unsightly black background border/halo, destroying the seamless blend with the hero background.
+2. **Hero Typography Failure & Delays:**
+   Restricting the Google Fonts stylesheet to Inter/Fira Code and relying on a lazy-loaded print stylesheet caused the hero title (`GOTHIC NOVA`) to fail to apply `Antonio` (or fallback to browser defaults) because the font was removed from the active Google Fonts link, and the local `@font-face` only defined `font-weight: 700` whereas the hero title required `font-weight: 900`.
+3. **Card Grid CTA Clarity:**
+   Displaying `ADD TO CART` buttons directly on the product grid cluttered the dark aesthetic and bypassed the PDP modal where customers review specifications, sizing, and quantity before purchase.
+
+### Decision
+1. **Preserve PNG for Silhouette Cutouts:**
+   - Retained `assets/subject_silhouette.png` exclusively for transparent cutouts.
+   - All solid photographic and canvas backdrops (`website_bg`, `gothic_cathedral_bg`, `gothic_card_back`, `website_bg_mobile`) remain WebP.
+2. **Immediate Brand Font Availability:**
+   - Restored `Antonio:wght@700` and `League+Spartan:wght@600;700` to the primary Google Fonts stylesheet link.
+   - Broadened the local critical `@font-face` definition to `font-weight: 400 900;` to ensure full coverage across all font weight declarations.
+3. **Restoration of "VIEW OPTIONS" on Catalog Cards:**
+   - Product cards in the storefront grid render the clean `VIEW OPTIONS` button (or `SOLD OUT` if out of stock), complete with the view eye icon.
+   - Clicking `VIEW OPTIONS` opens the PDP modal smoothly.
+   - Cart additions, quantity adjustments, and `BUY NOW` direct checkouts are managed within the PDP modal and cart drawer with zero layout thrashing or grid button desynchronization.
+
+### Invariants
+* The floating statue cutout must strictly remain a transparent PNG (`assets/subject_silhouette.png`).
+* The brand hero title must render in `Antonio` immediately upon page paint.
+* Product cards on the grid must display `VIEW OPTIONS` (never `ADD TO CART`), leaving purchase and cart actions to the PDP modal.
+
 
 

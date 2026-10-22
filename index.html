@@ -45,24 +45,20 @@
         @font-face {
             font-family: 'Antonio';
             font-style: normal;
-            font-weight: 700;
+            font-weight: 400 900;
             font-display: swap;
             src: url('assets/fonts/Antonio-Bold.woff2') format('woff2');
         }
     </style>
 
-    <!-- Non-Blocking Typography Links & Third-Party Connection Warming -->
+    <!-- Typography Links & Third-Party Connection Warming -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link rel="dns-prefetch" href="https://ogjyubekshcxcirlboue.supabase.co">
     <link rel="preconnect" href="https://ogjyubekshcxcirlboue.supabase.co" crossorigin>
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" media="print" onload="this.media='all'">
-    <noscript>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap">
-    </noscript>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Antonio:wght@700&family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&family=League+Spartan:wght@600;700&display=swap">
     
     <!-- Tailored Design System Style Sheets -->
     <link rel="stylesheet" href="style.css?v=8.3">
@@ -2060,7 +2056,7 @@
         <div class="hero-light-glow" aria-hidden="true"></div>
 
         <div class="hero-silhouette-wrapper hero-silhouette-active" aria-hidden="true">
-            <img src="assets/subject_silhouette.webp" alt="Gothic Nova Silhouette" class="hero-silhouette-img" width="500" height="600" decoding="async">
+            <img src="assets/subject_silhouette.png" alt="Gothic Nova Silhouette" class="hero-silhouette-img" width="500" height="600" decoding="async">
         </div>
         <div class="hero-ghosts-container" aria-hidden="true">
             <div class="hero-ghost ghost-1"></div>
@@ -2853,19 +2849,13 @@
                         priceHtml = `<span class="card-price font-mono">Rs. ${priceVal.toLocaleString('en-PK')}</span>`;
                     }
 
-                    const currentCart = (typeof cartMap !== 'undefined' ? cartMap : window.gn_cart) || {};
-                    const inCartItem = currentCart[String(p.id).trim()] || currentCart[safeId];
-                    const inCartQty = inCartItem ? Number(inCartItem.qty || 0) : 0;
-                    const isInCart = !isSoldOut && inCartQty > 0;
-
                     const soldOutClass = isSoldOut ? ' card-sold-out' : '';
                     const disabledAttr = isSoldOut ? ' disabled aria-disabled="true"' : '';
-                    const ctaText = isSoldOut ? 'SOLD OUT' : (isInCart ? 'VIEW CART' : 'ADD TO CART');
-                    const ctaAction = isSoldOut ? '' : (isInCart ? "event.stopPropagation(); window.openCart();" : `event.stopPropagation(); window.quickAddToCart('${safeId}');`);
-                    const buttonClass = isInCart ? ' view-cart-mode' : '';
-                    const buttonSvg = isInCart 
-                        ? `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14" style="stroke-width:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>`
-                        : `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14" style="stroke-width:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>`;
+                    const ctaText = isSoldOut ? 'SOLD OUT' : 'VIEW OPTIONS';
+                    const ctaAction = isSoldOut ? '' : `event.stopPropagation(); if(!${isSoldOut} && !this.disabled) window.openPdpModal('${safeId}');`;
+                    const buttonSvg = isSoldOut 
+                        ? `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14" style="stroke-width:2px;"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>`
+                        : `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14" style="stroke-width:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>`;
                     const stampHtml = isSoldOut ? `<div class="sold-out-stamp font-mono">SOLD OUT</div>` : '';
                     const newlyLoadedClass = isNewlyLoaded ? ' card-newly-loaded' : '';
                     const imgLoadingAttr = (cardIndex < 4) ? 'loading="eager" fetchpriority="auto"' : 'loading="lazy" fetchpriority="low"';
@@ -2885,7 +2875,7 @@
                                 </div>
                             </div>
                             <div class="card-actions">
-                                <button class="view-options-btn${buttonClass}" ${disabledAttr} data-product-id="${safeId}" onclick="${ctaAction}">
+                                <button class="view-options-btn" ${disabledAttr} data-product-id="${safeId}" onclick="${ctaAction}">
                                     ${buttonSvg}
                                     ${ctaText}
                                 </button>
@@ -2895,34 +2885,7 @@
                 }
 
                 function syncCartButtonStates() {
-                    const currentCart = (typeof cartMap !== 'undefined' ? cartMap : window.gn_cart) || {};
-                    
-                    // 1. In-place card button state update (Zero DOM destruction, zero flicker)
-                    const cards = document.querySelectorAll('.product-card');
-                    if (cards && cards.length) {
-                        cards.forEach(card => {
-                            const pid = String(card.getAttribute('data-product-id') || '').trim();
-                            const btn = card.querySelector('.view-options-btn');
-                            if (!btn || card.classList.contains('card-sold-out')) return;
-
-                            const inCart = Boolean(currentCart[pid] && Number(currentCart[pid].qty) > 0);
-                            if (inCart) {
-                                if (!btn.classList.contains('view-cart-mode')) {
-                                    btn.classList.add('view-cart-mode');
-                                    btn.innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14" style="stroke-width:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg> VIEW CART`;
-                                    btn.setAttribute('onclick', 'event.stopPropagation(); window.openCart();');
-                                }
-                            } else {
-                                if (btn.classList.contains('view-cart-mode')) {
-                                    btn.classList.remove('view-cart-mode');
-                                    btn.innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14" style="stroke-width:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg> ADD TO CART`;
-                                    btn.setAttribute('onclick', `event.stopPropagation(); window.quickAddToCart('${pid}');`);
-                                }
-                            }
-                        });
-                    }
-
-                    // 2. Synchronize active PDP modal if open
+                    // Synchronize active PDP modal if open
                     if (typeof window.syncPdpModalCartState === 'function') {
                         window.syncPdpModalCartState();
                     }
