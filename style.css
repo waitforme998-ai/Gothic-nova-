@@ -3116,10 +3116,20 @@ body.no-ticker .hero-section {
     z-index: 50 !important;
 }
 
-.pdp-modal-close:hover {
+@media (hover: hover) {
+    .pdp-modal-close:hover {
+        background: var(--color-red-deep) !important;
+        border-color: var(--color-red-glow) !important;
+        transform: scale(1.08) !important;
+    }
+}
+.pdp-modal-close:active {
     background: var(--color-red-deep) !important;
     border-color: var(--color-red-glow) !important;
-    transform: scale(1.08) !important;
+    transform: scale(0.94) !important;
+}
+.pdp-modal-close:focus {
+    outline: none !important;
 }
 
 .pdp-modal-main-img-wrap {
@@ -3717,10 +3727,12 @@ body.no-ticker .hero-section {
     transition: background 0.12s ease, border-color 0.12s ease, transform 0.12s ease !important;
     z-index: 50;
 }
-.pdp-modal-close:hover {
-    background: var(--color-red-deep);
-    border-color: var(--color-red-glow);
-    transform: scale(1.08);
+@media (hover: hover) {
+    .pdp-modal-close:hover {
+        background: var(--color-red-deep);
+        border-color: var(--color-red-glow);
+        transform: scale(1.08);
+    }
 }
 
 .pdp-modal-grid {

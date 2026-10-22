@@ -2787,26 +2787,33 @@
                 window.renderNavMenuCategories = renderNavMenuCategories;
 
                 // Handle URL search/cat/product query params on load (e.g. ?product=123, ?cat=rings, or ?q=reaper)
+                let _hasHandledInitialDeepLink = false;
                 function handleUrlQueryParams() {
+                    if (_hasHandledInitialDeepLink) return;
                     try {
                         const params = new URLSearchParams(window.location.search);
                         const pid = params.get('product') || params.get('p');
                         const cat = params.get('cat') || params.get('category');
                         const q = params.get('q') || params.get('search');
                         if (pid) {
+                            _hasHandledInitialDeepLink = true;
                             setTimeout(() => {
+                                const currentParams = new URLSearchParams(window.location.search);
+                                if (!currentParams.get('product') && !currentParams.get('p')) return;
                                 if (document.body.classList.contains('checkout-open') || document.getElementById('checkoutModal')?.classList.contains('active')) return;
                                 if (typeof window.openPdpModal === 'function') {
                                     window.openPdpModal(pid);
                                 }
                             }, 150);
                         } else if (cat) {
+                            _hasHandledInitialDeepLink = true;
                             setTimeout(() => {
                                 if (typeof window.selectCategoryAndScroll === 'function') {
                                     window.selectCategoryAndScroll(cat);
                                 }
                             }, 120);
                         } else if (q) {
+                            _hasHandledInitialDeepLink = true;
                             setTimeout(() => {
                                 if (typeof window.applySearchQueryAndScroll === 'function') {
                                     window.applySearchQueryAndScroll(q);
@@ -4664,8 +4671,15 @@
                 }
             }
 
+            let _pdpJustClosedTime = 0;
+
             window.openPdpModal = function(productId) {
-                // Strict Checkout Isolation: never open over active checkout
+                // 1. Ghost click & fall-through guard: reject re-opening within 400ms of closing
+                if (Date.now() - _pdpJustClosedTime < 400) {
+                    return;
+                }
+
+                // 2. Strict Checkout Isolation: never open over active checkout
                 if (document.body.classList.contains('checkout-open') || (document.getElementById('checkoutModal')?.classList.contains('active'))) {
                     return;
                 }
@@ -4834,7 +4848,14 @@
             };
             window.scrollToProduct = window.navigateToProductCard;
 
-            window.closePdpModal = function() {
+            window.closePdpModal = function(e) {
+                if (e) {
+                    if (typeof e.stopPropagation === 'function') e.stopPropagation();
+                    if (typeof e.preventDefault === 'function') e.preventDefault();
+                }
+                _pdpJustClosedTime = Date.now();
+                if (closeBtn) closeBtn.blur();
+
                 overlay.classList.remove('active');
                 modalBox.classList.remove('active');
                 modalBox.style.display = 'none';
@@ -4853,8 +4874,16 @@
             };
 
             // Event Listeners
-            closeBtn.addEventListener('click', window.closePdpModal);
-            overlay.addEventListener('click', window.closePdpModal);
+            closeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                window.closePdpModal(e);
+            });
+            overlay.addEventListener('click', (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                window.closePdpModal(e);
+            });
 
             const detailsToggleBtn = document.getElementById('pdpDetailsToggleBtn');
             if (detailsToggleBtn) {

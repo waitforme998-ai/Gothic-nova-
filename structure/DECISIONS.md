@@ -590,5 +590,38 @@ Before troubleshooting any reported issue, execute this verification protocol:
 - [ ] **Verify Element Display:** Ensure target elements are not hidden by CSS (`display: none;`, zero-height accordions, or parent overflow).
 - [ ] **Verify Cart Viewport:** Confirm `#cart-items-list` scrolls cleanly and `#cart-footer` remains docked on mobile screen sizes.
 
+---
+
+## ADR-024: PDP Modal Dismissal, Click Fall-Through Immunity & Non-Sticky Close Button
+
+### Context & Problem
+1. **Modal Reopening Glitch upon Dismissal:**
+   When clicking the top-right cross button (`✕`) to close the product details modal (`pdpModalBox`), the modal frequently flashed closed and immediately reopened with the cross button illuminated ("lighted").
+2. **Click Fall-Through / Touch Ghost Clicks:**
+   Setting `modalBox.style.display = 'none'` synchronously removed the modal from the browser's hit-test layer before the click/tap cycle completed. The underlying `.product-card` directly beneath the cross button coordinates captured the fall-through `click` event, invoking `onclick="openPdpModal(id)"` and reopening the modal.
+3. **Repeated Deep-Link Ingestion on Product Sync:**
+   `handleUrlQueryParams` listened to the `productsLoaded` event without an idempotency latch. When Supabase or local storage dispatched catalog updates, the handler re-parsed `?product=` from the initial URL and triggered a deferred `setTimeout` reopening the modal even after the customer dismissed it.
+4. **Sticky `:hover` State on Mobile Touchscreens:**
+   CSS rules for `.pdp-modal-close:hover` applied deep crimson background and glowing red borders without checking for `@media (hover: hover)`. Mobile touch interactions left the `:hover` styling stuck to the button upon reopening.
+
+### Decision
+1. **Event Propagation & Focus Isolation:**
+   - `closeBtn` and `overlay` click listeners explicitly call `e.stopPropagation()` and `e.preventDefault()`.
+   - `closePdpModal()` explicitly calls `closeBtn.blur()`, clearing focused or active states.
+2. **Ghost-Click Cooldown Guard:**
+   - Implemented an atomic closing timestamp: `_pdpJustClosedTime = Date.now()`.
+   - `openPdpModal()` enforces an immediate rejection guard: `if (Date.now() - _pdpJustClosedTime < 400) return;`.
+3. **Idempotent URL Query Latch:**
+   - Gated `handleUrlQueryParams()` behind `_hasHandledInitialDeepLink = true`.
+   - Inside the scheduled timeout, validated that `new URLSearchParams(window.location.search).get('product')` has not been deleted by modal closure before opening.
+4. **Touch-Safe CSS Media Queries:**
+   - Scoped `.pdp-modal-close:hover` under `@media (hover: hover)` so mobile touch interactions never retain a persistent glow.
+   - Added `.pdp-modal-close:active` and `.pdp-modal-close:focus { outline: none !important; }`.
+
+### Invariants
+* The product details modal must dismiss completely on the first click of the `✕` button or overlay.
+* Catalog cards beneath the modal must never register click events originating from the dismissal action.
+* Initial deep links (`?product=...`) must only open once on store boot and never resurrect after customer dismissal.
+
 
 
