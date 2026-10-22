@@ -52,7 +52,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Antonio:wght@700&family=Inter:wght@200;300;400;500;600;700&family=Fira+Code:wght@300;400;500&family=League+Spartan:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Tailored Design System Style Sheets -->
-    <link rel="stylesheet" href="style.css?v=8.1">
+    <link rel="stylesheet" href="style.css?v=8.2">
     
     <!-- Resilient SafeStorage Engine (Instagram IAB & Sandbox Immunity) -->
     <script>
@@ -772,7 +772,7 @@
         // =========================================================================
         // GOTHIC OCCULT LUXURY UTILITIES
         // =========================================================================
-        function showLuxuryToast(message, icon = '✦') {
+        function showLuxuryToast(message, icon = '✦', type = 'info') {
             let container = document.getElementById('luxuryToastContainer');
             if (!container) {
                 container = document.createElement('div');
@@ -780,16 +780,33 @@
                 container.className = 'luxury-toast-container';
                 document.body.appendChild(container);
             }
+            // Clear any lingering toast so they never stack or swap awkwardly
+            while (container.firstChild) {
+                container.removeChild(container.firstChild);
+            }
             const toast = document.createElement('div');
-            toast.className = 'luxury-toast-item';
-            toast.innerHTML = `<span style="color: #ff9999; font-size: 0.9rem;">${icon}</span> <span>${message}</span>`;
+            toast.className = `luxury-toast ${type}`;
+            let iconSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffe8be" stroke-width="2.2"><path d="M20 6 9 17l-5-5"/></svg>`;
+            if (icon === '⚠️' || type === 'warning') {
+                iconSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffe8be" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
+            } else if (icon === '✕' || type === 'error') {
+                iconSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ff3b5c" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`;
+            }
+            toast.innerHTML = `
+                <div class="toast-icon-wrap">${iconSvg}</div>
+                <div class="toast-text-wrap">
+                    <div class="toast-msg font-mono">${escapeHtml(message)}</div>
+                </div>
+            `;
             container.appendChild(toast);
             setTimeout(() => {
-                if (toast && toast.parentNode) {
-                    toast.parentNode.removeChild(toast);
+                if (toast && toast.parentElement) {
+                    toast.classList.add('fade-out');
+                    setTimeout(() => { if (toast.parentElement) toast.remove(); }, 250);
                 }
-            }, 4000);
+            }, 2600);
         }
+        window.showLuxuryToast = showLuxuryToast;
 
         function executeUniversalCopy(text) {
             if (!text) return;
@@ -4413,8 +4430,8 @@
                 window.removeFromCart(cleanPid);
                 return;
             } else if (newQty > stock) {
-                if (typeof showLuxuryAlert === 'function') {
-                    showLuxuryAlert(`Only ${stock} unit${stock === 1 ? '' : 's'} available in stock.`, 'STOCK LIMIT', 'info');
+                if (typeof showLuxuryToast === 'function') {
+                    showLuxuryToast(`Only ${stock} unit${stock === 1 ? '' : 's'} available in stock`, '⚠️', 'warning');
                 }
                 cartMap[cleanPid].qty = Math.max(1, stock);
                 saveCart();
@@ -4835,8 +4852,8 @@
                     currentModalQty++;
                     if (qtyVal) qtyVal.textContent = currentModalQty;
                 } else {
-                    if (typeof showLuxuryAlert === 'function') {
-                        showLuxuryAlert(`Maximum available stock is ${maxStock} unit${maxStock === 1 ? '' : 's'}.`, 'STOCK LIMIT', 'info');
+                    if (typeof showLuxuryToast === 'function') {
+                        showLuxuryToast(`Maximum available stock is ${maxStock} unit${maxStock === 1 ? '' : 's'}`, '⚠️', 'warning');
                     }
                 }
             });
@@ -5049,8 +5066,8 @@
             activeCheckoutItemsMap = customItems || null;
             const items = Object.entries(getActiveCheckoutItems());
             if (items.length === 0) {
-                if (typeof showLuxuryAlert === 'function') {
-                    showLuxuryAlert('Your selection is empty. Please add artifacts to proceed.', 'EMPTY SELECTION', 'info');
+                if (typeof showLuxuryToast === 'function') {
+                    showLuxuryToast('Your selection is empty. Please add artifacts to proceed', '✦');
                 }
                 return;
             }
@@ -6244,6 +6261,11 @@
                 toast.classList.add('fade-out');
                 setTimeout(() => toast.remove(), 250);
             };
+
+            // Clear any lingering notifications to prevent stacking/swapping
+            while (container.firstChild) {
+                container.removeChild(container.firstChild);
+            }
 
             container.appendChild(toast);
 
