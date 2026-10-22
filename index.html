@@ -2795,6 +2795,7 @@
                         const q = params.get('q') || params.get('search');
                         if (pid) {
                             setTimeout(() => {
+                                if (document.body.classList.contains('checkout-open') || document.getElementById('checkoutModal')?.classList.contains('active')) return;
                                 if (typeof window.openPdpModal === 'function') {
                                     window.openPdpModal(pid);
                                 }
@@ -2886,6 +2887,41 @@
                     `;
                 }
 
+                function syncCartButtonStates() {
+                    const currentCart = (typeof cartMap !== 'undefined' ? cartMap : window.gn_cart) || {};
+                    
+                    // 1. In-place card button state update (Zero DOM destruction, zero flicker)
+                    const cards = document.querySelectorAll('.product-card');
+                    if (cards && cards.length) {
+                        cards.forEach(card => {
+                            const pid = String(card.getAttribute('data-product-id') || '').trim();
+                            const btn = card.querySelector('.view-options-btn');
+                            if (!btn || card.classList.contains('card-sold-out')) return;
+
+                            const inCart = Boolean(currentCart[pid] && Number(currentCart[pid].qty) > 0);
+                            if (inCart) {
+                                if (!btn.classList.contains('view-cart-mode')) {
+                                    btn.classList.add('view-cart-mode');
+                                    btn.innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14" style="stroke-width:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg> VIEW CART`;
+                                    btn.setAttribute('onclick', 'event.stopPropagation(); window.openCart();');
+                                }
+                            } else {
+                                if (btn.classList.contains('view-cart-mode')) {
+                                    btn.classList.remove('view-cart-mode');
+                                    btn.innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14" style="stroke-width:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg> ADD TO CART`;
+                                    btn.setAttribute('onclick', `event.stopPropagation(); window.quickAddToCart('${pid}');`);
+                                }
+                            }
+                        });
+                    }
+
+                    // 2. Synchronize active PDP modal if open
+                    if (typeof window.syncPdpModalCartState === 'function') {
+                        window.syncPdpModalCartState();
+                    }
+                }
+                window.syncCartButtonStates = syncCartButtonStates;
+
                 window.quickAddToCart = function(productId) {
                     const prods = (typeof getAllProducts === 'function') ? getAllProducts() : (window.gn_products || []);
                     const p = prods.find(item => String(item.id) === String(productId));
@@ -2919,8 +2955,7 @@
                     if (typeof saveCart === 'function') saveCart();
                     if (typeof renderCart === 'function') renderCart();
                     if (typeof updateCartBadge === 'function') updateCartBadge();
-                    if (typeof window.renderMainCatalog === 'function') window.renderMainCatalog();
-                    if (typeof window.syncPdpModalCartState === 'function') window.syncPdpModalCartState();
+                    syncCartButtonStates();
                     if (typeof showLuxuryToast === 'function') showLuxuryToast(`${p.name} added to cart`);
                 };
 
@@ -3037,7 +3072,8 @@
                     const currentCatalogKey = `${window.currentCategory || 'all'}|${window.searchQuery || ''}|${visibleCount}|${visibleList.map(p => `${p.id}:${p.stock}:${p.price}:${p.salePrice}:${p.badge || ''}:${p.name}`).join(';')}`;
 
                     if (!isAppending && _lastCatalogKey === currentCatalogKey && grid.children.length === visibleList.length && !grid.querySelector('.skeleton-card')) {
-                        // DOM is already in sync; skip DOM wiping and layout thrashing
+                        // DOM is already in sync; keep button states perfectly synchronized without layout thrashing
+                        if (typeof syncCartButtonStates === 'function') syncCartButtonStates();
                     } else if (isAppending && grid.children.length > 0 && !grid.querySelector('.skeleton-card')) {
                         _lastCatalogKey = currentCatalogKey;
                         const prevCount = window.prevCatalogVisibleCount || 0;
@@ -4455,8 +4491,8 @@
                 saveCart();
                 renderCart();
             }
-            if (typeof syncPdpModalCartState === 'function') syncPdpModalCartState();
-            if (typeof window.renderMainCatalog === 'function') window.renderMainCatalog();
+            if (typeof window.syncCartButtonStates === 'function') window.syncCartButtonStates();
+            else if (typeof syncPdpModalCartState === 'function') syncPdpModalCartState();
         };
 
         window.removeFromCart = function(pid) {
@@ -4464,16 +4500,16 @@
             delete cartMap[cleanPid];
             saveCart();
             renderCart();
-            if (typeof syncPdpModalCartState === 'function') syncPdpModalCartState();
-            if (typeof window.renderMainCatalog === 'function') window.renderMainCatalog();
+            if (typeof window.syncCartButtonStates === 'function') window.syncCartButtonStates();
+            else if (typeof syncPdpModalCartState === 'function') syncPdpModalCartState();
         };
 
         window.clearCart = function() {
             Object.keys(cartMap).forEach(k => delete cartMap[k]);
             saveCart();
             renderCart();
-            if (typeof syncPdpModalCartState === 'function') syncPdpModalCartState();
-            if (typeof window.renderMainCatalog === 'function') window.renderMainCatalog();
+            if (typeof window.syncCartButtonStates === 'function') window.syncCartButtonStates();
+            else if (typeof syncPdpModalCartState === 'function') syncPdpModalCartState();
         };
 
         // --- PURE WHITE SLOW FLYING ORB ANIMATION ---
@@ -4629,6 +4665,11 @@
             }
 
             window.openPdpModal = function(productId) {
+                // Strict Checkout Isolation: never open over active checkout
+                if (document.body.classList.contains('checkout-open') || (document.getElementById('checkoutModal')?.classList.contains('active'))) {
+                    return;
+                }
+
                 const p = getProduct(productId);
                 if (!p) return;
 
@@ -4946,10 +4987,11 @@
                 renderCart();
                 if (typeof updateCartBadge === 'function') updateCartBadge();
 
-                // Synchronize modal state & catalog
-                syncPdpModalCartState();
-                if (typeof window.renderMainCatalog === 'function') {
-                    window.renderMainCatalog();
+                // Synchronize modal state & catalog in-place (No grid thrashing)
+                if (typeof window.syncCartButtonStates === 'function') {
+                    window.syncCartButtonStates();
+                } else {
+                    syncPdpModalCartState();
                 }
 
                 if (typeof showLuxuryToast === 'function') {
@@ -4975,8 +5017,6 @@
                         { transform:'scale(1)'   }
                     ], { duration:380, easing:'cubic-bezier(0.34,1.56,0.64,1)' });
                 }
-
-                premiumCartAnimation(addToCartBtn, () => {});
             });
 
             // Handle browser back/forward navigation
@@ -4990,14 +5030,6 @@
                 }
             });
 
-            // Initial Direct Deep Link Check
-            window.addEventListener('DOMContentLoaded', () => {
-                const params = new URLSearchParams(window.location.search);
-                const pId = params.get('product');
-                if (pId) {
-                    setTimeout(() => window.openPdpModal(pId), 150);
-                }
-            });
         })();
 
         // --- FULLSCREEN IMAGE LIGHTBOX CONTROLLER ---
@@ -5107,6 +5139,7 @@
             overlay.classList.add('active');
             modal.classList.add('active');
             modal.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('checkout-open');
             document.body.style.overflow = 'hidden';
         }
         window.openCheckout = openCheckout;
@@ -5119,6 +5152,7 @@
             overlay.classList.remove('active');
             modal.classList.remove('active');
             modal.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('checkout-open');
             document.body.style.overflow = '';
         }
         window.closeCheckout = closeCheckout;

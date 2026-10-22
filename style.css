@@ -4403,20 +4403,13 @@ body.no-ticker .hero-section {
     pointer-events: none;
 }
 
-/* View Cart Mode for Add to Cart Buttons */
-.pdp-modal-btn-cart.view-cart-mode,
-.pdp-add-to-cart-btn.view-cart-mode {
-    background: linear-gradient(135deg, #1f6f43 0%, #13462a 100%) !important;
-    border-color: #30d158 !important;
-    color: #ffffff !important;
-    box-shadow: 0 4px 15px rgba(48, 209, 88, 0.3) !important;
-}
-
-.pdp-modal-btn-cart.view-cart-mode:hover,
-.pdp-add-to-cart-btn.view-cart-mode:hover {
-    background: linear-gradient(135deg, #278652 0%, #1a5835 100%) !important;
-    border-color: #4cd964 !important;
-    transform: translateY(-2px);
+/* Checkout Modal Layering & Isolation Guard */
+body.checkout-open .pdp-modal-box,
+body.checkout-open .pdp-modal-overlay {
+    display: none !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
 }
 
 /* Product Card Search Focus Pulse / Spotlight Highlight */
