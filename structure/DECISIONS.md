@@ -473,29 +473,28 @@ Internal system state records (`__GN_SYNC_PRODUCTS__`, `__GN_SYNC_ANNOUNCEMENTS_
    On mobile devices with short vertical viewports (or browsers with dynamic URL bars), `#cart-items-list` lacked a hard boundary relative to dynamic viewport units (`dvh`). When 3+ items were added, the list expanded down and pushed the checkout CTA and subtotal footer past the fold, preventing customers from finishing their purchase without closing and reopening.
 
 ### Decision
-1. **Persistent `VIEW CART (${newTotalQty})` Modal State:**
-   Removed the arbitrary 800ms timeout on the Add-to-Cart button. Upon successful cart addition, the CTA transitions permanently to `VIEW CART (${newTotalQty})`. Clicking this button immediately opens the cart drawer.
-2. **Secondary Addition Stepper & Quick-Add Link:**
-   Introduced `#pdpAddMoreBtn` (`+ Add another unit`) directly below `.pdp-modal-actions`.
-   - When clicked (or when the PDP quantity stepper `+` is engaged), the button state smoothly transitions back to `ADD (+1) TO CART` with the updated quantity increment.
-   - Preserves complete flexibility: customers can either click `VIEW CART` to checkout or use the stepper / add-more link to stack additional units.
-3. **Strict ID String Coercion:**
-   All cart operations (lookups, insertions, deletions, clamp adjustments) strictly enforce `String(pid).trim()`. Prevents numeric vs string key collisions in `gn_cart`.
-4. **Mobile Cart Drawer Viewport Containment:**
-   Enforced strict boundary constraints in CSS:
-   ```css
-   #cart-items-list {
-       max-height: calc(100dvh - 210px);
-       overscroll-behavior-y: contain;
-       padding-bottom: 24px;
-   }
-   ```
-   Ensures that `#cart-footer` with the total amount and checkout CTA remains permanently docked and visible in the mobile viewport regardless of how many items are added to the cart.
+1. **Pure Binary Cart Button State (`ADD TO CART` / `VIEW CART`):**
+   - The button has only two clean binary states: `ADD TO CART` and `VIEW CART`.
+   - Never displays numeric counts (`(1)`, `(+1)`, `(X)`) on the button.
+   - When clicked in `ADD TO CART` mode, adds strictly 1 unit to the cart and immediately flips permanently to `VIEW CART`.
+   - When clicked in `VIEW CART` mode, opens the cart drawer immediately.
+2. **Decoupled Quantity Controls (Exclusively for Buy Now):**
+   - The quantity stepper (`-`, `1`, `+`) in the product details modal controls quantity strictly for the direct **"BUY NOW"** checkout flow.
+   - It does not modify the cart, nor does it alter the `ADD TO CART` button.
+   - Increasing and decreasing quantity of cart items is managed exclusively inside the Cart Drawer (`#cart-drawer`), ensuring zero conflicting or fighting DOM states.
+3. **Card "Added to Cart" Clutter Removal:**
+   - All secondary badges (`.card-incart-badge`), "X IN CART" overlays, and special in-cart card borders are completely removed.
+   - The only indicator that an artifact is currently in the cart is that its action button changes from `ADD TO CART` to `VIEW CART`.
+4. **Checkout Modal Layering Immunity:**
+   - `#checkoutOverlay` (`z-index: 999998 !important`) and `#checkoutModal` (`z-index: 999999 !important`) are permanently elevated above all modal systems.
+   - `.pdp-modal-box:not(.active)` is strictly set to `display: none !important`, and `openCheckout()` explicitly closes the PDP modal, eliminating any stacking or bleed-through conflicts.
+5. **Strict ID String Coercion:**
+   All cart operations strictly enforce `String(pid).trim()`.
 
 ### Invariants
-* The PDP modal Add-to-Cart button must never use arbitrary `setTimeout` resets that falsely snap back to `ADD TO CART` while units exist in the cart.
-* Cart item keys must always be strictly coerced via `String(id).trim()`.
-* The cart drawer footer (`#cart-footer`) must remain permanently visible and docked in viewport; `#cart-items-list` must strictly scroll within its `calc(100dvh - 210px)` max-height boundary.
+* The Add-to-Cart button must never show quantity numbers in parentheses or fight with modal steppers.
+* Stepper adjustments on the product card/modal must only affect direct "BUY NOW" checkout; clicking `ADD TO CART` always adds strictly 1 unit.
+* Checkout modal must always close any active PDP modal and render above all other layers.
 
 ---
 
