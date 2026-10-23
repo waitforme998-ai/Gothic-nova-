@@ -6,8 +6,8 @@
 (function() {
     'use strict';
 
-    const DEFAULT_SUPABASE_URL = 'https://ogjyubekshcxcirlboue.supabase.co';
-    const DEFAULT_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9nanl1YmVrc2hjeGNpcmxib3VlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2MzU3NzIsImV4cCI6MjEwNTIxMTc3Mn0.DgLLeJfRhTgJhJsDhj5LSmxjk9U7q7FYskX-QB10BiM';
+    const DEFAULT_SUPABASE_URL = 'https://xtphuycoriazzkoalyyh.supabase.co';
+    const DEFAULT_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh0cGh1eWNvcmlhenprb2FseXloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2ODExNTYsImV4cCI6MjEwODI1NzE1Nn0.PiQ6a1Kd4lSt6O-15OqUdebKTydt6R6dhYgzOdOkyLM';
 
     let supabase = null;
 
