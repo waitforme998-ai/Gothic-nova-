@@ -1194,10 +1194,10 @@
         min-height: 40px;
         padding: 0 14px;
         margin: 0;
-        font-family: var(--font-vintage);
-        font-size: 0.76rem;
+        font-family: var(--font-heading) !important;
+        font-size: 0.88rem;
         font-weight: 700;
-        letter-spacing: 0.04em;
+        letter-spacing: 0.05em;
         text-transform: uppercase;
         display: inline-flex;
         align-items: center;
@@ -1283,12 +1283,12 @@
     }
 
     .card-category-tag {
-        font-family: var(--font-mono);
-        font-size: 0.70rem;
-        letter-spacing: 0.18em;
+        font-family: var(--font-heading) !important;
+        font-size: 0.80rem;
+        letter-spacing: 0.12em;
         text-transform: uppercase;
         color: #c5b8ad !important;
-        font-weight: 600;
+        font-weight: 700;
         margin-bottom: 4px;
         display: inline-flex;
         align-items: center;
@@ -1456,8 +1456,8 @@
     }
 
     .card-title {
-        font-family: var(--font-vintage);
-        font-size: 1.18rem;
+        font-family: var(--font-heading) !important;
+        font-size: 1.25rem;
         font-weight: 700;
         color: #ffffff;
         text-transform: uppercase;
@@ -2438,6 +2438,7 @@
         .filter-tab,
         .cat-more-btn,
         .cat-more-toggle-btn {
+            font-family: var(--font-heading) !important;
             flex: 1 1 0 !important;
             width: auto !important;
             min-width: 0 !important;
@@ -2445,8 +2446,9 @@
             min-height: 38px !important;
             max-height: 38px !important;
             padding: 0 clamp(4px, 1.5vw, 10px) !important;
-            font-size: clamp(0.64rem, 2.1vw, 0.74rem) !important;
-            letter-spacing: 0.02em !important;
+            font-size: clamp(0.72rem, 2.4vw, 0.84rem) !important;
+            font-weight: 700 !important;
+            letter-spacing: 0.03em !important;
             white-space: nowrap !important;
             text-overflow: ellipsis !important;
             overflow: hidden !important;
@@ -2581,10 +2583,10 @@
         }
 
         .card-title {
-            font-family: var(--font-vintage) !important;
-            font-size: clamp(0.78rem, 2.8vw, 0.95rem) !important;
+            font-family: var(--font-heading) !important;
+            font-size: clamp(0.85rem, 3.2vw, 1.05rem) !important;
             font-weight: 700 !important;
-            line-height: 1.25 !important;
+            line-height: 1.15 !important;
             color: #ffffff !important;
             letter-spacing: 0.03em !important;
             text-transform: uppercase !important;
@@ -3171,10 +3173,10 @@
 
     .pdp-category-pill,
     #pdpCategoryTag {
-        font-family: var(--font-mono) !important;
-        font-size: 0.72rem !important;
-        font-weight: 600 !important;
-        letter-spacing: 0.24em !important;
+        font-family: var(--font-heading) !important;
+        font-size: 0.85rem !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.12em !important;
         text-transform: uppercase !important;
         color: #c5b8ad !important;
         background: rgba(255, 255, 255, 0.04) !important;
@@ -3932,13 +3934,13 @@
     }
 
     .pdp-modal-title {
-        font-family: var(--font-vintage);
-        font-size: 1.35rem;
+        font-family: var(--font-heading) !important;
+        font-size: 1.45rem;
         font-weight: 700;
         color: #ffffff;
         line-height: 1.15;
         text-transform: uppercase;
-        letter-spacing: 0.03em;
+        letter-spacing: 0.04em;
         margin: 0;
     }
 
@@ -4395,8 +4397,11 @@
     }
 
     .search-item-title {
-        font-size: 0.80rem;
-        font-weight: 600;
+        font-family: var(--font-heading) !important;
+        font-size: 0.95rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
         color: #ffffff;
         white-space: nowrap;
         overflow: hidden;
@@ -4404,9 +4409,10 @@
     }
 
     .search-item-category {
-        font-family: var(--font-mono);
-        font-size: 0.58rem;
+        font-family: var(--font-heading) !important;
+        font-size: 0.68rem;
         font-weight: 700;
+        letter-spacing: 0.08em;
         color: #ff5c7c;
         text-transform: uppercase;
         background: rgba(92, 15, 31, 0.4);
@@ -4821,12 +4827,16 @@
     }
 
     .trending-chip, .cat-chip {
+        font-family: var(--font-heading) !important;
+        font-weight: 700 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.05em !important;
         background: rgba(255, 255, 255, 0.06);
         border: 1px solid rgba(255, 255, 255, 0.15);
         color: #ffffff;
         padding: 8px 14px;
         border-radius: 20px;
-        font-size: 0.82rem;
+        font-size: 0.90rem;
         cursor: pointer;
         transition: all 0.15s ease;
     }

@@ -1833,23 +1833,34 @@
             }
             trySync();
 
-            // Mobile Background/Foreground Lifecycle Auto-Wake:
-            // When user wakes their phone screen, unlocks device, or focuses tab -> instant re-sync!
+            // Supabase Zero-Waste Quota Guard:
+            // 1. Debounce tab focus/wake with a 90-second cooldown so tabs don't burn API quota.
+            // 2. Realtime WebSocket delivers instant updates automatically; heartbeat fallback only polls every 5 minutes if Realtime is disconnected.
+            let _lastHydrateTime = Date.now();
+            function quotaSafeHydrate(force = false) {
+                const now = Date.now();
+                if (!force && (now - _lastHydrateTime < 90000)) return;
+                _lastHydrateTime = now;
+                hydrateStorefrontFromCloud();
+            }
+
             document.addEventListener('visibilitychange', function() {
                 if (document.visibilityState === 'visible') {
-                    hydrateStorefrontFromCloud();
+                    quotaSafeHydrate(false);
                 }
             });
             window.addEventListener('focus', function() {
-                hydrateStorefrontFromCloud();
+                quotaSafeHydrate(false);
             });
 
-            // 45-second heartbeat poll for maximum multi-device reliability
+            // 5-minute quota-safe fallback poll (skipped when Realtime is active)
             setInterval(function() {
-                if (document.visibilityState === 'visible') {
-                    hydrateStorefrontFromCloud();
+                if (document.visibilityState !== 'visible') return;
+                if (window.SupabaseEngine && window.SupabaseEngine.isRealtimeConnected) {
+                    return; // Realtime pushes live updates, zero polling needed!
                 }
-            }, 45000);
+                quotaSafeHydrate(true);
+            }, 300000);
         })();
         // =========================================================================
         // DYNAMIC SEO & JSON-LD STRUCTURED DATA INJECTION ENGINE

@@ -228,6 +228,9 @@
         get isLive() {
             return !!initSupabase();
         },
+        get isRealtimeConnected() {
+            return !!(_realtimeChannel && (_realtimeChannel.state === 'joined' || _realtimeChannel.state === 'joining'));
+        },
         formatError(err, fallback = "Operation failed") {
             if (typeof navigator !== 'undefined' && !navigator.onLine) {
                 return "No internet connection. Please check your network.";
@@ -265,6 +268,10 @@
                         const parsed = JSON.parse(cachedRaw);
                         if (Array.isArray(parsed) && parsed.length > 0) {
                             _sectionCache[sectionKey] = parsed;
+                            const storedTs = parseInt(SafeStorage.getItem('gn_swr_ts_' + sectionKey), 10);
+                            if (storedTs) {
+                                _sectionConfirmedAt[sectionKey] = storedTs;
+                            }
                             // Trigger background cloud revalidation without blocking caller
                             this._getSection(sectionKey, true).catch(() => {});
                             return parsed;
@@ -279,6 +286,24 @@
             }
 
             try {
+                // ZERO-EGRESS QUOTA GUARD: Check updated_at first (~50 bytes) instead of downloading multi-megabyte items
+                if (_sectionCache[sectionKey] && _sectionConfirmedAt[sectionKey]) {
+                    const { data: headData, error: headErr } = await client
+                        .from('gn_orders')
+                        .select('id, updated_at')
+                        .eq('customer_name', config.syncName)
+                        .order('updated_at', { ascending: false })
+                        .limit(1);
+
+                    if (!headErr && headData && headData.length > 0) {
+                        const cloudTime = new Date(headData[0].updated_at).getTime();
+                        if (cloudTime && _sectionConfirmedAt[sectionKey] >= cloudTime) {
+                            // Cloud data has not changed! Zero egress payload downloaded.
+                            return _sectionCache[sectionKey];
+                        }
+                    }
+                }
+
                 const { data, error } = await client
                     .from('gn_orders')
                     .select('id, items, updated_at')
@@ -299,8 +324,10 @@
                         : [];
 
                     _sectionCache[sectionKey] = sectionData;
-                    _sectionConfirmedAt[sectionKey] = Date.now();
+                    const confirmedTs = data[0].updated_at ? new Date(data[0].updated_at).getTime() : Date.now();
+                    _sectionConfirmedAt[sectionKey] = confirmedTs;
                     safeLocalStorageSet('gn_swr_' + sectionKey, sectionData);
+                    safeLocalStorageSet('gn_swr_ts_' + sectionKey, String(confirmedTs));
                     return sectionData;
                 }
             } catch (e) {
