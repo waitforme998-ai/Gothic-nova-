@@ -1225,9 +1225,11 @@
             }
 
             if (createdOrder) {
-                if (Array.isArray(_ordersCache)) {
-                    _ordersCache.unshift(createdOrder);
-                }
+                if (!Array.isArray(_ordersCache)) _ordersCache = [];
+                _ordersCache.unshift(createdOrder);
+                try {
+                    SafeStorage.setItem('gn_swr_orders', JSON.stringify(_ordersCache.slice(0, 50)));
+                } catch(e) {}
             }
 
             // Atomically decrement catalog stock upon confirmed order
@@ -1277,6 +1279,20 @@
         },
 
         async getOrders() {
+            // SWR fallback from local SafeStorage ring buffer
+            let localOrders = [];
+            try {
+                const raw = SafeStorage.getItem('gn_swr_orders');
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (Array.isArray(parsed)) localOrders = parsed;
+                }
+            } catch(e) {}
+
+            if (!_ordersCache && localOrders.length > 0) {
+                _ordersCache = localOrders;
+            }
+
             const client = this.client;
             if (client) {
                 try {
@@ -1292,11 +1308,15 @@
                             if (o.customer_name && (o.customer_name === '__GN_STORE_SYNC__' || String(o.customer_name).startsWith('__GN_'))) return false;
                             return true;
                         }).map(o => {
-                            // Remote status is AUTHORITATIVE. Do not overwrite remote status with cached status.
                             return { ...o };
                         });
 
                         _ordersCache = validRemote;
+                        // Persist capped ring buffer (up to 50 latest orders)
+                        try {
+                            SafeStorage.setItem('gn_swr_orders', JSON.stringify(validRemote.slice(0, 50)));
+                        } catch(e) {}
+
                         return validRemote;
                     }
                 } catch (e) {
@@ -1304,13 +1324,48 @@
                 }
             }
 
-            return _ordersCache || [];
+            return _ordersCache || localOrders || [];
+        },
+
+        async checkForNewOrders() {
+            const client = this.client;
+            if (!client) return { hasNew: false, count: 0 };
+            try {
+                // Ultra-lightweight check (~200 bytes) instead of full-table scan
+                const { data, error } = await client
+                    .from('gn_orders')
+                    .select('id, created_at')
+                    .order('created_at', { ascending: false })
+                    .limit(1);
+
+                if (error || !Array.isArray(data) || data.length === 0) {
+                    return { hasNew: false, error: error ? error.message : null };
+                }
+
+                const latestRemoteId = String(data[0].id);
+                let localOrders = _ordersCache;
+                if (!Array.isArray(localOrders) || localOrders.length === 0) {
+                    try {
+                        const raw = SafeStorage.getItem('gn_swr_orders');
+                        if (raw) localOrders = JSON.parse(raw);
+                    } catch(e) {}
+                }
+
+                const latestLocalId = (Array.isArray(localOrders) && localOrders.length > 0) ? String(localOrders[0].id) : null;
+                const hasNew = Boolean(latestRemoteId && latestRemoteId !== latestLocalId);
+                return { hasNew, latestId: latestRemoteId, latestCreatedAt: data[0].created_at };
+            } catch(e) {
+                return { hasNew: false, error: e.message };
+            }
         },
 
         async deleteOrder(orderId) {
             const cleanId = String(orderId);
             if (Array.isArray(_ordersCache)) {
                 _ordersCache = _ordersCache.filter(o => String(o.id) !== cleanId && String(o.order_number) !== cleanId);
+                try {
+                    SafeStorage.setItem('gn_swr_orders', JSON.stringify(_ordersCache.slice(0, 50)));
+                } catch(e) {}
             }
 
             const client = this.client;
@@ -1351,6 +1406,9 @@
                 if (idx >= 0) {
                     _ordersCache[idx].status = newStatus;
                     _ordersCache[idx].updated_at = now;
+                    try {
+                        SafeStorage.setItem('gn_swr_orders', JSON.stringify(_ordersCache.slice(0, 50)));
+                    } catch(e) {}
                 }
             }
 

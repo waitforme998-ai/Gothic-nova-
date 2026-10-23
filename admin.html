@@ -2917,6 +2917,10 @@
                 <h1>Management</h1>
             </div>
             <div class="header-actions">
+                <div class="cloud-sync-status-badge font-mono" id="cloudSyncStatusBadge" title="Supabase Cloud Connection Status" style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:0.68rem;letter-spacing:0.06em;font-weight:700;border:1px solid rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);color:#10b981;">
+                    <span class="status-dot" style="width:6px;height:6px;border-radius:50%;background:#10b981;box-shadow:0 0 8px #10b981;"></span>
+                    <span class="status-label">CLOUD LIVE</span>
+                </div>
                 <button type="button" class="admin-search-trigger-btn" id="adminSearchTriggerBtn" onclick="openAdminExpandingSearch()" title="Search catalog, reviews, categories (Press / or Ctrl+K)">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
                     <span>SEARCH</span>
@@ -5341,11 +5345,42 @@
                     }
                 } catch(e) {
                     console.warn("Error loading orders from Supabase:", e);
+                    updateCloudSyncBadge(false);
                 }
             }
             if (showFeedback) showToast(`Orders synced (${adminOrders.length} total)`);
         }
         window.loadOrdersAdmin = loadOrdersAdmin;
+
+        function updateCloudSyncBadge(isLive) {
+            const badge = document.getElementById('cloudSyncStatusBadge');
+            if (!badge) return;
+            const dot = badge.querySelector('.status-dot');
+            const label = badge.querySelector('.status-label');
+            if (isLive) {
+                badge.style.borderColor = 'rgba(16, 185, 129, 0.35)';
+                badge.style.background = 'rgba(16, 185, 129, 0.08)';
+                badge.style.color = '#10b981';
+                if (dot) {
+                    dot.style.background = '#10b981';
+                    dot.style.boxShadow = '0 0 8px #10b981';
+                }
+                if (label) label.textContent = 'CLOUD LIVE';
+                badge.title = 'Supabase Cloud Realtime Connected';
+            } else {
+                badge.style.borderColor = 'rgba(245, 158, 11, 0.4)';
+                badge.style.background = 'rgba(245, 158, 11, 0.10)';
+                badge.style.color = '#f59e0b';
+                if (dot) {
+                    dot.style.background = '#f59e0b';
+                    dot.style.boxShadow = '0 0 8px #f59e0b';
+                }
+                if (label) label.textContent = 'VAULT CACHED';
+                badge.title = 'Offline or Cloud Quota Paused - Safe Local Vault Active';
+            }
+        }
+        window.updateCloudSyncBadge = updateCloudSyncBadge;
+
 
         function updateOrdersHeaderMetrics() {
             const badge = document.getElementById('ordersCountBadge');
@@ -8395,24 +8430,55 @@
         })();
 
         // =========================================================================
-        // SHIELD 3: LIFECYCLE AUTO-WAKE & 30-SECOND SILENT HEARTBEAT
+        // ZERO-WASTE SHIELD: 120S HEARTBEAT & LIGHTWEIGHT CHANGE DETECTION
         // =========================================================================
+        let lastOrderFocusCheck = 0;
+        async function runLightweightOrderCheck() {
+            if (document.visibilityState !== 'visible') return;
+            if (typeof isSavingProduct !== 'undefined' && isSavingProduct) return;
+            if (typeof isSavingAnnouncements !== 'undefined' && isSavingAnnouncements) return;
+
+            const curSection = (typeof currentSection !== 'undefined') ? currentSection : 'dashboard';
+            if (curSection !== 'orders' && curSection !== 'dashboard') return;
+
+            if (window.SupabaseEngine && typeof window.SupabaseEngine.checkForNewOrders === 'function') {
+                try {
+                    const check = await window.SupabaseEngine.checkForNewOrders();
+                    if (check && check.hasNew) {
+                        await loadOrdersAdmin(false);
+                    }
+                    if (typeof updateCloudSyncBadge === 'function') {
+                        updateCloudSyncBadge(check && !check.error);
+                    }
+                } catch(e) {
+                    if (typeof updateCloudSyncBadge === 'function') updateCloudSyncBadge(false);
+                }
+            } else {
+                await loadOrdersAdmin(false);
+            }
+        }
+
+        // Debounced 10s cooldown for visibility and focus changes
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'visible') {
-                loadOrdersAdmin(false);
+                const now = Date.now();
+                if (now - lastOrderFocusCheck > 10000) {
+                    lastOrderFocusCheck = now;
+                    runLightweightOrderCheck();
+                }
             }
         });
 
         window.addEventListener('focus', () => {
-            loadOrdersAdmin(false);
+            const now = Date.now();
+            if (now - lastOrderFocusCheck > 10000) {
+                lastOrderFocusCheck = now;
+                runLightweightOrderCheck();
+            }
         });
 
-        // 30-Second Silent Heartbeat for guaranteed zero-click ingestion
-        setInterval(() => {
-            if (document.visibilityState === 'visible' && !isSavingProduct && !isSavingAnnouncements) {
-                loadOrdersAdmin(false);
-            }
-        }, 30000);
+        // 120-Second Ultra-Lightweight Heartbeat (Queries only ~200 bytes header)
+        setInterval(runLightweightOrderCheck, 120000);
     </script>
 </body>
 </html>
