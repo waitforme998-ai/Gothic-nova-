@@ -49,7 +49,7 @@
     
     <!-- Supabase SDK & Dual-Mode Engine -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase-engine.js?v=3.2.0"></script>
+    <script src="supabase-engine.js?v=3.2.1"></script>
 
     <!-- Instant Auth Guard to Prevent Reload Flash & Maintain Permanent Session -->
     <script>
@@ -2924,10 +2924,7 @@
                 <h1>Management</h1>
             </div>
             <div class="header-actions">
-                <div class="cloud-sync-status-badge font-mono" id="cloudSyncStatusBadge" title="Supabase Cloud Connection Status" style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:0.68rem;letter-spacing:0.06em;font-weight:700;border:1px solid rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);color:#10b981;">
-                    <span class="status-dot" style="width:6px;height:6px;border-radius:50%;background:#10b981;box-shadow:0 0 8px #10b981;"></span>
-                    <span class="status-label">CLOUD LIVE</span>
-                </div>
+
                 <button type="button" class="admin-search-trigger-btn" id="adminSearchTriggerBtn" onclick="openAdminExpandingSearch()" title="Search catalog, reviews, categories (Press / or Ctrl+K)">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
                     <span>SEARCH</span>

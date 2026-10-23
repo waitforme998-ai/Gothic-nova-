@@ -354,8 +354,10 @@
             }
 
             _sectionCache[sectionKey] = data;
-            _sectionConfirmedAt[sectionKey] = Date.now(); // _confirmed_at
+            const nowTs = Date.now();
+            _sectionConfirmedAt[sectionKey] = nowTs;
             safeLocalStorageSet('gn_swr_' + sectionKey, data);
+            safeLocalStorageSet('gn_swr_ts_' + sectionKey, String(nowTs));
             dispatchUniversalSyncEvents({ [sectionKey]: data });
 
             if (typeof navigator !== 'undefined' && !navigator.onLine) {

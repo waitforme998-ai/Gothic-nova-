@@ -80,7 +80,7 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Antonio:wght@400;700&family=Playfair+Display:ital,wght@0,600;0,700;0,800;0,900;1,600;1,700;1,800&family=Inter:wght@300;400;500;600;700;800;900&family=Fira+Code:wght@400;500;600;700&family=League+Spartan:wght@600;700;800;900&display=swap">
     
     <!-- Tailored Design System Style Sheets -->
-    <link rel="stylesheet" href="style.css?v=8.6">
+    <link rel="stylesheet" href="style.css?v=8.7">
     
     <!-- Resilient SafeStorage Engine (Instagram IAB & Sandbox Immunity) -->
     <script>
@@ -138,7 +138,7 @@
     
     <!-- Supabase SDK & Dual-Mode Engine (Non-blocking Deferred Loading) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-    <script src="supabase-engine.js?v=3.2.0" defer></script>
+    <script src="supabase-engine.js?v=3.2.1" defer></script>
     <script src="search-engine.js" defer></script>
     <!-- Instant 0ms Tarot Ritual Gate Check (Strict 48-Hour Restriction) -->
     <script>
@@ -2634,12 +2634,12 @@
                     }
                     _lastCategoryKey = catStructureKey;
 
-                    let primaryHtml = `<button type="button" class="filter-tab ${window.currentCategory === 'all' ? 'active' : ''}" data-filter="all">ALL</button>`;
+                    let primaryHtml = `<button type="button" class="filter-tab ${window.currentCategory === 'all' ? 'active' : ''}" data-filter="all" style="font-family: 'Antonio', sans-serif !important; font-weight: 700 !important; letter-spacing: 0.04em !important; text-transform: uppercase !important;">ALL</button>`;
                     
                     primaryCats.forEach(cat => {
                         const title = (metaMap.get(cat) || (cat.charAt(0).toUpperCase() + cat.slice(1))).toUpperCase();
                         const isActive = window.currentCategory === cat ? 'active' : '';
-                        primaryHtml += `<button type="button" class="filter-tab ${isActive}" data-filter="${cat}">${escapeHtml(title)}</button>`;
+                        primaryHtml += `<button type="button" class="filter-tab ${isActive}" data-filter="${cat}" style="font-family: 'Antonio', sans-serif !important; font-weight: 700 !important; letter-spacing: 0.04em !important; text-transform: uppercase !important;">${escapeHtml(title)}</button>`;
                     });
 
                     if (overflowCats.length > 0) {
@@ -2647,7 +2647,7 @@
                         const isDrawerOpen = drawer.classList.contains('open');
                         
                         primaryHtml += `
-                            <button type="button" class="filter-tab cat-more-toggle-btn ${isOverflowActive ? 'active' : ''} ${isDrawerOpen ? 'open' : ''}" id="catMoreToggleBtn" aria-label="More Categories" aria-expanded="${isDrawerOpen}">
+                            <button type="button" class="filter-tab cat-more-toggle-btn ${isOverflowActive ? 'active' : ''} ${isDrawerOpen ? 'open' : ''}" id="catMoreToggleBtn" aria-label="More Categories" aria-expanded="${isDrawerOpen}" style="font-family: 'Antonio', sans-serif !important; font-weight: 700 !important; letter-spacing: 0.04em !important; text-transform: uppercase !important;">
                                 <span id="catMoreLabel">MORE</span>
                                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
                             </button>
@@ -2657,7 +2657,7 @@
                         overflowCats.forEach(cat => {
                             const title = (metaMap.get(cat) || (cat.charAt(0).toUpperCase() + cat.slice(1))).toUpperCase();
                             const isActive = window.currentCategory === cat ? 'active' : '';
-                            drawerItemsHtml += `<button type="button" class="filter-tab ${isActive}" data-filter="${cat}">${escapeHtml(title)}</button>`;
+                            drawerItemsHtml += `<button type="button" class="filter-tab ${isActive}" data-filter="${cat}" style="font-family: 'Antonio', sans-serif !important; font-weight: 700 !important; letter-spacing: 0.04em !important; text-transform: uppercase !important;">${escapeHtml(title)}</button>`;
                         });
 
                         drawer.innerHTML = drawerItemsHtml;
@@ -2877,7 +2877,7 @@
                             </div>
                             <div class="card-details">
                                 <div class="card-title-price">
-                                    <h3 class="card-title">${safeName}</h3>
+                                    <h3 class="card-title" style="font-family: 'Antonio', sans-serif !important; font-size: clamp(0.95rem, 3.2vw, 1.15rem) !important; font-weight: 700 !important; text-transform: uppercase !important; letter-spacing: 0.03em !important;">${safeName}</h3>
                                     ${priceHtml}
                                 </div>
                             </div>
@@ -3604,8 +3604,8 @@
                 <div class="pdp-modal-thumbs" id="pdpModalThumbs"></div>
             </div>
             <div class="pdp-modal-info">
-                <div id="pdpModalCategoryTag" class="pdp-category-pill" style="font-size: 0.68rem; letter-spacing: 0.22em; text-transform: uppercase; color: #c5b8ad; font-weight: 600; margin-bottom: 8px; display: inline-block; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.14); padding: 4px 10px; border-radius: 2px;">RINGS</div>
-                <h2 class="pdp-modal-title" id="pdpModalTitle">PRODUCT TITLE</h2>
+                <div id="pdpModalCategoryTag" class="pdp-category-pill" style="font-family: 'Antonio', sans-serif !important; font-size: 0.85rem !important; letter-spacing: 0.12em !important; text-transform: uppercase !important; color: #c5b8ad !important; font-weight: 700 !important; margin-bottom: 8px; display: inline-block; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.14); padding: 4px 10px; border-radius: 2px;">RINGS</div>
+                <h2 class="pdp-modal-title" id="pdpModalTitle" style="font-family: 'Antonio', sans-serif !important; font-weight: 700 !important; text-transform: uppercase !important; letter-spacing: 0.03em !important;">PRODUCT TITLE</h2>
                 <div class="pdp-modal-price-row" id="pdpModalPriceRow">
                     <span class="pdp-modal-price" id="pdpModalPrice">Rs. 0</span>
                 </div>
