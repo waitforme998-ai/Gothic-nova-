@@ -184,7 +184,7 @@ Because Supabase PostgreSQL stores `items` as a native `JSONB` document, you can
 
 Never build custom architectural features for free. Use this modular agency pricing model:
 
-* **Base E-Commerce Store (Rs. 35,000):**
+* **Base E-Commerce Store (Rs. 50,000):**
   * Product Catalog (up to 30 items)
   * Fast Mobile-First Shopping Cart & PDP Modal
   * Dual-Mode Supabase Realtime Sync & SWR Caching
