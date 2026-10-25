@@ -127,3 +127,71 @@ Change the top CSS variables in [style.css](file:///c:/Users/tasaw/Desktop/gothi
 * [ ] Verify test order placement: Confirm order appears instantly in Admin Panel without refresh.
 * [ ] Configure client WhatsApp number for direct checkout notifications.
 * [ ] Collect final payment (Cash, Bank Transfer, or Raast).
+
+---
+
+## 6. Client Customization Framework (Feature Flags & Schema Extensibility)
+
+When different businesses have unique operational requirements, **never rewrite the engine**. Use the two-tier architectural pattern below to toggle features and extend data contracts instantly:
+
+### 6.1 The Feature Flag Engine (Toggle Features in 1 Second)
+Add a centralized `STORE_CONFIG.features` block:
+
+```javascript
+const STORE_CONFIG = {
+  features: {
+    tarotGamification: false,     // Disable gamified wheel for luxury, leather, or perfume brands
+    advanceDepositSlip: true,     // Require Rs. 500 advance deposit verification for COD
+    sizeAndColorVariants: true,   // Enable Size / Color dropdown on PDP modal (clothing/shoes)
+    cityBasedDelivery: true,      // Karachi: Rs. 150 / Other cities: Rs. 300
+    directWhatsAppCheckout: false // Bypass checkout modal; sends cart summary straight to WhatsApp
+  }
+};
+```
+
+**Implementation Pattern in Storefront:**
+```javascript
+// Example: Hide Tarot button if client brand does not want gamification
+if (!STORE_CONFIG.features.tarotGamification) {
+    const tarotBtn = document.getElementById('tarotTriggerBtn');
+    if (tarotBtn) tarotBtn.style.display = 'none';
+}
+```
+
+---
+
+### 6.2 Zero-Migration JSONB Extensibility
+Because Supabase PostgreSQL stores `items` as a native `JSONB` document, you can add custom client properties **without touching database schemas or running SQL migrations**:
+
+* **Clothing / Shoe Brand:** Add `sizes: ["S", "M", "L", "XL"]` to the product object. When purchased, `selectedSize: "L"` persists inside `items` automatically.
+* **Perfume Brand:** Add `volumes: ["50ml", "100ml"]`. When purchased, `selectedVolume: "100ml"` persists automatically.
+* **Custom Notes / Engravings:** Add `customEngravingText` to cart items with zero schema changes.
+
+---
+
+### 6.3 Common Pakistan Client Scenarios & Solutions
+
+| Client Scenario | Architectural Solution | Time to Implement |
+| :--- | :--- | :--- |
+| **"Bhai mujhe Tarot game nahi chahiye"** | Set `features.tarotGamification: false`. Wheel & timers are hidden cleanly. | 30 seconds |
+| **"Kapron mein Sizes & Colors hain"** | Add `sizes: []` array to product. PDP modal renders size pills; passes choice to cart. | 15 minutes |
+| **"Karachi Rs. 150, baaqi sheher Rs. 300"** | Checkout city dropdown listener: if city == "Karachi", fee = 150; else fee = 300. | 5 minutes |
+| **"Direct WhatsApp order chahiye, website form nahi"** | Set `features.directWhatsAppCheckout: true`. Cart CTA opens `wa.me/...` with pre-filled order text. | 10 minutes |
+
+---
+
+### 6.4 The Agency Pricing & Upsell Strategy
+
+Never build custom architectural features for free. Use this modular agency pricing model:
+
+* **Base E-Commerce Store (Rs. 35,000):**
+  * Product Catalog (up to 30 items)
+  * Fast Mobile-First Shopping Cart & PDP Modal
+  * Dual-Mode Supabase Realtime Sync & SWR Caching
+  * Standard Cash on Delivery (COD) Checkout
+  * Free Vercel Edge Hosting & Namecheap Custom Domain Setup
+  * Google Search Console Verification & XML Sitemap Indexing
+* **Custom Add-on Modules (+Rs. 10,000 – 15,000 each):**
+  * **Size / Color Variant Inventory Module:** +Rs. 10,000
+  * **Automated Courier Booking API (Trax / PostEx / CallCourier):** +Rs. 15,000
+  * **Direct Online Payment Gateway (JazzCash / EasyPaisa / PayFast):** +Rs. 15,000
