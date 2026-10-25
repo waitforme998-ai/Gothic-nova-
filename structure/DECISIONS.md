@@ -652,5 +652,22 @@ Before troubleshooting any reported issue, execute this verification protocol:
 * The brand hero title must render in `Antonio` immediately upon page paint.
 * Product cards on the grid must display `VIEW OPTIONS` (never `ADD TO CART`), leaving purchase and cart actions to the PDP modal.
 
+---
 
+## ADR-026: Dynamic XML Sitemap Vercel Rewrite & CleanUrls Resolution
 
+### Context & Problem
+1. **Sitemap 404 & SEO Score Regression:**
+   After migrating from static `sitemap.xml` to dynamic serverless generation via `api/sitemap.js`, PageSpeed/Lighthouse mobile SEO score dropped significantly.
+2. **CleanUrls Collision:**
+   `vercel.json` specified `"cleanUrls": true`, which strips `.js` extensions and issues HTTP 308 redirects for requests targeting `/api/sitemap.js`. The rewrite `{ "source": "/sitemap.xml", "destination": "/api/sitemap.js" }` caused an internal routing loop / 404 Not Found error for search crawlers visiting `/sitemap.xml` declared in `robots.txt`.
+
+### Decision
+1. **Direct Route Rewriting:**
+   Updated `vercel.json` rewrites to point `/sitemap.xml` directly to `/api/sitemap` (omitting `.js`), matching Vercel's cleanUrls routing model.
+2. **Response Verification:**
+   Verified `https://gothicnova.com/sitemap.xml` returns `HTTP 200 OK` with `Content-Type: application/xml; charset=utf-8` and complete live product XML payload.
+
+### Invariants
+* `robots.txt` must declare `Sitemap: https://gothicnova.com/sitemap.xml`.
+* `/sitemap.xml` must serve dynamic product URLs with `HTTP 200` without static file conflicts.
