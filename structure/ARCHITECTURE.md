@@ -1,9 +1,10 @@
 # GOTHIC NOVA — System Architecture & Code Connections Map
 
-> **Audience:** Core Engineers & AI Coding Agents.  
-> **Scope & Purpose (The "What" & "How"):** Living technical specification of the active system — structural topology, component responsibilities, data flow pipelines, schema contracts, event busses, function cross-references, SEO & Edge architecture, and mobile layout specifications.  
-> **Architectural Decisions (The "Why"):** For historical context, problem statements, rejected hypotheses, and non-negotiable invariants, refer directly to [`structure/DECISIONS.md`](file:///c:/Users/tasaw/Desktop/gothic-nova-store/structure/DECISIONS.md).  
-> **Maintenance Rule:** Keep this document modular, authoritative, and concise. Update active contracts and topologies when features change without repeating historical ADR narrative.
+> **Documentation Navigation:**
+> - 📘 **Architecture & Pipelines:** [ARCHITECTURE.md](file:///c:/Users/tasaw/Desktop/gothic-nova-store/structure/ARCHITECTURE.md) (This file)
+> - 📗 **Anti-Hallucination Data Dictionary:** [SCHEMA_AND_CONVENTIONS.md](file:///c:/Users/tasaw/Desktop/gothic-nova-store/structure/SCHEMA_AND_CONVENTIONS.md) (Product/Order property contracts & naming rules)
+> - 📙 **Agency Replication Playbook:** [REUSABLE_STORE_BLUEPRINT.md](file:///c:/Users/tasaw/Desktop/gothic-nova-store/structure/REUSABLE_STORE_BLUEPRINT.md) (Deploying this engine for any new client in 24 hours)
+> - 📕 **Historical Decisions & Invariants:** [DECISIONS.md](file:///c:/Users/tasaw/Desktop/gothic-nova-store/structure/DECISIONS.md) (ADR-001 through ADR-026)
 
 ---
 
