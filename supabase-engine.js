@@ -1499,6 +1499,9 @@
                         }
                         // Zero-Click Admin Ingestion: Invalidate cache and broadcast to all tabs
                         _ordersCache = null;
+                        try {
+                            window.dispatchEvent(new CustomEvent('gn:orderReceived', { detail: payload }));
+                        } catch(e) {}
                         window.dispatchEvent(new Event('ordersUpdated'));
                         const bc = getStoreSyncBroadcastChannel();
                         if (bc) {

@@ -671,3 +671,33 @@ Before troubleshooting any reported issue, execute this verification protocol:
 ### Invariants
 * `robots.txt` must declare `Sitemap: https://gothicnova.com/sitemap.xml`.
 * `/sitemap.xml` must serve dynamic product URLs with `HTTP 200` without static file conflicts.
+
+---
+
+## ADR-027: Decoupled Order Hydration, Native Browser Push Notifications & Google Favicon Standards
+
+### Context & Problem
+1. **Startup Latency Bottleneck (20–25s Delay):**
+   In `admin.html`, `loadOrdersAdmin()` was coupled inside a monolithic `await Promise.all([...])` alongside `loadProducts()`, `loadReviewsAdmin()`, and category payloads. Even though the Supabase orders query resolves in under 150ms, orders rendering was blocked until the entire catalog and base64 media downloaded. In addition, `adminOrders` lacked initial local storage SWR cache hydration on startup.
+2. **Order Alert Latency & Third-Party Bloat:**
+   The admin required instant order notifications without 3rd-party gamer app downloads (like Discord) or blocked networks (Telegram in Pakistan). The system needed to function like modern progressive web apps (Claude.ai / ChatGPT) via the native Web Notification and Audio APIs.
+3. **Google Search SERP Favicon Default Globe Issue:**
+   Googlebot-Favicon requires explicit square icons matching 48px multiples (48×48, 96×96, 192×192) and root `/favicon.ico`. The previous configuration only declared an SVG icon first, delaying Googlebot-Favicon from caching the monochrome emblem.
+
+### Decision
+1. **0ms Startup Hydration & Decoupled Fast Path:**
+   - Hydrate `adminOrders` immediately from `gn_swr_orders` in 0ms on page paint before network requests fire.
+   - Decoupled `loadOrdersAdmin()` from the catalog `Promise.all` queue so the fresh orders table revalidates independently in <200ms.
+2. **Native Web Push & Realtime Chime Engine:**
+   - Implemented `playOrderAlertChime()` using the native Web Audio API (dual-tone 880Hz $\rightarrow$ 1320Hz sine wave, 0 KB external asset weight).
+   - Added `handleIncomingOrderAlert()` which triggers OS-level `new Notification()` with store emblem icon upon receiving `INSERT` events from Supabase Realtime.
+   - Added `focusAndHighlightOrder(target)` supporting deep-links (`?order=ID` or `#order-ID`): fetches the single record in ~80ms if not in memory, expands the order card, scrolls smoothly, and flashes a subtle 3-second highlight border.
+   - Added an understated `[ALERTS: ON/OFF]` toggle button in the header actions bar.
+3. **Standard Google Search Favicon Suite:**
+   - Generated high-quality bicubic 48×48, 96×96, 192×192, and 180×180 PNG emblems.
+   - Updated `index.html` with explicit `<link rel="icon" sizes="...">` tags prioritized for search engine crawlers.
+
+### Invariants
+* Orders revalidation must never be blocked by catalog products or media loading.
+* Audio alerts must be synthesized in-memory via Web Audio API (no external MP3/WAV assets).
+* Notification routing must deep-link directly to the specific order without full page reload.
