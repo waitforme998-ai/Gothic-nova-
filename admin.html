@@ -968,12 +968,17 @@
             color: #d1d1d6;
         }
         @media (max-width: 600px) {
-            .admin-search-trigger-btn span,
+            .admin-search-trigger-btn span {
+                display: inline !important;
+                font-size: 0.78rem !important;
+                letter-spacing: 0.05em !important;
+            }
             .admin-search-trigger-btn kbd {
-                display: none;
+                display: none !important;
             }
             .admin-search-trigger-btn {
-                padding: 0 10px;
+                padding: 0 10px !important;
+                height: 36px !important;
             }
         }
 
