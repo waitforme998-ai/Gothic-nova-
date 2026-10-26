@@ -701,3 +701,25 @@ Before troubleshooting any reported issue, execute this verification protocol:
 * Orders revalidation must never be blocked by catalog products or media loading.
 * Audio alerts must be synthesized in-memory via Web Audio API (no external MP3/WAV assets).
 * Notification routing must deep-link directly to the specific order without full page reload.
+
+---
+
+## ADR-028: Storefront Real Business WhatsApp Integration & Automated Disaster Recovery Backups
+
+### Context & Problem
+1. **Dummy Contact Number Vulnerability:**
+   Trust badges, customer support buttons, and post-order WhatsApp confirmation routing in `index.html` were hardcoded to a placeholder number (`923001234567`). Customer inquiries and order verification chats were routed to a non-existent number instead of the store owner's real business line (`923710498483` / Muhammad Sammam Faisal).
+2. **Obsolete 20.6MB Legacy Backup:**
+   `docs/backups` contained an outdated 20.6 MB file from October 2024 containing raw base64 data URLs. If restored, it would inject dead media paths and outdated catalog rows.
+
+### Decision
+1. **Live Business Line Routing:**
+   - Updated all customer touchpoints (`index.html` lines 3445, 3546, 6264) to route directly to `https://wa.me/923710498483`.
+   - Preserved automated pre-filled receipt generation on the checkout success modal, allowing customers to send their order summary, delivery details, and balance with 1 tap.
+2. **Automated Clean Backup Engine:**
+   - Created `scripts/backup-store.js` which connects to Supabase, queries active rows for products, categories, reviews, and announcements, and outputs clean JSON snapshots to `docs/backups/latest_clean_store_backup.json`.
+   - Created `docs/backups/README.md` documenting restoration procedures and CLI usage (`node scripts/backup-store.js`).
+
+### Invariants
+* Customer-facing WhatsApp links must always resolve to the store's verified business number.
+* Backup scripts must store live CDN WebP paths, avoiding raw base64 data bloat.
