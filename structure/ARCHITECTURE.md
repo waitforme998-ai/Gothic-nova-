@@ -1,10 +1,11 @@
 # GOTHIC NOVA — System Architecture & Code Connections Map
 
-> **Documentation Navigation:**
-> - 📘 **Architecture & Pipelines:** [ARCHITECTURE.md](file:///c:/Users/tasaw/Desktop/gothic-nova-store/structure/ARCHITECTURE.md) (This file)
-> - 📗 **Anti-Hallucination Data Dictionary:** [SCHEMA_AND_CONVENTIONS.md](file:///c:/Users/tasaw/Desktop/gothic-nova-store/structure/SCHEMA_AND_CONVENTIONS.md) (Product/Order property contracts & naming rules)
-> - 📙 **Agency Replication Playbook:** [REUSABLE_STORE_BLUEPRINT.md](file:///c:/Users/tasaw/Desktop/gothic-nova-store/structure/REUSABLE_STORE_BLUEPRINT.md) (Deploying this engine for any new client in 24 hours)
-> - 📕 **Historical Decisions & Invariants:** [DECISIONS.md](file:///c:/Users/tasaw/Desktop/gothic-nova-store/structure/DECISIONS.md) (ADR-001 through ADR-026)
+> **Documentation Suite Navigation:**
+> - 📘 **System Architecture (The HOW & WHAT):** [ARCHITECTURE.md](file:///c:/Users/tasaw/Desktop/gothic-nova-store/structure/ARCHITECTURE.md) (This file — System topology, component directory, data flow pipelines, and layout specifications)
+> - 📜 **Functional Feature Specification (The CAPABILITIES):** [FEATURES.md](file:///c:/Users/tasaw/Desktop/gothic-nova-store/structure/FEATURES.md) (Complete catalog of all 10 user-facing & admin subsystems)
+> - 📗 **Anti-Hallucination Data Dictionary (The CONTRACT):** [SCHEMA_AND_CONVENTIONS.md](file:///c:/Users/tasaw/Desktop/gothic-nova-store/structure/SCHEMA_AND_CONVENTIONS.md) (Product/Order property contracts, dual-property access rules, and SafeStorage keys)
+> - 📕 **Historical Decisions & Invariants (The WHY):** [DECISIONS.md](file:///c:/Users/tasaw/Desktop/gothic-nova-store/structure/DECISIONS.md) (ADR-001 through ADR-028 — Problem statements, failure modes, and invariant rules)
+> - 📙 **Agency Replication Playbook (The REUSE):** [REUSABLE_STORE_BLUEPRINT.md](file:///c:/Users/tasaw/Desktop/gothic-nova-store/structure/REUSABLE_STORE_BLUEPRINT.md) (Deploying this engine for any new client in 24 hours)
 
 ---
 
@@ -394,7 +395,7 @@ Injected into `<head>` under `<script type="application/ld+json" id="gn-dynamic-
       "@type": "Product",
       "@id": "https://gothicnova.com/?product=1#product",
       "name": "Dragon",
-      "image": "https://ogjyubekshcxcirlboue.supabase.co/storage/v1/object/public/product-media/products/prod_1.webp",
+      "image": "https://xtphuycoriazzkoalyyh.supabase.co/storage/v1/object/public/product-media/products/prod_1.webp",
       "description": "Dragon - Handcrafted gothic jewelry by Gothic Nova. Available with Cash on Delivery across Pakistan.",
       "sku": "GN-1",
       "brand": { "@type": "Brand", "name": "Gothic Nova" },
@@ -420,8 +421,8 @@ Optimized to ensure 95+ performance scores and minimal LCP/CLS:
 * **Connection Warming:**
   - `<link rel="dns-prefetch" href="https://cdn.jsdelivr.net">`
   - `<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>`
-  - `<link rel="dns-prefetch" href="https://ogjyubekshcxcirlboue.supabase.co">`
-  - `<link rel="preconnect" href="https://ogjyubekshcxcirlboue.supabase.co" crossorigin>`
+  - `<link rel="dns-prefetch" href="https://xtphuycoriazzkoalyyh.supabase.co">`
+  - `<link rel="preconnect" href="https://xtphuycoriazzkoalyyh.supabase.co" crossorigin>`
 * **Script Optimization:**
   - `@supabase/supabase-js@2` and `supabase-engine.js` execute with `defer` to prevent parser blocking.
 * **Vercel Edge Caching Headers (`vercel.json`):**
@@ -522,3 +523,74 @@ The filter bar (`.category-filter-container`) is locked to a single horizontal r
 * **Tier 2 (Post-LCP / ~100ms):** Render catalog grid from SWR cache (`gn_swr_products`).
 * **Tier 3 (Idle / `requestIdleCallback`):** Search token indexing (`search-engine.js`), Supabase Realtime WebSocket handshake, review tickers.
 
+---
+
+## 12. Realtime Order Alerts & Fast Direct Lookup Engine
+
+To ensure sub-second administrative awareness of newly submitted customer orders without external gamer third-party dependencies (such as Discord or Telegram) or cellular blocking, Gothic Nova implements a dual-path browser alerting and fast retrieval subsystem:
+
+```
+                                  +------------------------------------+
+                                  |    CUSTOMER CHECKOUT SUBMISSION    |
+                                  |   (POST to table 'gn_orders')      |
+                                  +-----------------+------------------+
+                                                    |
+                                                    v
+                                  +------------------------------------+
+                                  |   SUPABASE REALTIME CDC ENGINE     |
+                                  |   (WebSocket: 'gn_realtime_sync')  |
+                                  +-----------------+------------------+
+                                                    |
+                                                    v (Broadcast to Admin)
+             +--------------------------------------+--------------------------------------+
+             |                                                                             |
+             v                                                                             v
++----------------------------+                                                +----------------------------+
+| NATIVE WEB AUDIO CHIME     |                                                | NATIVE WEB NOTIFICATION    |
+| - Synthesized sine tone    |                                                | - OS-level Notification()  |
+| - 880Hz -> 1320Hz ramp     |                                                | - Store brand emblem icon  |
+| - 0 KB external file size  |                                                | - Click opens & highlights |
++----------------------------+                                                +----------------------------+
+```
+
+### 12.1 Synthesized Web Audio Chime (`playOrderAlertChime`)
+* **Zero Asset Weight:** Instead of loading multi-kilobyte MP3 or WAV sound effects across cellular networks, the chime is synthesized live in-memory via the browser's native `AudioContext`.
+* **Frequency Envelope:** Operates on an 880Hz (A5) fundamental stepping cleanly to 1320Hz (E6) over 220 milliseconds with exponential gain decay.
+* **Autoplay Compliance:** Initialized or resumed on first administrative user gesture (click/tap) and guarded against unhandled promise rejections.
+
+### 12.2 Native Web Push Notification (`handleIncomingOrderAlert`)
+* **OS-Level Integration:** Dispatches native desktop and mobile push banners using `new Notification(title, options)` with Gothic Nova's official monochrome brand emblem (`assets/favicon-192x192.png`).
+* **Deep-Link Routing:** Clicking the notification focuses the admin browser window and activates direct order lookup (`admin.html?order=<id>`).
+* **Header Toggle Control:** Header action bar features an understated `[ALERTS: ON/OFF]` button backed by `gn_admin_notifications_enabled` in storage.
+
+### 12.3 Direct Order Lookup & Instant Focus (`focusAndHighlightOrder`)
+* **URL Parameter Ingestion:** On page load or hash change, the engine parses `?order=<id>` or `#order-<id>`.
+* **Sub-100ms Query:** If the requested order is already hydrated in memory, it highlights immediately. If missing (e.g. direct deep-link from notification), it queries Supabase for strictly that single row (`.eq('id', orderId).single()`), rendering in under 100ms.
+* **Visual Cue:** Automatically switches to the Orders tab, clears any conflicting search filter, expands the target order card, scrolls it smoothly into the viewport center, and applies a 3-second pulsing gold highlight border (`order-direct-highlight`).
+
+---
+
+## 13. Storefront Communication Endpoints & Disaster Recovery Architecture
+
+### 13.1 Verified Business WhatsApp Endpoints Architecture
+Customer touchpoints and order verifications are mapped strictly to verified business lines to prevent customer loss:
+
+| Location | Element ID / Selector | Destination URL | Purpose |
+| :--- | :--- | :--- | :--- |
+| **Storefront Footer** | `.footer-social-link[title="WhatsApp"]` | `https://wa.me/923710498483` | General pre-sales and customer support inquiries |
+| **Help & Support Modal** | `#contactSupportBtn` | `https://wa.me/923710498483?text=...` | Pre-sales order queries and delivery timeframe checks |
+| **Post-Checkout Modal** | `#orderConfirmationModal .wa-btn` | `https://wa.me/923710498483?text=...` | 1-Tap pre-filled order receipt confirmation dispatch |
+| **Admin Order Card** | `.order-card-phone-btn` | `https://wa.me/${order.customer_phone}` | **Dynamic:** Merchant contacts customer's submitted phone number |
+
+### 13.2 Automated Disaster Recovery Backup Engine
+To ensure complete business continuity and rapid disaster recovery without reliance on fragile in-browser exports, Gothic Nova maintains a dedicated Node.js backup pipeline:
+* **Script Location:** `scripts/backup-store.js`
+* **Target Output:** `docs/backups/latest_clean_store_backup.json`
+* **Data Ingestion:** Authenticates with Supabase using service credentials, extracts active rows for:
+  - Catalog products (`__GN_SYNC_PRODUCTS__`)
+  - Category taxonomies (`__GN_SYNC_CATEGORIES__`)
+  - Customer reviews (`__GN_SYNC_REVIEWS__`)
+  - Live announcement banners (`__GN_SYNC_ANNOUNCEMENTS__`)
+  - Recent historical customer orders
+* **Format Guarantee:** Saves clean public CDN WebP asset paths. Zero multi-megabyte base64 blobs.
+* **Execution Command:** `node scripts/backup-store.js`

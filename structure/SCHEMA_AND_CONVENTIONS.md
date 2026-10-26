@@ -1,5 +1,16 @@
 # GOTHIC NOVA — Code-Level Schema & Naming Conventions Dictionary
 
+> **Documentation Suite Navigation:**
+> - 📘 **System Architecture (The HOW & WHAT):** [ARCHITECTURE.md](file:///c:/Users/tasaw/Desktop/gothic-nova-store/structure/ARCHITECTURE.md) (System topology, component directory, data flow pipelines, and layout specifications)
+> - 📜 **Functional Feature Specification (The CAPABILITIES):** [FEATURES.md](file:///c:/Users/tasaw/Desktop/gothic-nova-store/structure/FEATURES.md) (Complete catalog of all 10 user-facing & admin subsystems)
+> - 📗 **Anti-Hallucination Data Dictionary (The CONTRACT):** [SCHEMA_AND_CONVENTIONS.md](file:///c:/Users/tasaw/Desktop/gothic-nova-store/structure/SCHEMA_AND_CONVENTIONS.md) (This file — Product/Order property contracts, dual-property access rules, and SafeStorage keys)
+> - 📕 **Historical Decisions & Invariants (The WHY):** [DECISIONS.md](file:///c:/Users/tasaw/Desktop/gothic-nova-store/structure/DECISIONS.md) (ADR-001 through ADR-028: Problem statements, failure modes, trade-offs, and invariant rules)
+> - 📙 **Agency Replication Playbook (The REUSE):** [REUSABLE_STORE_BLUEPRINT.md](file:///c:/Users/tasaw/Desktop/gothic-nova-store/structure/REUSABLE_STORE_BLUEPRINT.md) (Deploying this engine for any new client in 24 hours)
+
+---
+
+## Document Purpose & Anti-Hallucination Guardrail
+
 > **Audience:** Developers & AI Coding Agents.  
 > **Critical Purpose:** This document is the **Single Source of Truth** for all data schemas, naming asymmetries, storage keys, and runtime invariants across the application.  
 > **Anti-Hallucination Guardrail:** DO NOT rename existing fields or assume standard normalized names. This application uses specific dual-property conventions for backwards compatibility across local caching, Supabase rows, and legacy demo payloads.

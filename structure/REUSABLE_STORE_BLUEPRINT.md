@@ -1,5 +1,16 @@
 # AGENCY PLAYBOOK: Reusable Store Blueprint & Deployment Engine
 
+> **Documentation Suite Navigation:**
+> - 📘 **System Architecture (The HOW & WHAT):** [ARCHITECTURE.md](file:///c:/Users/tasaw/Desktop/gothic-nova-store/structure/ARCHITECTURE.md) (System topology, component directory, data flow pipelines, and layout specifications)
+> - 📜 **Functional Feature Specification (The CAPABILITIES):** [FEATURES.md](file:///c:/Users/tasaw/Desktop/gothic-nova-store/structure/FEATURES.md) (Complete catalog of all 10 user-facing & admin subsystems)
+> - 📗 **Anti-Hallucination Data Dictionary (The CONTRACT):** [SCHEMA_AND_CONVENTIONS.md](file:///c:/Users/tasaw/Desktop/gothic-nova-store/structure/SCHEMA_AND_CONVENTIONS.md) (Product/Order property contracts, dual-property access rules, and SafeStorage keys)
+> - 📕 **Historical Decisions & Invariants (The WHY):** [DECISIONS.md](file:///c:/Users/tasaw/Desktop/gothic-nova-store/structure/DECISIONS.md) (ADR-001 through ADR-028: Problem statements, failure modes, trade-offs, and invariant rules)
+> - 📙 **Agency Replication Playbook (The REUSE):** [REUSABLE_STORE_BLUEPRINT.md](file:///c:/Users/tasaw/Desktop/gothic-nova-store/structure/REUSABLE_STORE_BLUEPRINT.md) (This file — Deploying this engine for any new client in 24 hours)
+
+---
+
+## Playbook Purpose
+
 > **Purpose:** Step-by-step master guide to replicate, customize, and deploy this high-performance e-commerce engine for any new client (leather goods, perfume, clothing, accessories, clinics, etc.) in **under 24 hours**.
 
 ---

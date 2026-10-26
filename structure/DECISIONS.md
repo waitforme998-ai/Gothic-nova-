@@ -1,8 +1,35 @@
 # GOTHIC NOVA — Architectural Decisions Record (ADR)
 
-> **Audience:** Core Engineers & AI Coding Agents.  
-> **Scope:** Historical decisions, problem statements, failed hypotheses, chosen architectural solutions, and non-negotiable invariants across storage, synchronization, inventory integrity, image delivery, and UI state.  
-> **Maintenance Rule:** Keep this document modular, authoritative, and concise. When architectural policies evolve, update the relevant ADR and remove obsolete hypotheses.
+> **Documentation Suite Navigation:**
+> - 📘 **System Architecture (The HOW & WHAT):** [ARCHITECTURE.md](file:///c:/Users/tasaw/Desktop/gothic-nova-store/structure/ARCHITECTURE.md) (System topology, component directory, data flow pipelines, and layout specifications)
+> - 📜 **Functional Feature Specification (The CAPABILITIES):** [FEATURES.md](file:///c:/Users/tasaw/Desktop/gothic-nova-store/structure/FEATURES.md) (Complete catalog of all 10 user-facing & admin subsystems)
+> - 📗 **Anti-Hallucination Data Dictionary (The CONTRACT):** [SCHEMA_AND_CONVENTIONS.md](file:///c:/Users/tasaw/Desktop/gothic-nova-store/structure/SCHEMA_AND_CONVENTIONS.md) (Product/Order property contracts, dual-property access rules, and SafeStorage keys)
+> - 📕 **Historical Decisions & Invariants (The WHY):** [DECISIONS.md](file:///c:/Users/tasaw/Desktop/gothic-nova-store/structure/DECISIONS.md) (This file — ADR-001 through ADR-028: Problem statements, failure modes, trade-offs, and invariant rules)
+> - 📙 **Agency Replication Playbook (The REUSE):** [REUSABLE_STORE_BLUEPRINT.md](file:///c:/Users/tasaw/Desktop/gothic-nova-store/structure/REUSABLE_STORE_BLUEPRINT.md) (Deploying this engine for any new client in 24 hours)
+
+---
+
+## Purpose & Scope of This Document
+
+This document records the **authoritative architectural decisions, trade-offs, and non-negotiable invariants** established across Gothic Nova's evolution. 
+
+* **The WHY & INVARIANTS:** While `ARCHITECTURE.md` describes *how the system currently works*, `DECISIONS.md` documents *why choices were made*, which bugs or failure modes forced those decisions, and the strict invariants that prevent regressions.
+* **Maintenance Rule:** When architectural policies evolve, append a new ADR or update the existing record. Never wipe historical context or delete invariant rules.
+
+---
+
+## Diagnostic Checklist for Future AI Agents
+
+Before modifying code or troubleshooting any reported issue, execute this verification protocol:
+
+- [ ] **Check Deployment:** Confirm latest commit is on `main` and deployed to `https://gothicnova.com` (and `https://gothic-nova.vercel.app`).
+- [ ] **Verify Dynamic Sitemap:** Confirm `https://gothicnova.com/sitemap.xml` returns valid XML (`HTTP 200`) containing dynamic product URLs.
+- [ ] **Inspect Supabase Row:** Query `gn_orders` where `customer_name = '__GN_SYNC_PRODUCTS__'`. Ensure `count === 1` and `items` is populated with active catalog products.
+- [ ] **Check Realtime Logs:** Open DevTools console and verify WebSocket connection (`gn_realtime_sync`) without `cannot add postgres_changes callbacks` errors.
+- [ ] **Verify Storage Keys:** Inspect `localStorage.getItem('gn_swr_products')` or `SafeStorage`. Ensure no startup script is clearing it.
+- [ ] **Verify Element Display:** Ensure target elements are not hidden by CSS (`display: none;`, zero-height accordions, or parent overflow).
+- [ ] **Verify Cart Viewport:** Confirm `#cart-items-list` scrolls cleanly and `#cart-footer` remains docked on mobile screen sizes.
+- [ ] **Verify Order Hydration:** Confirm `adminOrders` hydrates from `gn_swr_orders` at T=0ms without being blocked by catalog media.
 
 ---
 
@@ -30,6 +57,12 @@
 20. [ADR-020: Static Wall Hero Backdrop, Crawling Curtain Topology & Marquee Speed Calibration](#adr-020-static-wall-hero-backdrop-crawling-curtain-topology--marquee-speed-calibration)
 21. [ADR-021: Add-to-Cart Persistent State, Secondary Stepper, & Cart Drawer Viewport Containment](#adr-021-add-to-cart-persistent-state-secondary-stepper--cart-drawer-viewport-containment)
 22. [ADR-022: Zero-Dependency Serverless Dynamic XML Sitemap, Canonical Domain Migration & Core Web Vitals Optimization](#adr-022-zero-dependency-serverless-dynamic-xml-sitemap-canonical-domain-migration--core-web-vitals-optimization)
+23. [ADR-023: Mobile Core Web Vitals (<2.5s LCP) & Asset Compression Architecture](#adr-023-mobile-core-web-vitals-25s-lcp--asset-compression-architecture)
+24. [ADR-024: PDP Modal Dismissal, Click Fall-Through Immunity & Non-Sticky Close Button](#adr-024-pdp-modal-dismissal-click-fall-through-immunity--non-sticky-close-button)
+25. [ADR-025: Catalog Card Interaction Restoration, Hero Typography Reliability & PNG Asset Preservation](#adr-025-catalog-card-interaction-restoration-hero-typography-reliability--png-asset-preservation)
+26. [ADR-026: Dynamic XML Sitemap Vercel Rewrite & CleanUrls Resolution](#adr-026-dynamic-xml-sitemap-vercel-rewrite--cleanurls-resolution)
+27. [ADR-027: Decoupled Order Hydration, Native Browser Push Notifications & Google Favicon Standards](#adr-027-decoupled-order-hydration-native-browser-push-notifications--google-favicon-standards)
+28. [ADR-028: Storefront Real Business WhatsApp Integration & Automated Disaster Recovery Backups](#adr-028-storefront-real-business-whatsapp-integration--automated-disaster-recovery-backups)
 
 ---
 
@@ -575,20 +608,6 @@ Internal system state records (`__GN_SYNC_PRODUCTS__`, `__GN_SYNC_ANNOUNCEMENTS_
 * Delivery fees (flat Rs. 300, Tarot Rs. 0 waiver) and mandatory Rs. 700 advance deposit verification must remain unchanged.
 * Zero-Click admin live order feed (Triple-Shield) must remain active.
 * Image compression must remain visually lossless (q=82 WebP) preserving the dark gothic luxury aesthetic.
-
----
-
-## Diagnostic Checklist for Future AI Agents
-
-Before troubleshooting any reported issue, execute this verification protocol:
-
-- [ ] **Check Deployment:** Confirm latest commit is on `main` and deployed to `https://gothicnova.com` (and `https://gothic-nova.vercel.app`).
-- [ ] **Verify Dynamic Sitemap:** Confirm `https://gothicnova.com/sitemap.xml` returns valid XML (`HTTP 200`) containing dynamic product URLs.
-- [ ] **Inspect Supabase Row:** Query `gn_orders` where `customer_name = '__GN_SYNC_PRODUCTS__'`. Ensure `count === 1` and `items` is populated with active catalog products.
-- [ ] **Check Realtime Logs:** Open DevTools console and verify WebSocket connection (`gn_realtime_sync`) without `cannot add postgres_changes callbacks` errors.
-- [ ] **Verify Storage Keys:** Inspect `localStorage.getItem('gn_swr_products')` or `SafeStorage`. Ensure no startup script is clearing it.
-- [ ] **Verify Element Display:** Ensure target elements are not hidden by CSS (`display: none;`, zero-height accordions, or parent overflow).
-- [ ] **Verify Cart Viewport:** Confirm `#cart-items-list` scrolls cleanly and `#cart-footer` remains docked on mobile screen sizes.
 
 ---
 
