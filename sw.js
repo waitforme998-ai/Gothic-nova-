@@ -12,8 +12,8 @@ self.addEventListener('activate', (event) => {
 // Handle incoming push or background message events
 self.addEventListener('push', (event) => {
     let payload = {
-        title: '✦ GOTHIC NOVA — NEW ORDER',
-        body: 'A new order has been received.',
+        title: 'GOTHIC NOVA — ORDER ALERT',
+        body: 'New order received. Tap to inspect details.',
         orderId: null
     };
 
