@@ -283,8 +283,8 @@
         .header {
             padding: 14px 20px;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            flex-direction: column;
+            gap: 10px;
             position: sticky;
             top: 0;
             z-index: 20;
@@ -295,30 +295,58 @@
             box-sizing: border-box;
             max-width: 100vw;
         }
-        .header-left { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+        .header-top-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
+        .header-tools {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .header-title-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            gap: 12px;
+        }
         .back-btn {
-            display: inline-flex; align-items: center; gap: 4px;
+            display: inline-flex; align-items: center; gap: 6px;
             color: var(--text-secondary); text-decoration: none;
-            font-size: 0.82rem; font-weight: 500; transition: color 0.2s;
+            font-size: 0.85rem; font-weight: 500; transition: color 0.2s;
         }
         .back-btn:hover { color: var(--text-primary); }
+        .back-btn span {
+            display: inline !important;
+            font-size: 0.85rem !important;
+        }
         .header h1 {
             font-family: var(--font-heading); font-size: 1.85rem; font-weight: 700;
             letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-primary);
-            margin: 0; line-height: 1.1;
+            margin: 0; line-height: 1;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
-        .header-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+        .header-add-wrap {
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+        }
         .primary-add-btn {
             background: #000000;
             border: 1px solid rgba(255,255,255,0.5);
             color: #ffffff;
-            border-radius: var(--radius-sm); padding: 9px 16px;
-            font-size: 0.82rem; font-weight: 700; letter-spacing: 0.05em;
+            border-radius: var(--radius-sm); padding: 9px 18px;
+            font-size: 0.84rem; font-weight: 700; letter-spacing: 0.05em;
             cursor: pointer; display: inline-flex; align-items: center;
             justify-content: center; gap: 7px;
             transition: all 0.2s; white-space: nowrap;
             touch-action: manipulation; min-height: 38px;
+        }
+        .primary-add-btn span {
+            display: inline !important;
         }
         .primary-add-btn:hover { background: #ffffff; color: #000000; border-color: #ffffff; }
         .primary-add-btn:active { transform: scale(0.96); }
@@ -388,744 +416,59 @@
         .stat-detail { font-size: 0.70rem; color: var(--text-secondary); font-family: var(--font-mono); }
 
         @media (max-width: 600px) {
-            .admin-stats-bar { grid-template-columns: 1.15fr 1fr 0.85fr; gap: 8px; padding: 10px; }
-            .stat-col { padding: 2px 4px; }
-            .stat-label { font-size: 0.62rem; gap: 4px; }
-            .stat-label svg { width: 12px; height: 12px; }
-            .stat-num { font-size: 1.18rem; margin: 2px 0 1px; }
-            .stat-detail { display: none; }
-        }
-        @media (max-width: 360px) {
-            .admin-stats-bar { grid-template-columns: 1fr; gap: 10px; }
-            .stat-col:not(:last-child) { border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 8px; }
-        }
-
-        /* --- ACCORDION SECTIONS (UNIFIED VISUAL BALANCE) --- */
-        .admin-section-box, .categories-section, .alerts-section {
-            background: var(--surface-color);
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: var(--radius-md);
-            overflow: hidden;
-            margin-top: 18px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.35);
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        .alerts-section { border-color: rgba(255, 59, 92, 0.28); }
-        .alerts-section:hover { border-color: rgba(255, 59, 92, 0.45); }
-        .admin-section-box:hover, .categories-section:hover { 
-            border-color: rgba(255,255,255,0.16); 
-            box-shadow: 0 6px 24px rgba(0,0,0,0.5), 0 0 15px rgba(255,232,190,0.04);
-        }
-
-        .admin-section-header, .categories-header, .alerts-header {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 15px 18px; cursor: pointer; transition: background 0.2s;
-            gap: 10px; user-select: none;
-        }
-        .admin-section-header:hover, .categories-header:hover, .alerts-header:hover { 
-            background: rgba(255,255,255,0.035); 
-        }
-        
-        .admin-section-header-left, .categories-header-left, .alerts-header-left {
-            display: flex; align-items: center; gap: 8px;
-        }
-        .admin-section-header h3, .categories-header h3, .alerts-header h3 {
-            font-size: 0.85rem; color: var(--text-primary); text-transform: uppercase;
-            font-weight: 700; letter-spacing: 0.08em; margin: 0;
-            display: flex; align-items: center; gap: 8px;
-        }
-        .cat-count-badge, .alerts-count-badge {
-            font-family: var(--font-mono); font-size: 0.72rem; color: #ffe8be;
-            background: rgba(255,232,190,0.12); border: 1px solid rgba(255,232,190,0.28);
-            padding: 3px 9px; border-radius: 4px; font-weight: 700;
-            display: inline-flex; align-items: center; justify-content: center;
-            box-sizing: border-box; line-height: 1.2;
-        }
-        .alerts-count-badge { background: rgba(255,59,92,0.15); border-color: rgba(255,59,92,0.3); color: #ff3b5c; }
-        .alerts-count-badge.zero { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.1); color: var(--text-secondary); }
-
-        .chevron-icon {
-            transition: transform 0.25s ease; color: var(--text-secondary);
-            flex-shrink: 0;
-        }
-        .chevron-icon.open { transform: rotate(180deg); }
-
-        .admin-section-body, .categories-body, .alerts-body {
-            max-height: 0; overflow: hidden;
-            transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .admin-section-body.open, .categories-body.open, .alerts-body.open { max-height: 5000px; }
-        .admin-section-body-inner, .categories-body-inner, .alerts-body-inner { padding: 0 18px 16px; }
-
-        /* Add Category Inline Form */
-        .add-cat-inline-form {
-            display: flex; gap: 8px; align-items: center;
-            padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.06);
-            margin-bottom: 10px;
-        }
-        .add-cat-input {
-            flex: 1; background: #0a0508; border: 1px solid rgba(255,255,255,0.12);
-            padding: 9px 12px; border-radius: var(--radius-sm); color: var(--text-primary);
-            font-size: 0.85rem; outline: none; box-sizing: border-box;
-            transition: border-color 0.2s;
-        }
-        .add-cat-input:focus { border-color: #ffffff; }
-
-        /* Category Accordion Item */
-        .cat-accordion {
-            background: rgba(14,7,11,0.6);
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: var(--radius-sm);
-            margin-bottom: 8px;
-            overflow: hidden;
-        }
-        .cat-accordion:hover { border-color: rgba(255,255,255,0.12); }
-        .cat-accordion-header {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 12px 16px; cursor: pointer; gap: 8px;
-            transition: background 0.15s;
-        }
-        .cat-accordion-header:hover { background: rgba(255,255,255,0.04); }
-        .cat-accordion-left {
-            display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0;
-        }
-        .cat-accordion-chevron {
-            transition: transform 0.2s ease; color: var(--text-secondary); flex-shrink: 0;
-        }
-        .cat-accordion-chevron.open { transform: rotate(90deg); }
-        .cat-accordion-name {
-            font-family: 'Antonio', 'Impact', sans-serif !important;
-            font-size: 1.05rem; font-weight: 700; color: var(--text-primary);
-            letter-spacing: 0.04em; text-transform: uppercase;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
-        .cat-accordion-count {
-            font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-secondary);
-            background: rgba(255,255,255,0.05); padding: 2px 7px; border-radius: 4px;
-            border: 1px solid rgba(255,255,255,0.08); flex-shrink: 0;
-        }
-        .cat-accordion-actions { display: flex; align-items: center; gap: 6px; }
-        .cat-icon-btn {
-            background: #000000; border: 1px solid rgba(255,255,255,0.2);
-            color: #e5e5e5; width: 32px; height: 32px; min-width: 32px; min-height: 32px;
-            border-radius: 4px; display: inline-flex; align-items: center;
-            justify-content: center; cursor: pointer; transition: all 0.15s;
-        }
-        .cat-icon-btn:hover { background: #ffffff; color: #000000; border-color: #ffffff; }
-        .cat-icon-btn.delete:hover { background: #ff3b30; color: #ffffff; border-color: #ff3b30; }
-
-        .cat-accordion-body {
-            max-height: 0; overflow: hidden;
-            transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-            background: rgba(0, 0, 0, 0.2);
-            border-top: 1px solid rgba(255, 255, 255, 0.04);
-        }
-        .cat-accordion-body.open { max-height: 5000px; }
-
-        /* PICTURE-CENTERED RESPONSIVE PRODUCT GRID */
-        .cat-products-list {
-            padding: 12px;
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-            gap: 14px;
-            box-sizing: border-box;
-            width: 100%;
-            max-width: 100%;
-        }
-        .cat-products-empty {
-            grid-column: 1 / -1;
-            padding: 24px 16px; text-align: center; color: var(--text-secondary);
-            font-size: 0.82rem; font-style: italic; background: rgba(255,255,255,0.02);
-            border-radius: var(--radius-sm); border: 1px dashed rgba(255,255,255,0.06);
-        }
-
-        /* PICTURE-CENTERED CATALOG PRODUCT CARD */
-        .catalog-card {
-            background: #14090f;
-            border-radius: var(--radius-md);
-            padding: 12px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            gap: 10px;
-            border: 1px solid rgba(255,255,255,0.08);
-            box-shadow: 0 4px 18px rgba(0,0,0,0.35);
-            transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
-            position: relative;
-            box-sizing: border-box;
-            width: 100%;
-            max-width: 100%;
-            overflow: hidden;
-        }
-        .catalog-card:hover {
-            border-color: rgba(255,255,255,0.2);
-            background: #1c1017;
-            box-shadow: 0 6px 24px rgba(0,0,0,0.55);
-            transform: translateY(-2px);
-        }
-        .catalog-card-cross-btn {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
-            background: rgba(0, 0, 0, 0.75);
-            border: 1px solid rgba(255, 59, 48, 0.6);
-            color: #ff3b30;
-            font-size: 15px;
-            line-height: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            z-index: 8;
-            padding: 0;
-            transition: all 0.15s ease;
-        }
-        .catalog-card-cross-btn:hover {
-            background: #ff3b30;
-            color: #fff;
-            border-color: #ff3b30;
-            transform: scale(1.1);
-        }
-        /* Admin Category Filter Tabs */
-        .admin-cat-filter-bar {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            overflow-x: auto;
-            scrollbar-width: none;
-            -webkit-overflow-scrolling: touch;
-            padding: 4px 2px 8px;
-        }
-        .admin-cat-filter-bar::-webkit-scrollbar {
-            display: none;
-        }
-        .admin-cat-tab {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 7px 15px;
-            border-radius: 20px;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 232, 190, 0.2);
-            color: #d1c7bd;
-            font-family: var(--font-mono);
-            font-size: 0.74rem;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            white-space: nowrap;
-            flex-shrink: 0;
-        }
-        .admin-cat-tab:hover {
-            border-color: rgba(255, 232, 190, 0.5);
-            color: #ffffff;
-            background: rgba(255, 255, 255, 0.08);
-        }
-        .admin-cat-tab.active {
-            background: #ffe8be;
-            color: #0b0507;
-            font-weight: 700;
-            border-color: #ffe8be;
-            box-shadow: 0 0 12px rgba(255, 232, 190, 0.25);
-        }
-        .admin-cat-tab-count {
-            display: inline-block;
-            padding: 1px 6px;
-            border-radius: 10px;
-            font-size: 0.68rem;
-            background: rgba(0, 0, 0, 0.25);
-            color: inherit;
-        }
-        .admin-cat-tab.active .admin-cat-tab-count {
-            background: rgba(11, 5, 7, 0.25);
-            color: #0b0507;
-        }
-        .catalog-card-img-wrap {
-            position: relative;
-            width: 100%;
-            aspect-ratio: 1 / 1;
-            background: #0a0508;
-            border-radius: 6px;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 1px solid rgba(255,255,255,0.08);
-        }
-        .catalog-card-img-wrap img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.3s ease;
-        }
-        .catalog-card:hover .catalog-card-img-wrap img {
-            transform: scale(1.04);
-        }
-        .catalog-card-img-wrap .stock-badge {
-            position: absolute;
-            top: 6px;
-            right: 6px;
-            z-index: 2;
-        }
-        .catalog-card-body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            width: 100%;
-            min-width: 0;
-        }
-        .catalog-title {
-            font-family: 'Antonio', 'Impact', sans-serif !important;
-            font-size: 1.05rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            letter-spacing: 0.03em;
-            text-transform: uppercase;
-            line-height: 1.2;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            width: 100%;
-            text-align: center;
-        }
-        .catalog-meta-sub {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            flex-wrap: wrap;
-        }
-        .catalog-tag {
-            font-size: 0.65rem;
-            color: #ffe8be;
-            background: rgba(255,232,190,0.08);
-            border: 1px solid rgba(255,232,190,0.2);
-            padding: 2px 7px;
-            border-radius: 3px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            font-weight: 600;
-            font-family: var(--font-mono);
-        }
-        .stock-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            font-size: 0.65rem;
-            font-weight: 600;
-            font-family: var(--font-mono);
-            padding: 2px 7px;
-            border-radius: 3px;
-            letter-spacing: 0.04em;
-            text-transform: uppercase;
-        }
-        .stock-badge.in-stock { background: rgba(48,209,88,0.12); color: #30d158; border: 1px solid rgba(48,209,88,0.3); }
-        .stock-badge.low-stock { background: rgba(255,159,10,0.15); color: #ff9f0a; border: 1px solid rgba(255,159,10,0.35); }
-        .stock-badge.out-stock { background: rgba(255,59,48,0.15); color: #ff3b30; border: 1px solid rgba(255,59,48,0.35); }
-        .catalog-price {
-            font-family: var(--font-mono);
-            font-size: 0.86rem;
-            font-weight: 700;
-            color: #ffe8be;
-            display: flex;
-            align-items: baseline;
-            justify-content: center;
-            gap: 6px;
-        }
-        .catalog-price.sale { color: var(--accent-red); }
-        .catalog-price .original {
-            text-decoration: line-through;
-            color: var(--text-secondary);
-            font-size: 0.70rem;
-            font-weight: 400;
-        }
-
-        /* CATALOG & ALERTS ACTION CONTROLS - SPACIOUS & NO OVERFLOW */
-        .catalog-actions-group {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            width: 100%;
-            padding-top: 8px;
-            border-top: 1px solid rgba(255,255,255,0.06);
-            box-sizing: border-box;
-        }
-        .catalog-actions-top-row {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            width: 100%;
-            box-sizing: border-box;
-        }
-        .catalog-qty-stepper {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: #0a0508;
-            border: 1px solid rgba(255,255,255,0.15);
-            border-radius: var(--radius-sm);
-            padding: 2px 4px;
-            min-height: 32px;
-            box-sizing: border-box;
-        }
-        .catalog-qty-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 1.15rem;
-            font-weight: 700;
-            color: var(--text-secondary);
-            width: 28px;
-            height: 28px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 3px;
-            transition: all 0.15s;
-            touch-action: manipulation;
-        }
-        .catalog-qty-btn:hover {
-            color: #ffffff;
-            background: rgba(255,255,255,0.12);
-        }
-        .catalog-qty-btn:active {
-            opacity: 0.5;
-            transform: scale(0.9);
-        }
-        .catalog-qty-val {
-            font-family: var(--font-mono);
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            min-width: 26px;
-            text-align: center;
-        }
-        .catalog-qty-val.low-stock { color: #ff9f0a; }
-        .catalog-qty-val.sold-out { color: #ff3b30; }
-        .catalog-edit-btn {
-            background: #000000;
-            border: 1px solid rgba(255,255,255,0.22);
-            color: var(--text-primary);
-            width: 32px;
-            height: 32px;
-            min-width: 32px;
-            min-height: 32px;
-            border-radius: var(--radius-sm);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.15s;
-            touch-action: manipulation;
-        }
-        .catalog-edit-btn:hover {
-            background: #ffffff;
-            color: #000000;
-            border-color: #ffffff;
-        }
-        .catalog-delete-btn {
-            background: none;
-            border: 1px solid rgba(255,59,48,0.25);
-            cursor: pointer;
-            width: 32px;
-            height: 32px;
-            min-width: 32px;
-            min-height: 32px;
-            color: #ff3b30;
-            opacity: 0.85;
-            transition: all 0.15s;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            touch-action: manipulation;
-            border-radius: var(--radius-sm);
-        }
-        .catalog-delete-btn:hover {
-            opacity: 1;
-            background: rgba(255,59,48,0.18);
-            border-color: #ff3b30;
-        }
-        .quick-restock-btn {
-            width: 100%;
-            justify-content: center;
-            background: rgba(255,255,255,0.06);
-            border: 1px solid rgba(255,255,255,0.22);
-            color: #ffffff;
-            font-size: 0.70rem;
-            font-weight: 700;
-            letter-spacing: 0.05em;
-            padding: 6px 10px;
-            border-radius: var(--radius-sm);
-            cursor: pointer;
-            transition: all 0.15s ease;
-            white-space: nowrap;
-            font-family: var(--font-mono);
-            touch-action: manipulation;
-            min-height: 28px;
-            display: inline-flex;
-            align-items: center;
-            box-sizing: border-box;
-        }
-        .quick-restock-btn:hover {
-            background: #ffffff;
-            color: #000000;
-            border-color: #ffffff;
-        }
-
-        /* GOTHIC NOVA CUSTOM DROPDOWN SYSTEM */
-        .gn-custom-dropdown {
-            position: relative;
-            display: inline-block;
-        }
-        .gn-custom-dropdown-btn {
-            background: #0a0508;
-            color: #ffe8be;
-            font-family: var(--font-mono);
-            font-size: 0.80rem;
-            font-weight: 700;
-            padding: 6px 12px;
-            border-radius: 4px;
-            border: 1px solid rgba(255,232,190,0.3);
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.15s ease;
-        }
-        .gn-custom-dropdown-btn:hover {
-            border-color: #ffe8be;
-            background: #140910;
-        }
-        .gn-custom-dropdown-menu {
-            display: none;
-            position: absolute;
-            top: calc(100% + 4px);
-            left: 0;
-            z-index: 9999;
-            background: #12070e;
-            border: 1px solid rgba(255,232,190,0.35);
-            border-radius: 4px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.9), 0 0 15px rgba(255,232,190,0.1);
-            min-width: 140px;
-            overflow: hidden;
-        }
-        .gn-custom-dropdown-item {
-            padding: 9px 12px;
-            font-family: var(--font-mono);
-            font-size: 0.78rem;
-            font-weight: 700;
-            color: #e0d0d5;
-            cursor: pointer;
-            transition: all 0.15s ease;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .gn-custom-dropdown-item:hover {
-            background: rgba(255,232,190,0.15);
-            color: #ffe8be;
-        }
-        .gn-custom-dropdown-item.active {
-            background: rgba(138,26,46,0.35);
-            color: #ffe8be;
-            font-weight: 800;
-        }
-
-        /* UNIVERSAL SELECT OVERRIDE */
-        select {
-            appearance: none !important;
-            -webkit-appearance: none !important;
-            -moz-appearance: none !important;
-            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffe8be' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e") !important;
-            background-repeat: no-repeat !important;
-            background-position: right 10px center !important;
-            background-size: 13px !important;
-            padding-right: 30px !important;
-        }
-        select option {
-            background: #12070e !important;
-            color: #ffe8be !important;
-        }
-
-        /* HERO SLIDER & REVIEWS SECTIONS */
-        .slides-list-grid, .reviews-list-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 14px;
-            margin-top: 14px;
-        }
-        .slide-mgmt-card {
-            background: #0e0710;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: var(--radius-sm);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            transition: border-color 0.2s ease;
-        }
-        .slide-mgmt-card:hover { border-color: rgba(255, 255, 255, 0.2); }
-        .slide-mgmt-card.inactive { opacity: 0.6; }
-        .slide-mgmt-preview {
-            width: 100%;
-            aspect-ratio: 16 / 9;
-            height: auto;
-            min-height: 120px;
-            max-height: 220px;
-            object-fit: cover;
-            background: #050204;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-            display: block;
-        }
-        .slide-mgmt-content {
-            padding: 12px 14px;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            flex: 1;
-        }
-        .slide-mgmt-title {
-            font-size: 0.92rem;
-            font-weight: 700;
-            color: #fff;
-        }
-        .slide-mgmt-sub {
-            font-size: 0.76rem;
-            color: var(--text-secondary);
-            line-height: 1.4;
-        }
-        .slide-mgmt-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 14px;
-            border-top: 1px solid rgba(255, 255, 255, 0.06);
-            background: rgba(0, 0, 0, 0.2);
-        }
-
-        .review-mgmt-card {
-            background: #0e0710;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: var(--radius-sm);
-            padding: 14px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            transition: border-color 0.2s ease;
-        }
-        .review-mgmt-card:hover { border-color: rgba(255, 255, 255, 0.2); }
-        .review-mgmt-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-        }
-        .review-stars-gold {
-            color: #ffe8be;
-            font-size: 0.85rem;
-            letter-spacing: 2px;
-        }
-        .review-sample-badge {
-            font-family: var(--font-mono);
-            font-size: 0.65rem;
-            padding: 2px 6px;
-            border-radius: 3px;
-            background: rgba(48, 209, 88, 0.12);
-            border: 1px solid rgba(48, 209, 88, 0.35);
-            color: #30d158;
-            text-transform: uppercase;
-        }
-        .review-sample-badge.verified {
-            background: rgba(48, 209, 88, 0.12);
-            border-color: rgba(48, 209, 88, 0.35);
-            color: #30d158;
-        }
-        .review-author-line {
-            font-size: 0.82rem;
-            font-weight: 600;
-            color: #ffffff;
-        }
-        .review-quote-text {
-            font-size: 0.78rem;
-            color: var(--text-secondary);
-            line-height: 1.45;
-            font-style: italic;
-        }
-        .review-form-grid-2col {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-        @media (max-width: 600px) {
-            .review-form-grid-2col {
-                grid-template-columns: 1fr !important;
-                gap: 10px !important;
-            }
-        }
-
-        /* 2-TIER RESPONSIVE RULES FOR MOBILE & TABLET */
-        @media (max-width: 768px) {
-            .section { padding: 0 14px !important; }
-            .cat-products-list {
-                grid-template-columns: 1fr !important;
-                gap: 12px !important;
-                padding: 10px 0 !important;
-            }
-        }
-        @media (max-width: 600px) {
             .section { padding: 0 10px !important; }
             .header {
-                padding: 10px 10px !important;
+                padding: 10px 12px !important;
+                gap: 8px !important;
+            }
+            .header-top-row {
+                display: flex !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+            }
+            .back-btn {
+                font-size: 0.82rem !important;
+            }
+            .back-btn span {
+                display: inline !important;
+            }
+            .header-tools {
                 gap: 6px !important;
-                flex-wrap: nowrap !important;
-            }
-            .header-left {
-                min-width: 0 !important;
-                flex: 1 1 auto !important;
-            }
-            .header h1 {
-                font-size: clamp(1.02rem, 4.2vw, 1.25rem) !important;
-                letter-spacing: 0.02em !important;
-                white-space: nowrap !important;
-                overflow: visible !important;
-                text-overflow: clip !important;
-            }
-            .header-actions {
-                gap: 4px !important;
-                flex-shrink: 0 !important;
             }
             .admin-search-trigger-btn {
-                padding: 0 8px !important;
                 height: 34px !important;
-                min-width: 34px !important;
-                justify-content: center !important;
+                padding: 0 10px !important;
+                font-size: 0.78rem !important;
             }
-            .admin-search-trigger-btn span,
+            .admin-search-trigger-btn span {
+                display: inline !important;
+            }
             .admin-search-trigger-btn kbd {
                 display: none !important;
             }
-            #adminNotifStatusDot {
-                top: 4px !important;
-                right: 4px !important;
+            .header-title-row {
+                display: flex !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+                gap: 10px !important;
+            }
+            .header h1 {
+                font-size: 1.5rem !important;
+                letter-spacing: 0.03em !important;
+                margin: 0 !important;
+                line-height: 1 !important;
             }
             .primary-add-btn {
-                padding: 6px 10px !important;
-                font-size: 0.72rem !important;
-                min-height: 34px !important;
-                height: 34px !important;
-                letter-spacing: 0.02em !important;
+                padding: 8px 14px !important;
+                font-size: 0.8rem !important;
+                min-height: 36px !important;
+                height: 36px !important;
+                letter-spacing: 0.04em !important;
+            }
+            .primary-add-btn span {
+                display: inline !important;
             }
         }
-        @media (max-width: 420px) {
-            .header {
-                padding: 8px 8px !important;
-                gap: 4px !important;
-            }
             .header h1 {
                 font-size: 1.08rem !important;
             }
@@ -2959,17 +2302,24 @@
          DASHBOARD APP CONTAINER (SHOWN WHEN AUTHENTICATED)
     ───────────────────────────────────────────────────────────── -->
     <div id="adminDashboardApp">
-        <!-- In-App Floating Heads-Up Order Notification Banner -->
-        <div id="adminHeadsUpAlert" style="display: none; position: fixed; top: 14px; left: 50%; transform: translateX(-50%) translateY(-150%); z-index: 99999; width: calc(100% - 24px); max-width: 440px; background: rgba(15, 8, 12, 0.96); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid #d4af37; border-radius: 8px; padding: 12px 16px; box-shadow: 0 12px 36px rgba(0,0,0,0.85), 0 0 15px rgba(212,175,55,0.25); transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease; opacity: 0; box-sizing: border-box;">
-            <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <div style="width: 28px; height: 28px; border-radius: 6px; background: rgba(212,175,55,0.15); border: 1px solid rgba(212,175,55,0.4); display: flex; align-items: center; justify-content: center; color: #d4af37; flex-shrink: 0;">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <!-- In-App Floating Heads-Up Order Notification Banner (Monochrome Luxury Theme) -->
+        <div id="adminHeadsUpAlert" style="display: none; position: fixed; top: 16px; left: 50%; transform: translateX(-50%) translateY(-150%); z-index: 99999; width: calc(100% - 24px); max-width: 440px; background: rgba(13, 7, 10, 0.98); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border: 1px solid rgba(255, 255, 255, 0.16); border-radius: 4px; padding: 14px 18px; box-shadow: 0 16px 40px rgba(0,0,0,0.9); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease; opacity: 0; box-sizing: border-box;">
+            <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 32px; height: 32px; border-radius: 4px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.18); display: flex; align-items: center; justify-content: center; color: #ffffff; flex-shrink: 0;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
                     </div>
                     <div>
-                        <div id="headsUpAlertTitle" style="font-family: var(--font-heading); font-size: 0.95rem; font-weight: 700; color: #ffffff; letter-spacing: 0.05em; text-transform: uppercase;">✦ ORDER ALERT</div>
-                        <div id="headsUpAlertBody" style="font-size: 0.78rem; color: #e5e5ea; margin-top: 2px; line-height: 1.3;">System notifications are active.</div>
+                        <div id="headsUpAlertTitle" style="font-family: var(--font-heading); font-size: 0.88rem; font-weight: 700; color: #ffffff; letter-spacing: 0.08em; text-transform: uppercase;">ORDER NOTIFICATION SYSTEM</div>
+                        <div id="headsUpAlertBody" style="font-size: 0.8rem; color: #a1a1aa; margin-top: 3px; line-height: 1.35; font-family: var(--font-sans);">Dispatch channel active • Realtime monitoring operational.</div>
                     </div>
+                </div>
+                <button type="button" onclick="dismissHeadsUpAlert()" style="background: none; border: none; color: #71717a; font-size: 1.1rem; cursor: pointer; padding: 2px 4px; line-height: 1;" title="Dismiss">✕</button>
+            </div>
+            <div id="headsUpAlertActions" style="margin-top: 12px; display: flex; justify-content: flex-end; gap: 8px;">
+                <button type="button" id="headsUpAlertViewBtn" style="background: #ffffff; color: #000000; border: 1px solid #ffffff; border-radius: 3px; padding: 6px 14px; font-size: 0.74rem; font-weight: 700; font-family: var(--font-heading); letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer;">INSPECT ORDER</button>
+            </div>
+        </div>
                 </div>
                 <button type="button" onclick="dismissHeadsUpAlert()" style="background: none; border: none; color: #8e8e93; font-size: 1.1rem; line-height: 1; cursor: pointer; padding: 2px 4px;">✕</button>
             </div>
@@ -2981,30 +2331,34 @@
         
         <!-- Header -->
         <header class="header">
-            <div class="header-left">
+            <div class="header-top-row">
                 <a href="index.html" class="back-btn" id="storefrontBackLink">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
                     <span>Storefront</span>
                 </a>
-                <h1>Management</h1>
-            </div>
-            <div class="header-actions">
-                <button type="button" class="admin-search-trigger-btn" id="adminNotifTriggerBtn" onclick="toggleOrderNotificationPermission()" title="Enable or test instant order notifications on this device" style="display: inline-flex; align-items: center; justify-content: center; position: relative; gap: 5px;">
-                    <svg id="adminNotifIcon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-                    <span id="adminNotifBtnText">ALERTS</span>
-                    <span id="adminNotifStatusDot" style="display: none; position: absolute; top: 6px; right: 6px; width: 6px; height: 6px; border-radius: 50%; background: #34d399; box-shadow: 0 0 6px #34d399;"></span>
-                </button>
+                <div class="header-tools">
+                    <button type="button" class="admin-search-trigger-btn" id="adminNotifTriggerBtn" onclick="toggleOrderNotificationPermission()" title="Enable or test instant order notifications on this device">
+                        <svg id="adminNotifIcon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                        <span id="adminNotifBtnText">ALERTS</span>
+                        <span id="adminNotifStatusDot" style="display: none; position: absolute; top: 6px; right: 6px; width: 6px; height: 6px; border-radius: 50%; background: #34d399; box-shadow: 0 0 6px #34d399;"></span>
+                    </button>
 
-                <button type="button" class="admin-search-trigger-btn" id="adminSearchTriggerBtn" onclick="openAdminExpandingSearch()" title="Search catalog, reviews, categories (Press / or Ctrl+K)">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-                    <span>SEARCH</span>
-                    <kbd>/</kbd>
-                </button>
-                <input type="file" id="unifiedProductFileInput" multiple accept="image/*" style="display: none;" onchange="handleUnifiedProductFiles(event)">
-                <button type="button" class="primary-add-btn" id="unifiedAddProductsBtn" onclick="triggerUnifiedFileInput()" title="Add product photos (1 or multiple)">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
-                    <span>ADD PRODUCTS</span>
-                </button>
+                    <button type="button" class="admin-search-trigger-btn" id="adminSearchTriggerBtn" onclick="openAdminExpandingSearch()" title="Search catalog, reviews, categories (Press / or Ctrl+K)">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+                        <span>SEARCH</span>
+                        <kbd>/</kbd>
+                    </button>
+                </div>
+            </div>
+            <div class="header-title-row">
+                <h1>Management</h1>
+                <div class="header-add-wrap">
+                    <input type="file" id="unifiedProductFileInput" multiple accept="image/*" style="display: none;" onchange="handleUnifiedProductFiles(event)">
+                    <button type="button" class="primary-add-btn" id="unifiedAddProductsBtn" onclick="triggerUnifiedFileInput()" title="Add product photos (1 or multiple)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                        <span>ADD PRODUCTS</span>
+                    </button>
+                </div>
             </div>
         </header>
 
@@ -6157,13 +5511,14 @@
         }
         window.playOrderAlertChime = playOrderAlertChime;
 
-        // Register Service Worker for mobile Web Push notifications
+        // Immediate Service Worker Registration for Mobile Background Notifications
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js').then(reg => {
-                    console.log('Admin Service Worker registered:', reg.scope);
-                }).catch(e => console.log('SW registration note:', e));
-            });
+            navigator.serviceWorker.register('/sw.js', { scope: '/' })
+                .then(reg => {
+                    console.log('SW registration active:', reg.scope);
+                    if (reg.update) reg.update();
+                })
+                .catch(err => console.warn('SW registration note:', err));
         }
 
         let _headsUpAlertTimeout = null;
@@ -6172,7 +5527,7 @@
             if (!banner) return;
             banner.style.transform = 'translateX(-50%) translateY(-150%)';
             banner.style.opacity = '0';
-            setTimeout(() => { banner.style.display = 'none'; }, 350);
+            setTimeout(() => { banner.style.display = 'none'; }, 300);
             if (_headsUpAlertTimeout) clearTimeout(_headsUpAlertTimeout);
         }
         window.dismissHeadsUpAlert = dismissHeadsUpAlert;
@@ -6181,11 +5536,10 @@
             const banner = document.getElementById('adminHeadsUpAlert');
             const titleEl = document.getElementById('headsUpAlertTitle');
             const bodyEl = document.getElementById('headsUpAlertBody');
-            const actionsEl = document.getElementById('headsUpAlertActions');
             const viewBtn = document.getElementById('headsUpAlertViewBtn');
             if (!banner || !titleEl || !bodyEl) return;
 
-            titleEl.textContent = title || '✦ ORDER ALERT';
+            titleEl.textContent = title || 'ORDER NOTIFICATION SYSTEM';
             bodyEl.textContent = bodyText || '';
 
             if (orderId && viewBtn) {
@@ -6199,8 +5553,7 @@
             }
 
             banner.style.display = 'block';
-            // Force reflow for smooth transition
-            banner.offsetHeight;
+            banner.offsetHeight; // reflow
             banner.style.transform = 'translateX(-50%) translateY(0)';
             banner.style.opacity = '1';
 
@@ -6212,10 +5565,13 @@
         window.showInAppHeadsUpAlert = showInAppHeadsUpAlert;
 
         async function dispatchSystemNotification(title, options = {}) {
-            // 1. Mandatory for Android Chrome & mobile web push: ServiceWorkerRegistration.showNotification
+            // 1. Mobile & Android Chrome: ServiceWorkerRegistration
             if ('serviceWorker' in navigator) {
                 try {
-                    const reg = await navigator.serviceWorker.ready;
+                    let reg = await navigator.serviceWorker.getRegistration();
+                    if (!reg) {
+                        reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+                    }
                     if (reg && reg.showNotification) {
                         await reg.showNotification(title, {
                             ...options,
@@ -6228,11 +5584,11 @@
                         return true;
                     }
                 } catch(swErr) {
-                    console.warn('SW showNotification error:', swErr);
+                    console.warn('SW showNotification note:', swErr);
                 }
             }
 
-            // 2. Desktop Notification constructor fallback
+            // 2. Desktop Notification API
             if ('Notification' in window && Notification.permission === 'granted') {
                 try {
                     const notif = new Notification(title, {
@@ -6249,7 +5605,7 @@
                     };
                     return true;
                 } catch(deskErr) {
-                    console.warn('Desktop Notification constructor error:', deskErr);
+                    console.warn('Desktop notification constructor note:', deskErr);
                 }
             }
             return false;
@@ -6311,12 +5667,10 @@
                 return;
             }
 
-            // Trigger physical haptic vibration if supported on mobile
             if (navigator.vibrate) {
                 try { navigator.vibrate([150, 80, 150]); } catch(e) {}
             }
 
-            // Always synthesize the luxury audio chime
             playOrderAlertChime();
 
             if (Notification.permission === 'default') {
@@ -6324,9 +5678,9 @@
                     const res = await Notification.requestPermission();
                     updateNotificationToggleUI();
                     if (res === 'granted') {
-                        if (typeof showToast === 'function') showToast("✦ Order alerts enabled on this device!");
-                        showInAppHeadsUpAlert("✦ NOTIFICATIONS ACTIVE", "This device will receive instant alerts whenever an order arrives.");
-                        dispatchSystemNotification("✦ GOTHIC NOVA ADMIN", {
+                        if (typeof showToast === 'function') showToast("Order alert system connected.");
+                        showInAppHeadsUpAlert("ORDER NOTIFICATION SYSTEM", "Dispatch channel connected to this device.");
+                        dispatchSystemNotification("GOTHIC NOVA — ADMIN", {
                             body: "Order notifications successfully connected to this device.",
                             tag: "gn-welcome-alert"
                         });
@@ -6335,16 +5689,21 @@
                     console.warn("Permission request error:", e);
                 }
             } else if (Notification.permission === 'granted') {
-                if (typeof showToast === 'function') showToast("✦ Notification test alert fired!");
-                // 1. Show prominent in-app heads-up card right on screen
-                showInAppHeadsUpAlert("✦ ORDER ALERT TEST", "System notifications are active and ready for live orders.");
-                // 2. Dispatch OS / Service Worker push notification
-                dispatchSystemNotification("✦ GOTHIC NOVA — ORDER ALERT TEST", {
-                    body: "System notifications are active and ready for live orders.",
+                if (typeof showToast === 'function') showToast("Test alert dispatched.");
+                showInAppHeadsUpAlert("ORDER NOTIFICATION SYSTEM", "Dispatch channel verified. Testing system push...");
+                dispatchSystemNotification("GOTHIC NOVA — ORDER ALERT TEST", {
+                    body: "System notifications verified and operational.",
                     tag: "gn-test-alert"
                 });
+                // Scheduled 3s background push so user can lock screen/switch away and verify
+                setTimeout(() => {
+                    dispatchSystemNotification("GOTHIC NOVA — BACKGROUND DISPATCH", {
+                        body: "Live order push verified in device notification shade.",
+                        tag: "gn-test-background"
+                    });
+                }, 3000);
             } else if (Notification.permission === 'denied') {
-                showInAppHeadsUpAlert("ALERTS BLOCKED IN BROWSER", "Tap the lock icon in your browser address bar to allow notifications.");
+                showInAppHeadsUpAlert("NOTIFICATIONS BLOCKED", "Allow notifications in browser site settings.");
                 if (typeof showToast === 'function') {
                     showToast("Notifications blocked. Allow them in your browser site settings.", true);
                 }
@@ -6353,10 +5712,8 @@
         window.toggleOrderNotificationPermission = toggleOrderNotificationPermission;
 
         function handleIncomingOrderAlert(newOrder) {
-            // 1. Synthesize audio chime
             playOrderAlertChime();
 
-            // 2. Mobile haptic vibration
             if (navigator.vibrate) {
                 try { navigator.vibrate([200, 100, 200, 100, 300]); } catch(e) {}
             }
@@ -6367,21 +5724,20 @@
             const amount = newOrder?.total_amount ? ` — Rs. ${Number(newOrder.total_amount).toLocaleString()}` : '';
             const method = newOrder?.payment_method ? ` • ${String(newOrder.payment_method).toUpperCase()}` : '';
 
-            // 3. Bottom toast
             if (typeof showToast === 'function') {
-                showToast(`✦ New Order #${orderNum} received from ${cust}${amount}!`);
+                showToast(`New Order #${orderNum} from ${cust}${amount}`);
             }
 
-            // 4. In-App Heads-Up Banner (Guarantees foreground visibility on mobile & desktop)
+            // In-App Heads-Up Banner (Foreground View)
             showInAppHeadsUpAlert(
-                `✦ NEW ORDER #${orderNum}${amount}`,
-                `${cust}${city}${method}. Tap to view details.`,
+                `NEW ORDER #${orderNum}${amount}`,
+                `${cust}${city}${method}. Select to view details.`,
                 newOrder?.order_number || newOrder?.id || orderNum
             );
 
-            // 5. System / Service Worker Push Notification (for background / screen lock)
-            dispatchSystemNotification(`✦ NEW ORDER #${orderNum}${amount}`, {
-                body: `${cust}${city}${method}. Tap to inspect order.`,
+            // System / Service Worker Push Notification (Background / Lockscreen View)
+            dispatchSystemNotification(`NEW ORDER #${orderNum}${amount}`, {
+                body: `${cust}${city}${method}.`,
                 tag: `order-${newOrder?.id || orderNum}`,
                 data: { orderId: newOrder?.order_number || newOrder?.id || orderNum }
             });
